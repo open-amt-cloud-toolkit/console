@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/jritsema/go-htmx-starter/internal"
-	"github.com/jritsema/go-htmx-starter/internal/companies"
+	"github.com/jritsema/go-htmx-starter/internal/devices"
 	"github.com/jritsema/gotoolbox"
 )
 
@@ -30,7 +30,7 @@ func main() {
 
 	router.Handle("/css/output.css", http.FileServer(http.FS(css)))
 
-	_ = companies.NewCompanies(router)
+	_ = devices.NewDevices(router)
 	_ = internal.NewIndex(router)
 
 	//logging/tracing
