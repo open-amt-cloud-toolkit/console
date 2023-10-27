@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/gotoolbox/web"
 )
 
@@ -31,7 +32,7 @@ type DeviceThing struct {
 func NewDevices(router *http.ServeMux) DeviceThing {
 	//parse templates
 	var err error
-	html, err := web.TemplateParseFSRecursive(templateFS, ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(templateFS, ".html", true, nil)
 	if err != nil {
 		panic(err)
 	}
