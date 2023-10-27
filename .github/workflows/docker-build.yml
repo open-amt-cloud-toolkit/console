@@ -1,0 +1,41 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      docker_registry:
+            description: 'Registry URL'     
+            required: true
+            default: 'docker.io/username'
+      image_name:
+            description: 'Name you wish to use on the docker image (ex. myapp). This will be tagged with :latest, and the git sha'     
+            required: true
+            default: 'app'
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag ${{ github.event.inputs.docker_registry }}/${{ github.event.inputs.image_name }}:latest --tag ${{ github.event.inputs.docker_registry }}/${{ github.event.inputs.image_name }}:${{ github.sha }}
+    - name: Docker Login
+      uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+      with:
+        registry: ${{ github.event.inputs.docker_registry }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        logout: true
+    - name: Push the Docker image to ${{ github.event.inputs.docker_registry }}
+      run: docker push ${{ github.event.inputs.docker_registry }}/${{ github.event.inputs.image_name }}
+    - name: Push the Docker image to ${{ github.event.inputs.docker_registry }}
+      run: docker push ${{ github.event.inputs.docker_registry }}/${{ github.event.inputs.image_name }}:${{ github.sha }}
