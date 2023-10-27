@@ -1,4 +1,4 @@
-<div id="companies">
+<div id="devices">
   <div id="processing" class="htmx-indicator">Processing...</div>
   <div class="flex flex-col">
     <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -6,7 +6,7 @@
         <div class="overflow-hidden">
           <div class="flex justify-end">
             <button
-              hx-get="/company/add"
+              hx-get="/device/add"
               hx-target="#table-body"
               hx-swap="outerHTML"
               hx-indicator="#processing"
@@ -19,10 +19,10 @@
           <table class="min-w-full text-left text-sm font-light">
             <thead class="border-b font-medium dark:border-neutral-500">
               <tr>
-                <th scope="col" class="px-6 py-4">#</th>
-                <th scope="col" class="px-6 py-4">Company</th>
-                <th scope="col" class="px-6 py-4">Contact</th>
-                <th scope="col" class="px-6 py-4">Country</th>
+                <th scope="col" class="px-6 py-4">UUID</th>
+                <th scope="col" class="px-6 py-4">Name</th>
+                <th scope="col" class="px-6 py-4">IP Address</th>
+                <th scope="col" class="px-6 py-4">Firmware Version</th>
               </tr>
             </thead>
             <tbody id="table-body">
