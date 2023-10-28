@@ -11,8 +11,10 @@ import (
 	"time"
 
 	"github.com/jritsema/go-htmx-starter/internal"
+	"github.com/jritsema/go-htmx-starter/internal/certificates"
 	"github.com/jritsema/go-htmx-starter/internal/devices"
 	"github.com/jritsema/gotoolbox"
+	"go.etcd.io/bbolt"
 )
 
 var (
@@ -29,8 +31,17 @@ func main() {
 	router := http.NewServeMux()
 
 	router.Handle("/css/output.css", http.FileServer(http.FS(css)))
+	// Open the my.db data file in your current directory.
+	// It will be created if it doesn't exist.
+	db, err := bbolt.Open("my.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
-	_ = devices.NewDevices(router)
+	_ = devices.NewDevices(db, router)
+	_ = certificates.NewCertificates(router)
+
 	_ = internal.NewIndex(router)
 
 	//logging/tracing

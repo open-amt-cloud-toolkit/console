@@ -1,15 +1,12 @@
-package devices
+package certificates
 
 import (
 	"embed"
-	"fmt"
 	"html/template"
 	"net/http"
-	"strconv"
 
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/gotoolbox/web"
-	"go.etcd.io/bbolt"
 )
 
 // Delete -> DELETE /company/{id} -> delete, companys.html
@@ -26,14 +23,13 @@ var (
 	templateFS embed.FS
 )
 
-type DeviceThing struct {
+type CertificateThing struct {
 	router *http.ServeMux
-	db     *bbolt.DB
 	//parsed templates
 	html *template.Template
 }
 
-func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
+func NewCertificates(router *http.ServeMux) CertificateThing {
 	//parse templates
 	var err error
 	html, err := templates.TemplateParseFSRecursive(templateFS, ".html", true, nil)
@@ -41,47 +37,35 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 		panic(err)
 	}
 
-	dt := DeviceThing{
-		db:   db,
+	dt := CertificateThing{
 		html: html,
 	}
-	err = db.Update(func(tx *bbolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("Devices"))
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
-		return nil
-	})
+	router.Handle("/certificate/add", web.Action(dt.RouteAdd))
+	router.Handle("/certificate/add/", web.Action(dt.RouteAdd))
 
-	if err != nil {
-		panic(err)
-	}
-	router.Handle("/device/add", web.Action(dt.DeviceAdd))
-	router.Handle("/device/add/", web.Action(dt.DeviceAdd))
+	router.Handle("/certificate/edit", web.Action(dt.RouteEdit))
+	router.Handle("/certificate/edit/", web.Action(dt.RouteEdit))
 
-	router.Handle("/device/edit", web.Action(dt.DeviceEdit))
-	router.Handle("/device/edit/", web.Action(dt.DeviceEdit))
+	router.Handle("/certificate", web.Action(dt.Certificates))
+	router.Handle("/certificate/", web.Action(dt.Certificates))
 
-	router.Handle("/device", web.Action(dt.Devices))
-	router.Handle("/device/", web.Action(dt.Devices))
-
-	router.Handle("/devices", web.Action(dt.Index))
+	router.Handle("/certificates", web.Action(dt.Index))
 
 	return dt
 }
-func (dt DeviceThing) Index(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, dt.html, "index.html", dt.GetDevices(), nil)
+func (dt CertificateThing) Index(r *http.Request) *web.Response {
+	return web.HTML(http.StatusOK, dt.html, "index.html", data, nil)
 }
 
-// GET /device/add
-func (dt DeviceThing) DeviceAdd(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, dt.html, "devices-add.html", dt.GetDevices(), nil)
+// GET /certificate/add
+func (dt CertificateThing) RouteAdd(r *http.Request) *web.Response {
+	return web.HTML(http.StatusOK, dt.html, "devices-add.html", data, nil)
 }
 
 // /GET company/edit/{id}
-func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
+func (dt CertificateThing) RouteEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
-	row := dt.GetDeviceByID(id)
+	row := dt.GetByID(id)
 	return web.HTML(http.StatusOK, dt.html, "row-edit.html", row, nil)
 }
 
@@ -90,46 +74,46 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 // DELETE /company/{id}
 // PUT /company/{id}
 // POST /company
-func (dt DeviceThing) Devices(r *http.Request) *web.Response {
+func (dt CertificateThing) Certificates(r *http.Request) *web.Response {
 	id, segments := web.PathLast(r)
 	switch r.Method {
 
 	case http.MethodDelete:
-		dt.DeleteDevice(id)
-		return web.HTML(http.StatusOK, dt.html, "devices.html", dt.GetDevices(), nil)
+		dt.Delete(id)
+		return web.HTML(http.StatusOK, dt.html, "devices.html", data, nil)
 
 	//cancel
 	case http.MethodGet:
 		if segments > 1 {
 			//cancel edit
-			row := dt.GetDeviceByID(id)
+			row := dt.GetByID(id)
 			return web.HTML(http.StatusOK, dt.html, "row.html", row, nil)
 		} else {
 			//cancel add
-			return web.HTML(http.StatusOK, dt.html, "devices.html", dt.GetDevices(), nil)
+			return web.HTML(http.StatusOK, dt.html, "devices.html", data, nil)
 		}
 
 	//save edit
 	case http.MethodPut:
-		row := dt.GetDeviceByID(id)
+		row := dt.GetByID(id)
 		r.ParseForm()
-		row.UUID, _ = strconv.Atoi(id)
+		row.UUID = id
 		row.Name = r.Form.Get("name")
 		row.IPAddress = r.Form.Get("ipaddress")
 		row.FWVersion = r.Form.Get("fwversion")
-		dt.UpdateDevice(row)
+		dt.Update(row)
 		return web.HTML(http.StatusOK, dt.html, "row.html", row, nil)
 
 	//save add
 	case http.MethodPost:
-		row := Device{}
+		row := Certificate{}
 		r.ParseForm()
-		row.UUID, _ = strconv.Atoi(r.Form.Get("uuid"))
+		row.UUID = r.Form.Get("uuid")
 		row.Name = r.Form.Get("name")
 		row.IPAddress = r.Form.Get("ipaddress")
 		row.FWVersion = r.Form.Get("fwversion")
-		dt.AddDevice(row)
-		return web.HTML(http.StatusOK, dt.html, "devices.html", dt.GetDevices(), nil)
+		dt.Add(row)
+		return web.HTML(http.StatusOK, dt.html, "devices.html", data, nil)
 	}
 
 	return web.Empty(http.StatusNotImplemented)

@@ -1,89 +1,144 @@
 package devices
 
-// import "strconv"
+import (
+	"encoding/binary"
+	"encoding/json"
+	"strconv"
 
-var data []Device
+	"go.etcd.io/bbolt"
+)
 
 type Device struct {
-	UUID      string
+	UUID      int
 	Name      string
 	IPAddress string
 	FWVersion string
 }
 
 func init() {
-	data = []Device{
-		{
-			UUID:      "12345678-abcd-efgh-ijkl-123456789001",
-			Name:      "AMT Device 1",
-			IPAddress: "192.168.0.1",
-			FWVersion: "15.1.123",
-		},
-		{
-			UUID:      "12345678-abcd-efgh-ijkl-123456789002",
-			Name:      "AMT Device 2",
-			IPAddress: "192.168.0.2",
-			FWVersion: "16.0.43",
-		},
-		{
-			UUID:      "12345678-abcd-efgh-ijkl-123456789003",
-			Name:      "AMT Device 3",
-			IPAddress: "192.168.0.3",
-			FWVersion: "16.1.25",
-		},
-	}
+	// data = []Device{
+	// 	{
+	// 		UUID:      1,
+	// 		Name:      "AMT Device 1",
+	// 		IPAddress: "192.168.0.1",
+	// 		FWVersion: "15.1.123",
+	// 	},
+	// 	{
+	// 		UUID:      2,
+	// 		Name:      "AMT Device 2",
+	// 		IPAddress: "192.168.0.2",
+	// 		FWVersion: "16.0.43",
+	// 	},
+	// 	{
+	// 		UUID:      3,
+	// 		Name:      "AMT Device 3",
+	// 		IPAddress: "192.168.0.3",
+	// 		FWVersion: "16.1.25",
+	// 	},
+	// }
+}
+
+// Get all devices
+func (dt DeviceThing) GetDevices() []Device {
+	var data []Device
+	dt.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("Devices"))
+		b.ForEach(func(k, v []byte) error {
+			result := &Device{}
+
+			// Marshal user data into bytes.
+			err := json.Unmarshal(v, result)
+			if err != nil {
+				return err
+			}
+			data = append(data, *result)
+			return nil
+		})
+		return nil
+	})
+	return data
 }
 
 func (dt DeviceThing) GetDeviceByID(id string) Device {
-	var result Device
-	for _, i := range data {
-		if i.UUID == id {
-			result = i
-			break
+	result := Device{}
+
+	dt.db.Update(func(tx *bbolt.Tx) error {
+		// Get buckets
+		b := tx.Bucket([]byte("Devices"))
+		intId, _ := strconv.Atoi(id)
+		deviceSlice := b.Get(itob(intId))
+
+		// Marshal user data into bytes.
+		err := json.Unmarshal(deviceSlice, &result)
+		if err != nil {
+			return err
 		}
-	}
+		return nil
+	})
 	return result
 }
 
 func (dt DeviceThing) UpdateDevice(device Device) {
-	result := []Device{}
-	for _, i := range data {
-		if i.UUID == device.UUID {
-			i.UUID = device.UUID
-			i.Name = device.Name
-			i.IPAddress = device.IPAddress
-			i.FWVersion = device.FWVersion
+	dt.db.Update(func(tx *bbolt.Tx) error {
+		// Get buckets
+		b := tx.Bucket([]byte("Devices"))
+
+		deviceSlice := b.Get(itob(device.UUID))
+		result := &Device{}
+
+		// Marshal user data into bytes.
+		err := json.Unmarshal(deviceSlice, result)
+		if err != nil {
+			return err
 		}
-		result = append(result, i)
-	}
-	data = result
+		result.FWVersion = device.FWVersion
+		result.IPAddress = device.IPAddress
+		result.Name = device.Name
+
+		// Marshal user data into bytes.
+		buf, err := json.Marshal(device)
+		if err != nil {
+			return err
+		}
+		// Persist bytes to users bucket.
+		return b.Put(itob(device.UUID), buf)
+	})
 }
 
 func (dt DeviceThing) AddDevice(device Device) {
-	// max := 0
-	// for _, i := range data {
-	// 	n, _ := strconv.Atoi(i.UUID)
-	// 	if n > max {
-	// 		max = n
-	// 	}
-	// }
-	// max++
-	// id := strconv.Itoa(max)
+	dt.db.Update(func(tx *bbolt.Tx) error {
+		// Get buckets
+		b := tx.Bucket([]byte("Devices"))
 
-	data = append(data, Device{
-		UUID:      device.UUID,
-		Name:      device.Name,
-		IPAddress: device.IPAddress,
-		FWVersion: device.FWVersion,
+		// Generate ID for the device.
+		// This returns an error only if the Tx is closed or not writeable.
+		// That can't happen in an Update() call so I ignore the error check.
+		id, _ := b.NextSequence()
+		device.UUID = int(id)
+
+		// Marshal user data into bytes.
+		buf, err := json.Marshal(device)
+		if err != nil {
+			return err
+		}
+		// Persist bytes to users bucket.
+		return b.Put(itob(device.UUID), buf)
 	})
 }
 
 func (dt DeviceThing) DeleteDevice(id string) {
-	result := []Device{}
-	for _, i := range data {
-		if i.UUID != id {
-			result = append(result, i)
-		}
-	}
-	data = result
+	dt.db.Update(func(tx *bbolt.Tx) error {
+		// Get buckets
+		b := tx.Bucket([]byte("Devices"))
+		intId, _ := strconv.Atoi(id)
+		b.Delete(itob(intId))
+		return nil
+	})
+}
+
+// itob returns an 8-byte big endian representation of v.
+func itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }
