@@ -9,6 +9,7 @@ import (
 
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt"
 	"go.etcd.io/bbolt"
 )
 
@@ -67,6 +68,9 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 
 	router.Handle("/devices", web.Action(dt.Index))
 
+	router.Handle("/device/connect", web.Action(dt.DeviceConnect))
+	router.Handle("/device/connect/", web.Action(dt.DeviceConnect))
+
 	return dt
 }
 func (dt DeviceThing) Index(r *http.Request) *web.Response {
@@ -83,6 +87,15 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	row := dt.GetDeviceByID(id)
 	return web.HTML(http.StatusOK, dt.html, "row-edit.html", row, nil)
+}
+
+// Connect to device
+func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
+	id, _ := web.PathLast(r)
+	device := dt.GetDeviceByID(id)
+	amt := amt.NewMessages("http://"+device.IPAddress+":16992/wsman", "admin", "P@ssw0rd", true)
+	result, _ := amt.GeneralSettings.Get()
+	return web.HTML(http.StatusOK, dt.html, "device.html", result.Body.AMTGeneralSettings, nil)
 }
 
 // GET /company
@@ -113,7 +126,7 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 	case http.MethodPut:
 		row := dt.GetDeviceByID(id)
 		r.ParseForm()
-		row.UUID, _ = strconv.Atoi(id)
+		row.Id, _ = strconv.Atoi(id)
 		row.Name = r.Form.Get("name")
 		row.IPAddress = r.Form.Get("ipaddress")
 		row.FWVersion = r.Form.Get("fwversion")
@@ -124,7 +137,7 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 	case http.MethodPost:
 		row := Device{}
 		r.ParseForm()
-		row.UUID, _ = strconv.Atoi(r.Form.Get("uuid"))
+		row.Id, _ = strconv.Atoi(r.Form.Get("id"))
 		row.Name = r.Form.Get("name")
 		row.IPAddress = r.Form.Get("ipaddress")
 		row.FWVersion = r.Form.Get("fwversion")

@@ -9,10 +9,13 @@ import (
 )
 
 type Device struct {
-	UUID      int
+	Id        int
+	UUID      string
 	Name      string
 	IPAddress string
 	FWVersion string
+	Username  string
+	Password  string
 }
 
 func init() {
@@ -83,7 +86,7 @@ func (dt DeviceThing) UpdateDevice(device Device) {
 		// Get buckets
 		b := tx.Bucket([]byte("Devices"))
 
-		deviceSlice := b.Get(itob(device.UUID))
+		deviceSlice := b.Get(itob(device.Id))
 		result := &Device{}
 
 		// Marshal user data into bytes.
@@ -101,7 +104,7 @@ func (dt DeviceThing) UpdateDevice(device Device) {
 			return err
 		}
 		// Persist bytes to users bucket.
-		return b.Put(itob(device.UUID), buf)
+		return b.Put(itob(device.Id), buf)
 	})
 }
 
@@ -114,7 +117,7 @@ func (dt DeviceThing) AddDevice(device Device) {
 		// This returns an error only if the Tx is closed or not writeable.
 		// That can't happen in an Update() call so I ignore the error check.
 		id, _ := b.NextSequence()
-		device.UUID = int(id)
+		device.Id = int(id)
 
 		// Marshal user data into bytes.
 		buf, err := json.Marshal(device)
@@ -122,7 +125,7 @@ func (dt DeviceThing) AddDevice(device Device) {
 			return err
 		}
 		// Persist bytes to users bucket.
-		return b.Put(itob(device.UUID), buf)
+		return b.Put(itob(device.Id), buf)
 	})
 }
 
