@@ -12,7 +12,7 @@ type Device struct {
 	Id        int
 	UUID      string
 	Name      string
-	IPAddress string
+	Address   string
 	FWVersion string
 	Username  string
 	Password  string
@@ -95,7 +95,7 @@ func (dt DeviceThing) UpdateDevice(device Device) {
 			return err
 		}
 		result.FWVersion = device.FWVersion
-		result.IPAddress = device.IPAddress
+		result.Address = device.Address
 		result.Name = device.Name
 
 		// Marshal user data into bytes.

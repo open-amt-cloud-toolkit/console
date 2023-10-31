@@ -93,7 +93,7 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	device := dt.GetDeviceByID(id)
-	amt := amt.NewMessages("http://"+device.IPAddress+":16992/wsman", "admin", "P@ssw0rd", true)
+	amt := amt.NewMessages(device.Address, device.Username, device.Password, true, false)
 	result, _ := amt.GeneralSettings.Get()
 	return web.HTML(http.StatusOK, dt.html, "device.html", result.Body.AMTGeneralSettings, nil)
 }
@@ -128,8 +128,9 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		r.ParseForm()
 		row.Id, _ = strconv.Atoi(id)
 		row.Name = r.Form.Get("name")
-		row.IPAddress = r.Form.Get("ipaddress")
-		row.FWVersion = r.Form.Get("fwversion")
+		row.Address = r.Form.Get("address")
+		row.Username = r.Form.Get("username")
+		row.Password = r.Form.Get("password")
 		dt.UpdateDevice(row)
 		return web.HTML(http.StatusOK, dt.html, "row.html", row, nil)
 
@@ -139,8 +140,9 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		r.ParseForm()
 		row.Id, _ = strconv.Atoi(r.Form.Get("id"))
 		row.Name = r.Form.Get("name")
-		row.IPAddress = r.Form.Get("ipaddress")
-		row.FWVersion = r.Form.Get("fwversion")
+		row.Address = r.Form.Get("address")
+		row.Username = r.Form.Get("username")
+		row.Password = r.Form.Get("password")
 		dt.AddDevice(row)
 		return web.HTML(http.StatusOK, dt.html, "devices.html", dt.GetDevices(), nil)
 	}

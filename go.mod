@@ -8,6 +8,6 @@ require (
 	go.etcd.io/bbolt v1.3.8
 )
 
-replace github.com/open-amt-cloud-toolkit/go-wsman-messages => d:\Repository\go-wsman-messages
+replace github.com/open-amt-cloud-toolkit/go-wsman-messages => ../go-wsman-messages
 
 require golang.org/x/sys v0.4.0 // indirect
