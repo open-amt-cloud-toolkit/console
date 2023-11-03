@@ -1,10 +1,10 @@
 package certificates
 
 import (
-	"embed"
 	"html/template"
 	"net/http"
 
+	"github.com/jritsema/go-htmx-starter/internal"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/gotoolbox/web"
 )
@@ -18,10 +18,6 @@ import (
 // Add    -> GET /company/add/ -> companys-add.html (target body with row-add.html and row.html)
 // Save   ->   POST /company -> add, companys.html (target body without row-add.html)
 // Cancel ->	 GET /company -> nothing, companys.html
-var (
-	//go:embed all:templates/*
-	templateFS embed.FS
-)
 
 type CertificateThing struct {
 	router *http.ServeMux
@@ -32,7 +28,7 @@ type CertificateThing struct {
 func NewCertificates(router *http.ServeMux) CertificateThing {
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(templateFS, ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, ".html", true, nil)
 	if err != nil {
 		panic(err)
 	}

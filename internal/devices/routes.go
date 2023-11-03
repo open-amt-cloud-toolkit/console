@@ -1,13 +1,14 @@
 package devices
 
 import (
-	"embed"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
 
+	"github.com/jritsema/go-htmx-starter/internal"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
+	web2 "github.com/jritsema/go-htmx-starter/pkg/web"
 	"github.com/jritsema/gotoolbox/web"
 	"go.etcd.io/bbolt"
 )
@@ -21,10 +22,6 @@ import (
 // Add    -> GET /company/add/ -> companys-add.html (target body with row-add.html and row.html)
 // Save   ->   POST /company -> add, companys.html (target body without row-add.html)
 // Cancel ->	 GET /company -> nothing, companys.html
-var (
-	//go:embed all:templates/*
-	templateFS embed.FS
-)
 
 type DeviceThing struct {
 	router *http.ServeMux
@@ -36,7 +33,7 @@ type DeviceThing struct {
 func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(templateFS, ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, ".html", true, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -73,19 +70,19 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	return dt
 }
 func (dt DeviceThing) Index(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, dt.html, "index.html", dt.GetDevices(), nil)
+	return web2.HTML(r, http.StatusOK, dt.html, "devices/index.html", dt.GetDevices(), nil)
 }
 
 // GET /device/add
 func (dt DeviceThing) DeviceAdd(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, dt.html, "devices-add.html", dt.GetDevices(), nil)
+	return web.HTML(http.StatusOK, dt.html, "devices/devices-add.html", dt.GetDevices(), nil)
 }
 
 // /GET company/edit/{id}
 func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	row := dt.GetDeviceByID(id)
-	return web.HTML(http.StatusOK, dt.html, "row-edit.html", row, nil)
+	return web.HTML(http.StatusOK, dt.html, "devices/row-edit.html", row, nil)
 }
 
 // Connect to device
@@ -95,7 +92,7 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	// amt := amt.NewMessages(device.Address, device.Username, device.Password, true, false)
 	// result, _ := amt.GeneralSettings.Get()
 	// result.Body.AMTGeneralSettings
-	return web.HTML(http.StatusOK, dt.html, "device.html", nil, nil)
+	return web.HTML(http.StatusOK, dt.html, "devices/device.html", nil, nil)
 }
 
 // GET /company
@@ -109,17 +106,17 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 
 	case http.MethodDelete:
 		dt.DeleteDevice(id)
-		return web.HTML(http.StatusOK, dt.html, "devices.html", dt.GetDevices(), nil)
+		return web.HTML(http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 
 	//cancel
 	case http.MethodGet:
 		if segments > 1 {
 			//cancel edit
 			row := dt.GetDeviceByID(id)
-			return web.HTML(http.StatusOK, dt.html, "row.html", row, nil)
+			return web.HTML(http.StatusOK, dt.html, "devices/row.html", row, nil)
 		} else {
 			//cancel add
-			return web.HTML(http.StatusOK, dt.html, "devices.html", dt.GetDevices(), nil)
+			return web.HTML(http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 		}
 
 	//save edit
@@ -131,8 +128,11 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Address = r.Form.Get("address")
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
+		if !row.IsValid() {
+			return web.HTML(http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
+		}
 		dt.UpdateDevice(row)
-		return web.HTML(http.StatusOK, dt.html, "row.html", row, nil)
+		return web.HTML(http.StatusOK, dt.html, "devices/row.html", row, nil)
 
 	//save add
 	case http.MethodPost:
@@ -143,8 +143,11 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Address = r.Form.Get("address")
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
+		if !row.IsValid() {
+			return web.HTML(http.StatusBadRequest, dt.html, "devices/errors.html", dt.GetDevices(), nil)
+		}
 		dt.AddDevice(row)
-		return web.HTML(http.StatusOK, dt.html, "devices.html", dt.GetDevices(), nil)
+		return web.HTML(http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 	}
 
 	return web.Empty(http.StatusNotImplemented)

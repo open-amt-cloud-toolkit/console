@@ -18,6 +18,20 @@ type Device struct {
 	Password  string
 }
 
+func (d *Device) IsValid() bool {
+	if d.Name == "" {
+		return false
+	}
+	if d.FWVersion == "" {
+		return false
+	}
+	// match, err := regexp.MatchString("^[0-9]+.[0-9]+.[0-9]+.[0-9]+$", d.IPAddress)
+	// if !match || err != nil {
+	// 	return false
+	// }
+	return true
+}
+
 func init() {
 	// data = []Device{
 	// 	{
