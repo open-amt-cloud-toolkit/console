@@ -9,7 +9,6 @@ import (
 
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/gotoolbox/web"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt"
 	"go.etcd.io/bbolt"
 )
 
@@ -92,10 +91,11 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 // Connect to device
 func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
-	device := dt.GetDeviceByID(id)
-	amt := amt.NewMessages(device.Address, device.Username, device.Password, true, false)
-	result, _ := amt.GeneralSettings.Get()
-	return web.HTML(http.StatusOK, dt.html, "device.html", result.Body.AMTGeneralSettings, nil)
+	_ = dt.GetDeviceByID(id)
+	// amt := amt.NewMessages(device.Address, device.Username, device.Password, true, false)
+	// result, _ := amt.GeneralSettings.Get()
+	// result.Body.AMTGeneralSettings
+	return web.HTML(http.StatusOK, dt.html, "device.html", nil, nil)
 }
 
 // GET /company
