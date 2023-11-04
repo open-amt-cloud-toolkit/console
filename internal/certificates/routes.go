@@ -6,6 +6,7 @@ import (
 
 	"github.com/jritsema/go-htmx-starter/internal"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
+	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
 )
 
@@ -50,19 +51,19 @@ func NewCertificates(router *http.ServeMux) CertificateThing {
 	return dt
 }
 func (dt CertificateThing) Index(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, dt.html, "index.html", data, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "certificates/index.html", data, nil)
 }
 
 // GET /certificate/add
 func (dt CertificateThing) RouteAdd(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, dt.html, "devices-add.html", data, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices-add.html", data, nil)
 }
 
 // /GET company/edit/{id}
 func (dt CertificateThing) RouteEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	row := dt.GetByID(id)
-	return web.HTML(http.StatusOK, dt.html, "row-edit.html", row, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "row-edit.html", row, nil)
 }
 
 // GET /company
@@ -76,17 +77,17 @@ func (dt CertificateThing) Certificates(r *http.Request) *web.Response {
 
 	case http.MethodDelete:
 		dt.Delete(id)
-		return web.HTML(http.StatusOK, dt.html, "devices.html", data, nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices.html", data, nil)
 
 	//cancel
 	case http.MethodGet:
 		if segments > 1 {
 			//cancel edit
 			row := dt.GetByID(id)
-			return web.HTML(http.StatusOK, dt.html, "row.html", row, nil)
+			return webtools.HTML(r, http.StatusOK, dt.html, "row.html", row, nil)
 		} else {
 			//cancel add
-			return web.HTML(http.StatusOK, dt.html, "devices.html", data, nil)
+			return webtools.HTML(r, http.StatusOK, dt.html, "devices.html", data, nil)
 		}
 
 	//save edit
@@ -98,7 +99,7 @@ func (dt CertificateThing) Certificates(r *http.Request) *web.Response {
 		row.IPAddress = r.Form.Get("ipaddress")
 		row.FWVersion = r.Form.Get("fwversion")
 		dt.Update(row)
-		return web.HTML(http.StatusOK, dt.html, "row.html", row, nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "row.html", row, nil)
 
 	//save add
 	case http.MethodPost:
@@ -109,7 +110,7 @@ func (dt CertificateThing) Certificates(r *http.Request) *web.Response {
 		row.IPAddress = r.Form.Get("ipaddress")
 		row.FWVersion = r.Form.Get("fwversion")
 		dt.Add(row)
-		return web.HTML(http.StatusOK, dt.html, "devices.html", data, nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices.html", data, nil)
 	}
 
 	return web.Empty(http.StatusNotImplemented)

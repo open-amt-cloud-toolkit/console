@@ -8,7 +8,7 @@ import (
 
 	"github.com/jritsema/go-htmx-starter/internal"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
-	web2 "github.com/jritsema/go-htmx-starter/pkg/web"
+	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
 	"go.etcd.io/bbolt"
 )
@@ -24,8 +24,7 @@ import (
 // Cancel ->	 GET /company -> nothing, companys.html
 
 type DeviceThing struct {
-	router *http.ServeMux
-	db     *bbolt.DB
+	db *bbolt.DB
 	//parsed templates
 	html *template.Template
 }
@@ -70,19 +69,19 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	return dt
 }
 func (dt DeviceThing) Index(r *http.Request) *web.Response {
-	return web2.HTML(r, http.StatusOK, dt.html, "devices/index.html", dt.GetDevices(), nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/index.html", dt.GetDevices(), nil)
 }
 
 // GET /device/add
 func (dt DeviceThing) DeviceAdd(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, dt.html, "devices/devices-add.html", dt.GetDevices(), nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices-add.html", dt.GetDevices(), nil)
 }
 
 // /GET company/edit/{id}
 func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	row := dt.GetDeviceByID(id)
-	return web.HTML(http.StatusOK, dt.html, "devices/row-edit.html", row, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/row-edit.html", row, nil)
 }
 
 // Connect to device
@@ -92,7 +91,7 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	// amt := amt.NewMessages(device.Address, device.Username, device.Password, true, false)
 	// result, _ := amt.GeneralSettings.Get()
 	// result.Body.AMTGeneralSettings
-	return web.HTML(http.StatusOK, dt.html, "devices/device.html", nil, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", nil, nil)
 }
 
 // GET /company
@@ -106,17 +105,17 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 
 	case http.MethodDelete:
 		dt.DeleteDevice(id)
-		return web.HTML(http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 
 	//cancel
 	case http.MethodGet:
 		if segments > 1 {
 			//cancel edit
 			row := dt.GetDeviceByID(id)
-			return web.HTML(http.StatusOK, dt.html, "devices/row.html", row, nil)
+			return webtools.HTML(r, http.StatusOK, dt.html, "devices/row.html", row, nil)
 		} else {
 			//cancel add
-			return web.HTML(http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
+			return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 		}
 
 	//save edit
@@ -129,10 +128,10 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
 		if !row.IsValid() {
-			return web.HTML(http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
+			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
 		}
 		dt.UpdateDevice(row)
-		return web.HTML(http.StatusOK, dt.html, "devices/row.html", row, nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices/row.html", row, nil)
 
 	//save add
 	case http.MethodPost:
@@ -144,10 +143,10 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
 		if !row.IsValid() {
-			return web.HTML(http.StatusBadRequest, dt.html, "devices/errors.html", dt.GetDevices(), nil)
+			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", dt.GetDevices(), nil)
 		}
 		dt.AddDevice(row)
-		return web.HTML(http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 	}
 
 	return web.Empty(http.StatusNotImplemented)

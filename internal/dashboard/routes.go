@@ -1,4 +1,4 @@
-package profiles
+package dashboard
 
 import (
 	"html/template"
@@ -10,23 +10,13 @@ import (
 	"github.com/jritsema/gotoolbox/web"
 )
 
-// Delete -> DELETE /company/{id} -> delete, companys.html
-
-// Edit   -> GET /company/edit/{id} -> row-edit.html
-// Save   ->   PUT /company/{id} -> update, row.html
-// Cancel ->	 GET /company/{id} -> nothing, row.html
-
-// Add    -> GET /company/add/ -> companys-add.html (target body with row-add.html and row.html)
-// Save   ->   POST /company -> add, companys.html (target body without row-add.html)
-// Cancel ->	 GET /company -> nothing, companys.html
-
-type CertificateThing struct {
+type DashboardPages struct {
 	router *http.ServeMux
 	//parsed templates
 	html *template.Template
 }
 
-func NewProfiles(router *http.ServeMux) CertificateThing {
+func NewDashboard(router *http.ServeMux) DashboardPages {
 
 	//parse templates
 	var err error
@@ -35,7 +25,7 @@ func NewProfiles(router *http.ServeMux) CertificateThing {
 		panic(err)
 	}
 
-	dt := CertificateThing{
+	dt := DashboardPages{
 		html: html,
 	}
 	// router.Handle("/profile/add", web.Action(dt.RouteAdd))
@@ -47,10 +37,10 @@ func NewProfiles(router *http.ServeMux) CertificateThing {
 	// router.Handle("/profile", web.Action(dt.Profiles))
 	// router.Handle("/profile/", web.Action(dt.Profiles))
 
-	router.Handle("/profiles", web.Action(dt.Index))
+	router.Handle("/dashboard", web.Action(dt.Index))
 
 	return dt
 }
-func (dt CertificateThing) Index(r *http.Request) *web.Response {
-	return webtools.HTML(r, http.StatusOK, dt.html, "profiles/index.html", nil, nil)
+func (dt DashboardPages) Index(r *http.Request) *web.Response {
+	return webtools.HTML(r, http.StatusOK, dt.html, "dashboard/index.html", nil, nil)
 }

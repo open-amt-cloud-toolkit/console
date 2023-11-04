@@ -12,6 +12,7 @@ import (
 
 	"github.com/jritsema/go-htmx-starter/internal"
 	"github.com/jritsema/go-htmx-starter/internal/certificates"
+	"github.com/jritsema/go-htmx-starter/internal/dashboard"
 	"github.com/jritsema/go-htmx-starter/internal/devices"
 	"github.com/jritsema/go-htmx-starter/internal/profiles"
 	"github.com/jritsema/gotoolbox"
@@ -43,6 +44,8 @@ func main() {
 	_ = devices.NewDevices(db, router)
 	_ = certificates.NewCertificates(router)
 	_ = profiles.NewProfiles(router)
+	_ = dashboard.NewDashboard(router)
+
 	_ = internal.NewIndex(router)
 
 	//logging/tracing

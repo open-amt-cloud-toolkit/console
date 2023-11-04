@@ -1,10 +1,12 @@
-package web
+package webtools
 
 import (
 	"bytes"
 	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/jritsema/gotoolbox/web"
 )
@@ -41,4 +43,11 @@ func HTML(r *http.Request, status int, t *template.Template, template string, da
 		Content:     &buf,
 		Headers:     headers,
 	}
+}
+
+// ConvertPath takes in a path and returns it formatted with the appropriate path separator for the OS.
+func ConvertPath(p string) string {
+	// Split the string by either / or \ (so it works both ways)
+	parts := strings.FieldsFunc(p, func(c rune) bool { return c == '/' || c == '\\' })
+	return filepath.Join(parts...)
 }

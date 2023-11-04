@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
+	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
 )
 
@@ -37,9 +38,9 @@ func NewIndex(router *http.ServeMux) IndexThing {
 }
 
 func (it IndexThing) Index(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, html, "index.html", nil, nil)
+	return webtools.HTML(r, http.StatusOK, html, "index.html", nil, nil)
 }
 
 func (it IndexThing) Menu(r *http.Request) *web.Response {
-	return web.HTML(http.StatusOK, html, "menu.html", nil, nil)
+	return webtools.HTML(r, http.StatusOK, html, "menu.html", nil, nil)
 }

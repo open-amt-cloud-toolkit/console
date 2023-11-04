@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"fmt"
 	"html/template"
 	"io/fs"
 	"os"
@@ -32,7 +33,8 @@ func TemplateParseFSRecursive(
 			if nonRootTemplateNames {
 				//name the template based on the file path (excluding the root)
 				parts := strings.Split(filepath.FromSlash(path), string(os.PathSeparator))
-				name = strings.Join(parts[1:], string(os.PathSeparator))
+				name = strings.Join(parts[1:], "/")
+				fmt.Println(name)
 			}
 			t := root.New(name).Funcs(funcMap)
 			_, err = t.Parse(string(b))
