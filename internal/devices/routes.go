@@ -10,6 +10,9 @@ import (
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt/ethernetport"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt/general"
 	"go.etcd.io/bbolt"
 )
 
@@ -27,6 +30,12 @@ type DeviceThing struct {
 	db *bbolt.DB
 	//parsed templates
 	html *template.Template
+}
+
+type DeviceContent struct {
+	Device	Device
+	GeneralSettings general.GeneralSettings
+	EthernetSettings ethernetport.EthernetPort
 }
 
 func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
@@ -87,11 +96,36 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 // Connect to device
 func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
-	_ = dt.GetDeviceByID(id)
-	// amt := amt.NewMessages(device.Address, device.Username, device.Password, true, false)
-	// result, _ := amt.GeneralSettings.Get()
-	// result.Body.AMTGeneralSettings
-	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", nil, nil)
+	device := dt.GetDeviceByID(id)
+	cp := amt.ClientParameters{
+		Target:            device.Address,
+		Username:          device.Username,
+		Password:          device.Password,
+		UseDigest:         true,
+		UseTLS:            device.UseTLS,
+		SelfSignedAllowed: device.SelfSignedAllowed,
+	}
+	amt := amt.NewMessages(cp)
+	generalSettings, err := amt.GeneralSettings.Get()
+	if err != nil {
+		fmt.Println("Error:", err)
+		fmt.Println("Message:", generalSettings.Body.AMTGeneralSettings)
+	}
+	var selector ethernetport.Selector
+	selector.Name = "InstanceID"
+	selector.Value = "Intel(r) AMT Ethernet Port Settings 0"
+
+	ethernetSettings, err := amt.EthernetPortSettings.Get(selector)
+	if err != nil {
+		fmt.Println("Error:", err)
+		fmt.Println("Message:", ethernetSettings.Body.EthernetPort)
+	}
+	var dc DeviceContent
+	dc.Device = device
+	dc.GeneralSettings = generalSettings.Body.AMTGeneralSettings
+	dc.EthernetSettings = ethernetSettings.Body.EthernetPort
+
+	return web.HTML(http.StatusOK, dt.html, "devices/device.html", dc, nil)
 }
 
 // GET /company
@@ -127,6 +161,16 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Address = r.Form.Get("address")
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
+		tls := false
+		if r.Form.Get("usetls") == "on" {
+			tls = true
+		}
+		row.UseTLS = tls
+		selfSignedAllowed := false
+		if r.Form.Get("selfsignedallowed") == "on" {
+			selfSignedAllowed = true
+		}
+		row.SelfSignedAllowed = selfSignedAllowed
 		if !row.IsValid() {
 			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
 		}
@@ -142,6 +186,16 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Address = r.Form.Get("address")
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
+		tls := false
+		if r.Form.Get("usetls") == "on" {
+			tls = true
+		}
+		row.UseTLS = tls
+		selfSignedAllowed := false
+		if r.Form.Get("selfsignedallowed") == "on" {
+			selfSignedAllowed = true
+		}
+		row.SelfSignedAllowed = selfSignedAllowed
 		if !row.IsValid() {
 			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", dt.GetDevices(), nil)
 		}

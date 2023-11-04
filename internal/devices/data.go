@@ -9,13 +9,15 @@ import (
 )
 
 type Device struct {
-	Id        int
-	UUID      string
-	Name      string
-	Address   string
-	FWVersion string
-	Username  string
-	Password  string
+	Id                int
+	UUID              string
+	Name              string
+	Address           string
+	FWVersion         string
+	Username          string
+	Password          string
+	UseTLS            bool
+	SelfSignedAllowed bool
 }
 
 func (d *Device) IsValid() bool {
