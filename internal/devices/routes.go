@@ -33,8 +33,8 @@ type DeviceThing struct {
 }
 
 type DeviceContent struct {
-	Device	Device
-	GeneralSettings general.GeneralSettings
+	Device           Device
+	GeneralSettings  general.GeneralSettings
 	EthernetSettings ethernetport.EthernetPort
 }
 
