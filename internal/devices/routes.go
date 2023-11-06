@@ -10,9 +10,8 @@ import (
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt/ethernetport"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/amt/general"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
 	"go.etcd.io/bbolt"
 )
 
@@ -32,10 +31,42 @@ type DeviceThing struct {
 	html *template.Template
 }
 
+type GeneralSettings struct {
+	NetworkInterfaceEnabled bool
+	DigestRealm             string
+	HostOSFQDN              string
+}
+
+type EthernetSettings struct {
+	DHCPEnabled    bool
+	SubnetMask     string
+	DefaultGateway string
+	PrimaryDNS     string
+	SecondaryDNS   string
+}
+
+type SetupAndConfigurationService struct {
+	ProvisioningMode  string
+	ProvisioningState string
+}
+
 type DeviceContent struct {
-	Device           Device
-	GeneralSettings  general.GeneralSettings
-	EthernetSettings ethernetport.EthernetPort
+	DeviceName                   string
+	Address                      string
+	GeneralSettings              GeneralSettings
+	EthernetSettings             EthernetSettings
+	SetupAndConfigurationService SetupAndConfigurationService
+}
+
+var provisioningModeLookup = map[int]string{
+	1: "Admin Control Mode",
+	4: "Client Control Mode",
+}
+
+var provisioningStateLookup = map[int]string{
+	0: "Pre-Provisioning",
+	1: "In Provisioning",
+	2: "Post Provisioning",
 }
 
 func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
@@ -97,7 +128,7 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	device := dt.GetDeviceByID(id)
-	cp := amt.ClientParameters{
+	cp := wsman.ClientParameters{
 		Target:            device.Address,
 		Username:          device.Username,
 		Password:          device.Password,
@@ -105,25 +136,55 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 		UseTLS:            device.UseTLS,
 		SelfSignedAllowed: device.SelfSignedAllowed,
 	}
-	amt := amt.NewMessages(cp)
-	generalSettings, err := amt.GeneralSettings.Get()
+	wsman := wsman.NewMessages(cp)
+	// Get General Settings
+	generalSettings, err := wsman.AMT.GeneralSettings.Get()
 	if err != nil {
 		fmt.Println("Error:", err)
 		fmt.Println("Message:", generalSettings.Body.AMTGeneralSettings)
 	}
+	gs := GeneralSettings{
+		NetworkInterfaceEnabled: generalSettings.Body.AMTGeneralSettings.NetworkInterfaceEnabled,
+		DigestRealm:             generalSettings.Body.AMTGeneralSettings.DigestRealm,
+		HostOSFQDN:              generalSettings.Body.AMTGeneralSettings.HostOSFQDN,
+	}
+
 	var selector ethernetport.Selector
 	selector.Name = "InstanceID"
 	selector.Value = "Intel(r) AMT Ethernet Port Settings 0"
-
-	ethernetSettings, err := amt.EthernetPortSettings.Get(selector)
+	// Get Ethernet Settings
+	ethernetSettings, err := wsman.AMT.EthernetPortSettings.Get(selector)
 	if err != nil {
 		fmt.Println("Error:", err)
 		fmt.Println("Message:", ethernetSettings.Body.EthernetPort)
 	}
-	var dc DeviceContent
-	dc.Device = device
-	dc.GeneralSettings = generalSettings.Body.AMTGeneralSettings
-	dc.EthernetSettings = ethernetSettings.Body.EthernetPort
+	es := EthernetSettings{
+		DHCPEnabled:    ethernetSettings.Body.EthernetPort.DHCPEnabled,
+		SubnetMask:     ethernetSettings.Body.EthernetPort.SubnetMask,
+		DefaultGateway: ethernetSettings.Body.EthernetPort.DefaultGateway,
+		PrimaryDNS:     ethernetSettings.Body.EthernetPort.PrimaryDNS,
+		SecondaryDNS:   ethernetSettings.Body.EthernetPort.SecondaryDNS,
+	}
+
+	// Get Setup and Configuration Service
+	setupAndConfigurationService, err := wsman.AMT.SetupAndConfigurationService.Get()
+	if err != nil {
+		fmt.Println("Error:", err)
+		fmt.Println("Message:", setupAndConfigurationService.Body.Setup)
+	}
+
+	scs := SetupAndConfigurationService{
+		ProvisioningMode:  provisioningModeLookup[setupAndConfigurationService.Body.Setup.PasswordModel],
+		ProvisioningState: provisioningStateLookup[setupAndConfigurationService.Body.Setup.ProvisioningState],
+	}
+
+	dc := DeviceContent{
+		DeviceName:                   device.Name,
+		Address:                      device.Address,
+		GeneralSettings:              gs,
+		EthernetSettings:             es,
+		SetupAndConfigurationService: scs,
+	}
 
 	return web.HTML(http.StatusOK, dt.html, "devices/device.html", dc, nil)
 }
