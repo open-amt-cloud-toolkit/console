@@ -29,13 +29,13 @@
               <div class="ml-10 flex items-baseline space-x-4" _="on htmx:beforeOnLoad take .bg-gray-900 from .tabs for event.target">
                 <!-- Tab Links -->
                 <a href="#" hx-get="/dashboard" hx-push-url="/dashboard" hx-target="#content" class="tabs text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
-                  _="on load if window.location.pathname === '/dashboard' add .bg-gray-900 to me">Dashboard</a>
+                  _="on load if window.location.pathname === '/dashboard'  trigger 'click' then add .bg-gray-900 to me">Dashboard</a>
                 <a href="#" hx-get="/devices" hx-push-url="/devices" hx-target="#content" class="tabs text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
-                  _="on load if window.location.pathname === '/devices' add .bg-gray-900 to me">Devices</a>
+                  _="on load if window.location.pathname === '/devices'  trigger 'click' then add .bg-gray-900 to me">Devices</a>
                 <a href="#" hx-get="/certificates" hx-push-url="/certificates" hx-target="#content" class="tabs text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
-                  _="on load if window.location.pathname === '/certificates' add .bg-gray-900 to me">Certificates</a>
+                  _="on load if window.location.pathname === '/certificates'  trigger 'click' then add .bg-gray-900 to me">Certificates</a>
                 <a href="#" hx-get="/profiles" hx-push-url="/profiles" hx-target="#content" class="tabs text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
-                  _="on load if window.location.pathname === '/profiles' add .bg-gray-900 to me">Profiles</a>
+                  _="on load if window.location.pathname === '/profiles'  trigger 'click' then add .bg-gray-900 to me">Profiles</a>
               </div>
             </div>
           </div>
