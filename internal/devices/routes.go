@@ -186,7 +186,7 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 		SetupAndConfigurationService: scs,
 	}
 
-	return web.HTML(http.StatusOK, dt.html, "devices/device.html", dc, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", dc, nil)
 }
 
 // GET /company
@@ -236,7 +236,7 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
 		}
 		dt.UpdateDevice(row)
-		return webtools.HTML(r, http.StatusOK, dt.html, "devices/row.html", row, nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 
 	//save add
 	case http.MethodPost:

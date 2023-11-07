@@ -3,6 +3,7 @@ package devices
 import (
 	"encoding/binary"
 	"encoding/json"
+	"regexp"
 	"strconv"
 
 	"go.etcd.io/bbolt"
@@ -20,14 +21,28 @@ type Device struct {
 	SelfSignedAllowed bool
 }
 
+const ipPattern = `^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
+const fqdnPattern = `^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`
+
 func (d *Device) IsValid() bool {
 	if d.Name == "" {
 		return false
 	}
-	if d.FWVersion == "" {
+	if d.Username == "" {
 		return false
 	}
-	// match, err := regexp.MatchString("^[0-9]+.[0-9]+.[0-9]+.[0-9]+$", d.IPAddress)
+	if d.Password == "" {
+		return false
+	}
+
+	isIP := regexp.MustCompile(ipPattern).MatchString(d.Address)
+	isFQDN := regexp.MustCompile(fqdnPattern).MatchString(d.Address)
+	isLocalhost := d.Address == "localhost"
+	if !isIP || !isFQDN || !isLocalhost {
+		return false
+	}
+
+	// match, err := regexp.MatchString("^[0-9]+.[0-9]+.[0-9]+.[0-9]+$", d.Address)
 	// if !match || err != nil {
 	// 	return false
 	// }
