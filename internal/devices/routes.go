@@ -236,7 +236,7 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
 		}
 		dt.UpdateDevice(row)
-		return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices/row.html", row, nil)
 
 	//save add
 	case http.MethodPost:

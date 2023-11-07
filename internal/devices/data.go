@@ -38,7 +38,7 @@ func (d *Device) IsValid() bool {
 	isIP := regexp.MustCompile(ipPattern).MatchString(d.Address)
 	isFQDN := regexp.MustCompile(fqdnPattern).MatchString(d.Address)
 	isLocalhost := d.Address == "localhost"
-	if !isIP || !isFQDN || !isLocalhost {
+	if !isIP && !isFQDN && !isLocalhost {
 		return false
 	}
 
