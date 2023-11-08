@@ -1,13 +1,14 @@
 <div id="device">
     <div id="processing" class="htmx-indicator">Processing...</div>
     <div class="flex flex-col">
-        <h1 class="text-3xl">{{.HostOSFQDN}}</h1>
+        <h1 class="text-3xl">{{.Device.Name}}</h1>
+        <h2 class="text-3x1">AMT Host OS FQDN: {{.GeneralSettings.HostOSFQDN}}</h2>
         <br>
         <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
                 <div class="overflow-hidden">
                     <div class="flex justify-end">
-                        <button hx-get="/devices" hx-target="#main" hx-swap="outerHTML" hx-indicator="#processing"
+                        <button hx-get="/devices" hx-target="#content" hx-swap="innerHTML" hx-indicator="#processing"
                             class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
                             href="">
                             Devices
@@ -16,13 +17,51 @@
                     <table class="min-w-full text-left text-sm font-light">
                         <tbody id="table-body">
                             <tr>
+                                <td>Provisioning State</td>
+                                <td>{{.SetupAndConfigurationService.ProvisioningState | ProvisioningStateLookup}}</td>
+                            </tr>
+                            <tr>
+                                <td>Provisioning Mode</td>
+                                <td>{{.SetupAndConfigurationService.ProvisioningMode | ProvisioningModeLookup}}</td>
+                            </tr>
+                            <tr>
                                 <td>Network Enabled</td>
-                                <td>{{.NetworkInterfaceEnabled}}</td>
+                                <td>{{.GeneralSettings.NetworkInterfaceEnabled}}</td>
                             </tr>
                             <tr>
                                 <td>Digest Realm</td>
-                                <td>{{.DigestRealm}}
-                                <td>
+                                <td>{{.GeneralSettings.DigestRealm}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>DHCP Enabled</td>
+                                <td>{{.EthernetPort.DHCPEnabled}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Address</td>
+                                <td>{{.Device.Address}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Subnet Mask</td>
+                                <td>{{.EthernetPort.SubnetMask}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Default Gateway</td>
+                                <td>{{.EthernetPort.DefaultGateway}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Primary DNS</td>
+                                <td>{{.EthernetPort.PrimaryDNS}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Secondary DNS</td>
+                                <td>{{.EthernetPort.SecondaryDNS}}
+                                </td>
                             </tr>
                         </tbody>
                     </table>

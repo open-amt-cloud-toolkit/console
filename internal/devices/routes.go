@@ -13,16 +13,6 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// Delete -> DELETE /company/{id} -> delete, companys.html
-
-// Edit   -> GET /company/edit/{id} -> row-edit.html
-// Save   ->   PUT /company/{id} -> update, row.html
-// Cancel ->	 GET /company/{id} -> nothing, row.html
-
-// Add    -> GET /company/add/ -> companys-add.html (target body with row-add.html and row.html)
-// Save   ->   POST /company -> add, companys.html (target body without row-add.html)
-// Cancel ->	 GET /company -> nothing, companys.html
-
 type DeviceThing struct {
 	db *bbolt.DB
 	//parsed templates
@@ -32,10 +22,17 @@ type DeviceThing struct {
 func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, ".html", true, nil)
+
+	funcMap := template.FuncMap{
+		"ProvisioningModeLookup":  ProvisioningModeLookup,
+		"ProvisioningStateLookup": ProvisioningStateLookup,
+	}
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/devices", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}
+
+	// html.Funcs(funcMap)
 
 	dt := DeviceThing{
 		db:   db,
@@ -87,11 +84,34 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 // Connect to device
 func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
-	_ = dt.GetDeviceByID(id)
-	// amt := amt.NewMessages(device.Address, device.Username, device.Password, true, false)
-	// result, _ := amt.GeneralSettings.Get()
-	// result.Body.AMTGeneralSettings
-	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", nil, nil)
+	device := dt.GetDeviceByID(id)
+	wsman := CreateWsmanConnection(device)
+	// Get General Settings
+	gs, err := GetGeneralSettings(wsman)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	// Get Ethernet Settings
+	ep, err := GetEthernetSettings(wsman)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	// Get Setup and Configuration Service
+	scs, err := GetSetupAndConfigurationService(wsman)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	dc := DeviceContent{
+		Device:                       device,
+		GeneralSettings:              gs,
+		EthernetPort:                 ep,
+		SetupAndConfigurationService: scs,
+	}
+
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", dc, nil)
 }
 
 // GET /company
@@ -127,8 +147,19 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Address = r.Form.Get("address")
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
-		if !row.IsValid() {
-			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
+		tls := false
+		if r.Form.Get("usetls") == "on" {
+			tls = true
+		}
+		row.UseTLS = tls
+		selfSignedAllowed := false
+		if r.Form.Get("selfsignedallowed") == "on" {
+			selfSignedAllowed = true
+		}
+		row.SelfSignedAllowed = selfSignedAllowed
+		isValid, errors := row.IsValid()
+		if !isValid {
+			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", errors, nil)
 		}
 		dt.UpdateDevice(row)
 		return webtools.HTML(r, http.StatusOK, dt.html, "devices/row.html", row, nil)
@@ -142,9 +173,22 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 		row.Address = r.Form.Get("address")
 		row.Username = r.Form.Get("username")
 		row.Password = r.Form.Get("password")
-		if !row.IsValid() {
-			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", dt.GetDevices(), nil)
+		tls := false
+		if r.Form.Get("usetls") == "on" {
+			tls = true
 		}
+		row.UseTLS = tls
+		selfSignedAllowed := false
+		if r.Form.Get("selfsignedallowed") == "on" {
+			selfSignedAllowed = true
+		}
+		row.SelfSignedAllowed = selfSignedAllowed
+
+		isValid, errors := row.IsValid()
+		if !isValid {
+			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", errors, nil)
+		}
+
 		dt.AddDevice(row)
 		return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 	}

@@ -3,33 +3,51 @@ package devices
 import (
 	"encoding/binary"
 	"encoding/json"
+	"regexp"
 	"strconv"
 
 	"go.etcd.io/bbolt"
 )
 
 type Device struct {
-	Id        int
-	UUID      string
-	Name      string
-	Address   string
-	FWVersion string
-	Username  string
-	Password  string
+	Id                int
+	UUID              string
+	Name              string
+	Address           string
+	FWVersion         string
+	Username          string
+	Password          string
+	UseTLS            bool
+	SelfSignedAllowed bool
 }
 
-func (d *Device) IsValid() bool {
+const ipPattern = `^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
+const fqdnPattern = `^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`
+
+func (d *Device) IsValid() (bool, []string) {
+	errors := []string{}
 	if d.Name == "" {
-		return false
+		errors = append(errors, "Name is required")
 	}
-	if d.FWVersion == "" {
-		return false
+	if d.Username == "" {
+		errors = append(errors, "Username is required")
 	}
-	// match, err := regexp.MatchString("^[0-9]+.[0-9]+.[0-9]+.[0-9]+$", d.IPAddress)
+	if d.Password == "" {
+		errors = append(errors, "Password is required")
+	}
+
+	isIP := regexp.MustCompile(ipPattern).MatchString(d.Address)
+	isFQDN := regexp.MustCompile(fqdnPattern).MatchString(d.Address)
+	isLocalhost := d.Address == "localhost"
+	if !isIP && !isFQDN && !isLocalhost {
+		errors = append(errors, "Host must be localhost, IP, or FQDN")
+	}
+
+	// match, err := regexp.MatchString("^[0-9]+.[0-9]+.[0-9]+.[0-9]+$", d.Address)
 	// if !match || err != nil {
 	// 	return false
 	// }
-	return true
+	return len(errors) <= 0, errors
 }
 
 func init() {

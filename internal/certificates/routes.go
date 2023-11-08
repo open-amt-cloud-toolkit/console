@@ -29,7 +29,7 @@ type CertificateThing struct {
 func NewCertificates(router *http.ServeMux) CertificateThing {
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/certificates", ".html", true, nil)
 	if err != nil {
 		panic(err)
 	}
