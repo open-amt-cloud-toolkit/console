@@ -18,11 +18,11 @@
                         <tbody id="table-body">
                             <tr>
                                 <td>Provisioning State</td>
-                                <td>{{.SetupAndConfigurationService.ProvisioningState}}</td>
+                                <td>{{.SetupAndConfigurationService.ProvisioningState | ProvisioningStateLookup}}</td>
                             </tr>
                             <tr>
                                 <td>Provisioning Mode</td>
-                                <td>{{.SetupAndConfigurationService.ProvisioningMode}}</td>
+                                <td>{{.SetupAndConfigurationService.ProvisioningMode | ProvisioningModeLookup}}</td>
                             </tr>
                             <tr>
                                 <td>Network Enabled</td>

@@ -7,15 +7,28 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/setupandconfiguration"
 )
 
-var provisioningModeLookup = map[int]string{
-	1: "Admin Control Mode",
-	4: "Client Control Mode",
+func ProvisioningModeLookup(mode int) string {
+	switch mode {
+	case 1:
+		return "Admin Control Mode"
+	case 4:
+		return "Client Control Mode"
+	default:
+		return "Invalid Mode"
+	}
 }
 
-var provisioningStateLookup = map[int]string{
-	0: "Pre-Provisioning",
-	1: "In Provisioning",
-	2: "Post Provisioning",
+func ProvisioningStateLookup(state int) string {
+	switch state {
+	case 0:
+		return "Pre-Provisioning"
+	case 1:
+		return "In Provisioning"
+	case 2:
+		return "Post Provisioning"
+	default:
+		return "Invalid State"
+	}
 }
 
 func CreateWsmanConnection(d Device) wsman.Messages {

@@ -20,7 +20,7 @@ func NewDashboard(router *http.ServeMux) DashboardPages {
 
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/dashboard", ".html", true, nil)
 	if err != nil {
 		panic(err)
 	}

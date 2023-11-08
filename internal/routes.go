@@ -24,7 +24,7 @@ var (
 func NewIndex(router *http.ServeMux) IndexThing {
 	//parse templates
 	var err error
-	html, err = templates.TemplateParseFSRecursive(TemplateFS, ".html", true, nil)
+	html, err = templates.TemplateParseFSRecursive(TemplateFS, "/", ".html", true, nil)
 	if err != nil {
 		panic(err)
 	}

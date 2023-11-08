@@ -15,16 +15,19 @@ import (
 // (e.g. index.html instead of templates/index.html)
 func TemplateParseFSRecursive(
 	templates fs.FS,
+	walkDir string,
 	ext string,
 	nonRootTemplateNames bool,
 	funcMap template.FuncMap) (*template.Template, error) {
 
 	root := template.New("")
 	err := fs.WalkDir(templates, "templates", func(path string, d fs.DirEntry, err error) error {
-		if !d.IsDir() && strings.HasSuffix(path, ext) {
-			if err != nil {
-				return err
-			}
+		if err != nil {
+			return err
+		}
+	
+		var goIn bool = (walkDir == "/" && strings.Count(path, "/") < 2) || (walkDir != "/" && strings.Contains(path, walkDir))
+		if !d.IsDir() && goIn && strings.HasSuffix(path, ext) {
 			b, err := fs.ReadFile(templates, path)
 			if err != nil {
 				return err

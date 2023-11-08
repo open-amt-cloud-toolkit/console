@@ -2,6 +2,7 @@ package devices
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -12,23 +13,26 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// Delete -> DELETE /company/{id} -> delete, companys.html
-
-// Edit   -> GET /company/edit/{id} -> row-edit.html
-// Save   ->   PUT /company/{id} -> update, row.html
-// Cancel ->	 GET /company/{id} -> nothing, row.html
-
-// Add    -> GET /company/add/ -> companys-add.html (target body with row-add.html and row.html)
-// Save   ->   POST /company -> add, companys.html (target body without row-add.html)
-// Cancel ->	 GET /company -> nothing, companys.html
+type DeviceThing struct {
+	db *bbolt.DB
+	//parsed templates
+	html *template.Template
+}
 
 func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, ".html", true, nil)
+
+	funcMap := template.FuncMap{
+		"ProvisioningModeLookup":  ProvisioningModeLookup,
+		"ProvisioningStateLookup": ProvisioningStateLookup,
+	}
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/devices", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}
+
+	// html.Funcs(funcMap)
 
 	dt := DeviceThing{
 		db:   db,
