@@ -56,6 +56,7 @@
   <td class="whitespace-nowrap px-1 py-1">
     <a
       hx-put="/device/{{.Id}}"
+      hx-target-error="#errors"
       hx-target="#datarow-{{.Id}}"
       hx-swap="outerHTML"
       hx-indicator="#processing"
@@ -68,6 +69,7 @@
   <td class="whitespace-nowrap px-1 py-1">
     <a
       hx-get="/device/{{.Id}}"
+      hx-target-error="#errors"
       hx-target="#datarow-{{.Id}}"
       hx-swap="outerHTML"
       hx-indicator="#processing"

@@ -2,7 +2,6 @@ package devices
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -10,8 +9,6 @@ import (
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
 	"go.etcd.io/bbolt"
 )
 
@@ -24,50 +21,6 @@ import (
 // Add    -> GET /company/add/ -> companys-add.html (target body with row-add.html and row.html)
 // Save   ->   POST /company -> add, companys.html (target body without row-add.html)
 // Cancel ->	 GET /company -> nothing, companys.html
-
-type DeviceThing struct {
-	db *bbolt.DB
-	//parsed templates
-	html *template.Template
-}
-
-type GeneralSettings struct {
-	NetworkInterfaceEnabled bool
-	DigestRealm             string
-	HostOSFQDN              string
-}
-
-type EthernetSettings struct {
-	DHCPEnabled    bool
-	SubnetMask     string
-	DefaultGateway string
-	PrimaryDNS     string
-	SecondaryDNS   string
-}
-
-type SetupAndConfigurationService struct {
-	ProvisioningMode  string
-	ProvisioningState string
-}
-
-type DeviceContent struct {
-	DeviceName                   string
-	Address                      string
-	GeneralSettings              GeneralSettings
-	EthernetSettings             EthernetSettings
-	SetupAndConfigurationService SetupAndConfigurationService
-}
-
-var provisioningModeLookup = map[int]string{
-	1: "Admin Control Mode",
-	4: "Client Control Mode",
-}
-
-var provisioningStateLookup = map[int]string{
-	0: "Pre-Provisioning",
-	1: "In Provisioning",
-	2: "Post Provisioning",
-}
 
 func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	//parse templates
@@ -128,61 +81,29 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	device := dt.GetDeviceByID(id)
-	cp := wsman.ClientParameters{
-		Target:            device.Address,
-		Username:          device.Username,
-		Password:          device.Password,
-		UseDigest:         true,
-		UseTLS:            device.UseTLS,
-		SelfSignedAllowed: device.SelfSignedAllowed,
-	}
-	wsman := wsman.NewMessages(cp)
+	wsman := CreateWsmanConnection(device)
 	// Get General Settings
-	generalSettings, err := wsman.AMT.GeneralSettings.Get()
+	gs, err := GetGeneralSettings(wsman)
 	if err != nil {
 		fmt.Println("Error:", err)
-		fmt.Println("Message:", generalSettings.Body.AMTGeneralSettings)
-	}
-	gs := GeneralSettings{
-		NetworkInterfaceEnabled: generalSettings.Body.AMTGeneralSettings.NetworkInterfaceEnabled,
-		DigestRealm:             generalSettings.Body.AMTGeneralSettings.DigestRealm,
-		HostOSFQDN:              generalSettings.Body.AMTGeneralSettings.HostOSFQDN,
 	}
 
-	var selector ethernetport.Selector
-	selector.Name = "InstanceID"
-	selector.Value = "Intel(r) AMT Ethernet Port Settings 0"
 	// Get Ethernet Settings
-	ethernetSettings, err := wsman.AMT.EthernetPortSettings.Get(selector)
+	ep, err := GetEthernetSettings(wsman)
 	if err != nil {
 		fmt.Println("Error:", err)
-		fmt.Println("Message:", ethernetSettings.Body.EthernetPort)
-	}
-	es := EthernetSettings{
-		DHCPEnabled:    ethernetSettings.Body.EthernetPort.DHCPEnabled,
-		SubnetMask:     ethernetSettings.Body.EthernetPort.SubnetMask,
-		DefaultGateway: ethernetSettings.Body.EthernetPort.DefaultGateway,
-		PrimaryDNS:     ethernetSettings.Body.EthernetPort.PrimaryDNS,
-		SecondaryDNS:   ethernetSettings.Body.EthernetPort.SecondaryDNS,
 	}
 
 	// Get Setup and Configuration Service
-	setupAndConfigurationService, err := wsman.AMT.SetupAndConfigurationService.Get()
+	scs, err := GetSetupAndConfigurationService(wsman)
 	if err != nil {
 		fmt.Println("Error:", err)
-		fmt.Println("Message:", setupAndConfigurationService.Body.Setup)
-	}
-
-	scs := SetupAndConfigurationService{
-		ProvisioningMode:  provisioningModeLookup[setupAndConfigurationService.Body.Setup.PasswordModel],
-		ProvisioningState: provisioningStateLookup[setupAndConfigurationService.Body.Setup.ProvisioningState],
 	}
 
 	dc := DeviceContent{
-		DeviceName:                   device.Name,
-		Address:                      device.Address,
+		Device:                       device,
 		GeneralSettings:              gs,
-		EthernetSettings:             es,
+		EthernetPort:                 ep,
 		SetupAndConfigurationService: scs,
 	}
 
@@ -232,8 +153,9 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 			selfSignedAllowed = true
 		}
 		row.SelfSignedAllowed = selfSignedAllowed
-		if !row.IsValid() {
-			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", row, nil)
+		isValid, errors := row.IsValid()
+		if !isValid {
+			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", errors, nil)
 		}
 		dt.UpdateDevice(row)
 		return webtools.HTML(r, http.StatusOK, dt.html, "devices/row.html", row, nil)
@@ -257,9 +179,12 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 			selfSignedAllowed = true
 		}
 		row.SelfSignedAllowed = selfSignedAllowed
-		if !row.IsValid() {
-			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", dt.GetDevices(), nil)
+
+		isValid, errors := row.IsValid()
+		if !isValid {
+			return webtools.HTML(r, http.StatusBadRequest, dt.html, "devices/errors.html", errors, nil)
 		}
+
 		dt.AddDevice(row)
 		return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices.html", dt.GetDevices(), nil)
 	}

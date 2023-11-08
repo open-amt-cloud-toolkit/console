@@ -1,7 +1,7 @@
 <div id="device">
     <div id="processing" class="htmx-indicator">Processing...</div>
     <div class="flex flex-col">
-        <h1 class="text-3xl">{{.DeviceName}}</h1>
+        <h1 class="text-3xl">{{.Device.Name}}</h1>
         <h2 class="text-3x1">AMT Host OS FQDN: {{.GeneralSettings.HostOSFQDN}}</h2>
         <br>
         <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -31,37 +31,37 @@
                             <tr>
                                 <td>Digest Realm</td>
                                 <td>{{.GeneralSettings.DigestRealm}}
-                                <td>
+                                </td>
                             </tr>
                             <tr>
                                 <td>DHCP Enabled</td>
-                                <td>{{.EthernetSettings.DHCPEnabled}}
-                                <td>
+                                <td>{{.EthernetPort.DHCPEnabled}}
+                                </td>
                             </tr>
                             <tr>
                                 <td>Address</td>
-                                <td>{{.Address}}
-                                <td>
+                                <td>{{.Device.Address}}
+                                </td>
                             </tr>
                             <tr>
                                 <td>Subnet Mask</td>
-                                <td>{{.EthernetSettings.SubnetMask}}
-                                <td>
+                                <td>{{.EthernetPort.SubnetMask}}
+                                </td>
                             </tr>
                             <tr>
                                 <td>Default Gateway</td>
-                                <td>{{.EthernetSettings.DefaultGateway}}
-                                <td>
+                                <td>{{.EthernetPort.DefaultGateway}}
+                                </td>
                             </tr>
                             <tr>
                                 <td>Primary DNS</td>
-                                <td>{{.EthernetSettings.PrimaryDNS}}
-                                <td>
+                                <td>{{.EthernetPort.PrimaryDNS}}
+                                </td>
                             </tr>
                             <tr>
                                 <td>Secondary DNS</td>
-                                <td>{{.EthernetSettings.SecondaryDNS}}
-                                <td>
+                                <td>{{.EthernetPort.SecondaryDNS}}
+                                </td>
                             </tr>
                         </tbody>
                     </table>
