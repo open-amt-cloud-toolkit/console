@@ -25,8 +25,8 @@ func TemplateParseFSRecursive(
 		if err != nil {
 			return err
 		}
-	
-		var goIn bool = (walkDir == "/" && strings.Count(path, "/") < 2) || (walkDir != "/" && strings.Contains(path, walkDir))
+
+		var goIn bool = (walkDir == "/" && strings.Count(path, "/") < 2) || (walkDir != "/" && (strings.Contains(path, walkDir) || path == "templates/index.html"))
 		if !d.IsDir() && goIn && strings.HasSuffix(path, ext) {
 			b, err := fs.ReadFile(templates, path)
 			if err != nil {
