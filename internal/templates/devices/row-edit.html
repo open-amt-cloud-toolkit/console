@@ -4,6 +4,7 @@
       type="text"
       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
       data-include-edit="{{.Id}}"
+      title="name"
       name="name"
       value="{{.Name}}"
     />
@@ -13,6 +14,7 @@
       type="text"
       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
       data-include-edit="{{.Id}}"
+      title="address"
       name="address"
       value="{{.Address}}"
     />
@@ -42,16 +44,18 @@
       type="checkbox"
       data-include-edit="{{.Id}}"
       name="usetls"
+      title="usetls"
     />
-    TLS
+    Use TLS
   </td>
   <td class="whitespace-nowrap px-6 py-4">
     <input
       type="checkbox"
       data-include-edit="{{.Id}}"
       name="selfsignedallowed"
+      title="selfsignedallowed"
     />
-    Self-Signed
+    Self-Signed OK
   </td>
   <td class="whitespace-nowrap px-1 py-1">
     <a

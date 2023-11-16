@@ -89,16 +89,27 @@ func GetGeneralSettings(wsman wsman.Messages) (gs general.GeneralSettings, err e
 	return
 }
 
-func GetEthernetSettings(wsman wsman.Messages) (ep ethernetport.EthernetPort, err error) {
-	var selector ethernetport.Selector
-	selector.Name = "InstanceID"
-	selector.Value = "Intel(r) AMT Ethernet Port Settings 0"
-	response, err := wsman.AMT.EthernetPortSettings.Get(selector)
-	if err != nil {
-		return
+func GetEthernetSettings(wsman wsman.Messages) (ep []ethernetport.EthernetPort, err error) {
+	selectors := []ethernetport.Selector{
+		{
+			Name:  "InstanceID",
+			Value: "Intel(r) AMT Ethernet Port Settings 0",
+		},
+		{
+			Name:  "InstanceID",
+			Value: "Intel(r) AMT Ethernet Port Settings 1",
+		},
 	}
-	ep = response.Body.EthernetPort
-	return
+
+	for _, selector := range selectors {
+		response, err := wsman.AMT.EthernetPortSettings.Get(selector)
+		if err != nil {
+			continue
+		}
+		ep = append(ep, response.Body.EthernetPort)
+	}
+
+	return ep, err
 }
 
 func GetSetupAndConfigurationService(wsman wsman.Messages) (sc setupandconfiguration.Setup, err error) {

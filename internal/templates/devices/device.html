@@ -31,44 +31,35 @@
                                 <td>{{.SetupAndConfigurationService.ProvisioningMode | ProvisioningModeLookup}}</td>
                             </tr>
                             <tr>
-                                <td>Network Enabled</td>
+                                <td>Network Interface Enabled</td>
                                 <td>{{.GeneralSettings.NetworkInterfaceEnabled}}</td>
                             </tr>
-                            <tr>
-                                <td>Digest Realm</td>
-                                <td>{{.GeneralSettings.DigestRealm}}
-                                </td>
-                            </tr>
+                            {{range .EthernetPort}}
                             <tr>
                                 <td>DHCP Enabled</td>
-                                <td>{{.EthernetPort.DHCPEnabled}}
-                                </td>
+                                <td>{{.DHCPEnabled}}</td>
                             </tr>
                             <tr>
-                                <td>Address</td>
-                                <td>{{.Device.Address}}
-                                </td>
+                                <td>AMT IP Address</td>
+                                <td>{{.IPAddress}}</td>
                             </tr>
                             <tr>
                                 <td>Subnet Mask</td>
-                                <td>{{.EthernetPort.SubnetMask}}
-                                </td>
+                                <td>{{.SubnetMask}}</td>
                             </tr>
                             <tr>
                                 <td>Default Gateway</td>
-                                <td>{{.EthernetPort.DefaultGateway}}
-                                </td>
+                                <td>{{.DefaultGateway}}</td>
                             </tr>
                             <tr>
                                 <td>Primary DNS</td>
-                                <td>{{.EthernetPort.PrimaryDNS}}
-                                </td>
+                                <td>{{.PrimaryDNS}}</td>
                             </tr>
                             <tr>
                                 <td>Secondary DNS</td>
-                                <td>{{.EthernetPort.SecondaryDNS}}
-                                </td>
+                                <td>{{.SecondaryDNS}}</td>
                             </tr>
+                            {{end}}
                         </tbody>
                     </table>
                 </div>
