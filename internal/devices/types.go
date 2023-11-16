@@ -8,6 +8,7 @@ import (
 
 type DeviceContent struct {
 	Device                       Device
+	UUID                         string
 	GeneralSettings              general.GeneralSettings
 	EthernetPort                 ethernetport.EthernetPort
 	SetupAndConfigurationService setupandconfiguration.Setup

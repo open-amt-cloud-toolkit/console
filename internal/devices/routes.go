@@ -63,6 +63,8 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	router.Handle("/device/connect", web.Action(dt.DeviceConnect))
 	router.Handle("/device/connect/", web.Action(dt.DeviceConnect))
 
+	// router.Handle("/device/powerState/", web.Action(dt.ChangePowerState))
+
 	return dt
 }
 func (dt DeviceThing) Index(r *http.Request) *web.Response {
@@ -113,6 +115,18 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", dc, nil)
 }
+
+// func (dt DeviceThing) ChangePowerState(r *http.Request) *web.Response {
+// 	id, _ := web.PathLast(r)
+// 	device := dt.GetDeviceByID(id)
+// 	wsman := CreateWsmanConnection(device)
+// 	reboot := power.PowerOffHard
+// 	response, errors := ChangePowerState(wsman, reboot)
+// 	if errors != nil {
+// 		return webtools.HTML(r, http.StatusRequestTimeout, dt.html, "devices/errors.html", errors, nil)
+// 	}
+// 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", response, nil)
+// }
 
 // GET /company
 // GET /company/{id}

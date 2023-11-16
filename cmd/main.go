@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -54,9 +56,15 @@ func main() {
 	}
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 	middleware := internal.Tracing(nextRequestID)(internal.Logging(logger)(router))
-
 	port := gotoolbox.GetEnvWithDefault("PORT", "8080")
 	logger.Println("listening on http://localhost:" + port)
+	url := "http://localhost:" + port
+	// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
+	browserError := openBrowser(url)
+
+	if browserError != nil {
+		panic(browserError)
+	}
 	if err := http.ListenAndServe("localhost:"+port, middleware); err != nil {
 		logger.Println("http.ListenAndServe():", err)
 		os.Exit(1)
@@ -71,4 +79,23 @@ func handleSigTerms() {
 		fmt.Println("received SIGTERM, exiting")
 		os.Exit(1)
 	}()
+}
+
+func openBrowser(url string) error {
+	var cmd string
+	var args []string
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+		args = []string{url}
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start", url}
+	default:
+		cmd = "xdg-open"
+		args = []string{url}
+	}
+
+	return exec.Command(cmd, args...).Start()
 }
