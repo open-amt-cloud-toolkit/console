@@ -13,3 +13,13 @@ type DeviceContent struct {
 	EthernetPort                 []ethernetport.EthernetPort
 	SetupAndConfigurationService setupandconfiguration.Setup
 }
+
+type GeneralContent struct  {
+	Device Device
+	GeneralSettings general.GeneralSettings
+	SetupAndConfigurationService setupandconfiguration.Setup
+}
+
+type EthernetContent struct {
+	EthernetPort ethernetport.EthernetPort
+}

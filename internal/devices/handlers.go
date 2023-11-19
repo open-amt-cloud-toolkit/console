@@ -1,6 +1,8 @@
 package devices
 
 import (
+	"fmt"
+
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/general"
@@ -89,25 +91,17 @@ func GetGeneralSettings(wsman wsman.Messages) (gs general.GeneralSettings, err e
 	return
 }
 
-func GetEthernetSettings(wsman wsman.Messages) (ep []ethernetport.EthernetPort, err error) {
-	selectors := []ethernetport.Selector{
-		{
-			Name:  "InstanceID",
-			Value: "Intel(r) AMT Ethernet Port Settings 0",
-		},
-		{
-			Name:  "InstanceID",
-			Value: "Intel(r) AMT Ethernet Port Settings 1",
-		},
+func GetEthernetSettings(wsman wsman.Messages, eth int) (ep ethernetport.EthernetPort, err error) {
+	selector := ethernetport.Selector{
+		Name:  "InstanceID",
+		Value: fmt.Sprintf("Intel(r) AMT Ethernet Port Settings %d", eth),
 	}
 
-	for _, selector := range selectors {
-		response, err := wsman.AMT.EthernetPortSettings.Get(selector)
-		if err != nil {
-			continue
-		}
-		ep = append(ep, response.Body.EthernetPort)
+	response, err := wsman.AMT.EthernetPortSettings.Get(selector)
+	if err != nil {
+		return
 	}
+	ep = response.Body.EthernetPort
 
 	return ep, err
 }

@@ -63,6 +63,9 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	router.Handle("/device/connect", web.Action(dt.DeviceConnect))
 	router.Handle("/device/connect/", web.Action(dt.DeviceConnect))
 
+	router.Handle("/device/ethernet", web.Action(dt.GetEthernet))
+	router.Handle("/device/ethernet/", web.Action(dt.GetEthernet))
+
 	// router.Handle("/device/powerState/", web.Action(dt.ChangePowerState))
 
 	return dt
@@ -94,12 +97,6 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 		fmt.Println("Error:", err)
 	}
 
-	// Get Ethernet Settings
-	ep, err := GetEthernetSettings(wsman)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
 	// Get Setup and Configuration Service
 	scs, err := GetSetupAndConfigurationService(wsman)
 	if err != nil {
@@ -109,11 +106,34 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 	dc := DeviceContent{
 		Device:                       device,
 		GeneralSettings:              gs,
-		EthernetPort:                 ep,
 		SetupAndConfigurationService: scs,
 	}
 
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", dc, nil)
+}
+
+func (dt DeviceThing) GetEthernet(r *http.Request) *web.Response {
+	id, _ := web.PathLast(r)
+	queryValues := r.URL.Query()
+	keyValue := queryValues.Get("eth")
+	eth, err := strconv.Atoi(keyValue)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	device := dt.GetDeviceByID(id)
+	wsman := CreateWsmanConnection(device)
+	// Get Ethernet Settings
+	ep, err := GetEthernetSettings(wsman, eth)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	ec := EthernetContent{
+		EthernetPort: ep,
+	}
+	if ec.EthernetPort.ElementName == "" {
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", nil, nil)	
+	}
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", ec.EthernetPort, nil)
 }
 
 // func (dt DeviceThing) ChangePowerState(r *http.Request) *web.Response {
