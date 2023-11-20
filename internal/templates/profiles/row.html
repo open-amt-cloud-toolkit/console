@@ -1,0 +1,26 @@
+<tr id="datarow-{{.Id}}" class="border-b dark:border-neutral-500">
+    <td class="whitespace-nowrap px-6 py-4">{{.Name}}</td>
+    <td class="whitespace-nowrap px-1 py-1">
+      <a
+        hx-get="/profile/edit/{{.Id}}"
+        hx-target="#datarow-{{.Id}}"
+        hx-swap="outerHTML"
+        hx-indicator="#processing"
+        class="hover:underline text-blue-700"
+        href=""
+      >
+        Edit
+      </a>
+    </td>
+    <td class="whitespace-nowrap px-1 py-1">
+      <a
+        hx-delete="/profile/{{.Id}}"
+        hx-target="#profiles"
+        hx-confirm="Are you sure you want to delete {{.Name}}?"
+        hx-indicator="#processing"
+        class="hover:underline text-blue-700"
+        href=""
+        >Delete</a
+      >
+    </td>
+  </tr>

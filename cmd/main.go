@@ -24,6 +24,8 @@ import (
 var (
 	//go:embed css/output.css
 	css embed.FS
+	//go:embed assets/logo.png
+	logo embed.FS
 )
 
 func main() {
@@ -35,6 +37,7 @@ func main() {
 	router := http.NewServeMux()
 
 	router.Handle("/css/output.css", http.FileServer(http.FS(css)))
+	router.Handle("/assets/logo.png", http.FileServer(http.FS(logo)))
 	// Open the my.db data file in your current directory.
 	// It will be created if it doesn't exist.
 	db, err := bbolt.Open("my.db", 0600, nil)
@@ -45,7 +48,7 @@ func main() {
 
 	_ = devices.NewDevices(db, router)
 	_ = certificates.NewCertificates(router)
-	_ = profiles.NewProfiles(router)
+	_ = profiles.NewProfiles(db, router)
 	_ = dashboard.NewDashboard(router)
 
 	_ = internal.NewIndex(router)
@@ -58,7 +61,7 @@ func main() {
 	middleware := internal.Tracing(nextRequestID)(internal.Logging(logger)(router))
 	port := gotoolbox.GetEnvWithDefault("PORT", "8080")
 	logger.Println("listening on http://localhost:" + port)
-	url := "http://localhost:" + port
+	url := "http://localhost:" + port + "/devices"
 	// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
 	browserError := openBrowser(url)
 

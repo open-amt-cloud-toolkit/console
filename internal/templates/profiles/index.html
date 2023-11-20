@@ -1,2 +1,13 @@
-<h1 class="text-3xl">Profiles</h1>
+<div class="flex flex-row w-full">
+    <div class="flex justify-start w-1/2">
+        <h1 class="text-3xl">Profiles</h1>
+    </div>
+    <div class="flex justify-end w-1/2">
+        <button hx-get="/profile/add" hx-target="#table-body" hx-target-4xx="#errors" hx-swap="outerHTML" hx-indicator="#processing"
+            class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800" href="">
+            Add Profile
+        </button>
+    </div>
+</div>
 <br />
+<div>{{ template "profiles/profiles.html" . }}</div>

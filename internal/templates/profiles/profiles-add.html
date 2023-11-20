@@ -1,0 +1,6 @@
+<tbody id="table-body">
+    {{ template "profiles/row-add.html" . }}
+      {{range .}}
+          {{ template "profiles/row.html". }}
+      {{end}}
+  </tbody>

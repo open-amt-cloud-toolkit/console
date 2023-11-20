@@ -50,29 +50,6 @@ func (d *Device) IsValid() (bool, []string) {
 	return len(errors) <= 0, errors
 }
 
-func init() {
-	// data = []Device{
-	// 	{
-	// 		UUID:      1,
-	// 		Name:      "AMT Device 1",
-	// 		IPAddress: "192.168.0.1",
-	// 		FWVersion: "15.1.123",
-	// 	},
-	// 	{
-	// 		UUID:      2,
-	// 		Name:      "AMT Device 2",
-	// 		IPAddress: "192.168.0.2",
-	// 		FWVersion: "16.0.43",
-	// 	},
-	// 	{
-	// 		UUID:      3,
-	// 		Name:      "AMT Device 3",
-	// 		IPAddress: "192.168.0.3",
-	// 		FWVersion: "16.1.25",
-	// 	},
-	// }
-}
-
 // Get all devices
 func (dt DeviceThing) GetDevices() []Device {
 	var data []Device
