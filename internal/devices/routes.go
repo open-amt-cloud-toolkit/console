@@ -131,7 +131,7 @@ func (dt DeviceThing) GetEthernet(r *http.Request) *web.Response {
 		EthernetPort: ep,
 	}
 	if ec.EthernetPort.ElementName == "" {
-		return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", nil, nil)	
+		return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", nil, nil)
 	}
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", ec.EthernetPort, nil)
 }

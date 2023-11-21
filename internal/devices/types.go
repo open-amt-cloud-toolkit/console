@@ -14,9 +14,9 @@ type DeviceContent struct {
 	SetupAndConfigurationService setupandconfiguration.Setup
 }
 
-type GeneralContent struct  {
-	Device Device
-	GeneralSettings general.GeneralSettings
+type GeneralContent struct {
+	Device                       Device
+	GeneralSettings              general.GeneralSettings
 	SetupAndConfigurationService setupandconfiguration.Setup
 }
 

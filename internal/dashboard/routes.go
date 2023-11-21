@@ -37,7 +37,7 @@ func NewDashboard(router *http.ServeMux) DashboardPages {
 }
 
 type DashboardContent struct {
-	devices []devices.Device
+	devices  []devices.Device
 	profiles []profiles.Profile
 }
 

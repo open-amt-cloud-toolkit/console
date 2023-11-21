@@ -9,10 +9,10 @@ import (
 )
 
 type Profile struct {
-	Id   int
-	Name string
-	ControlMode string
-	AMTPassword string
+	Id           int
+	Name         string
+	ControlMode  string
+	AMTPassword  string
 	MEBXPassword string
 }
 
