@@ -1,8 +1,6 @@
 <tr id="datarow-{{.Id}}" class="border-b dark:border-neutral-500">
   <td class="whitespace-nowrap px-6 py-4">{{.Name}}</td>
   <td class="whitespace-nowrap px-6 py-4">{{.Address}}</td>
-  <td class="whitespace-nowrap px-6 py-4">{{.UseTLS}}</td>
-  <td class="whitespace-nowrap px-6 py-4">{{.SelfSignedAllowed}}</td>
   <td class="whitespace-nowrap px-1 py-1">
     <a
       hx-get="/device/connect/{{.Id}}"

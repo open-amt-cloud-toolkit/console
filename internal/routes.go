@@ -4,6 +4,7 @@ import (
 	"embed"
 	"html/template"
 	"net/http"
+	"os"
 
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
@@ -33,6 +34,7 @@ func NewIndex(router *http.ServeMux) IndexThing {
 	router.Handle("/", web.Action(it.Index))
 	router.Handle("/index.html", web.Action(it.Index))
 	router.Handle("/menu", web.Action(it.Menu))
+	router.Handle("/close", web.Action(it.Close))
 
 	return it
 }
@@ -43,4 +45,9 @@ func (it IndexThing) Index(r *http.Request) *web.Response {
 
 func (it IndexThing) Menu(r *http.Request) *web.Response {
 	return webtools.HTML(r, http.StatusOK, html, "menu.html", nil, nil)
+}
+
+func (it IndexThing) Close(r *http.Request) *web.Response {
+	os.Exit(0)
+	return webtools.HTML(r, http.StatusOK, html, "", nil, nil)
 }
