@@ -60,7 +60,10 @@ func NewProfiles(db *bbolt.DB, router *http.ServeMux) ProfileThing {
 
 	router.Handle("/profile/edit", web.Action(pt.ProfileEdit))
 	router.Handle("/profile/edit/", web.Action(pt.ProfileEdit))
-
+	router.Handle("/profile/export", web.Action(pt.ExportProfile))
+	router.Handle("/profile/export/", web.Action(pt.ExportProfile))
+	router.Handle("/profile/download", web.Action(pt.Download))
+	router.Handle("/profile/download/", web.Action(pt.Download))
 	router.Handle("/profile", web.Action(pt.Profiles))
 	router.Handle("/profile/", web.Action(pt.Profiles))
 
@@ -90,9 +93,12 @@ func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
 		pt.DeleteProfile(id)
 		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/profiles.html", pt.GetProfiles(), nil)
 
-	//cancel
+	//Gets
 	case http.MethodGet:
-		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/index.html", pt.GetProfiles(), nil)
+		// Cancel
+		if id == "profiles" {
+			return webtools.HTML(r, http.StatusOK, pt.html, "profiles/index.html", pt.GetProfiles(), nil)
+		}
 
 	//save edit
 	case http.MethodPut:
@@ -102,7 +108,7 @@ func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
 		profile.Name = r.Form.Get("name")
 		profile.ControlMode = r.Form.Get("controlMode")
 		if r.Form.Get("amtpassword") != "" {
-			profile.AMTPassword = r.Form.Get("amtpassword")
+			profile.Activate.AMTPassword = r.Form.Get("amtpassword")
 		}
 		if r.Form.Get("mebxpassword") != "" {
 			profile.MEBXPassword = r.Form.Get("mebxpassword")
@@ -122,7 +128,7 @@ func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
 		profile.Id, _ = strconv.Atoi(r.Form.Get("id"))
 		profile.Name = r.Form.Get("name")
 		profile.ControlMode = r.Form.Get("controlMode")
-		profile.AMTPassword = r.Form.Get("amtpassword")
+		profile.Activate.AMTPassword = r.Form.Get("amtpassword")
 		profile.MEBXPassword = r.Form.Get("mebxpassword")
 
 		isValid, errors := profile.IsValid()

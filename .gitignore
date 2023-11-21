@@ -6,3 +6,4 @@ tmp
 launch.json
 **/*.db
 **/__debug_bin
+**/*.exe
