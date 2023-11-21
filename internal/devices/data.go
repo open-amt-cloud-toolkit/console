@@ -29,12 +29,6 @@ func (d *Device) IsValid() (bool, []string) {
 	if d.Name == "" {
 		errors = append(errors, "Name is required")
 	}
-	if d.Username == "" {
-		errors = append(errors, "Username is required")
-	}
-	if d.Password == "" {
-		errors = append(errors, "Password is required")
-	}
 
 	isIP := regexp.MustCompile(ipPattern).MatchString(d.Address)
 	isFQDN := regexp.MustCompile(fqdnPattern).MatchString(d.Address)
@@ -43,10 +37,6 @@ func (d *Device) IsValid() (bool, []string) {
 		errors = append(errors, "Host must be localhost, IP, or FQDN")
 	}
 
-	// match, err := regexp.MatchString("^[0-9]+.[0-9]+.[0-9]+.[0-9]+$", d.Address)
-	// if !match || err != nil {
-	// 	return false
-	// }
 	return len(errors) <= 0, errors
 }
 
@@ -103,12 +93,19 @@ func (dt DeviceThing) UpdateDevice(device Device) {
 		if err != nil {
 			return err
 		}
-		result.FWVersion = device.FWVersion
 		result.Address = device.Address
 		result.Name = device.Name
+		result.UseTLS = device.UseTLS
+		result.SelfSignedAllowed = device.SelfSignedAllowed
+		if device.Username != "" {
+			result.Username = device.Username
+		}
+		if device.Password != "" {
+			result.Password = device.Password
+		}
 
 		// Marshal user data into bytes.
-		buf, err := json.Marshal(device)
+		buf, err := json.Marshal(result)
 		if err != nil {
 			return err
 		}

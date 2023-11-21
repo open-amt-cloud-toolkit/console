@@ -11,12 +11,18 @@ import (
 type Profile struct {
 	Id   int
 	Name string
+	ControlMode string
+	AMTPassword string
+	MEBXPassword string
 }
 
 func (p *Profile) IsValid() (bool, []string) {
 	errors := []string{}
 	if p.Name == "" {
 		errors = append(errors, "Name is required")
+	}
+	if p.AMTPassword == "" {
+		errors = append(errors, "AMT Password is required")
 	}
 	return len(errors) <= 0, errors
 }

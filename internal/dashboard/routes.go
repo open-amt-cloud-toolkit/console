@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/jritsema/go-htmx-starter/internal"
+	"github.com/jritsema/go-htmx-starter/internal/devices"
+	"github.com/jritsema/go-htmx-starter/internal/profiles"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
@@ -25,22 +27,25 @@ func NewDashboard(router *http.ServeMux) DashboardPages {
 		panic(err)
 	}
 
-	dt := DashboardPages{
+	dp := DashboardPages{
 		html: html,
 	}
-	// router.Handle("/profile/add", web.Action(dt.RouteAdd))
-	// router.Handle("/profile/add/", web.Action(dt.RouteAdd))
 
-	// router.Handle("/profile/edit", web.Action(dt.RouteEdit))
-	// router.Handle("/profile/edit/", web.Action(dt.RouteEdit))
+	router.Handle("/dashboard", web.Action(dp.Index))
 
-	// router.Handle("/profile", web.Action(dt.Profiles))
-	// router.Handle("/profile/", web.Action(dt.Profiles))
-
-	router.Handle("/dashboard", web.Action(dt.Index))
-
-	return dt
+	return dp
 }
-func (dt DashboardPages) Index(r *http.Request) *web.Response {
-	return webtools.HTML(r, http.StatusOK, dt.html, "dashboard/index.html", nil, nil)
+
+type DashboardContent struct {
+	devices []devices.Device
+	profiles []profiles.Profile
+}
+
+func (dp DashboardPages) Index(r *http.Request) *web.Response {
+	dc := DashboardContent{}
+	dt := devices.DeviceThing{}
+	dc.devices = dt.GetDevices()
+	pt := profiles.ProfileThing{}
+	dc.profiles = pt.GetProfiles()
+	return webtools.HTML(r, http.StatusOK, dp.html, "dashboard/index.html", dc, nil)
 }

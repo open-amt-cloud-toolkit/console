@@ -73,17 +73,17 @@ func (pt ProfileThing) Index(r *http.Request) *web.Response {
 }
 
 func (pt ProfileThing) ProfileAdd(r *http.Request) *web.Response {
-	return webtools.HTML(r, http.StatusOK, pt.html, "profiles/profiles-add.html", pt.GetProfiles(), nil)
+	return webtools.HTML(r, http.StatusOK, pt.html, "profiles/profiles-add.html", nil, nil)
 }
 
 func (pt ProfileThing) ProfileEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
-	row := pt.GetProfileByID(id)
-	return webtools.HTML(r, http.StatusOK, pt.html, "profiles/row-edit.html", row, nil)
+	profile := pt.GetProfileByID(id)
+	return webtools.HTML(r, http.StatusOK, pt.html, "profiles/profiles-edit.html", profile, nil)
 }
 
 func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
-	id, segments := web.PathLast(r)
+	id, _ := web.PathLast(r)
 	switch r.Method {
 
 	case http.MethodDelete:
@@ -92,42 +92,46 @@ func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
 
 	//cancel
 	case http.MethodGet:
-		if segments > 1 {
-			//cancel edit
-			row := pt.GetProfileByID(id)
-			return webtools.HTML(r, http.StatusOK, pt.html, "profiles/row.html", row, nil)
-		} else {
-			//cancel add
-			return webtools.HTML(r, http.StatusOK, pt.html, "profiles/profiles.html", pt.GetProfiles(), nil)
-		}
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/index.html", pt.GetProfiles(), nil)
 
 	//save edit
 	case http.MethodPut:
-		row := pt.GetProfileByID(id)
+		profile := pt.GetProfileByID(id)
 		r.ParseForm()
-		row.Id, _ = strconv.Atoi(id)
-		row.Name = r.Form.Get("name")
-		isValid, errors := row.IsValid()
+		profile.Id, _ = strconv.Atoi(id)
+		profile.Name = r.Form.Get("name")
+		profile.ControlMode = r.Form.Get("controlMode")
+		if r.Form.Get("amtpassword") != "" {
+			profile.AMTPassword = r.Form.Get("amtpassword")
+		}
+		if r.Form.Get("mebxpassword") != "" {
+			profile.MEBXPassword = r.Form.Get("mebxpassword")
+		}
+
+		isValid, errors := profile.IsValid()
 		if !isValid {
 			return webtools.HTML(r, http.StatusBadRequest, pt.html, "profiles/errors.html", errors, nil)
 		}
-		pt.UpdateProfile(row)
-		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/row.html", row, nil)
+		pt.UpdateProfile(profile)
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/index.html", pt.GetProfiles(), nil)
 
 	//save add
 	case http.MethodPost:
-		row := Profile{}
+		profile := Profile{}
 		r.ParseForm()
-		row.Id, _ = strconv.Atoi(r.Form.Get("id"))
-		row.Name = r.Form.Get("name")
+		profile.Id, _ = strconv.Atoi(r.Form.Get("id"))
+		profile.Name = r.Form.Get("name")
+		profile.ControlMode = r.Form.Get("controlMode")
+		profile.AMTPassword = r.Form.Get("amtpassword")
+		profile.MEBXPassword = r.Form.Get("mebxpassword")
 
-		isValid, errors := row.IsValid()
+		isValid, errors := profile.IsValid()
 		if !isValid {
 			return webtools.HTML(r, http.StatusBadRequest, pt.html, "profiles/errors.html", errors, nil)
 		}
 
-		pt.AddDevice(row)
-		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/profiles.html", pt.GetProfiles(), nil)
+		pt.AddDevice(profile)
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/index.html", pt.GetProfiles(), nil)
 	}
 
 	return web.Empty(http.StatusNotImplemented)

@@ -79,7 +79,7 @@ func (dt DeviceThing) DeviceAdd(r *http.Request) *web.Response {
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices-add.html", dt.GetDevices(), nil)
 }
 
-// /GET company/edit/{id}
+// /GET device/edit/{id}
 func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	row := dt.GetDeviceByID(id)
@@ -148,11 +148,11 @@ func (dt DeviceThing) GetEthernet(r *http.Request) *web.Response {
 // 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", response, nil)
 // }
 
-// GET /company
-// GET /company/{id}
-// DELETE /company/{id}
-// PUT /company/{id}
-// POST /company
+// GET /device
+// GET /device/{id}
+// DELETE /device/{id}
+// PUT /device/{id}
+// POST /device
 func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 	id, segments := web.PathLast(r)
 	switch r.Method {

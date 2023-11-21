@@ -1,6 +1,6 @@
 <div class="flex flex-row w-full">
     <div class="flex justify-start w-1/2">
-        <h1 class="text-3xl">New Profile</h1>
+        <h1 class="text-3xl">Edit Profile</h1>
     </div>
 </div>
 <br />
@@ -9,18 +9,26 @@
         <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Name:</div>
         <input type="text"
             class="justify-end shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight, focus:outline-none focus:shadow-outline"
-            data-include-add="" name="name" placeholder="Profile Name" value="" required />
+            data-include-edit="{{.Id}}" name="name" placeholder="Profile Name" value="{{.Name}}" required />
     </div>
     <br />
     <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
         <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Control Mode:</div>
         <div class="grid grid-cols-1">
             <div>
-                <input type="radio" id="acm" name="controlMode" value="acm" data-include-add="" checked>
+                {{if eq .ControlMode "acm"}}
+                <input type="radio" id="acm" name="controlMode" value="acm" data-include-edit="{{.Id}}" checked >
+                {{else}}
+                <input type="radio" id="acm" name="controlMode" value="acm" data-include-edit="{{.Id}}" >
+                {{end}}
                 <label for="acm">Admin Control Mode</label>
             </div>
             <div>
-                <input type="radio" id="ccm" name="controlMode" value="ccm" data-include-add="">
+                {{if eq .ControlMode "ccm"}}
+                <input type="radio" id="ccm" name="controlMode" value="ccm" data-include-edit="{{.Id}}" checked >
+                {{else}}
+                <input type="radio" id="ccm" name="controlMode" value="ccm" data-include-edit="{{.Id}}" >
+                {{end}}
                 <label for="ccm">Client Control Mode</label>
             </div>
         </div>
@@ -30,18 +38,18 @@
         <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">AMT Password:</div>
         <input type="text"
             class="justify-end shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight, focus:outline-none focus:shadow-outline"
-            data-include-add="" name="amtpassword" placeholder="Password" value="" required />
+            data-include-edit="{{.Id}}" name="amtpassword" placeholder="Password" value="" />
     </div>
     <br />
     <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
         <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">MEBX Password:</div>
         <input type="text"
             class="justify-end shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight, focus:outline-none focus:shadow-outline"
-            data-include-add="" name="mebxpassword" placeholder="Password" value="" />
+            data-include-edit="{{.Id}}" name="mebxpassword" placeholder="Password" value="" />
     </div>
 </div>
 <div class="flex flex-row w-full justify-end">
-    <a hx-post="/profile" hx-target="#profilePage" hx-indicator="#processing" hx-include="input[data-include-add]"
+    <a hx-put="/profile/{{.Id}}" hx-target="#profilePage" hx-indicator="#processing" hx-include="input[data-include-edit='{{.Id}}']"
         class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
         href="">Save</a>
     <a hx-get="/profile" hx-target="#profilePage" hx-indicator="#processing"
