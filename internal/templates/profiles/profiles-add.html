@@ -13,38 +13,59 @@
     </div>
     <br />
     <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
-        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Control Mode:</div>
-        <div class="grid grid-cols-1">
-            <div>
-                <input type="radio" id="acm" name="controlMode" value="acm" data-include-add="" checked>
-                <label for="acm">Admin Control Mode</label>
-            </div>
-            <div>
-                <input type="radio" id="ccm" name="controlMode" value="ccm" data-include-add="">
-                <label for="ccm">Client Control Mode</label>
-            </div>
-        </div>
+        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Admin Password:</div>
+        <input type="text"
+            class="justify-end shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight, focus:outline-none focus:shadow-outline"
+            data-include-add="" name="adminPassword" placeholder="Password" value="" required />
     </div>
     <br />
     <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
-        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">AMT Password:</div>
+        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Technology</div>
+        <select name="technology" id="technologySelect" title="technology" hx-get="/profile/technology-select"
+            hx-trigger="change" hx-target="#technology-specific">
+            <option value="default" hx-vals='{"technology": "default", "page": "add"}' selected>Select Technology...</option>
+            <option value="AMT" hx-vals='{"technology": "AMT", "page": "add"}'>AMT</option>
+            <option value="BMC" hx-vals='{"technology": "BMC", "page": "add"}'>BMC</option>
+            <option value="DASH" hx-vals='{"technology": "DASH", "page": "add"}'>DASH</option>
+            <option value="Redfish" hx-vals='{"technology": "Redfish", "page": "add"}'>Redfish</option>
+        </select>
+    </div>
+    <br />
+    <div id="technology-specific" hx-swap="innerHTML"></div>
+    <br />
+    <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
+        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Host Name:</div>
         <input type="text"
             class="justify-end shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight, focus:outline-none focus:shadow-outline"
-            data-include-add="" name="amtpassword" placeholder="Password" value="" required />
+            data-include-add="" name="hostName" placeholder="Host Name" value="" />
     </div>
     <br />
     <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
-        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">MEBX Password:</div>
-        <input type="text"
-            class="justify-end shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight, focus:outline-none focus:shadow-outline"
-            data-include-add="" name="mebxpassword" placeholder="Password" value="" />
+        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Domain Name:</div>
+        <input type="text" data-include-add="" name="domainName" placeholder="Domain Name" value="" />
     </div>
+    <br />
+    <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
+        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Shared FQDN:</div>
+        <input type="checkbox" title="sharedFQDN" data-include-add="" name="sharedFQDN" />
+    </div>
+    <br />
+    <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
+        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Network Enabled:</div>
+        <input type="checkbox" title="networkEnabled" data-include-add="" name="networkEnabled" />
+    </div>
+    <br />
+    <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
+        <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Respond to Pings:</div>
+        <input type="checkbox" title="pingResponseEnabled" data-include-add="" name="pingResponseEnabled" />
+    </div>
+    <br />
 </div>
 <div class="flex flex-row w-full justify-end">
     <a hx-post="/profile" hx-target="#profilePage" hx-indicator="#processing" hx-include="input[data-include-add]"
         class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
         href="">Save</a>
-    <a hx-get="/profile" hx-target="#profilePage" hx-indicator="#processing"
+    <a hx-get="/profiles" hx-target="#profilePage" hx-indicator="#processing"
         class="inline-flex items-center h-8 px-4 m-2 text-sm text-red-100 transition-colors duration-150 bg-red-700 rounded-lg focus:shadow-outline hover:bg-red-800"
         href="">Cancel</a>
 </div>
