@@ -20,13 +20,13 @@
     </div>
     <br />
     {{if .Configuration.AMTSpecific}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology": "AMT", "page": "edit"}'></div>
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"AMT","page":"edit"}'></div>
     {{else if .Configuration.BMCSpecific}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology": "BMC", "page": "edit"}'></div>
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"BMC","page":"edit"}'></div>
     {{else if .Configuration.DASHSpecific}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology": "DASH", "page": "edit"}'></div>
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"DASH","page":"edit"}'></div>
     {{else if .Configuration.Redfish}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology": "Redfish", "page": "edit"}'></div>
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"Redfish","page":"edit"}'></div>
     {{end}}
     <br />
     <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">

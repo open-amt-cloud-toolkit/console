@@ -64,6 +64,7 @@ func NewProfiles(db *bbolt.DB, router *http.ServeMux) ProfileThing {
 	router.Handle("/profile/export/", web.Action(pt.ExportProfile))
 	router.Handle("/profile/download", web.Action(pt.Download))
 	router.Handle("/profile/download/", web.Action(pt.Download))
+	router.Handle("/profile/technology-select", web.Action(pt.TechnologySelect))
 	router.Handle("/profile/technology-select/", web.Action(pt.TechnologySelect))
 	router.Handle("/profile", web.Action(pt.Profiles))
 	router.Handle("/profile/", web.Action(pt.Profiles))

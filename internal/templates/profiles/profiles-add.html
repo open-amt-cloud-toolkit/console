@@ -23,11 +23,12 @@
         <div class="whitespace-nowrap px-6 py-2 text-lg justify-start">Technology</div>
         <select name="technology" id="technologySelect" title="technology" hx-get="/profile/technology-select"
             hx-trigger="change" hx-target="#technology-specific">
-            <option value="default" hx-vals='{"technology": "default", "page": "add"}' selected>Select Technology...</option>
-            <option value="AMT" hx-vals='{"technology": "AMT", "page": "add"}'>AMT</option>
-            <option value="BMC" hx-vals='{"technology": "BMC", "page": "add"}'>BMC</option>
-            <option value="DASH" hx-vals='{"technology": "DASH", "page": "add"}'>DASH</option>
-            <option value="Redfish" hx-vals='{"technology": "Redfish", "page": "add"}'>Redfish</option>
+            <option value="default" hx-vals="js:{'technology': 'default', 'page': 'add'}" selected>Select Technology...
+            </option>
+            <option value="AMT" hx-vals='js:{"technology":"AMT","page":"add"}'>AMT</option>
+            <option value="BMC" hx-vals='js:{"technology":"BMC","page":"add"}'>BMC</option>
+            <option value="DASH" hx-vals='js:{"technology":"DASH","page":"add"}'>DASH</option>
+            <option value="Redfish" hx-vals='js:{"technology":"Redfish","page":"add"}'>Redfish</option>
         </select>
     </div>
     <br />

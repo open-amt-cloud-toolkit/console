@@ -123,9 +123,6 @@ type AMTSpecific struct {
 	MEBXPassword        string `yaml:"mebxPassword,omitempty" json:"mebxPassword,omitempty" validate:"required,min=8,max=32"`
 }
 
-type BMCSpecific struct {
-}
-
 type Account struct {
 	Credential Credential `yaml:"credential,omitempty" json:"credential,omitempty"`
 	Scopes     []string   `yaml:"scopes,omitempty" json:"scopes,omitempty"`
@@ -135,6 +132,9 @@ type Credential struct {
 	DigestUsername  string `yaml:"username,omitempty" json:"username,omitempty"`
 	DigestPassword  string `yaml:"password,omitempty" json:"password,omitempty"`
 	KerberosUserSid string `yaml:"kerberosSID,omitempty" json:"kerberosSID,omitempty"`
+}
+
+type BMCSpecific struct {
 }
 
 type DASHSpecific struct {
