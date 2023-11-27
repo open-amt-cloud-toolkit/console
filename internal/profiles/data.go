@@ -18,11 +18,12 @@ import (
 type Profile struct {
 	Id            int           `yaml:"id" json:"id"`
 	Name          string        `yaml:"name" json:"name"`
+	Technology    string        `yaml:"technology" json:"technology"`
 	Configuration Configuration `yaml:"configuration" json:"configuration"`
 }
 
 type Configuration struct {
-	RemoteManagement RemoteManagement `yaml:"remoteManagement" json:"remoteManagement"`
+	RemoteManagement    RemoteManagement    `yaml:"remoteManagement" json:"remoteManagement"`
 	EnterpriseAssistant EnterpriseAssistant `yaml:"enterpriseAssistant,omitempty" json:"enterpriseAssistant,omitempty"`
 	AMTSpecific         AMTSpecific         `yaml:"amtSpecific,omitempty" json:"amtSpecific,omitempty"`
 	BMCSpecific         BMCSpecific         `yaml:"bmcSpecific,omitempty" json:"bmcSpecific,omitempty"`

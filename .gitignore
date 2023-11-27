@@ -7,3 +7,4 @@ launch.json
 **/*.db
 **/__debug_bin
 **/*.exe
+.vscode/settings.json

@@ -64,8 +64,10 @@ func NewProfiles(db *bbolt.DB, router *http.ServeMux) ProfileThing {
 	router.Handle("/profile/export/", web.Action(pt.ExportProfile))
 	router.Handle("/profile/download", web.Action(pt.Download))
 	router.Handle("/profile/download/", web.Action(pt.Download))
-	router.Handle("/profile/technology-select", web.Action(pt.TechnologySelect))
-	router.Handle("/profile/technology-select/", web.Action(pt.TechnologySelect))
+	router.Handle("/profile/technology-select/edit", web.Action(pt.TechnologySelectEdit))
+	router.Handle("/profile/technology-select/edit/", web.Action(pt.TechnologySelectEdit))
+	router.Handle("/profile/technology-select/add", web.Action(pt.TechnologySelectAdd))
+	router.Handle("/profile/technology-select/add/", web.Action(pt.TechnologySelectAdd))
 	router.Handle("/profile", web.Action(pt.Profiles))
 	router.Handle("/profile/", web.Action(pt.Profiles))
 
@@ -94,23 +96,41 @@ const (
 	Redfish = "Redfish"
 )
 
-func (pt ProfileThing) TechnologySelect(r *http.Request) *web.Response {
+func (pt ProfileThing) TechnologySelectAdd(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	profile := pt.GetProfileByID(id)
 	queryValues := r.URL.Query()
 	technologyValue := queryValues.Get("technology")
-	pageValue := queryValues.Get("page")
 	switch technologyValue {
 	case AMT:
-		return webtools.HTML(r, http.StatusOK, pt.html, fmt.Sprintf("profiles/profiles-amtspecific-%s.html", pageValue), profile, nil)
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/amt/add.html", profile, nil)
 	case BMC:
-		return webtools.HTML(r, http.StatusOK, pt.html, fmt.Sprintf("profiles/profiles-bmcspecific-%s.html", pageValue), profile, nil)
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/bmc/add.html", profile, nil)
 	case DASH:
-		return webtools.HTML(r, http.StatusOK, pt.html, fmt.Sprintf("profiles/profiles-dashspecific-%s.html", pageValue), profile, nil)
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/dash/add.html", profile, nil)
 	case Redfish:
-		return webtools.HTML(r, http.StatusOK, pt.html, fmt.Sprintf("profiles/profiles-redfishspecific-%s.html", pageValue), profile, nil)
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/redfish/add.html", profile, nil)
 	default:
-		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/profiles-no-technology.html", nil, nil)
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/no-technology.html", nil, nil)
+	}
+}
+
+func (pt ProfileThing) TechnologySelectEdit(r *http.Request) *web.Response {
+	id, _ := web.PathLast(r)
+	profile := pt.GetProfileByID(id)
+	queryValues := r.URL.Query()
+	technologyValue := queryValues.Get("technology")
+	switch technologyValue {
+	case AMT:
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/amt/edit.html", profile, nil)
+	case BMC:
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/bmc/edit.html", profile, nil)
+	case DASH:
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/dash/edit.html", profile, nil)
+	case Redfish:
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/redfish/edit.html", profile, nil)
+	default:
+		return webtools.HTML(r, http.StatusOK, pt.html, "profiles/no-technology.html", nil, nil)
 	}
 }
 
@@ -161,6 +181,7 @@ func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
 		r.ParseForm()
 		profile.Id, _ = strconv.Atoi(r.Form.Get("id"))
 		profile.Name = r.Form.Get("name")
+		profile.Technology = r.Form.Get("technology")
 		profile.Configuration.AMTSpecific.ControlMode = r.Form.Get("controlMode")
 		profile.Configuration.RemoteManagement.AdminPassword = r.Form.Get("adminPassword")
 		profile.Configuration.AMTSpecific.MEBXPassword = r.Form.Get("mebxPassword")

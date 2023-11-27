@@ -19,14 +19,14 @@
             data-include-edit="{{.Id}}" name="adminPassword" placeholder="Password" value="" />
     </div>
     <br />
-    {{if .Configuration.AMTSpecific}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"AMT","page":"edit"}'></div>
-    {{else if .Configuration.BMCSpecific}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"BMC","page":"edit"}'></div>
-    {{else if .Configuration.DASHSpecific}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"DASH","page":"edit"}'></div>
-    {{else if .Configuration.Redfish}}
-    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"Redfish","page":"edit"}'></div>
+    {{if eq .Technology "AMT"}}
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/edit/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"AMT"}'></div>
+    {{else if eq .Technology "BMC"}}
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/edit/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"BMC"}'></div>
+    {{else if eq .Technology "DASH"}}
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/edit/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"DASH"}'></div>
+    {{else if eq .Technology "Redfish"}}
+    <div id="technology-specific" hx-target="#technology-specific" hx-swap="innerHTML" hx-get="/profile/technology-select/edit/{{.Id}}" hx-trigger="load" hx-vals='{"technology":"Redfish"}'></div>
     {{end}}
     <br />
     <div class="grid grid-cols-2 w-1/2 text-left text-sm font-light">
