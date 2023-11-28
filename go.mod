@@ -8,7 +8,10 @@ require (
 	go.etcd.io/bbolt v1.3.8
 )
 
-require gopkg.in/validator.v2 v2.0.1 // indirect
+require (
+	github.com/google/uuid v1.4.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+)
 
 replace github.com/open-amt-cloud-toolkit/go-wsman-messages => ../go-wsman-messages
 

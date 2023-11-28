@@ -115,6 +115,19 @@ func GetSetupAndConfigurationService(wsman wsman.Messages) (sc setupandconfigura
 	return
 }
 
+func GetDeviceUUID(wsman wsman.Messages) (uuid string, err error) {
+	response, err := wsman.AMT.SetupAndConfigurationService.GetUuid()
+	if err != nil {
+		return
+	}
+
+	uuid, err = response.DecodeUUID()
+	if err != nil {
+		return
+	}
+	return
+}
+
 type PowerState string
 
 const (

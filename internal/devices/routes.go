@@ -103,6 +103,13 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 		fmt.Println("Error:", err)
 	}
 
+	uuid, err := GetDeviceUUID(wsman)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	device.UUID = uuid
+
 	dc := DeviceContent{
 		Device:                       device,
 		GeneralSettings:              gs,
