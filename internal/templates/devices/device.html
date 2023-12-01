@@ -1,22 +1,41 @@
 <div id="device">
     <div id="processing" class="htmx-indicator">Processing...</div>
     <div class="flex justify-end">
-        <!-- <button hx-get="/device/powerState/{{.Device.Id}}"
-            class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
-            href="">
-            Reboot
-        </button> -->
+
         <button hx-get="/devices" hx-target="#content" hx-swap="innerHTML" hx-indicator="#processing"
             class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
             href="">
-            Devices
+            Device List
         </button>
     </div>
     <div class="flex flex-col">
         <h1 class="text-3xl">{{.Device.Name}}</h1>
-        <h2 class="text-3x1">AMT Host OS FQDN: {{.GeneralSettings.HostOSFQDN}}</h2>
-        <h2 class="text-3x1">AMT UUID: {{.Device.UUID}}</h2>
-        
+        <h2 class="text-3x1">Host OS FQDN: {{.GeneralSettings.HostOSFQDN}}</h2>
+        {{if .Device.AMTSpecific.UUID}}
+        <h2 class="text-3x1">AMT UUID: {{.Device.AMTSpecific.UUID}}</h2>
+        {{end}}
+        <div class="flex justify-end">
+            <button hx-get="/device/powerState/{{.Device.Id}}"
+                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
+                href="" hx-vals='{"power": "on"}'>
+                On
+            </button>
+            <button hx-get="/device/powerState/{{.Device.Id}}"
+                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
+                href="" hx-vals='{"power": "off"}'>
+                Off
+            </button>
+            <button hx-get="/device/powerState/{{.Device.Id}}"
+                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
+                href="" hx-vals='{"power": "reboot"}'>
+                Reboot
+            </button>
+            <button hx-get="/device/powerState/{{.Device.Id}}"
+                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
+                href="" hx-vals='{"power": "powercycle"}'>
+                Power Cycle
+            </button>
+        </div>
         <br>
         <div id="loading" class="htmx-indicator">Loading...</div>
         <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">

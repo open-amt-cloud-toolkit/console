@@ -10,6 +10,7 @@ import (
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/power"
 	"go.etcd.io/bbolt"
 )
 
@@ -66,7 +67,7 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	router.Handle("/device/ethernet", web.Action(dt.GetEthernet))
 	router.Handle("/device/ethernet/", web.Action(dt.GetEthernet))
 
-	// router.Handle("/device/powerState/", web.Action(dt.ChangePowerState))
+	router.Handle("/device/powerState/", web.Action(dt.ChangePowerState))
 
 	return dt
 }
@@ -108,7 +109,7 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 		fmt.Println("Error:", err)
 	}
 
-	device.UUID = uuid
+	device.AMTSpecific.UUID = uuid
 
 	dc := DeviceContent{
 		Device:                       device,
@@ -143,17 +144,20 @@ func (dt DeviceThing) GetEthernet(r *http.Request) *web.Response {
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", ec.EthernetPort, nil)
 }
 
-// func (dt DeviceThing) ChangePowerState(r *http.Request) *web.Response {
-// 	id, _ := web.PathLast(r)
-// 	device := dt.GetDeviceByID(id)
-// 	wsman := CreateWsmanConnection(device)
-// 	reboot := power.PowerOffHard
-// 	response, errors := ChangePowerState(wsman, reboot)
-// 	if errors != nil {
-// 		return webtools.HTML(r, http.StatusRequestTimeout, dt.html, "devices/errors.html", errors, nil)
-// 	}
-// 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", response, nil)
-// }
+func (dt DeviceThing) ChangePowerState(r *http.Request) *web.Response {
+	id, _ := web.PathLast(r)
+	queryValues := r.URL.Query()
+	keyValue := queryValues.Get("power")
+	technology := "amt"
+	powerStateRequested := getPowerStateValue(technology, keyValue)
+	device := dt.GetDeviceByID(id)
+	wsman := CreateWsmanConnection(device)
+	response, errors := ChangePowerState(wsman, power.PowerState(powerStateRequested))
+	if errors != nil {
+		return webtools.HTML(r, http.StatusRequestTimeout, dt.html, "devices/errors.html", errors, nil)
+	}
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", response, nil)
+}
 
 // GET /device
 // GET /device/{id}

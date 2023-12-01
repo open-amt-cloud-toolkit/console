@@ -7,6 +7,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/general"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/setupandconfiguration"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/power"
 )
 
 func ProvisioningModeLookup(mode int) string {
@@ -145,10 +146,33 @@ const (
 	PowerCycleOffHardGraceful PowerState = "Hard Power Cycle (OS Graceful)"
 )
 
-// func ChangePowerState(wsman wsman.Messages, powerState power.PowerState) (response power.Response, err error) {
-// 	response, err = wsman.CIM.PowerManagementService.RequestPowerStateChange(powerState)
-// 	if err != nil {
-// 		return power.Response{}, err
-// 	}
-// 	return response, nil
-// }
+func ChangePowerState(wsman wsman.Messages, powerState power.PowerState) (response power.Response, err error) {
+	response, err = wsman.CIM.PowerManagementService.RequestPowerStateChange(powerState)
+	if err != nil {
+		return power.Response{}, err
+	}
+	return response, nil
+}
+
+func getPowerStateValue(technology string, value string) power.PowerState {
+	switch value {
+	case "on":
+		if technology == "amt" {
+			return power.PowerOn // 2
+		}
+	case "off":
+		if technology == "amt" {
+			return power.PowerOffHard // 8
+		}
+	case "reboot":
+		if technology == "amt" {
+			return power.MasterBusReset // 10
+		}
+	case "powercycle":
+		if technology == "amt" {
+			return power.PowerCycleOffHard // 5
+		}
+	}
+	return 0
+}
+
