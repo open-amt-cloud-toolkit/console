@@ -4,9 +4,18 @@ import (
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/authorization"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/environmentdetection"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/general"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/managementpresence"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/publickey"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/redirection"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/remoteaccess"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/setupandconfiguration"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/tls"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/userinitiatedconnection"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/power"
 )
 
@@ -65,10 +74,6 @@ func PowerControlLookup(value int) string {
 
 	return result
 }
-
-// func CreateFirmwareConnection() firmware.Messages {
-// 	return firmware.NewMessages()
-// }
 
 func CreateWsmanConnection(d Device) wsman.Messages {
 	cp := wsman.ClientParameters{
@@ -176,3 +181,599 @@ func getPowerStateValue(technology string, value string) power.PowerState {
 	return 0
 }
 
+type Class struct {
+	Name       string
+	MethodList []Method
+}
+
+type Method struct {
+	Name string
+}
+
+type WsmanMethods struct {
+	MethodList []Method
+}
+
+func GetSupportedWsmanClasses(className string) []Class {
+	var ClassList = []Class{
+		{Name: "AMT_AuthorizationService", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_EnvironmentDetectionSettingData", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_EthernetPortSettings", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_GeneralSettings", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_ManagementPresenceRemoteSAP", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_PublicKeyCertificate", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_PublicKeyManagementService", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_RedirectionService", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_RemoteAccessPolicyAppliesToMPS", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_RemoteAccessPolicyRule", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_RemoteAccessService", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_TLSSettingData", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "AMT_UserInitiatedConnectionService", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "CIM_BootConfigSetting", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "CIM_BootService", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: "CIM_BootSourceSetting", MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+	}
+	if className == "" {
+		return ClassList
+	}
+
+	for _, class := range ClassList {
+		if class.Name == className {
+			return []Class{class}
+		}
+	}
+	return []Class{}
+}
+
+type Response struct {
+	XMLInput  string
+	XMLOutput string
+}
+
+func MakeWsmanCall(device Device, class string, method string) (response Response, err error) {
+	clientParameters := wsman.ClientParameters{
+		Target:            device.Address,
+		Username:          device.Username,
+		Password:          device.Password,
+		UseDigest:         true,
+		UseTLS:            device.UseTLS,
+		SelfSignedAllowed: device.SelfSignedAllowed,
+	}
+	wsman := wsman.NewMessages(clientParameters)
+	selectedClass := GetSupportedWsmanClasses(class)
+	switch selectedClass[0].Name {
+	case "AMT_AuthorizationService":
+		var output authorization.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.AuthorizationService.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.AuthorizationService.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er authorization.Response
+			er, err = wsman.AMT.AuthorizationService.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.AuthorizationService.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_EnvironmentDetectionSettingData":
+		var output environmentdetection.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.EnvironmentDetectionSettingData.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.EnvironmentDetectionSettingData.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er environmentdetection.Response
+			er, err = wsman.AMT.EnvironmentDetectionSettingData.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.EnvironmentDetectionSettingData.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_EthernetPortSettings":
+		var output ethernetport.Response
+		switch method {
+		case "Get":
+			selector := ethernetport.Selector{
+				Name:  "InstanceID",
+				Value: "Intel(r) AMT Ethernet Port Settings 0",
+			}
+			output, err = wsman.AMT.EthernetPortSettings.Get(selector)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.EthernetPortSettings.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er ethernetport.Response
+			er, err = wsman.AMT.EthernetPortSettings.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.EthernetPortSettings.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_GeneralSettings":
+		var output general.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.GeneralSettings.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.GeneralSettings.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er general.Response
+			er, err = wsman.AMT.GeneralSettings.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.GeneralSettings.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_ManagementPresenceRemoteSAP":
+		var output managementpresence.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.ManagementPresenceRemoteSAP.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.ManagementPresenceRemoteSAP.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er managementpresence.Response
+			er, err = wsman.AMT.ManagementPresenceRemoteSAP.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.ManagementPresenceRemoteSAP.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_PublicKeyCertificate":
+		var output publickey.ResponseCert
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.PublicKeyCertificate.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.PublicKeyCertificate.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er publickey.ResponseCert
+			er, err = wsman.AMT.PublicKeyCertificate.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.PublicKeyCertificate.Pull(er.BodyCert.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_PublicKeyManagementService":
+		var output publickey.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.PublicKeyManagementService.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.PublicKeyManagementService.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er publickey.Response
+			er, err = wsman.AMT.PublicKeyManagementService.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.PublicKeyManagementService.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_RedirectionService":
+		var output redirection.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.RedirectionService.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.RedirectionService.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er redirection.Response
+			er, err = wsman.AMT.RedirectionService.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.RedirectionService.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_RemoteAccessPolicyAppliesToMPS":
+		var output remoteaccess.ResponseApplies
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.RemoteAccessPolicyAppliesToMPS.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er remoteaccess.ResponseApplies
+			er, err = wsman.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.RemoteAccessPolicyAppliesToMPS.Pull(er.BodyApplies.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_RemoteAccessPolicyRule":
+		var output remoteaccess.ResponseRule
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.RemoteAccessPolicyRule.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.RemoteAccessPolicyRule.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er remoteaccess.ResponseRule
+			er, err = wsman.AMT.RemoteAccessPolicyRule.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.RemoteAccessPolicyRule.Pull(er.BodyRule.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_RemoteAccessService":
+		var output remoteaccess.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.RemoteAccessService.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.RemoteAccessService.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er remoteaccess.Response
+			er, err = wsman.AMT.RemoteAccessService.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.RemoteAccessService.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_TLSSettingData":
+		var output tls.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.TLSSettingData.Get("Intel(r) AMT 802.3 TLS Settings")
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.TLSSettingData.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er tls.Response
+			er, err = wsman.AMT.TLSSettingData.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.TLSSettingData.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "AMT_UserInitiatedConnectionService":
+		var output userinitiatedconnection.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.UserInitiatedConnectionService.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.UserInitiatedConnectionService.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er userinitiatedconnection.Response
+			er, err = wsman.AMT.UserInitiatedConnectionService.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.UserInitiatedConnectionService.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "CIM_BootConfigSetting":
+		var output boot.Response
+		switch method {
+		case "Get":
+			output, err = wsman.CIM.BootConfigSetting.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.CIM.BootConfigSetting.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er boot.Response
+			er, err = wsman.CIM.BootConfigSetting.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.CIM.BootConfigSetting.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "CIM_BootService":
+		var output boot.Response
+		switch method {
+		case "Get":
+			output, err = wsman.CIM.BootService.Get()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.CIM.BootService.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er boot.Response
+			er, err = wsman.CIM.BootService.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.CIM.BootService.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case "CIM_BootSourceSetting":
+		var output boot.Response
+		switch method {
+		case "Get":
+			output, err = wsman.CIM.BootSourceSetting.Get("Intel(r) AMT: Force Hard-drive Boot")
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.CIM.BootSourceSetting.Enumerate()
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er boot.Response
+			er, err = wsman.CIM.BootSourceSetting.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.CIM.BootSourceSetting.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			if err != nil {
+				return
+			}
+			response.XMLInput = output.XMLInput
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	}
+	return
+}

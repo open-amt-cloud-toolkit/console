@@ -76,6 +76,8 @@
                                 hx-target="#wireless-ethernet" hx-swap="innerHTML" hx-indicator="#loading"></div>
                         </div>
                     </div>
+                    <br>
+                    <div id="w-explorer" hx-get="/device/wsman-explorer/{{.Device.Id}}" hx-trigger="load" hx-target="#w-explorer" hx-swap="innerHTML"></div>
                 </div>
             </div>
         </div>

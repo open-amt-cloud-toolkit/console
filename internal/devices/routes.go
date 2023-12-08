@@ -69,6 +69,18 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 
 	router.Handle("/device/powerState/", web.Action(dt.ChangePowerState))
 
+	router.Handle("/device/wsman-explorer", web.Action(dt.GetWsmanExplorer))
+	router.Handle("/device/wsman-explorer/", web.Action(dt.GetWsmanExplorer))
+
+	router.Handle("/device/ws-classes", web.Action(dt.GetWsmanClasses))
+	router.Handle("/device/ws-classes/", web.Action(dt.GetWsmanClasses))
+
+	router.Handle("/device/ws-methods", web.Action(dt.GetWsmanMethods))
+	router.Handle("/device/ws-methods/", web.Action(dt.GetWsmanMethods))
+
+	router.Handle("/device/test", web.Action(dt.WsmanTest))
+	router.Handle("/device/test/", web.Action(dt.WsmanTest))
+
 	return dt
 }
 func (dt DeviceThing) Index(r *http.Request) *web.Response {
@@ -85,6 +97,39 @@ func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	row := dt.GetDeviceByID(id)
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/row-edit.html", row, nil)
+}
+
+func (dt DeviceThing) GetWsmanExplorer(r *http.Request) *web.Response {
+	id, _ := web.PathLast(r)
+	device := dt.GetDeviceByID(id)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/wsman-explorer.html", device, nil)
+}
+
+func (dt DeviceThing) GetWsmanClasses(r *http.Request) *web.Response {
+	classes := GetSupportedWsmanClasses("")
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/class-select.html", classes, nil)
+}
+
+func (dt DeviceThing) GetWsmanMethods(r *http.Request) *web.Response {
+	queryValues := r.URL.Query()
+	selected := queryValues.Get("class-selector")
+	class := GetSupportedWsmanClasses(selected)
+	methods := class[0].MethodList
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/method-select.html", methods, nil)
+}
+
+func (dt DeviceThing) WsmanTest(r *http.Request) *web.Response {
+	id, _ := web.PathLast(r)
+	device := dt.GetDeviceByID(id)
+	r.ParseForm()
+	class := r.Form.Get("class-selector")
+	method := r.Form.Get("method-selector")
+
+	response, err := MakeWsmanCall(device, class, method)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/wsman.html", response, nil)
 }
 
 // Connect to device
