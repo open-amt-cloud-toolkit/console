@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/authorization"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/environmentdetection"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
@@ -208,6 +209,7 @@ type WsmanMethods struct {
 func GetSupportedWsmanClasses(className string) []Class {
 	var ClassList = []Class{
 		{Name: authorization.AMT_AuthorizationService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: alarmclock.AMT_AlarmClockService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: environmentdetection.AMT_EnvironmentDetectionSettingData, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: ethernetport.AMT_EthernetPortSettings, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: general.AMT_GeneralSettings, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
@@ -300,6 +302,42 @@ func MakeWsmanCall(device Device, class string, method string) (response Respons
 				return
 			}
 			output, err = wsman.AMT.AuthorizationService.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			response.XMLInput = output.XMLInput
+			if err != nil {
+				response.XMLOutput = error.Error(err)
+				return
+			}
+			response.XMLOutput = output.XMLOutput
+			return
+		}
+	case alarmclock.AMT_AlarmClockService :
+		var output alarmclock.Response
+		switch method {
+		case "Get":
+			output, err = wsman.AMT.AlarmClockService.Get()
+			response.XMLInput = output.XMLInput
+			if err != nil {
+				response.XMLOutput = error.Error(err)
+				return
+			}
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Enumerate":
+			output, err = wsman.AMT.AlarmClockService.Enumerate()
+			response.XMLInput = output.XMLInput
+			if err != nil {
+				response.XMLOutput = error.Error(err)
+				return
+			}
+			response.XMLOutput = output.XMLOutput
+			return
+		case "Pull":
+			var er alarmclock.Response
+			er, err = wsman.AMT.AlarmClockService.Enumerate()
+			if err != nil {
+				return
+			}
+			output, err = wsman.AMT.AlarmClockService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			response.XMLInput = output.XMLInput
 			if err != nil {
 				response.XMLOutput = error.Error(err)
