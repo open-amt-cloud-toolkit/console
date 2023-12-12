@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/jritsema/go-htmx-starter/internal"
+	"github.com/jritsema/go-htmx-starter/internal/features/explorer"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
@@ -106,26 +107,24 @@ func (dt DeviceThing) GetWsmanExplorer(r *http.Request) *web.Response {
 }
 
 func (dt DeviceThing) GetWsmanClasses(r *http.Request) *web.Response {
-	classes := GetSupportedWsmanClasses("")
+	classes := explorer.GetSupportedWsmanClasses("")
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/class-select.html", classes, nil)
 }
 
 func (dt DeviceThing) GetWsmanMethods(r *http.Request) *web.Response {
 	queryValues := r.URL.Query()
 	selected := queryValues.Get("class-selector")
-	class := GetSupportedWsmanClasses(selected)
+	class := explorer.GetSupportedWsmanClasses(selected)
 	methods := class[0].MethodList
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/method-select.html", methods, nil)
 }
 
 func (dt DeviceThing) WsmanTest(r *http.Request) *web.Response {
-	id, _ := web.PathLast(r)
-	device := dt.GetDeviceByID(id)
 	r.ParseForm()
 	class := r.Form.Get("class-selector")
 	method := r.Form.Get("method-selector")
 
-	response, err := MakeWsmanCall(device, class, method)
+	response, err := explorer.MakeWsmanCall(class, method)
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
@@ -161,7 +160,7 @@ func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
 		GeneralSettings:              gs,
 		SetupAndConfigurationService: scs,
 	}
-
+	explorer.Init(wsman)
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", dc, nil)
 }
 
