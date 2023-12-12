@@ -12,9 +12,7 @@ type Class struct {
 
 type Method struct {
 	Name                   string
-	Execute                func() (response client.Message, err error)
-	ExecuteWithStringInput func(string) (response client.Message, err error)
-	ExecuteWithIntInput    func(int) (response client.Message, err error)
+	Execute                func(string) (response client.Message, err error)
 }
 
 type WsmanMethods struct {

@@ -9,33 +9,6 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-type Device struct {
-	Id                int
-	Name              string
-	Address           string
-	Username          string
-	Password          string
-	UseTLS            bool
-	SelfSignedAllowed bool
-	AMTSpecific       AMTSpecific
-	BMCSpecific       BMCSpecific
-	DASHSpecific      DASHSpecific
-	RedfishSpecific   RedfishSpecific
-}
-
-type AMTSpecific struct {
-	UUID string
-}
-
-type BMCSpecific struct {
-}
-
-type DASHSpecific struct {
-}
-
-type RedfishSpecific struct {
-}
-
 const ipPattern = `^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
 const fqdnPattern = `^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`
 

@@ -1,6 +1,8 @@
 package explorer
 
 import (
+	"strconv"
+
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/authorization"
@@ -81,11 +83,11 @@ func GetSupportedWsmanClasses(className string) []Class {
 	return []Class{}
 }
 
-func MakeWsmanCall(class string, method string) (response Response, err error) {
+func MakeWsmanCall(class string, method string, param string) (response Response, err error) {
 
 	selectedClass := GetSupportedWsmanClasses(class)
 
-	output, err := Lookup[selectedClass[0].Name][method].Execute()
+	output, err := Lookup[selectedClass[0].Name][method].Execute(param)
 	response.XMLInput = output.XMLInput
 	if err != nil {
 		response.XMLOutput = error.Error(err)
@@ -103,20 +105,23 @@ func Init(wsman wsman.Messages) {
 	// Alarm Clock
 	Lookup[alarmclock.AMT_AlarmClockService] = make(map[string]Method)
 	Lookup[alarmclock.AMT_AlarmClockService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.AlarmClockService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[alarmclock.AMT_AlarmClockService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.AlarmClockService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[alarmclock.AMT_AlarmClockService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.AlarmClockService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.AlarmClockService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.AlarmClockService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -124,20 +129,23 @@ func Init(wsman wsman.Messages) {
 	// AuthorizationService
 	Lookup[authorization.AMT_AuthorizationService] = make(map[string]Method)
 	Lookup[authorization.AMT_AuthorizationService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.AuthorizationService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[authorization.AMT_AuthorizationService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.AuthorizationService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[authorization.AMT_AuthorizationService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.AuthorizationService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.AuthorizationService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.AuthorizationService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -145,20 +153,23 @@ func Init(wsman wsman.Messages) {
 	// EnvironementDetectionSettingData
 	Lookup[environmentdetection.AMT_EnvironmentDetectionSettingData] = make(map[string]Method)
 	Lookup[environmentdetection.AMT_EnvironmentDetectionSettingData]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.EnvironmentDetectionSettingData.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[environmentdetection.AMT_EnvironmentDetectionSettingData]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.EnvironmentDetectionSettingData.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[environmentdetection.AMT_EnvironmentDetectionSettingData]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.EnvironmentDetectionSettingData.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.EnvironmentDetectionSettingData.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.EnvironmentDetectionSettingData.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -166,20 +177,23 @@ func Init(wsman wsman.Messages) {
 	// GeneralSetting
 	Lookup[general.AMT_GeneralSettings] = make(map[string]Method)
 	Lookup[general.AMT_GeneralSettings]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.GeneralSettings.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[general.AMT_GeneralSettings]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.GeneralSettings.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[general.AMT_GeneralSettings]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.GeneralSettings.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.GeneralSettings.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.GeneralSettings.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -187,20 +201,23 @@ func Init(wsman wsman.Messages) {
 	// ManagementPresenceRemoteSAP
 	Lookup[managementpresence.AMT_ManagementPresenceRemoteSAP] = make(map[string]Method)
 	Lookup[managementpresence.AMT_ManagementPresenceRemoteSAP]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.ManagementPresenceRemoteSAP.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[managementpresence.AMT_ManagementPresenceRemoteSAP]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.ManagementPresenceRemoteSAP.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[managementpresence.AMT_ManagementPresenceRemoteSAP]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.ManagementPresenceRemoteSAP.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.ManagementPresenceRemoteSAP.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.ManagementPresenceRemoteSAP.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -208,20 +225,23 @@ func Init(wsman wsman.Messages) {
 	// PublicKeyCertificate
 	Lookup[publickey.AMT_PublicKeyCertificate] = make(map[string]Method)
 	Lookup[publickey.AMT_PublicKeyCertificate]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.PublicKeyCertificate.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[publickey.AMT_PublicKeyCertificate]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.PublicKeyCertificate.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[publickey.AMT_PublicKeyCertificate]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.PublicKeyCertificate.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.PublicKeyCertificate.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.PublicKeyCertificate.Pull(er.BodyCert.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -229,20 +249,23 @@ func Init(wsman wsman.Messages) {
 	// PublicKeyManagementService
 	Lookup[publickey.AMT_PublicKeyManagementService] = make(map[string]Method)
 	Lookup[publickey.AMT_PublicKeyManagementService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.PublicKeyManagementService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[publickey.AMT_PublicKeyManagementService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.PublicKeyManagementService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[publickey.AMT_PublicKeyManagementService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.PublicKeyManagementService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.PublicKeyManagementService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.PublicKeyManagementService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -250,20 +273,23 @@ func Init(wsman wsman.Messages) {
 	// RedirectionService
 	Lookup[redirection.AMT_RedirectionService] = make(map[string]Method)
 	Lookup[redirection.AMT_RedirectionService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RedirectionService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[redirection.AMT_RedirectionService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RedirectionService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[redirection.AMT_RedirectionService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.RedirectionService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.RedirectionService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.RedirectionService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -271,20 +297,23 @@ func Init(wsman wsman.Messages) {
 	// RemoteAccessPolicyAppliesToMPS
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyAppliesToMPS] = make(map[string]Method)
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyAppliesToMPS]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RemoteAccessPolicyAppliesToMPS.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyAppliesToMPS]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyAppliesToMPS]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.RemoteAccessPolicyAppliesToMPS.Pull(er.BodyApplies.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -292,20 +321,23 @@ func Init(wsman wsman.Messages) {
 	// RemoteAccessPolicyRule
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyRule] = make(map[string]Method)
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyRule]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RemoteAccessPolicyRule.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyRule]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RemoteAccessPolicyRule.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[remoteaccess.AMT_RemoteAccessPolicyRule]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.RemoteAccessPolicyRule.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.RemoteAccessPolicyRule.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.RemoteAccessPolicyRule.Pull(er.BodyRule.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -313,20 +345,23 @@ func Init(wsman wsman.Messages) {
 	// RemoteAccessService
 	Lookup[remoteaccess.AMT_RemoteAccessService] = make(map[string]Method)
 	Lookup[remoteaccess.AMT_RemoteAccessService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RemoteAccessService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[remoteaccess.AMT_RemoteAccessService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.RemoteAccessService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[remoteaccess.AMT_RemoteAccessService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.RemoteAccessService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.RemoteAccessService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.RemoteAccessService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -334,26 +369,29 @@ func Init(wsman wsman.Messages) {
 	// SetupAndConfigurationService
 	Lookup[setupandconfiguration.AMT_SetupAndConfigurationService] = make(map[string]Method)
 	Lookup[setupandconfiguration.AMT_SetupAndConfigurationService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.SetupAndConfigurationService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[setupandconfiguration.AMT_SetupAndConfigurationService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.SetupAndConfigurationService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[setupandconfiguration.AMT_SetupAndConfigurationService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.SetupAndConfigurationService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.SetupAndConfigurationService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.SetupAndConfigurationService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
 	}
 	Lookup[setupandconfiguration.AMT_SetupAndConfigurationService]["GetUUID"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.SetupAndConfigurationService.GetUuid()
 			return *response.Message, err
 		},
@@ -361,20 +399,23 @@ func Init(wsman wsman.Messages) {
 	// TLSSettingData
 	Lookup[tls.AMT_TLSCredentialContext] = make(map[string]Method)
 	Lookup[tls.AMT_TLSCredentialContext]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.AMT.TLSSettingData.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[tls.AMT_TLSCredentialContext]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.TLSSettingData.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[tls.AMT_TLSCredentialContext]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.TLSSettingData.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.TLSSettingData.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.TLSSettingData.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -382,20 +423,23 @@ func Init(wsman wsman.Messages) {
 	// UserInitiatedConnectionService
 	Lookup[userinitiatedconnection.AMT_UserInitiatedConnectionService] = make(map[string]Method)
 	Lookup[userinitiatedconnection.AMT_UserInitiatedConnectionService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.UserInitiatedConnectionService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[userinitiatedconnection.AMT_UserInitiatedConnectionService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.AMT.UserInitiatedConnectionService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[userinitiatedconnection.AMT_UserInitiatedConnectionService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.AMT.UserInitiatedConnectionService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.AMT.UserInitiatedConnectionService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.AMT.UserInitiatedConnectionService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -403,20 +447,23 @@ func Init(wsman wsman.Messages) {
 	// BootConfigSetting
 	Lookup[boot.CIM_BootConfigSetting] = make(map[string]Method)
 	Lookup[boot.CIM_BootConfigSetting]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BootConfigSetting.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[boot.CIM_BootConfigSetting]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BootConfigSetting.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[boot.CIM_BootConfigSetting]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.BootConfigSetting.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.BootConfigSetting.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.BootConfigSetting.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -424,20 +471,23 @@ func Init(wsman wsman.Messages) {
 	// BootService
 	Lookup[boot.CIM_BootService] = make(map[string]Method)
 	Lookup[boot.CIM_BootService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BootService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[boot.CIM_BootService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BootService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[boot.CIM_BootService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.BootService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.BootService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.BootService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -445,20 +495,23 @@ func Init(wsman wsman.Messages) {
 	// BootSourceSetting
 	Lookup[boot.CIM_BootSourceSetting] = make(map[string]Method)
 	Lookup[boot.CIM_BootSourceSetting]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.BootSourceSetting.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[boot.CIM_BootSourceSetting]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BootSourceSetting.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[boot.CIM_BootSourceSetting]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.BootSourceSetting.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.BootSourceSetting.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.BootSourceSetting.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -466,20 +519,23 @@ func Init(wsman wsman.Messages) {
 	// BIOSElement
 	Lookup[bios.CIM_BIOSElement] = make(map[string]Method)
 	Lookup[bios.CIM_BIOSElement]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BIOSElement.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[bios.CIM_BIOSElement]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BIOSElement.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[bios.CIM_BIOSElement]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.BIOSElement.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.BIOSElement.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.BIOSElement.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -487,20 +543,23 @@ func Init(wsman wsman.Messages) {
 	// ComputerSystemPackage
 	Lookup[computer.CIM_ComputerSystemPackage] = make(map[string]Method)
 	Lookup[computer.CIM_ComputerSystemPackage]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.ComputerSystemPackage.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[computer.CIM_ComputerSystemPackage]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.ComputerSystemPackage.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[computer.CIM_ComputerSystemPackage]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.ComputerSystemPackage.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.ComputerSystemPackage.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.ComputerSystemPackage.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -508,20 +567,23 @@ func Init(wsman wsman.Messages) {
 	// CredentialContext
 	Lookup[credential.CIM_CredentialContext] = make(map[string]Method)
 	Lookup[credential.CIM_CredentialContext]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.CredentialContext.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[credential.CIM_CredentialContext]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.CredentialContext.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[credential.CIM_CredentialContext]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.CredentialContext.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.CredentialContext.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.CredentialContext.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -529,20 +591,23 @@ func Init(wsman wsman.Messages) {
 	// IEEE802.1XSettings
 	Lookup[ieee8021x.CIM_IEEE8021xSettings] = make(map[string]Method)
 	Lookup[ieee8021x.CIM_IEEE8021xSettings]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.IEEE8021xSettings.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[ieee8021x.CIM_IEEE8021xSettings]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.IEEE8021xSettings.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[ieee8021x.CIM_IEEE8021xSettings]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.IEEE8021xSettings.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.IEEE8021xSettings.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.IEEE8021xSettings.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -550,20 +615,23 @@ func Init(wsman wsman.Messages) {
 	// KVMRedirectionSAP
 	Lookup[kvm.CIM_KVMRedirectionSAP] = make(map[string]Method)
 	Lookup[kvm.CIM_KVMRedirectionSAP]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.KVMRedirectionSAP.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[kvm.CIM_KVMRedirectionSAP]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.KVMRedirectionSAP.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[kvm.CIM_KVMRedirectionSAP]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.KVMRedirectionSAP.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.KVMRedirectionSAP.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.KVMRedirectionSAP.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -571,20 +639,23 @@ func Init(wsman wsman.Messages) {
 	// MediaAccessDevice
 	Lookup[mediaaccess.CIM_MediaAccessDevice] = make(map[string]Method)
 	Lookup[mediaaccess.CIM_MediaAccessDevice]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.MediaAccessDevice.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[mediaaccess.CIM_MediaAccessDevice]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.MediaAccessDevice.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[mediaaccess.CIM_MediaAccessDevice]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.MediaAccessDevice.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.MediaAccessDevice.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.MediaAccessDevice.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -592,20 +663,23 @@ func Init(wsman wsman.Messages) {
 	// PhysicalCard
 	Lookup[physical.CIM_Card] = make(map[string]Method)
 	Lookup[physical.CIM_Card]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Card.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Card]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Card.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Card]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.Card.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.Card.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.Card.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -613,20 +687,23 @@ func Init(wsman wsman.Messages) {
 	// PhysicalChassis
 	Lookup[physical.CIM_Chassis] = make(map[string]Method)
 	Lookup[physical.CIM_Chassis]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chassis.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Chassis]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chassis.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Chassis]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.Chassis.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.Chassis.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.Chassis.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -634,20 +711,23 @@ func Init(wsman wsman.Messages) {
 	// PhysicalChip
 	Lookup[physical.CIM_Chip] = make(map[string]Method)
 	Lookup[physical.CIM_Chip]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chip.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Chip]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chip.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Chip]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.Chip.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.Chip.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.Chip.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -655,20 +735,23 @@ func Init(wsman wsman.Messages) {
 	// PhysicalMemory
 	Lookup[physical.CIM_PhysicalMemory] = make(map[string]Method)
 	Lookup[physical.CIM_PhysicalMemory]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.PhysicalMemory.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_PhysicalMemory]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.PhysicalMemory.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_PhysicalMemory]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.PhysicalMemory.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.PhysicalMemory.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.PhysicalMemory.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -676,20 +759,23 @@ func Init(wsman wsman.Messages) {
 	// PhysicalPackage
 	Lookup[physical.CIM_PhysicalPackage] = make(map[string]Method)
 	Lookup[physical.CIM_PhysicalPackage]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.PhysicalPackage.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_PhysicalPackage]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.PhysicalPackage.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_PhysicalPackage]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.PhysicalPackage.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.PhysicalPackage.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.PhysicalPackage.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -697,20 +783,23 @@ func Init(wsman wsman.Messages) {
 	// PhysicalProcessor
 	Lookup[physical.CIM_Processor] = make(map[string]Method)
 	Lookup[physical.CIM_Processor]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Processor.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Processor]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Processor.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[physical.CIM_Processor]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.Processor.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.Processor.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.Processor.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -718,26 +807,33 @@ func Init(wsman wsman.Messages) {
 	// PowerManagementService
 	Lookup[power.CIM_PowerManagementService] = make(map[string]Method)
 	Lookup[power.CIM_PowerManagementService]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.PowerManagementService.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[power.CIM_PowerManagementService]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.PowerManagementService.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[power.CIM_PowerManagementService]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.PowerManagementService.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.PowerManagementService.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.PowerManagementService.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
 	}
 	Lookup[power.CIM_PowerManagementService]["RequestPowerStateChange"] = Method{
-		ExecuteWithIntInput: func(powerState int) (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
+			powerState, err := strconv.Atoi(value)
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.PowerManagementService.RequestPowerStateChange(power.PowerState(powerState))
 			return *response.Message, err
 		},
@@ -745,20 +841,23 @@ func Init(wsman wsman.Messages) {
 	// ServiceAvailableToElement
 	Lookup[service.CIM_ServiceAvailableToElement] = make(map[string]Method)
 	Lookup[service.CIM_ServiceAvailableToElement]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.ServiceAvailableToElement.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[service.CIM_ServiceAvailableToElement]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.ServiceAvailableToElement.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[service.CIM_ServiceAvailableToElement]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.ServiceAvailableToElement.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.ServiceAvailableToElement.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.ServiceAvailableToElement.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -766,20 +865,23 @@ func Init(wsman wsman.Messages) {
 	// SoftwareIdentity
 	Lookup[software.CIM_SoftwareIdentity] = make(map[string]Method)
 	Lookup[software.CIM_SoftwareIdentity]["Get"] = Method{
-		ExecuteWithStringInput: func(instanceID string) (client.Message, error) {
+		Execute: func(instanceID string) (client.Message, error) {
 			response, err := wsman.CIM.SoftwareIdentity.Get(instanceID)
 			return *response.Message, err
 		},
 	}
 	Lookup[software.CIM_SoftwareIdentity]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.SoftwareIdentity.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[software.CIM_SoftwareIdentity]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.SoftwareIdentity.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.SoftwareIdentity.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.SoftwareIdentity.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -787,20 +889,23 @@ func Init(wsman wsman.Messages) {
 	// SystemPackaging
 	Lookup[system.CIM_SystemPackaging] = make(map[string]Method)
 	Lookup[system.CIM_SystemPackaging]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.SystemPackaging.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[system.CIM_SystemPackaging]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.SystemPackaging.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[system.CIM_SystemPackaging]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.SystemPackaging.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.SystemPackaging.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.SystemPackaging.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -808,20 +913,23 @@ func Init(wsman wsman.Messages) {
 	// WiFiEndpointSettings
 	Lookup[wifi.CIM_WiFiEndpointSettings] = make(map[string]Method)
 	Lookup[wifi.CIM_WiFiEndpointSettings]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.WiFiEndpointSettings.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[wifi.CIM_WiFiEndpointSettings]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.WiFiEndpointSettings.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[wifi.CIM_WiFiEndpointSettings]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.WiFiEndpointSettings.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.WiFiEndpointSettings.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.WiFiEndpointSettings.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
@@ -829,20 +937,23 @@ func Init(wsman wsman.Messages) {
 	// WiFiPort
 	Lookup[wifi.CIM_WiFiPort] = make(map[string]Method)
 	Lookup[wifi.CIM_WiFiPort]["Get"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.WiFiPort.Get()
 			return *response.Message, err
 		},
 	}
 	Lookup[wifi.CIM_WiFiPort]["Enumerate"] = Method{
-		Execute: func() (client.Message, error) {
+		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.WiFiPort.Enumerate()
 			return *response.Message, err
 		},
 	}
 	Lookup[wifi.CIM_WiFiPort]["Pull"] = Method{
-		Execute: func() (client.Message, error) {
-			er, _ := wsman.CIM.WiFiPort.Enumerate()
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.WiFiPort.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
 			response, err := wsman.CIM.WiFiPort.Pull(er.Body.EnumerateResponse.EnumerationContext)
 			return *response.Message, err
 		},
