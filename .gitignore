@@ -3,8 +3,6 @@ app
 *.test
 *.out
 tmp
-launch.json
 **/*.db
 **/__debug_bin
 **/*.exe
-.vscode/settings.json
