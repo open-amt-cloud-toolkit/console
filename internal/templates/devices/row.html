@@ -4,6 +4,7 @@
   <td class="whitespace-nowrap px-1 py-1">
     <a
       hx-get="/device/connect/{{.Id}}"
+      hx-push-url="/devices/{{.Id}}"
       hx-target="#content"
       hx-swap="innerHTML"
       hx-indicator="#processing"

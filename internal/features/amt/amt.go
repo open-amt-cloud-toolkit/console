@@ -29,7 +29,7 @@ func ProvisioningStateLookup(state int) string {
 
 	result, ok := valueMap[state]
 	if !ok {
-		result = "invalid provisoining state"
+		result = "invalid provisioning state"
 	}
 
 	return result

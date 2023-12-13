@@ -1,48 +1,40 @@
-<div id="device">
-    <div id="processing" class="htmx-indicator">Processing...</div>
-    <div id="toastHolder"></div>
-    <div class="flex justify-end">
-
-        <button hx-get="/devices" hx-target="#content" hx-swap="innerHTML" hx-indicator="#processing"
-            class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
-            href="">
-            Device List
-        </button>
+<nav class="bg-gray-400 px-8">
+    <div class="flex h-16 items-center">
+        <div class="w-1/2 flex justify-start">
+            <h1 class="text-3xl">{{.Name}}</h1>
+        </div>
+        <div class="w-1/2 flex justify-end">
+            <button hx-get="/device/testToast/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
+                hx-target="#toastHolder">Test Toast</button>
+            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
+                hx-vals='{"power": "on"}' hx-target="#toastHolder">
+                On
+            </button>
+            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
+                hx-vals='{"power": "off"}' hx-target="#toastHolder">
+                Off
+            </button>
+            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
+                hx-vals='{"power": "reboot"}' hx-target="#toastHolder">
+                Reboot
+            </button>
+            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
+                hx-vals='{"power": "powercycle"}' hx-target="#toastHolder">
+                Power Cycle
+            </button>
+        </div>
     </div>
+</nav>
+
+<div id="device" class="m-8">
+   
     <div class="flex flex-col">
-        <h1 class="text-3xl">{{.Name}}</h1>
         <h2 class="text-3x1">Host OS FQDN: {{.AMTSpecific.GeneralSettings.HostOSFQDN}}</h2>
         {{if .AMTSpecific.UUID}}
         <h2 class="text-3x1">AMT UUID: {{.AMTSpecific.UUID}}</h2>
         {{end}}
         <h2 class="text-3x1">Power State: {{.PowerState}}</h2>
-        <div class="flex justify-end">
-            <button hx-get="/device/testToast/{{.Id}}"
-                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
-                href="" hx-target="#toastHolder">Test Toast</button>
-            <button hx-get="/device/powerState/{{.Id}}"
-                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
-                href="" hx-vals='{"power": "on"}' hx-target="#toastHolder">
-                On
-            </button>
-            <button hx-get="/device/powerState/{{.Id}}"
-                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
-                href="" hx-vals='{"power": "off"}' hx-target="#toastHolder">
-                Off
-            </button>
-            <button hx-get="/device/powerState/{{.Id}}"
-                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
-                href="" hx-vals='{"power": "reboot"}' hx-target="#toastHolder">
-                Reboot
-            </button>
-            <button hx-get="/device/powerState/{{.Id}}"
-                class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 bg-blue-700 rounded-lg focus:shadow-outline hover:bg-blue-800"
-                href="" hx-vals='{"power": "powercycle"}' hx-target="#toastHolder">
-                Power Cycle
-            </button>
-        </div>
-        <br>
-        <div id="loading" class="htmx-indicator">Loading...</div>
+
         <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
                 <div class="overflow-hidden">
@@ -127,8 +119,7 @@
                         </div>
                     </div>
                     <br>
-                    <div id="w-explorer" hx-get="/device/wsman-explorer/{{.Id}}" hx-trigger="load"
-                        hx-target="#w-explorer" hx-swap="innerHTML"></div>
+                    <div id="w-explorer" hx-get="/device/wsman-explorer/{{.Id}}" hx-trigger="load" hx-target="#w-explorer" hx-swap="innerHTML"></div>
                 </div>
             </div>
         </div>

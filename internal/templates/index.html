@@ -13,15 +13,15 @@
   <title>Device Management Console</title>
   <script>
     htmx.logAll();
-    window.addEventListener('beforeunload', function (e) {
-      fetch('/close', {
-        method: 'POST',
-        body: JSON.stringify({ message: 'Browser is closing' }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-    })
+    // window.addEventListener('beforeunload', function (e) {
+    //   fetch('/close', {
+    //     method: 'POST',
+    //     body: JSON.stringify({ message: 'Browser is closing' }),
+    //     headers: {
+    //       'Content-Type': 'application/json'
+    //     }
+    //   })
+    // })
   </script>
 </head>
 
@@ -137,9 +137,15 @@
         </div>
       </div>
     </nav>
-
+    <div id="toastHolder" class="absolute right-6 top-6"></div>
+    <div id="processing" class='w-full htmx-indicator'>
+      <div class="h-1.5 w-full bg-pink-100 overflow-hidden">
+        <div class="progress w-full h-full bg-pink-500 left-right"></div>
+      </div>
+    </div>
     <main hx-ext="response-targets">
-      <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8" hx-target="#profile-menu" id="content">
+      
+      <div class="mx-auto max-w-7xl" id="content">
         <!-- Your content -->
       </div>
     </main>
