@@ -7,16 +7,21 @@ import (
 	"strconv"
 
 	"github.com/jritsema/go-htmx-starter/internal"
+	"github.com/jritsema/go-htmx-starter/internal/features/amt"
+	"github.com/jritsema/go-htmx-starter/internal/features/explorer"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/power"
 	"go.etcd.io/bbolt"
 )
 
 type DeviceThing struct {
 	db *bbolt.DB
 	//parsed templates
-	html *template.Template
+	html  *template.Template
+	wsman *wsman.Messages
 }
 
 func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
@@ -63,97 +68,129 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	router.Handle("/device/connect", web.Action(dt.DeviceConnect))
 	router.Handle("/device/connect/", web.Action(dt.DeviceConnect))
 
-	router.Handle("/device/ethernet", web.Action(dt.GetEthernet))
-	router.Handle("/device/ethernet/", web.Action(dt.GetEthernet))
+	router.Handle("/device/powerState/", web.Action(dt.ChangePowerState))
 
-	// router.Handle("/device/powerState/", web.Action(dt.ChangePowerState))
+	router.Handle("/device/wsman-explorer", web.Action(dt.GetWsmanExplorer))
+	router.Handle("/device/wsman-explorer/", web.Action(dt.GetWsmanExplorer))
+
+	router.Handle("/device/ws-classes", web.Action(dt.GetWsmanClasses))
+	router.Handle("/device/ws-classes/", web.Action(dt.GetWsmanClasses))
+
+	router.Handle("/device/ws-methods", web.Action(dt.GetWsmanMethods))
+	router.Handle("/device/ws-methods/", web.Action(dt.GetWsmanMethods))
+
+	router.Handle("/device/test", web.Action(dt.WsmanTest))
+	router.Handle("/device/test/", web.Action(dt.WsmanTest))
+
+	router.Handle("/device/testToast", web.Action(dt.TestToast))
+	router.Handle("/device/testToast/", web.Action(dt.TestToast))
+
+	router.Handle("/device/closeToast", web.Action(dt.CloseToast))
+	router.Handle("/device/closeToast/", web.Action(dt.CloseToast))
 
 	return dt
 }
-func (dt DeviceThing) Index(r *http.Request) *web.Response {
+
+func (dt *DeviceThing) TestToast(r *http.Request) *web.Response {
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/toast.html", "PowerState", nil)
+}
+
+func (dt *DeviceThing) CloseToast(r *http.Request) *web.Response {
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/toastClose.html", nil, nil)
+}
+
+func (dt *DeviceThing) Index(r *http.Request) *web.Response {
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/index.html", dt.GetDevices(), nil)
 }
 
 // GET /device/add
-func (dt DeviceThing) DeviceAdd(r *http.Request) *web.Response {
+func (dt *DeviceThing) DeviceAdd(r *http.Request) *web.Response {
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/devices-add.html", dt.GetDevices(), nil)
 }
 
 // /GET device/edit/{id}
-func (dt DeviceThing) DeviceEdit(r *http.Request) *web.Response {
+func (dt *DeviceThing) DeviceEdit(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	row := dt.GetDeviceByID(id)
 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/row-edit.html", row, nil)
 }
 
-// Connect to device
-func (dt DeviceThing) DeviceConnect(r *http.Request) *web.Response {
+func (dt *DeviceThing) GetWsmanExplorer(r *http.Request) *web.Response {
 	id, _ := web.PathLast(r)
 	device := dt.GetDeviceByID(id)
-	wsman := CreateWsmanConnection(device)
-	// Get General Settings
-	gs, err := GetGeneralSettings(wsman)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
-	// Get Setup and Configuration Service
-	scs, err := GetSetupAndConfigurationService(wsman)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
-	dc := DeviceContent{
-		Device:                       device,
-		GeneralSettings:              gs,
-		SetupAndConfigurationService: scs,
-	}
-
-	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", dc, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/wsman-explorer.html", device, nil)
 }
 
-func (dt DeviceThing) GetEthernet(r *http.Request) *web.Response {
-	id, _ := web.PathLast(r)
+func (dt *DeviceThing) GetWsmanClasses(r *http.Request) *web.Response {
+	classes := explorer.GetSupportedWsmanClasses("")
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/class-select.html", classes, nil)
+}
+
+func (dt *DeviceThing) GetWsmanMethods(r *http.Request) *web.Response {
 	queryValues := r.URL.Query()
-	keyValue := queryValues.Get("eth")
-	eth, err := strconv.Atoi(keyValue)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	device := dt.GetDeviceByID(id)
-	wsman := CreateWsmanConnection(device)
-	// Get Ethernet Settings
-	ep, err := GetEthernetSettings(wsman, eth)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	ec := EthernetContent{
-		EthernetPort: ep,
-	}
-	if ec.EthernetPort.ElementName == "" {
-		return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", nil, nil)
-	}
-	return webtools.HTML(r, http.StatusOK, dt.html, "devices/ethernet.html", ec.EthernetPort, nil)
+	selected := queryValues.Get("class-selector")
+	class := explorer.GetSupportedWsmanClasses(selected)
+	methods := class[0].MethodList
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/method-select.html", methods, nil)
 }
 
-// func (dt DeviceThing) ChangePowerState(r *http.Request) *web.Response {
-// 	id, _ := web.PathLast(r)
-// 	device := dt.GetDeviceByID(id)
-// 	wsman := CreateWsmanConnection(device)
-// 	reboot := power.PowerOffHard
-// 	response, errors := ChangePowerState(wsman, reboot)
-// 	if errors != nil {
-// 		return webtools.HTML(r, http.StatusRequestTimeout, dt.html, "devices/errors.html", errors, nil)
-// 	}
-// 	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", response, nil)
-// }
+func (dt *DeviceThing) WsmanTest(r *http.Request) *web.Response {
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	class := r.Form.Get("class-selector")
+	method := r.Form.Get("method-selector")
+	param := r.Form.Get("method-param")
+
+	response, err := explorer.MakeWsmanCall(class, method, param)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/wsman-explorer/wsman.html", response, nil)
+}
+
+// Connect to device
+func (dt *DeviceThing) DeviceConnect(r *http.Request) *web.Response {
+	id, _ := web.PathLast(r)
+	device := dt.GetDeviceByID(id)
+	amtConnection := amt.AMTConnectionParameters{
+		Target:            device.Address,
+		Username:          device.Username,
+		Password:          device.Password,
+		UseTLS:            device.UseTLS,
+		SelfSignedAllowed: device.SelfSignedAllowed,
+	}
+	wsman := amt.CreateWsmanConnection(amtConnection)
+	dt.wsman = &wsman
+	device.AMTSpecific = amt.GetDeviceDetails(wsman)
+	explorer.Init(wsman)
+	var err error
+	device.PowerState, err = amt.GetPowerState(wsman)
+	if err != nil {
+		device.PowerState = "Error Reading Powerstate"
+	}
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/device.html", device, nil)
+}
+
+func (dt *DeviceThing) ChangePowerState(r *http.Request) *web.Response {
+	queryValues := r.URL.Query()
+	keyValue := queryValues.Get("power")
+	technology := "amt"
+	powerStateRequested := amt.GetPowerStateValue(technology, keyValue)
+	response, errors := amt.ChangePowerState(*dt.wsman, power.PowerState(powerStateRequested))
+	if errors != nil {
+		return webtools.HTML(r, http.StatusRequestTimeout, dt.html, "devices/errors.html", errors, nil)
+	}
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/toast.html", response.Body.RequestPowerStateChange_OUTPUT.ReturnValue, nil)
+}
 
 // GET /device
 // GET /device/{id}
 // DELETE /device/{id}
 // PUT /device/{id}
 // POST /device
-func (dt DeviceThing) Devices(r *http.Request) *web.Response {
+func (dt *DeviceThing) Devices(r *http.Request) *web.Response {
 	id, segments := web.PathLast(r)
 	switch r.Method {
 
@@ -175,7 +212,10 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 	//save edit
 	case http.MethodPut:
 		row := dt.GetDeviceByID(id)
-		r.ParseForm()
+		err := r.ParseForm()
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
 		row.Id, _ = strconv.Atoi(id)
 		row.Name = r.Form.Get("name")
 		row.Address = r.Form.Get("address")
@@ -201,8 +241,14 @@ func (dt DeviceThing) Devices(r *http.Request) *web.Response {
 	//save add
 	case http.MethodPost:
 		row := Device{}
-		r.ParseForm()
-		row.Id, _ = strconv.Atoi(r.Form.Get("id"))
+		err := r.ParseForm()
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+		row.Id, err = strconv.Atoi(r.Form.Get("id"))
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
 		row.Name = r.Form.Get("name")
 		row.Address = r.Form.Get("address")
 		row.Username = r.Form.Get("username")

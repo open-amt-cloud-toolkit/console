@@ -1,0 +1,7 @@
+<label for="method-selector" class="w-1/2">WSMAN Method:</label>
+<select id="method-selector" class="w-1/2" data-include-add="" name="method-selector" title="method-selector">
+    <option value="" selected disabled>Select an option</option>
+    {{range .}}
+    <option>{{.Name}}</option>
+    {{end}}
+</select>
