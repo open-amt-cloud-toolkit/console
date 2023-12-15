@@ -37,21 +37,71 @@ func ProvisioningStateLookup(state int) string {
 
 func PowerControlLookup(value int) string {
 	valueMap := map[int]string{
-		2:  "PowerOn",
-		3:  "SleepLight",
-		4:  "SleepDeep",
-		5:  "PowerCycleOffSoft",
-		6:  "PowerOffHard",
+		2:  "On",
+		3:  "Sleep - Light",
+		4:  "Sleep - Deep",
+		5:  "Power Cycle Off - Soft",
+		6:  "Power Off - Hard",
 		7:  "Hibernate",
-		8:  "PowerOffSoft",
-		9:  "PowerCycleOffHard",
-		10: "MasterBusReset",
-		11: "DiagnosticInterruptNMI",
-		12: "PowerOffSoftGraceful",
-		13: "PowerOffHardGraceful",
-		14: "MasterBusResetGraceful",
-		15: "PowerCycleOffSoftGraceful",
-		16: "PowerCycleOffHardGraceful",
+		8:  "Power Off - Soft",
+		9:  "Power Cycle Off - Hard",
+		10: "Master Bus Reset",
+		11: "Diagnostic Interrupt NMI",
+		12: "Power Off - Soft Graceful",
+		13: "Power Off - Hard Graceful",
+		14: "Master Bus Reset - Graceful",
+		15: "Power Cycle Off - Soft Graceful",
+		16: "Power Cycle Off - Hard Graceful",
+	}
+
+	result, ok := valueMap[value]
+	if !ok {
+		result = "invalid power control value"
+	}
+
+	return result
+}
+
+func PowerControlReturnValue(value int) string {
+	valueMap := map[int]string{
+		0:    "Completed with No Error",
+		1:    "Not Supported",
+		2:    "Unknown or Unspecified Error",
+		3:    "Cannot complete within Timeout Period",
+		4:    "Failed",
+		5:    "Invalid Parameter",
+		6:    "In Use",
+		4096: "Method Parameters Checked - Job Started",
+		4097: "Invalid State Transition",
+		4098: "Use of Timeout Parameter Not Supported",
+		4099: "Busy",
+	}
+
+	result, ok := valueMap[value]
+	if !ok {
+		result = "invalid power control value"
+	}
+
+	return result
+}
+
+func PowerStateLookup(value int) string {
+	valueMap := map[int]string{
+		2:  "On",
+		3:  "Sleep - Light",
+		4:  "Sleep - Deep",
+		5:  "Power Cycle Off - Soft",
+		6:  "Power Off - Hard",
+		7:  "Hibernate",
+		8:  "Power Off - Soft",
+		9:  "Power Cycle Off - Hard",
+		10: "Master Bus Reset",
+		11: "Diagnostic Interrupt NMI",
+		12: "Power Off - Soft Graceful",
+		13: "Power Off - Hard Graceful",
+		14: "Master Bus Reset - Graceful",
+		15: "Power Cycle Off - Soft Graceful",
+		16: "Power Cycle Off - Hard Graceful",
 	}
 
 	result, ok := valueMap[value]
@@ -130,12 +180,13 @@ func GetPowerState(wsman wsman.Messages) (powerState string, err error) {
 	return
 }
 
-func ChangePowerState(wsman wsman.Messages, powerState power.PowerState) (response power.Response, err error) {
-	response, err = wsman.CIM.PowerManagementService.RequestPowerStateChange(powerState)
+func ChangePowerState(wsman wsman.Messages, powerState power.PowerState) (powerResponse string, err error) {
+	response, err := wsman.CIM.PowerManagementService.RequestPowerStateChange(powerState)
 	if err != nil {
-		return power.Response{}, err
+		return "", err
 	}
-	return response, nil
+	powerResponse = PowerControlReturnValue(response.Body.RequestPowerStateChangeResponse.ReturnValue)
+	return powerResponse, nil
 }
 
 func GetPowerStateValue(technology string, value string) power.PowerState {

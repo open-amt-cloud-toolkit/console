@@ -19,6 +19,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/bios"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/computer"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/concrete"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/credential"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/kvm"
@@ -49,12 +50,13 @@ func GetSupportedWsmanClasses(className string) []Class {
 		{Name: setupandconfiguration.AMT_SetupAndConfigurationService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "GetUUID"}}},
 		{Name: tls.AMT_TLSSettingData, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: userinitiatedconnection.AMT_UserInitiatedConnectionService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: bios.CIM_BIOSElement, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: boot.CIM_BootConfigSetting, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: boot.CIM_BootService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: boot.CIM_BootSourceSetting, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: bios.CIM_BIOSElement, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: computer.CIM_ComputerSystemPackage, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: credential.CIM_CredentialContext, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: concrete.CIM_ConcreteDependency, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: credential.CIM_CredentialContext, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: ieee8021x.CIM_IEEE8021xSettings, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: kvm.CIM_KVMRedirectionSAP, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: mediaaccess.CIM_MediaAccessDevice, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
@@ -564,14 +566,26 @@ func Init(wsman wsman.Messages) {
 			return *response.Message, err
 		},
 	}
-	// CredentialContext
-	Lookup[credential.CIM_CredentialContext] = make(map[string]Method)
-	Lookup[credential.CIM_CredentialContext]["Get"] = Method{
-		Execute: func(instanceID string) (client.Message, error) {
-			response, err := wsman.CIM.CredentialContext.Get(instanceID)
+	// Concrete
+	Lookup[concrete.CIM_ConcreteDependency] = make(map[string]Method)
+	Lookup[concrete.CIM_ConcreteDependency]["Enumerate"] = Method{
+		Execute: func(value string) (client.Message, error) {
+			response, err := wsman.CIM.ConcreteDependency.Enumerate()
 			return *response.Message, err
 		},
 	}
+	Lookup[concrete.CIM_ConcreteDependency]["Pull"] = Method{
+		Execute: func(value string) (client.Message, error) {
+			er, err := wsman.CIM.ConcreteDependency.Enumerate()
+			if err != nil {
+				return client.Message{}, err
+			}
+			response, err := wsman.CIM.ConcreteDependency.Pull(er.Body.EnumerateResponse.EnumerationContext)
+			return *response.Message, err
+		},
+	}
+	// CredentialContext
+	Lookup[credential.CIM_CredentialContext] = make(map[string]Method)
 	Lookup[credential.CIM_CredentialContext]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.CredentialContext.Enumerate()
@@ -590,12 +604,6 @@ func Init(wsman wsman.Messages) {
 	}
 	// IEEE802.1XSettings
 	Lookup[ieee8021x.CIM_IEEE8021xSettings] = make(map[string]Method)
-	Lookup[ieee8021x.CIM_IEEE8021xSettings]["Get"] = Method{
-		Execute: func(instanceID string) (client.Message, error) {
-			response, err := wsman.CIM.IEEE8021xSettings.Get(instanceID)
-			return *response.Message, err
-		},
-	}
 	Lookup[ieee8021x.CIM_IEEE8021xSettings]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.IEEE8021xSettings.Enumerate()
