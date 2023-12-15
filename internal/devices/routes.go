@@ -92,7 +92,11 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 }
 
 func (dt *DeviceThing) TestToast(r *http.Request) *web.Response {
-	return webtools.HTML(r, http.StatusOK, dt.html, "devices/toast.html", "PowerState", nil)
+	powerState, errors := amt.GetPowerState(*dt.wsman)
+	if errors != nil {
+		return webtools.HTML(r, http.StatusRequestTimeout, dt.html, "devices/errors.html", errors, nil)
+	}
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/toast.html", powerState, nil)
 }
 
 func (dt *DeviceThing) CloseToast(r *http.Request) *web.Response {
@@ -178,11 +182,11 @@ func (dt *DeviceThing) ChangePowerState(r *http.Request) *web.Response {
 	keyValue := queryValues.Get("power")
 	technology := "amt"
 	powerStateRequested := amt.GetPowerStateValue(technology, keyValue)
-	response, errors := amt.ChangePowerState(*dt.wsman, power.PowerState(powerStateRequested))
+	powerResponse, errors := amt.ChangePowerState(*dt.wsman, power.PowerState(powerStateRequested))
 	if errors != nil {
 		return webtools.HTML(r, http.StatusRequestTimeout, dt.html, "devices/errors.html", errors, nil)
 	}
-	return webtools.HTML(r, http.StatusOK, dt.html, "devices/toast.html", response.Body.RequestPowerStateChange_OUTPUT.ReturnValue, nil)
+	return webtools.HTML(r, http.StatusOK, dt.html, "devices/toast.html", fmt.Sprintf("Power State Change %s", powerResponse), nil)
 }
 
 // GET /device
