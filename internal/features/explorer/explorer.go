@@ -18,6 +18,9 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/userinitiatedconnection"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/bios"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/boot"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/card"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/chassis"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/chip"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/computer"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/concrete"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/credential"
@@ -26,6 +29,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/mediaaccess"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/physical"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/power"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/processor"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/service"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/software"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/system"
@@ -53,24 +57,24 @@ func GetSupportedWsmanClasses(className string) []Class {
 		{Name: bios.CIM_BIOSElement, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: boot.CIM_BootConfigSetting, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: boot.CIM_BootService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: boot.CIM_BootSourceSetting, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: boot.CIM_BootSourceSetting, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: computer.CIM_ComputerSystemPackage, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: concrete.CIM_ConcreteDependency, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: credential.CIM_CredentialContext, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: ieee8021x.CIM_IEEE8021xSettings, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: ieee8021x.CIM_IEEE8021xSettings, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: kvm.CIM_KVMRedirectionSAP, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: mediaaccess.CIM_MediaAccessDevice, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: physical.CIM_Card, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: physical.CIM_Chassis, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: physical.CIM_Chip, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: physical.CIM_PhysicalMemory, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: physical.CIM_PhysicalPackage, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: physical.CIM_Processor, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: card.CIM_Card, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: chassis.CIM_Chassis, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: chip.CIM_Chip, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: physical.CIM_PhysicalMemory, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: physical.CIM_PhysicalPackage, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: processor.CIM_Processor, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: power.CIM_PowerManagementService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "RequestPowerStateChange"}}},
-		{Name: service.CIM_ServiceAvailableToElement, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: service.CIM_ServiceAvailableToElement, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: software.CIM_SoftwareIdentity, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: system.CIM_SystemPackaging, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
-		{Name: wifi.CIM_WiFiEndpointSettings, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: system.CIM_SystemPackaging, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
+		{Name: wifi.CIM_WiFiEndpointSettings, MethodList: []Method{{Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: wifi.CIM_WiFiPort, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 	}
 	if className == "" {
@@ -496,12 +500,6 @@ func Init(wsman wsman.Messages) {
 	}
 	// BootSourceSetting
 	Lookup[boot.CIM_BootSourceSetting] = make(map[string]Method)
-	Lookup[boot.CIM_BootSourceSetting]["Get"] = Method{
-		Execute: func(instanceID string) (client.Message, error) {
-			response, err := wsman.CIM.BootSourceSetting.Get(instanceID)
-			return *response.Message, err
-		},
-	}
 	Lookup[boot.CIM_BootSourceSetting]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.BootSourceSetting.Enumerate()
@@ -663,20 +661,20 @@ func Init(wsman wsman.Messages) {
 		},
 	}
 	// PhysicalCard
-	Lookup[physical.CIM_Card] = make(map[string]Method)
-	Lookup[physical.CIM_Card]["Get"] = Method{
+	Lookup[card.CIM_Card] = make(map[string]Method)
+	Lookup[card.CIM_Card]["Get"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Card.Get()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Card]["Enumerate"] = Method{
+	Lookup[card.CIM_Card]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Card.Enumerate()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Card]["Pull"] = Method{
+	Lookup[card.CIM_Card]["Pull"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			er, err := wsman.CIM.Card.Enumerate()
 			if err != nil {
@@ -687,20 +685,20 @@ func Init(wsman wsman.Messages) {
 		},
 	}
 	// PhysicalChassis
-	Lookup[physical.CIM_Chassis] = make(map[string]Method)
-	Lookup[physical.CIM_Chassis]["Get"] = Method{
+	Lookup[chassis.CIM_Chassis] = make(map[string]Method)
+	Lookup[chassis.CIM_Chassis]["Get"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chassis.Get()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Chassis]["Enumerate"] = Method{
+	Lookup[chassis.CIM_Chassis]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chassis.Enumerate()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Chassis]["Pull"] = Method{
+	Lookup[chassis.CIM_Chassis]["Pull"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			er, err := wsman.CIM.Chassis.Enumerate()
 			if err != nil {
@@ -711,20 +709,20 @@ func Init(wsman wsman.Messages) {
 		},
 	}
 	// PhysicalChip
-	Lookup[physical.CIM_Chip] = make(map[string]Method)
-	Lookup[physical.CIM_Chip]["Get"] = Method{
+	Lookup[chip.CIM_Chip] = make(map[string]Method)
+	Lookup[chip.CIM_Chip]["Get"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chip.Get()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Chip]["Enumerate"] = Method{
+	Lookup[chip.CIM_Chip]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Chip.Enumerate()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Chip]["Pull"] = Method{
+	Lookup[chip.CIM_Chip]["Pull"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			er, err := wsman.CIM.Chip.Enumerate()
 			if err != nil {
@@ -736,12 +734,6 @@ func Init(wsman wsman.Messages) {
 	}
 	// PhysicalMemory
 	Lookup[physical.CIM_PhysicalMemory] = make(map[string]Method)
-	Lookup[physical.CIM_PhysicalMemory]["Get"] = Method{
-		Execute: func(instanceID string) (client.Message, error) {
-			response, err := wsman.CIM.PhysicalMemory.Get(instanceID)
-			return *response.Message, err
-		},
-	}
 	Lookup[physical.CIM_PhysicalMemory]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.PhysicalMemory.Enumerate()
@@ -760,12 +752,6 @@ func Init(wsman wsman.Messages) {
 	}
 	// PhysicalPackage
 	Lookup[physical.CIM_PhysicalPackage] = make(map[string]Method)
-	Lookup[physical.CIM_PhysicalPackage]["Get"] = Method{
-		Execute: func(instanceID string) (client.Message, error) {
-			response, err := wsman.CIM.PhysicalPackage.Get(instanceID)
-			return *response.Message, err
-		},
-	}
 	Lookup[physical.CIM_PhysicalPackage]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.PhysicalPackage.Enumerate()
@@ -783,20 +769,20 @@ func Init(wsman wsman.Messages) {
 		},
 	}
 	// PhysicalProcessor
-	Lookup[physical.CIM_Processor] = make(map[string]Method)
-	Lookup[physical.CIM_Processor]["Get"] = Method{
+	Lookup[processor.CIM_Processor] = make(map[string]Method)
+	Lookup[processor.CIM_Processor]["Get"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Processor.Get()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Processor]["Enumerate"] = Method{
+	Lookup[processor.CIM_Processor]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.Processor.Enumerate()
 			return *response.Message, err
 		},
 	}
-	Lookup[physical.CIM_Processor]["Pull"] = Method{
+	Lookup[processor.CIM_Processor]["Pull"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			er, err := wsman.CIM.Processor.Enumerate()
 			if err != nil {
@@ -842,12 +828,6 @@ func Init(wsman wsman.Messages) {
 	}
 	// ServiceAvailableToElement
 	Lookup[service.CIM_ServiceAvailableToElement] = make(map[string]Method)
-	Lookup[service.CIM_ServiceAvailableToElement]["Get"] = Method{
-		Execute: func(instanceID string) (client.Message, error) {
-			response, err := wsman.CIM.ServiceAvailableToElement.Get(instanceID)
-			return *response.Message, err
-		},
-	}
 	Lookup[service.CIM_ServiceAvailableToElement]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.ServiceAvailableToElement.Enumerate()
@@ -868,7 +848,11 @@ func Init(wsman wsman.Messages) {
 	Lookup[software.CIM_SoftwareIdentity] = make(map[string]Method)
 	Lookup[software.CIM_SoftwareIdentity]["Get"] = Method{
 		Execute: func(instanceID string) (client.Message, error) {
-			response, err := wsman.CIM.SoftwareIdentity.Get(instanceID)
+			selector := software.Selector{
+				Name:  "InstanceID",
+				Value: "AMTApps",
+			}
+			response, err := wsman.CIM.SoftwareIdentity.Get(selector)
 			return *response.Message, err
 		},
 	}
@@ -890,12 +874,6 @@ func Init(wsman wsman.Messages) {
 	}
 	// SystemPackaging
 	Lookup[system.CIM_SystemPackaging] = make(map[string]Method)
-	Lookup[system.CIM_SystemPackaging]["Get"] = Method{
-		Execute: func(value string) (client.Message, error) {
-			response, err := wsman.CIM.SystemPackaging.Get()
-			return *response.Message, err
-		},
-	}
 	Lookup[system.CIM_SystemPackaging]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.SystemPackaging.Enumerate()
@@ -914,12 +892,6 @@ func Init(wsman wsman.Messages) {
 	}
 	// WiFiEndpointSettings
 	Lookup[wifi.CIM_WiFiEndpointSettings] = make(map[string]Method)
-	Lookup[wifi.CIM_WiFiEndpointSettings]["Get"] = Method{
-		Execute: func(value string) (client.Message, error) {
-			response, err := wsman.CIM.WiFiEndpointSettings.Get()
-			return *response.Message, err
-		},
-	}
 	Lookup[wifi.CIM_WiFiEndpointSettings]["Enumerate"] = Method{
 		Execute: func(value string) (client.Message, error) {
 			response, err := wsman.CIM.WiFiEndpointSettings.Enumerate()
