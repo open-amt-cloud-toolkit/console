@@ -24,7 +24,7 @@ jobs:
 
         run: docker build . --file Dockerfile --tag app:${{ github.sha }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@69cbbc0cbbf6a2b0bab8dcf0e9f2d7ead08e87e4 # master
+        uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # master
         with:
           image-ref: 'app:${{ github.sha }}'
           format: 'sarif'
