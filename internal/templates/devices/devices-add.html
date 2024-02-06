@@ -1,0 +1,6 @@
+<tbody id="table-body">
+  {{ template "devices/row-add.html" . }}
+	{{range .}}
+		{{ template "devices/row.html". }}
+	{{end}}
+</tbody>

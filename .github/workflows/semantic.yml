@@ -1,0 +1,28 @@
+name: "Semantic Pull Request"
+
+on:
+  pull_request:
+    types: ["opened", "edited", "reopened", "synchronize"]
+permissions:
+  contents: read
+jobs:
+  main:
+    name: Validate PR and Commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@0d749a1a91d4770e983a7b8f83d4a3f0e7e0874e # v5.4.4
+        with:
+          configFile: .github/commitlint.config.js
+      - name: Install Dependencies
+        run: npm install @commitlint/config-conventional
+      - uses: JulienKode/pull-request-name-linter-action@8c05fb989d9f156ce61e33754f9802c9d3cffa58 # v0.5.0
+        with:
+          configuration-path: ./.github/commitlint.config.js
