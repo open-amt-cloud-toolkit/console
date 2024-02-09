@@ -15,7 +15,6 @@ type IndexThing struct {
 }
 
 var (
-	router *http.ServeMux
 	//parsed templates
 	html *template.Template
 	//go:embed all:templates/**

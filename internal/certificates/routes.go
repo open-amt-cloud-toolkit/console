@@ -21,7 +21,6 @@ import (
 // Cancel ->	 GET /company -> nothing, companys.html
 
 type CertificateThing struct {
-	router *http.ServeMux
 	//parsed templates
 	html *template.Template
 }
@@ -93,7 +92,7 @@ func (dt CertificateThing) Certificates(r *http.Request) *web.Response {
 	//save edit
 	case http.MethodPut:
 		row := dt.GetByID(id)
-		r.ParseForm()
+		_ = r.ParseForm()
 		row.UUID = id
 		row.Name = r.Form.Get("name")
 		row.IPAddress = r.Form.Get("ipaddress")
@@ -104,7 +103,7 @@ func (dt CertificateThing) Certificates(r *http.Request) *web.Response {
 	//save add
 	case http.MethodPost:
 		row := Certificate{}
-		r.ParseForm()
+		_ = r.ParseForm()
 		row.UUID = r.Form.Get("uuid")
 		row.Name = r.Form.Get("name")
 		row.IPAddress = r.Form.Get("ipaddress")
