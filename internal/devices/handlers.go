@@ -1,7 +1,9 @@
 package devices
 
-func ProvisioningModeLookup(mode int) string {
-	valueMap := map[int]string{
+import "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+
+func ProvisioningModeLookup(mode setupandconfiguration.ProvisioningModeValue) string {
+	valueMap := map[setupandconfiguration.ProvisioningModeValue]string{
 		1: "Admin Control Mode",
 		4: "Client Control Mode",
 	}
@@ -14,8 +16,8 @@ func ProvisioningModeLookup(mode int) string {
 	return result
 }
 
-func ProvisioningStateLookup(state int) string {
-	valueMap := map[int]string{
+func ProvisioningStateLookup(state setupandconfiguration.ProvisioningStateValue) string {
+	valueMap := map[setupandconfiguration.ProvisioningStateValue]string{
 		0: "Pre-Provisioning",
 		1: "In Provisioning",
 		2: "Post Provisioning",
