@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [1.18.x, 1.19.x, 1.20.x]
+        go-version: [1.19.x, 1.20.x, 1.21.x]
 
     steps:
       - name: Harden Runner
@@ -55,6 +55,7 @@ jobs:
       - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
         name: Upload Coverage Results
       - name: GitHub Upload Release Artifacts
+        if: ${{ matrix.go-version }} == '1.20.x'
         uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: JUnit Results
