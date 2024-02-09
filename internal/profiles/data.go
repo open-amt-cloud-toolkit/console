@@ -158,9 +158,9 @@ func (p *Profile) IsValid() (bool, []string) {
 // Get all profiles
 func (pt ProfileThing) GetProfiles() []Profile {
 	var data []Profile
-	pt.db.Update(func(tx *bbolt.Tx) error {
+	_ = pt.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("Profiles"))
-		b.ForEach(func(k, v []byte) error {
+		_ = b.ForEach(func(k, v []byte) error {
 			result := &Profile{}
 
 			// Marshal user data into bytes.
@@ -179,7 +179,7 @@ func (pt ProfileThing) GetProfiles() []Profile {
 func (pt ProfileThing) GetProfileByID(id string) Profile {
 	result := Profile{}
 
-	pt.db.Update(func(tx *bbolt.Tx) error {
+	_ = pt.db.Update(func(tx *bbolt.Tx) error {
 		// Get buckets
 		b := tx.Bucket([]byte("Profiles"))
 		intId, _ := strconv.Atoi(id)
@@ -196,7 +196,7 @@ func (pt ProfileThing) GetProfileByID(id string) Profile {
 }
 
 func (pt ProfileThing) UpdateProfile(profile Profile) {
-	pt.db.Update(func(tx *bbolt.Tx) error {
+	_ = pt.db.Update(func(tx *bbolt.Tx) error {
 		// Get buckets
 		b := tx.Bucket([]byte("Profiles"))
 
@@ -243,11 +243,11 @@ func (pt ProfileThing) AddProfile(profile Profile) error {
 }
 
 func (pt ProfileThing) DeleteProfile(id string) {
-	pt.db.Update(func(tx *bbolt.Tx) error {
+	_ = pt.db.Update(func(tx *bbolt.Tx) error {
 		// Get buckets
 		b := tx.Bucket([]byte("Profiles"))
 		intId, _ := strconv.Atoi(id)
-		b.Delete(itob(intId))
+		_ = b.Delete(itob(intId))
 		return nil
 	})
 }

@@ -31,9 +31,9 @@ func (d *Device) IsValid() (bool, []string) {
 // Get all devices
 func (dt DeviceThing) GetDevices() []Device {
 	var data []Device
-	dt.db.Update(func(tx *bbolt.Tx) error {
+	_ = dt.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("Devices"))
-		b.ForEach(func(k, v []byte) error {
+		_ = b.ForEach(func(k, v []byte) error {
 			result := &Device{}
 
 			// Marshal user data into bytes.
@@ -52,7 +52,7 @@ func (dt DeviceThing) GetDevices() []Device {
 func (dt DeviceThing) GetDeviceByID(id string) Device {
 	result := Device{}
 
-	dt.db.Update(func(tx *bbolt.Tx) error {
+	_ = dt.db.Update(func(tx *bbolt.Tx) error {
 		// Get buckets
 		b := tx.Bucket([]byte("Devices"))
 		intId, _ := strconv.Atoi(id)
@@ -69,7 +69,7 @@ func (dt DeviceThing) GetDeviceByID(id string) Device {
 }
 
 func (dt DeviceThing) UpdateDevice(device Device) {
-	dt.db.Update(func(tx *bbolt.Tx) error {
+	_ = dt.db.Update(func(tx *bbolt.Tx) error {
 		// Get buckets
 		b := tx.Bucket([]byte("Devices"))
 
@@ -103,7 +103,7 @@ func (dt DeviceThing) UpdateDevice(device Device) {
 }
 
 func (dt DeviceThing) AddDevice(device Device) {
-	dt.db.Update(func(tx *bbolt.Tx) error {
+	_ = dt.db.Update(func(tx *bbolt.Tx) error {
 		// Get buckets
 		b := tx.Bucket([]byte("Devices"))
 
@@ -124,11 +124,11 @@ func (dt DeviceThing) AddDevice(device Device) {
 }
 
 func (dt DeviceThing) DeleteDevice(id string) {
-	dt.db.Update(func(tx *bbolt.Tx) error {
+	_ = dt.db.Update(func(tx *bbolt.Tx) error {
 		// Get buckets
 		b := tx.Bucket([]byte("Devices"))
 		intId, _ := strconv.Atoi(id)
-		b.Delete(itob(intId))
+		_ = b.Delete(itob(intId))
 		return nil
 	})
 }
