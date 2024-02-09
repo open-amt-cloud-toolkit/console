@@ -16,4 +16,3 @@ const (
 	PowerOffSoftGraceful      PowerState = "Soft Power Off (OS Graceful)"
 	PowerCycleOffHardGraceful PowerState = "Hard Power Cycle (OS Graceful)"
 )
-

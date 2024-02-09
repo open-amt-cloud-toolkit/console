@@ -13,7 +13,6 @@ import (
 )
 
 type DashboardPages struct {
-	router *http.ServeMux
 	//parsed templates
 	html *template.Template
 }

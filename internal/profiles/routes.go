@@ -152,7 +152,7 @@ func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
 	//save edit
 	case http.MethodPut:
 		profile := pt.GetProfileByID(id)
-		r.ParseForm()
+		_ = r.ParseForm()
 		profile.Id, _ = strconv.Atoi(id)
 		profile.Name = r.Form.Get("name")
 		profile.Configuration.AMTSpecific.ControlMode = r.Form.Get("controlMode")
@@ -178,7 +178,7 @@ func (pt ProfileThing) Profiles(r *http.Request) *web.Response {
 	//save add
 	case http.MethodPost:
 		profile := Profile{}
-		r.ParseForm()
+		_ = r.ParseForm()
 		profile.Id, _ = strconv.Atoi(r.Form.Get("id"))
 		profile.Name = r.Form.Get("name")
 		profile.Technology = r.Form.Get("technology")
