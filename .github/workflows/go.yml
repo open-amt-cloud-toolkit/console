@@ -57,6 +57,8 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         with:
           version: latest
+      - name: build go
+        run: go build ./cmd/main.go
       - name: Go Fuzz
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: go test ./cmd -fuzz=FuzzMe -fuzztime=15s
