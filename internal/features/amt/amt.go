@@ -1,13 +1,14 @@
 package amt
 
 import (
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/power"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
-func ProvisioningModeLookup(mode int) string {
-	valueMap := map[int]string{
+func ProvisioningModeLookup(mode setupandconfiguration.ProvisioningModeValue) string {
+	valueMap := map[setupandconfiguration.ProvisioningModeValue]string{
 		1: "Admin Control Mode",
 		4: "Client Control Mode",
 	}
@@ -20,8 +21,8 @@ func ProvisioningModeLookup(mode int) string {
 	return result
 }
 
-func ProvisioningStateLookup(state int) string {
-	valueMap := map[int]string{
+func ProvisioningStateLookup(state setupandconfiguration.ProvisioningStateValue) string {
+	valueMap := map[setupandconfiguration.ProvisioningStateValue]string{
 		0: "Pre-Provisioning",
 		1: "In Provisioning",
 		2: "Post Provisioning",
@@ -29,7 +30,7 @@ func ProvisioningStateLookup(state int) string {
 
 	result, ok := valueMap[state]
 	if !ok {
-		result = "invalid provisoining state"
+		result = "invalid provisioning state"
 	}
 
 	return result
@@ -113,7 +114,7 @@ func PowerStateLookup(value int) string {
 }
 
 func CreateWsmanConnection(amtConnectionParameters AMTConnectionParameters) wsman.Messages {
-	cp := wsman.ClientParameters{
+	cp := client.Parameters{
 		Target:            amtConnectionParameters.Target,
 		Username:          amtConnectionParameters.Username,
 		Password:          amtConnectionParameters.Password,
@@ -130,13 +131,13 @@ func GetDeviceDetails(wsman wsman.Messages) (amtDeviceDetails AMTSpecific) {
 	if err != nil {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
-	amtDeviceDetails.GeneralSettings = gs.Body.AMTGeneralSettings
+	amtDeviceDetails.GeneralSettings = gs.Body.GetResponse
 
 	scs, err := wsman.AMT.SetupAndConfigurationService.Get()
 	if err != nil {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
-	amtDeviceDetails.SetupAndConfigurationService = scs.Body.Setup
+	amtDeviceDetails.SetupAndConfigurationService = scs.Body.GetResponse
 
 	uuid, err := wsman.AMT.SetupAndConfigurationService.GetUuid()
 	if err != nil {
@@ -146,24 +147,18 @@ func GetDeviceDetails(wsman wsman.Messages) (amtDeviceDetails AMTSpecific) {
 	if err != nil {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
-	wiredSelector := ethernetport.Selector{
-		Name:  "InstanceID",
-		Value: "Intel(r) AMT Ethernet Port Settings 0",
-	}
-	eth0, err := wsman.AMT.EthernetPortSettings.Get(wiredSelector)
+
+	eth0, err := wsman.AMT.EthernetPortSettings.Get(0)
 	if err != nil {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
-	amtDeviceDetails.EthernetSettings.Wired = eth0.Body.EthernetPort
-	wirelessSelector := ethernetport.Selector{
-		Name:  "InstanceID",
-		Value: "Intel(r) AMT Ethernet Port Settings 1",
-	}
-	eth1, err := wsman.AMT.EthernetPortSettings.Get(wirelessSelector)
+	amtDeviceDetails.EthernetSettings.Wired = eth0.Body.GetAndPutResponse
+
+	eth1, err := wsman.AMT.EthernetPortSettings.Get(1)
 	if err != nil {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
-	amtDeviceDetails.EthernetSettings.Wireless = eth1.Body.EthernetPort
+	amtDeviceDetails.EthernetSettings.Wireless = eth1.Body.GetAndPutResponse
 	return amtDeviceDetails
 }
 

@@ -12,8 +12,9 @@ import (
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/cim/power"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
+
 	"go.etcd.io/bbolt"
 )
 

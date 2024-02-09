@@ -1,9 +1,9 @@
 package amt
 
 import (
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/ethernetport"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/general"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/pkg/wsman/amt/setupandconfiguration"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/general"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 )
 
 type AMTConnectionParameters struct {
@@ -17,13 +17,13 @@ type AMTConnectionParameters struct {
 
 type AMTSpecific struct {
 	UUID                         string
-	GeneralSettings              general.GeneralSettings
+	GeneralSettings              general.GeneralSettingsResponse
 	EthernetSettings             EthernetContent
-	SetupAndConfigurationService setupandconfiguration.Setup
+	SetupAndConfigurationService setupandconfiguration.SetupAndConfigurationServiceResponse
 	Errors                       []error
 }
 
 type EthernetContent struct {
-	Wired    ethernetport.EthernetPort
-	Wireless ethernetport.EthernetPort
+	Wired    ethernetport.SettingsResponse
+	Wireless ethernetport.SettingsResponse
 }
