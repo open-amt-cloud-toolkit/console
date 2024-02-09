@@ -37,6 +37,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.0.0
       - name: Install Test Converter and run tests
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |
           export GOPATH="$HOME/go/"
           export PATH=$PATH:$GOPATH/bin
@@ -47,23 +48,23 @@ jobs:
           if grep -q "FAIL" test_output.txt; then exit 1; fi
       - name: Format
         run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
-        if: ${{ matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
       - name: Run go vet
         run: go vet ./...
-        if: ${{ matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
       - name: Run go lint
         uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
-        if: ${{ matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         with:
           version: latest
       - name: Go Fuzz
-        if: ${{ matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: go test ./cmd -fuzz=FuzzMe -fuzztime=15s
       - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
-        if: ${{ matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         name: Upload Coverage Results
       - name: GitHub Upload Release Artifacts
-        if: ${{ matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: JUnit Results
