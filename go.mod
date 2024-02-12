@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/jritsema/gotoolbox v0.8.0
-	github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 v2.1.3
+	github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 v2.1.4
 	go.etcd.io/bbolt v1.3.8
 )
 
