@@ -1,12 +1,16 @@
-# go-htmx-tailwind-example
+# Console
 
-Example CRUD app written in Go + HTMX + Tailwind CSS
+A web-based UI for connecting to and managing Intel(r) Active Management Technology (AMT) devices over the local network.
 
-This project implements a pure dynamic web app with SPA-like features but without heavy complex Javascript or Go frameworks to keep up with.  Just HTML/CSS + Go ❤️
+Running the Console application will automatically launch the UI in the default browser.  How to use:
+1. Click the "Add Device" button and provide connection information for the Intel(r) AMT device (friendly name, IP Address, AMT Credential).  For AMT 16.1 and newer systems, "Use TLS" is required and "Self-Signed OK" is required if TLS has not been configured.
+2. Click "Connect" and Console will connect to the device and show the AMT device page with information gathered from the AMT device.
 
 ![screenshot](./screenshot.jpeg)
 
-## Prequisites
+## Developer Setup
+
+### Prequisites
 - Tailwind
 ``` bash
 # Example for macOS arm64
@@ -25,7 +29,7 @@ chmod +x tailwindcss-linux-x64
 mv tailwindcss-linux-x64 tailwindcss
 ```
 
-## Develop
+### Develop
 
 ```
  Choose a make command to run
@@ -38,4 +42,9 @@ mv tailwindcss-linux-x64 tailwindcss
   start         build and run local project
   css           build tailwindcss
   css-watch     watch build tailwindcss
+```
+
+### Build
+```bash
+go build -ldflags -H=windowsgui -o console.exe -v ./cmd/main.go
 ```
