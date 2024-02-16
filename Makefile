@@ -31,7 +31,7 @@ test:
 ## build: build a binary
 .PHONY: build
 build: test
-	go build -ldflags -H=windowsgui -o dmc.exe -v ./cmd/main.go
+	go build -ldflags -H=windowsgui -o console.exe -v ./cmd/main.go
 
 ## docker-build: build project into a docker container image
 .PHONY: docker-build
