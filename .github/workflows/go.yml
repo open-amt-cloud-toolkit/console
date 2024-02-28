@@ -62,7 +62,7 @@ jobs:
       - name: Go Fuzz
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: go test ./cmd -fuzz=FuzzMe -fuzztime=15s
-      - uses: codecov/codecov-action@0cfda1dd0a4ad9efc75517f399d859cd1ea4ced1 # v4.0.2
+      - uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # v4.1.0
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         name: Upload Coverage Results
       - name: GitHub Upload Release Artifacts
