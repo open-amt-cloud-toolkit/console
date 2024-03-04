@@ -405,7 +405,7 @@ func Init(wsman wsman.Messages) {
 	Lookup[ethernetport.AMT_EthernetPortSettings] = make(map[string]Method)
 	Lookup[ethernetport.AMT_EthernetPortSettings]["Get"] = Method{
 		Execute: func(value string) (client.Message, error) {
-			response, err := wsman.AMT.EthernetPortSettings.Get(0)
+			response, err := wsman.AMT.EthernetPortSettings.Get("Intel(r) AMT Ethernet Port Settings 0")
 			return *response.Message, err
 		},
 	}
@@ -1675,11 +1675,7 @@ func Init(wsman wsman.Messages) {
 	Lookup[software.CIM_SoftwareIdentity] = make(map[string]Method)
 	Lookup[software.CIM_SoftwareIdentity]["Get"] = Method{
 		Execute: func(instanceID string) (client.Message, error) {
-			selector := software.Selector{
-				Name:  "InstanceID",
-				Value: "AMTApps",
-			}
-			response, err := wsman.CIM.SoftwareIdentity.Get(selector)
+			response, err := wsman.CIM.SoftwareIdentity.Get("AMTApps")
 			return *response.Message, err
 		},
 	}

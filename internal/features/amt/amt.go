@@ -148,13 +148,13 @@ func GetDeviceDetails(wsman wsman.Messages) (amtDeviceDetails AMTSpecific) {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
 
-	eth0, err := wsman.AMT.EthernetPortSettings.Get(0)
+	eth0, err := wsman.AMT.EthernetPortSettings.Get("Intel(r) AMT Ethernet Port Settings 0")
 	if err != nil {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
 	amtDeviceDetails.EthernetSettings.Wired = eth0.Body.GetAndPutResponse
 
-	eth1, err := wsman.AMT.EthernetPortSettings.Get(1)
+	eth1, err := wsman.AMT.EthernetPortSettings.Get("Intel(r) AMT Ethernet Port Settings 1")
 	if err != nil {
 		amtDeviceDetails.Errors = append(amtDeviceDetails.Errors, err)
 	}
