@@ -436,7 +436,7 @@ func Init(wsman wsman.Messages) {
 				SharedMAC:      true,
 				SharedStaticIp: true,
 			}
-			response, err := wsman.AMT.EthernetPortSettings.Put(ethernetPortSettings, 0)
+			response, err := wsman.AMT.EthernetPortSettings.Put(ethernetPortSettings, ethernetPortSettings.InstanceID)
 			return *response.Message, err
 		},
 	}
