@@ -327,7 +327,6 @@ func Init(wsman wsman.Messages) {
 				LockPowerButton:        false,
 				LockResetButton:        false,
 				LockSleepButton:        false,
-				OwningEntity:           "Intel(r) AMT",
 				RSEPassword:            "",
 				ReflashBIOS:            false,
 				SecureErase:            false,
