@@ -15,6 +15,11 @@ Running the Console application will automatically launch the UI in the default 
 
 ### Prequisites
 - [Golang](https://go.dev/dl/)
+- [Air](https://github.com/cosmtrek/air)
+``` bash
+# With go 1.22 or higher:
+go install github.com/cosmtrek/air@latest
+```
 - [Tailwind](https://tailwindcss.com/)
 ``` bash
 # Example for win x64

@@ -1,4 +1,5 @@
-<div class="flex flex-row w-full">
+<div class="flex flex-row w-full flex-wrap">
+    
     <div class="flex justify-start w-1/2">
         <h1 class="text-3xl">Devices</h1>
     </div>
@@ -8,6 +9,10 @@
             Add Device
         </button>
     </div>
+    
+    <div class="flex w-full">
+        {{ template "devices/devices.html" . }}
+    </div>
 </div>
-<br />
-<div>{{ template "devices/devices.html" . }}</div>
+
+
