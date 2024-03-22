@@ -1,5 +1,5 @@
 <label for="class-selector" class="w-1/2">WSMAN Class:</label>
-<select id="class-selector" class="w-1/2" data-include-add="" name="class-selector" title="class-selector" hx-get="device/ws-methods/" hx-trigger="change" hx-target="#wsman-explorer-method">
+<select id="class-selector" class="w-1/2" data-include-add="" name="class-selector" title="class-selector" hx-get="/device/ws-methods/" hx-trigger="change" hx-target="#wsman-explorer-method">
     <option value="" selected disabled>Select an option</option>
     {{range .}}
     <option>{{.Name}}</option>

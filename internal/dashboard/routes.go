@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"github.com/jritsema/go-htmx-starter/internal"
-	"github.com/jritsema/go-htmx-starter/internal/devices"
-	"github.com/jritsema/go-htmx-starter/internal/profiles"
 	"github.com/jritsema/go-htmx-starter/pkg/templates"
 	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
@@ -35,16 +33,9 @@ func NewDashboard(router *http.ServeMux) DashboardPages {
 	return dp
 }
 
-type DashboardContent struct {
-	devices  []devices.Device
-	profiles []profiles.Profile
-}
+type DashboardContent struct{}
 
 func (dp DashboardPages) Index(r *http.Request) *web.Response {
 	dc := DashboardContent{}
-	dt := devices.DeviceThing{}
-	dc.devices = dt.GetDevices()
-	pt := profiles.ProfileThing{}
-	dc.profiles = pt.GetProfiles()
 	return webtools.HTML(r, http.StatusOK, dp.html, "dashboard/index.html", dc, nil)
 }

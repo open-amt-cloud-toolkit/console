@@ -6,9 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -61,13 +59,15 @@ func main() {
 	middleware := internal.Tracing(nextRequestID)(internal.Logging(logger)(router))
 	port := gotoolbox.GetEnvWithDefault("PORT", "8080")
 	logger.Println("listening on http://localhost:" + port)
-	url := "http://localhost:" + port + "/devices"
-	// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
-	browserError := openBrowser(url)
 
-	if browserError != nil {
-		panic(browserError)
-	}
+	// TODO: Setup development mode to not launch a new browser on changes
+	// url := "http://localhost:" + port + "/devices"
+	// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
+	// browserError := openBrowser(url)
+
+	// if browserError != nil {
+	// 	panic(browserError)
+	// }
 	if err := http.ListenAndServe("localhost:"+port, middleware); err != nil {
 		logger.Println("http.ListenAndServe():", err)
 		os.Exit(1)
@@ -84,21 +84,22 @@ func handleSigTerms() {
 	}()
 }
 
-func openBrowser(url string) error {
-	var cmd string
-	var args []string
+// TODO enable for production
+// func openBrowser(url string) error {
+// 	var cmd string
+// 	var args []string
 
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = "open"
-		args = []string{url}
-	case "windows":
-		cmd = "cmd"
-		args = []string{"/c", "start", url}
-	default:
-		cmd = "xdg-open"
-		args = []string{url}
-	}
+// 	switch runtime.GOOS {
+// 	case "darwin":
+// 		cmd = "open"
+// 		args = []string{url}
+// 	case "windows":
+// 		cmd = "cmd"
+// 		args = []string{"/c", "start", url}
+// 	default:
+// 		cmd = "xdg-open"
+// 		args = []string{url}
+// 	}
 
-	return exec.Command(cmd, args...).Start()
-}
+// 	return exec.Command(cmd, args...).Start()
+// }

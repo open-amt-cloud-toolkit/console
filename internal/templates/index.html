@@ -28,7 +28,7 @@
 <body class="h-full">
   <div class="min-h-full">
     <nav class="bg-gray-800">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center">
             <div class="flex-shrink-0">
@@ -138,14 +138,14 @@
       </div>
     </nav>
     <div id="toastHolder" class="absolute right-6 top-6"></div>
-    <div id="processing" class='w-full htmx-indicator'>
+    <div id="processing" class='w-full htmx-indicator absolute'>
       <div class="h-1.5 w-full bg-pink-100 overflow-hidden">
         <div class="progress w-full h-full bg-pink-500 left-right"></div>
       </div>
     </div>
     <main hx-ext="response-targets">
       
-      <div class="mx-auto max-w-7xl" id="content">
+      <div class="mx-auto max-w-7xl p-4" id="content">
         <!-- Your content -->
       </div>
     </main>

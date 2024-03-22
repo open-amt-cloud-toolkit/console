@@ -30,8 +30,8 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	var err error
 
 	funcMap := template.FuncMap{
-		"ProvisioningModeLookup":  ProvisioningModeLookup,
-		"ProvisioningStateLookup": ProvisioningStateLookup,
+		"ProvisioningModeLookup":  amt.ProvisioningModeLookup,
+		"ProvisioningStateLookup": amt.ProvisioningStateLookup,
 	}
 	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/devices", ".html", true, funcMap)
 	if err != nil {
