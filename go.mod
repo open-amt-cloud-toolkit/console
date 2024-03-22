@@ -1,4 +1,4 @@
-module github.com/jritsema/go-htmx-starter
+module github.com/open-amt-cloud-toolkit/console
 
 go 1.20
 

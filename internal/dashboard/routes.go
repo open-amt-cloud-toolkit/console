@@ -4,10 +4,10 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/jritsema/go-htmx-starter/internal"
-	"github.com/jritsema/go-htmx-starter/pkg/templates"
-	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/console/internal"
+	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
+	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 )
 
 type DashboardPages struct {

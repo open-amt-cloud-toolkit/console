@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jritsema/go-htmx-starter/pkg/templates"
-	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
+	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 )
 
 type IndexThing struct {

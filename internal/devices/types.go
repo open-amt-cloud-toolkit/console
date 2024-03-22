@@ -1,6 +1,6 @@
 package devices
 
-import "github.com/jritsema/go-htmx-starter/internal/features/amt"
+import "github.com/open-amt-cloud-toolkit/console/internal/features/amt"
 
 type Device struct {
 	Id                int
