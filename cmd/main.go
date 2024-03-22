@@ -10,12 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jritsema/go-htmx-starter/internal"
-	"github.com/jritsema/go-htmx-starter/internal/certificates"
-	"github.com/jritsema/go-htmx-starter/internal/dashboard"
-	"github.com/jritsema/go-htmx-starter/internal/devices"
-	"github.com/jritsema/go-htmx-starter/internal/profiles"
 	"github.com/jritsema/gotoolbox"
+	"github.com/open-amt-cloud-toolkit/console/internal"
+	"github.com/open-amt-cloud-toolkit/console/internal/certificates"
+	"github.com/open-amt-cloud-toolkit/console/internal/dashboard"
+	"github.com/open-amt-cloud-toolkit/console/internal/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/profiles"
 	"go.etcd.io/bbolt"
 )
 
