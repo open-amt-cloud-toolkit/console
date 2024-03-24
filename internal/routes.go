@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
 	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
 	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 )
@@ -22,9 +23,14 @@ var (
 )
 
 func NewIndex(router *http.ServeMux) IndexThing {
+
+	funcMap := template.FuncMap{
+		"Translate": i18n.Translate,
+	}
+
 	//parse templates
 	var err error
-	html, err = templates.TemplateParseFSRecursive(TemplateFS, "/", ".html", true, nil)
+	html, err = templates.TemplateParseFSRecursive(TemplateFS, "/", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}

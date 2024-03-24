@@ -15,6 +15,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/certificates"
 	"github.com/open-amt-cloud-toolkit/console/internal/dashboard"
 	"github.com/open-amt-cloud-toolkit/console/internal/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
 	"github.com/open-amt-cloud-toolkit/console/internal/profiles"
 	"go.etcd.io/bbolt"
 )
@@ -57,6 +58,19 @@ func main() {
 	}
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 	middleware := internal.Tracing(nextRequestID)(internal.Logging(logger)(router))
+
+	// Setup localization
+	translations, err := i18n.LoadTranslations()
+	if err != nil {
+		logger.Println("failed loading translations", err)
+		os.Exit(1)
+	}
+
+	if err := i18n.SetupTranslations(translations); err != nil {
+		logger.Println("failed setting up translations", err)
+		os.Exit(1)
+	}
+
 	port := gotoolbox.GetEnvWithDefault("PORT", "8080")
 	logger.Println("listening on http://localhost:" + port)
 

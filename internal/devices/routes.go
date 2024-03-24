@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal"
 	"github.com/open-amt-cloud-toolkit/console/internal/features/amt"
 	"github.com/open-amt-cloud-toolkit/console/internal/features/explorer"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
 	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
 	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
@@ -32,6 +33,7 @@ func NewDevices(db *bbolt.DB, router *http.ServeMux) DeviceThing {
 	funcMap := template.FuncMap{
 		"ProvisioningModeLookup":  amt.ProvisioningModeLookup,
 		"ProvisioningStateLookup": amt.ProvisioningStateLookup,
+		"Translate":               i18n.Translate,
 	}
 	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/devices", ".html", true, funcMap)
 	if err != nil {
