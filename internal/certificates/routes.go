@@ -6,6 +6,7 @@ import (
 
 	"github.com/jritsema/gotoolbox/web"
 	"github.com/open-amt-cloud-toolkit/console/internal"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
 	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
 	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 )
@@ -26,9 +27,12 @@ type CertificateThing struct {
 }
 
 func NewCertificates(router *http.ServeMux) CertificateThing {
+	funcMap := template.FuncMap{
+		"Translate": i18n.Translate,
+	}
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/certificates", ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/certificates", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}

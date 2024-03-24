@@ -1,127 +1,131 @@
 <nav class="bg-gray-400 -m-4 px-4">
-    <div class="flex h-16 items-center">
-        <div class="w-1/2 flex justify-start">
-            <h1 class="text-3xl">{{.Name}}</h1>
-        </div>
-        <div class="w-1/2 flex justify-end">
-            <button hx-get="/device/testToast/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
-                hx-target="#toastHolder">Test Toast</button>
-            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
-                hx-vals='{"power": "on"}' hx-target="#toastHolder">
-                On
-            </button>
-            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
-                hx-vals='{"power": "off"}' hx-target="#toastHolder">
-                Off
-            </button>
-            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
-                hx-vals='{"power": "reboot"}' hx-target="#toastHolder">
-                Reboot
-            </button>
-            <button hx-get="/device/powerState/{{.Id}}" class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800" href=""
-                hx-vals='{"power": "powercycle"}' hx-target="#toastHolder">
-                Power Cycle
-            </button>
-        </div>
+  <div class="flex h-16 items-center">
+    <div class="w-1/2 flex justify-start">
+      <h1 class="text-3xl">{{.Name}}</h1>
     </div>
+    <div class="w-1/2 flex justify-end">
+      <button hx-get="/device/testToast/{{.Id}}"
+        class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800"
+        href="" hx-target="#toastHolder">Test Toast</button>
+      <button hx-get="/device/powerState/{{.Id}}"
+        class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800"
+        href="" hx-vals='{"power": "on"}' hx-target="#toastHolder">
+        On
+      </button>
+      <button hx-get="/device/powerState/{{.Id}}"
+        class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800"
+        href="" hx-vals='{"power": "off"}' hx-target="#toastHolder">
+        Off
+      </button>
+      <button hx-get="/device/powerState/{{.Id}}"
+        class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800"
+        href="" hx-vals='{"power": "reboot"}' hx-target="#toastHolder">
+        Reboot
+      </button>
+      <button hx-get="/device/powerState/{{.Id}}"
+        class="inline-flex items-center h-8 px-4 m-2 text-sm text-blue-100 transition-colors duration-150 rounded-lg focus:shadow-outline hover:bg-blue-800"
+        href="" hx-vals='{"power": "powercycle"}' hx-target="#toastHolder">
+        Power Cycle
+      </button>
+    </div>
+  </div>
 </nav>
 
 <div id="device" class="m-8">
-   
-    <div class="flex flex-col">
-        <h2 class="text-3x1">Host OS FQDN: {{.AMTSpecific.GeneralSettings.HostOSFQDN}}</h2>
-        {{if .AMTSpecific.UUID}}
-        <h2 class="text-3x1">AMT UUID: {{.AMTSpecific.UUID}}</h2>
-        {{end}}
-        <h2 class="text-3x1">Power State: {{.PowerState}}</h2>
 
-        <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-                <div class="overflow-hidden">
-                    <div>
-                        <p>AMT State</p>
-                        <div id="amt-state" class="w-1/2 text-left text-sm font-light">
-                            <div class="flex space-evenly">
-                                <div class="w-1/2">Provisioning State:</div>
-                                <div class="w-1/2">{{.AMTSpecific.SetupAndConfigurationService.ProvisioningState |
-                                    ProvisioningStateLookup}}</div>
-                            </div>
-                            <div class="flex space-evenly">
-                                <div class="w-1/2">Provisioning Mode:</div>
-                                <div class="w-1/2">{{.AMTSpecific.SetupAndConfigurationService.ProvisioningMode |
-                                    ProvisioningModeLookup}}</div>
-                            </div>
-                            <div class="flex space-evenly">
-                                <div class="w-1/2">Network Interface Enabled:</div>
-                                <div class="w-1/2">{{.AMTSpecific.GeneralSettings.NetworkInterfaceEnabled}}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <br>
-                    <div class="flex space-evenly">
-                        <div class="w-1/2">
-                            <p>Wired Ethernet</p>
-                            <div id="wired-ethernet" class="text-left text-sm font-light">
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">DHCP Enabled:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.DHCPEnabled}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Address:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.IPAddress}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Subnet Mask:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.SubnetMask}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Default Gateway:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.DefaultGateway}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Primary DNS:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.PrimaryDNS}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Secondary DNS:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.SecondaryDNS}}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w-1/2">
-                            <p>Wireless Ethernet</p>
-                            <div id="wireless-ethernet" class="text-left text-sm font-light">
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">DHCP Enabled:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.DHCPEnabled}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Address:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.IPAddress}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Subnet Mask:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.SubnetMask}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Default Gateway:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.DefaultGateway}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Primary DNS:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.PrimaryDNS}}</div>
-                                </div>
-                                <div class="flex space-evenly">
-                                    <div class="w-1/2">Secondary DNS:</div>
-                                    <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.SecondaryDNS}}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <br>
-                    <div id="w-explorer" hx-get="/device/wsman-explorer/{{.Id}}" hx-trigger="load" hx-target="#w-explorer" hx-swap="innerHTML"></div>
-                </div>
+  <div class="flex flex-col">
+    <h2 class="text-3x1">{{ "HOSTOSFQDN" | Translate }}: {{.AMTSpecific.GeneralSettings.HostOSFQDN}}</h2>
+    {{if .AMTSpecific.UUID}}
+    <h2 class="text-3x1">{{ "AMTUUID" | Translate }}: {{.AMTSpecific.UUID}}</h2>
+    {{end}}
+    <h2 class="text-3x1">{{ "POWERSTATE" | Translate }}: {{.PowerState}}</h2>
+
+    <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
+        <div class="overflow-hidden">
+          <div>
+            <p>AMT State</p>
+            <div id="amt-state" class="w-1/2 text-left text-sm font-light">
+              <div class="flex space-evenly">
+                <div class="w-1/2">Provisioning State:</div>
+                <div class="w-1/2">{{.AMTSpecific.SetupAndConfigurationService.ProvisioningState | ProvisioningStateLookup}}</div>
+              </div>
+              <div class="flex space-evenly">
+                <div class="w-1/2">Provisioning Mode:</div>
+                <div class="w-1/2">{{.AMTSpecific.SetupAndConfigurationService.ProvisioningMode | ProvisioningModeLookup}}</div>
+              </div>
+              <div class="flex space-evenly">
+                <div class="w-1/2">Network Interface Enabled:</div>
+                <div class="w-1/2">{{.AMTSpecific.GeneralSettings.NetworkInterfaceEnabled}}</div>
+              </div>
             </div>
+          </div>
+          <br>
+          <div class="flex space-evenly">
+            <div class="w-1/2">
+              <p>Wired Ethernet</p>
+              <div id="wired-ethernet" class="text-left text-sm font-light">
+                <div class="flex space-evenly">
+                  <div class="w-1/2">DHCP Enabled:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.DHCPEnabled}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Address:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.IPAddress}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Subnet Mask:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.SubnetMask}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Default Gateway:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.DefaultGateway}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Primary DNS:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.PrimaryDNS}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Secondary DNS:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wired.SecondaryDNS}}</div>
+                </div>
+              </div>
+            </div>
+            <div class="w-1/2">
+              <p>Wireless Ethernet</p>
+              <div id="wireless-ethernet" class="text-left text-sm font-light">
+                <div class="flex space-evenly">
+                  <div class="w-1/2">DHCP Enabled:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.DHCPEnabled}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Address:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.IPAddress}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Subnet Mask:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.SubnetMask}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Default Gateway:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.DefaultGateway}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Primary DNS:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.PrimaryDNS}}</div>
+                </div>
+                <div class="flex space-evenly">
+                  <div class="w-1/2">Secondary DNS:</div>
+                  <div class="w-1/2">{{.AMTSpecific.EthernetSettings.Wireless.SecondaryDNS}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+          <div id="w-explorer" hx-get="/device/wsman-explorer/{{.Id}}" hx-trigger="load" hx-target="#w-explorer"
+            hx-swap="innerHTML"></div>
         </div>
+      </div>
     </div>
+  </div>
 </div>

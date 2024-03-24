@@ -8,6 +8,7 @@ import (
 
 	"github.com/jritsema/gotoolbox/web"
 	"github.com/open-amt-cloud-toolkit/console/internal"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
 	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
 	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 	"go.etcd.io/bbolt"
@@ -31,9 +32,12 @@ type ProfileThing struct {
 
 func NewProfiles(db *bbolt.DB, router *http.ServeMux) ProfileThing {
 
+	funcMap := template.FuncMap{
+		"Translate": i18n.Translate,
+	}
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/profiles", ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/profiles", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}
