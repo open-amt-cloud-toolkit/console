@@ -4,12 +4,11 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/jritsema/go-htmx-starter/internal"
-	"github.com/jritsema/go-htmx-starter/internal/devices"
-	"github.com/jritsema/go-htmx-starter/internal/profiles"
-	"github.com/jritsema/go-htmx-starter/pkg/templates"
-	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/console/internal"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
+	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
+	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 )
 
 type DashboardPages struct {
@@ -18,10 +17,12 @@ type DashboardPages struct {
 }
 
 func NewDashboard(router *http.ServeMux) DashboardPages {
-
+	funcMap := template.FuncMap{
+		"Translate": i18n.Translate,
+	}
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/dashboard", ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/dashboard", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}
@@ -35,16 +36,9 @@ func NewDashboard(router *http.ServeMux) DashboardPages {
 	return dp
 }
 
-type DashboardContent struct {
-	devices  []devices.Device
-	profiles []profiles.Profile
-}
+type DashboardContent struct{}
 
 func (dp DashboardPages) Index(r *http.Request) *web.Response {
 	dc := DashboardContent{}
-	dt := devices.DeviceThing{}
-	dc.devices = dt.GetDevices()
-	pt := profiles.ProfileThing{}
-	dc.profiles = pt.GetProfiles()
 	return webtools.HTML(r, http.StatusOK, dp.html, "dashboard/index.html", dc, nil)
 }

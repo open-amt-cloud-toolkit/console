@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 	"go.etcd.io/bbolt"
 	"gopkg.in/yaml.v3"
 )

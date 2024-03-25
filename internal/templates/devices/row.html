@@ -1,6 +1,6 @@
 <tr id="datarow-{{.Id}}" class="border-b dark:border-neutral-500">
-  <td class="whitespace-nowrap px-6 py-4">{{.Name}}</td>
-  <td class="whitespace-nowrap px-6 py-4">{{.Address}}</td>
+  <td class="whitespace-nowrap py-4">{{.Name}}</td>
+  <td class="whitespace-nowrap py-4">{{.Address}}</td>
   <td class="whitespace-nowrap px-1 py-1">
     <a
       hx-get="/device/connect/{{.Id}}"
@@ -11,7 +11,7 @@
       class="hover:underline text-blue-700"
       href=""
     >
-      Connect
+    {{ "CONNECT" | Translate }}
     </a>
   </td>
   <td class="whitespace-nowrap px-1 py-1">
@@ -23,7 +23,7 @@
       class="hover:underline text-blue-700"
       href=""
     >
-      Edit
+    {{ "EDIT" | Translate }}
     </a>
   </td>
   <td class="whitespace-nowrap px-1 py-1">
@@ -34,7 +34,7 @@
       hx-indicator="#processing"
       class="hover:underline text-blue-700"
       href=""
-      >Delete</a
+      >{{ "DELETE" | Translate }}</a
     >
   </td>
 </tr>

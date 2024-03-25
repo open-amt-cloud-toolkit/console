@@ -4,10 +4,11 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/jritsema/go-htmx-starter/internal"
-	"github.com/jritsema/go-htmx-starter/pkg/templates"
-	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/console/internal"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
+	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
+	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 )
 
 // Delete -> DELETE /company/{id} -> delete, companys.html
@@ -26,9 +27,12 @@ type CertificateThing struct {
 }
 
 func NewCertificates(router *http.ServeMux) CertificateThing {
+	funcMap := template.FuncMap{
+		"Translate": i18n.Translate,
+	}
 	//parse templates
 	var err error
-	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/certificates", ".html", true, nil)
+	html, err := templates.TemplateParseFSRecursive(internal.TemplateFS, "/certificates", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,12 +13,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jritsema/go-htmx-starter/internal"
-	"github.com/jritsema/go-htmx-starter/internal/certificates"
-	"github.com/jritsema/go-htmx-starter/internal/dashboard"
-	"github.com/jritsema/go-htmx-starter/internal/devices"
-	"github.com/jritsema/go-htmx-starter/internal/profiles"
 	"github.com/jritsema/gotoolbox"
+	"github.com/open-amt-cloud-toolkit/console/internal"
+	"github.com/open-amt-cloud-toolkit/console/internal/certificates"
+	"github.com/open-amt-cloud-toolkit/console/internal/dashboard"
+	"github.com/open-amt-cloud-toolkit/console/internal/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
+	"github.com/open-amt-cloud-toolkit/console/internal/profiles"
 	"go.etcd.io/bbolt"
 )
 
@@ -50,8 +52,7 @@ func main() {
 	_ = certificates.NewCertificates(router)
 	_ = profiles.NewProfiles(db, router)
 	_ = dashboard.NewDashboard(router)
-
-	_ = internal.NewIndex(router)
+	it := internal.NewIndex(router)
 
 	//logging/tracing
 	nextRequestID := func() string {
@@ -59,18 +60,40 @@ func main() {
 	}
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 	middleware := internal.Tracing(nextRequestID)(internal.Logging(logger)(router))
-	port := gotoolbox.GetEnvWithDefault("PORT", "8080")
-	logger.Println("listening on http://localhost:" + port)
-	url := "http://localhost:" + port + "/devices"
-	// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
-	browserError := openBrowser(url)
 
-	if browserError != nil {
-		panic(browserError)
+	// Setup localization
+	translations, err := i18n.LoadTranslations()
+	if err != nil {
+		logger.Println("failed loading translations", err)
+		os.Exit(1)
 	}
+
+	if err := i18n.SetupTranslations(translations); err != nil {
+		logger.Println("failed setting up translations", err)
+		os.Exit(1)
+	}
+
+	port := gotoolbox.GetEnvWithDefault("PORT", "8085")
+	logger.Println("listening on http://localhost:" + port)
+
+	it.Dev = flag.Bool("dev", false, "Set to true to enable development mode")
+	flag.Parse()
+	if *it.Dev {
+		fmt.Println("Development mode enabled")
+	} else {
+		url := "http://localhost:" + port + "/devices"
+		// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
+		browserError := openBrowser(url)
+
+		if browserError != nil {
+			panic(browserError)
+		}
+	}
+
 	if err := http.ListenAndServe("localhost:"+port, middleware); err != nil {
 		logger.Println("http.ListenAndServe():", err)
 		os.Exit(1)
+
 	}
 }
 

@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jritsema/go-htmx-starter/pkg/templates"
-	"github.com/jritsema/go-htmx-starter/pkg/webtools"
 	"github.com/jritsema/gotoolbox/web"
+	"github.com/open-amt-cloud-toolkit/console/internal/i18n"
+	"github.com/open-amt-cloud-toolkit/console/pkg/templates"
+	"github.com/open-amt-cloud-toolkit/console/pkg/webtools"
 )
 
 type IndexThing struct {
+	Dev *bool
 }
 
 var (
@@ -22,9 +24,14 @@ var (
 )
 
 func NewIndex(router *http.ServeMux) IndexThing {
+
+	funcMap := template.FuncMap{
+		"Translate": i18n.Translate,
+	}
+
 	//parse templates
 	var err error
-	html, err = templates.TemplateParseFSRecursive(TemplateFS, "/", ".html", true, nil)
+	html, err = templates.TemplateParseFSRecursive(TemplateFS, "/", ".html", true, funcMap)
 	if err != nil {
 		panic(err)
 	}
@@ -47,6 +54,9 @@ func (it IndexThing) Menu(r *http.Request) *web.Response {
 }
 
 func (it IndexThing) Close(r *http.Request) *web.Response {
+	if *it.Dev {
+		return webtools.HTML(r, http.StatusOK, html, "", nil, nil)
+	}
 	os.Exit(0)
 	return webtools.HTML(r, http.StatusOK, html, "", nil, nil)
 }
