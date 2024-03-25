@@ -13,6 +13,7 @@ import (
 )
 
 type IndexThing struct {
+	Dev *bool
 }
 
 var (
@@ -53,6 +54,9 @@ func (it IndexThing) Menu(r *http.Request) *web.Response {
 }
 
 func (it IndexThing) Close(r *http.Request) *web.Response {
+	if *it.Dev {
+		return webtools.HTML(r, http.StatusOK, html, "", nil, nil)
+	}
 	os.Exit(0)
 	return webtools.HTML(r, http.StatusOK, html, "", nil, nil)
 }

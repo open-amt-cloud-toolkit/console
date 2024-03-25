@@ -13,15 +13,15 @@
   <title>Device Management Console</title>
   <script>
     htmx.logAll();
-    // window.addEventListener('beforeunload', function (e) {
-    //   fetch('/close', {
-    //     method: 'POST',
-    //     body: JSON.stringify({ message: 'Browser is closing' }),
-    //     headers: {
-    //       'Content-Type': 'application/json'
-    //     }
-    //   })
-    // })
+    window.addEventListener('beforeunload', function (e) {
+      fetch('/close', {
+        method: 'POST',
+        body: JSON.stringify({ message: 'Browser is closing' }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    })
   </script>
 </head>
 

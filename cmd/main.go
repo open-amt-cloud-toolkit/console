@@ -2,11 +2,14 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -49,8 +52,7 @@ func main() {
 	_ = certificates.NewCertificates(router)
 	_ = profiles.NewProfiles(db, router)
 	_ = dashboard.NewDashboard(router)
-
-	_ = internal.NewIndex(router)
+	it := internal.NewIndex(router)
 
 	//logging/tracing
 	nextRequestID := func() string {
@@ -71,20 +73,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	port := gotoolbox.GetEnvWithDefault("PORT", "8080")
+	port := gotoolbox.GetEnvWithDefault("PORT", "8085")
 	logger.Println("listening on http://localhost:" + port)
 
-	// TODO: Setup development mode to not launch a new browser on changes
-	// url := "http://localhost:" + port + "/devices"
-	// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
-	// browserError := openBrowser(url)
+	it.Dev = flag.Bool("dev", false, "Set to true to enable development mode")
+	flag.Parse()
+	if *it.Dev {
+		fmt.Println("Development mode enabled")
+	} else {
+		url := "http://localhost:" + port + "/devices"
+		// Since ListenAndServe is blocking launching browser before the server is up.  Potential race condition that should be fixed.
+		browserError := openBrowser(url)
 
-	// if browserError != nil {
-	// 	panic(browserError)
-	// }
+		if browserError != nil {
+			panic(browserError)
+		}
+	}
+
 	if err := http.ListenAndServe("localhost:"+port, middleware); err != nil {
 		logger.Println("http.ListenAndServe():", err)
 		os.Exit(1)
+
 	}
 }
 
@@ -98,22 +107,21 @@ func handleSigTerms() {
 	}()
 }
 
-// TODO enable for production
-// func openBrowser(url string) error {
-// 	var cmd string
-// 	var args []string
+func openBrowser(url string) error {
+	var cmd string
+	var args []string
 
-// 	switch runtime.GOOS {
-// 	case "darwin":
-// 		cmd = "open"
-// 		args = []string{url}
-// 	case "windows":
-// 		cmd = "cmd"
-// 		args = []string{"/c", "start", url}
-// 	default:
-// 		cmd = "xdg-open"
-// 		args = []string{url}
-// 	}
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+		args = []string{url}
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start", url}
+	default:
+		cmd = "xdg-open"
+		args = []string{url}
+	}
 
-// 	return exec.Command(cmd, args...).Start()
-// }
+	return exec.Command(cmd, args...).Start()
+}
