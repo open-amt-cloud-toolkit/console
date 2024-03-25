@@ -6,7 +6,7 @@ require (
 	github.com/jritsema/gotoolbox v0.8.0
 	github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 v2.1.11
 	go.etcd.io/bbolt v1.3.9
-	golang.org/x/text v0.13.0
+	golang.org/x/text v0.14.0
 )
 
 require (
