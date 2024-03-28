@@ -56,7 +56,7 @@ func GetSupportedWsmanClasses(className string) []Class {
 	var ClassList = []Class{
 		{Name: alarmclock.AMT_AlarmClockService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "AddAlarm"}}},
 		{Name: auditlog.AMT_AuditLog, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "ReadRecords"}}},
-		{Name: authorization.AMT_AuthorizationService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "EnumerateUserAclEntries"}, {Name: "GetAclEnabledState"}, {Name: "GetAdminAclEntry"}, {Name: "GetAdminAclEntryStatus"}, {Name: "GetAdminNetAclEntryStatus"}, {Name: "GetUserAclEntryEx"}, {Name: "RemoveUserAclEntry"}, {Name: "SetAclEnabledState"}, {Name: "SetAdminACLEntryEx"}}},
+		{Name: authorization.AMT_AuthorizationService, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "EnumerateUserAclEntries"}, {Name: "GetAclEnabledState"}, {Name: "GetAdminAclEntry"}, {Name: "GetAdminAclEntryStatus"}, {Name: "GetAdminNetAclEntryStatus"}, {Name: "GetUserAclEntryEx"}, {Name: "RemoveUserAclEntry"}, {Name: "SetAclEnabledState"}, {Name: "SetAdminAclEntryEx"}}},
 		{Name: amtboot.AMT_BootCapabilities, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}}},
 		{Name: amtboot.AMT_BootSettingData, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "Put"}}},
 		{Name: environmentdetection.AMT_EnvironmentDetectionSettingData, MethodList: []Method{{Name: "Get"}, {Name: "Enumerate"}, {Name: "Pull"}, {Name: "Put"}}},
@@ -279,9 +279,9 @@ func Init(wsman wsman.Messages) {
 			return *response.Message, err
 		},
 	}
-	Lookup[authorization.AMT_AuthorizationService]["SetAdminACLEntryEx"] = Method{
+	Lookup[authorization.AMT_AuthorizationService]["SetAdminAclEntryEx"] = Method{
 		Execute: func(value string) (client.Message, error) {
-			response, err := wsman.AMT.AuthorizationService.SetAdminACLEntryEx("admin", "P@ssw0rd")
+			response, err := wsman.AMT.AuthorizationService.SetAdminAclEntryEx("admin", "P@ssw0rd")
 			return *response.Message, err
 		},
 	}
