@@ -20,9 +20,9 @@ jobs:
           fetch-depth: 0
       - uses: wagoid/commitlint-github-action@3c75220e8d20774b68eea48e869a706ff7249b54 # v6.0.0
         with:
-          configFile: .github/commitlint.config.js
+          configFile: .github/commitlint.config.cjs
       - name: Install Dependencies
         run: npm install @commitlint/config-conventional@18.5
       - uses: JulienKode/pull-request-name-linter-action@8c05fb989d9f156ce61e33754f9802c9d3cffa58 # v0.5.0
         with:
-          configuration-path: ./.github/commitlint.config.js
+          configuration-path: ./.github/commitlint.config.cjs
