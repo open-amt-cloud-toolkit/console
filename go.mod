@@ -11,7 +11,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/prometheus/client_golang v1.19.0
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.32.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
