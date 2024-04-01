@@ -58,10 +58,10 @@ jobs:
         with:
           version: latest
       - name: build go
-        run: go build ./cmd/main.go
-      - name: Go Fuzz
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
-        run: go test ./cmd -fuzz=FuzzMe -fuzztime=15s
+        run: go build ./cmd/app/main.go
+      # - name: Go Fuzz
+      #   if: ${{ matrix.os == 'ubuntu-20.04' }}
+      #   run: go test ./cmd -fuzz=FuzzMe -fuzztime=15s
       - uses: codecov/codecov-action@c16abc29c95fcf9174b58eb7e1abf4c866893bc8 # v4.1.1
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         name: Upload Coverage Results

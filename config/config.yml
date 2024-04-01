@@ -1,0 +1,18 @@
+app:
+  name: 'rps-config'
+  version: '1.0.0'
+
+http:
+  port: '8080'
+  allowed_origins: 
+    - '*'
+  allowed_headers: 
+    - '*'
+
+logger:
+  log_level: 'debug'
+  rollbar_env: 'go-clean-template'
+
+postgres:
+  pool_max: 2
+
