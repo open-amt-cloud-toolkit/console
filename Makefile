@@ -1,59 +1,74 @@
-PACKAGES := $(shell go list ./...)
-name := $(shell basename ${PWD})
+include .env.example
+export
 
-all: help
+LOCAL_BIN:=$(CURDIR)/bin
+PATH:=$(LOCAL_BIN):$(PATH)
 
+# HELP =================================================================================================================
+# This will output the help for each task
+# thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
-help: Makefile
-	@echo
-	@echo " Choose a make command to run"
-	@echo
-	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
-	@echo
 
-## init: initialize project (make init module=github.com/user/project)
-.PHONY: init
-init:
-	go mod init ${module}
-	go install github.com/cosmtrek/air@latest
-	asdf reshim golang
+help: ## Display this help screen
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-## vet: vet code
-.PHONY: vet
-vet:
-	go vet $(PACKAGES)
+compose-up: ### Run docker-compose
+	docker-compose up --build -d postgres && docker-compose logs -f
+.PHONY: compose-up
 
-## test: run unit tests
+compose-up-integration-test: ### Run docker-compose with integration test
+	docker-compose up --build --abort-on-container-exit --exit-code-from integration
+.PHONY: compose-up-integration-test
+
+compose-down: ### Down docker-compose
+	docker-compose down --remove-orphans
+.PHONY: compose-down
+
+swag-v1: ### swag init
+	swag init -g internal/controller/http/v1/router.go
+.PHONY: swag-v1
+
+run: swag-v1 ### swag run
+	go mod tidy && go mod download && \
+	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=0 go run -tags migrate ./cmd/app
+.PHONY: run
+
+docker-rm-volume: ### remove docker volume
+	docker volume rm go-clean-template_pg-data
+.PHONY: docker-rm-volume
+
+linter-golangci: ### check by golangci linter
+	golangci-lint run
+.PHONY: linter-golangci
+
+linter-hadolint: ### check by hadolint linter
+	git ls-files --exclude='Dockerfile*' --ignored | xargs hadolint
+.PHONY: linter-hadolint
+
+linter-dotenv: ### check by dotenv linter
+	dotenv-linter
+.PHONY: linter-dotenv
+
+test: ### run test
+	go test -v -cover -race ./internal/...
 .PHONY: test
-test:
-	go test -race -cover $(PACKAGES)
 
-## build: build a binary
-.PHONY: build
-build: test
-	go build -ldflags -H=windowsgui -o console.exe -v ./cmd/main.go
+integration-test: ### run integration-test
+	go clean -testcache && go test -v ./integration-test/...
+.PHONY: integration-test
 
-## docker-build: build project into a docker container image
-.PHONY: docker-build
-docker-build: test
-	GOPROXY=direct docker buildx build -t ${name} .
+mock: ### run mockgen
+	mockgen -source ./internal/usecase/interfaces.go -package usecase_test > ./internal/usecase/mocks_test.go
+.PHONY: mock
 
-## docker-run: run project in a container
-.PHONY: docker-run
-docker-run:
-	docker run -it --rm -p 8080:8080 ${name}
+migrate-create:  ### create new migration
+	migrate create -ext sql -dir migrations 'migrate_name'
+.PHONY: migrate-create
 
-## start: build and run local project
-.PHONY: start
-start: build
-	air
+migrate-up: ### migration up
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+.PHONY: migrate-up
 
-## css: build tailwindcss
-.PHONY: css
-css:
-	./tailwindcss -i cmd/css/input.css -o cmd/css/output.css --minify
-
-## css-watch: watch build tailwindcss
-.PHONY: css-watch
-css-watch:
-	tailwindcss -i cmd/css/input.css -o cmd/css/output.css --watch
+bin-deps:
+	GOBIN=$(LOCAL_BIN) go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@latest
