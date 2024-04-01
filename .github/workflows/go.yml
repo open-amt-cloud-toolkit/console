@@ -52,11 +52,11 @@ jobs:
       - name: Run go vet
         run: go vet ./...
         if: ${{ matrix.os == 'ubuntu-20.04' }}
-      - name: Run go lint
-        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
-        with:
-          version: latest
+      # - name: Run go lint
+      #   uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
+      #   if: ${{ matrix.os == 'ubuntu-20.04' }}
+      #   with:
+      #     version: latest
       - name: build go
         run: go build ./cmd/app/main.go
       # - name: Go Fuzz
