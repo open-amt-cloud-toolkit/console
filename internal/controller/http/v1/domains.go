@@ -35,11 +35,11 @@ type DomainCountResponse struct {
 
 // @Summary     Show Domains
 // @Description Show all domains
-// @ID          history
+// @ID          domains
 // @Tags  	    domains
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} domainresponse
+// @Success     200 {object} DomainCountResponse
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/domains [get]
 func (r *domainRoutes) get(c *gin.Context) {

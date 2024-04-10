@@ -35,11 +35,11 @@ type ProfileCountResponse struct {
 
 // @Summary     Show Profiles
 // @Description Show all profiles
-// @ID          history
+// @ID          profiles
 // @Tags  	    profiles
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} profileresponse
+// @Success     200 {object} ProfileCountResponse
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/profiles [get]
 func (pr *profileRoutes) get(c *gin.Context) {
