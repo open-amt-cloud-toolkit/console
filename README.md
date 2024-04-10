@@ -5,26 +5,18 @@
 
 Clean Architecture template for Golang services
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/open-amt-cloud-toolkit/console)](https://goreportcard.com/report/github.com/open-amt-cloud-toolkit/console)
-[![License](https://img.shields.io/github/license/evrone/go-clean-template.svg)](https://github.com/open-amt-cloud-toolkit/console/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/v/release/evrone/go-clean-template.svg)](https://github.com/open-amt-cloud-toolkit/console/releases/)
-[![codecov](https://codecov.io/gh/evrone/go-clean-template/branch/master/graph/badge.svg?token=XE3E0X3EVQ)](https://codecov.io/gh/evrone/go-clean-template)
+![CodeQL](https://img.shields.io/github/actions/workflow/status/open-amt-cloud-toolkit/console/codeql-analysis.yml?style=for-the-badge&label=CodeQL&logo=github)
+![Build](https://img.shields.io/github/actions/workflow/status/open-amt-cloud-toolkit/console/go.yml?style=for-the-badge&logo=github)
+![Codecov](https://img.shields.io/codecov/c/github/open-amt-cloud-toolkit/console?style=for-the-badge&logo=codecov)
+[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/open-amt-cloud-toolkit/console?style=for-the-badge&label=OSSF%20Score)](https://api.securityscorecards.dev/projects/github.com/open-amt-cloud-toolkit/console)
+[![Discord](https://img.shields.io/discord/1063200098680582154?style=for-the-badge&label=Discord&logo=discord&logoColor=white&labelColor=%235865F2&link=https%3A%2F%2Fdiscord.gg%2FqmTWWFyA)](https://discord.gg/qmTWWFyA)
 
 ## Overview
-The purpose of the template is to show:
-- how to organize a project and prevent it from turning into spaghetti code
-- where to store business logic so that it remains independent, clean, and extensible
-- how not to lose control when a microservice grows
+This is an application that packages the UI, RPS, and MPS into a single executable for use in an enterprise environment.
 
 Using the principles of Robert Martin (aka Uncle Bob).
 
 [Go-clean-template](https://evrone.com/go-clean-template?utm_source=github&utm_campaign=go-clean-template) is created & supported by [Evrone](https://evrone.com/?utm_source=github&utm_campaign=go-clean-template).
-
-## Content
-- [Quick start](#quick-start)
-- [Project structure](#project-structure)
-- [Dependency Injection](#dependency-injection)
-- [Clean Architecture](#clean-architecture)
 
 ## Quick start
 
@@ -108,7 +100,6 @@ v1.NewRouter(handler, t)
 v2.NewRouter(handler, t)
 ```
 
-Instead of Gin, you can use any other http framework or even the standard `net/http` library.
 
 In `v1/router.go` and above the handler methods, there are comments for generating swagger documentation using [swag](https://github.com/swaggo/swag).
 
