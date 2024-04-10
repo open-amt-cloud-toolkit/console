@@ -1,15 +1,14 @@
-version: '3.9'
+version: "3.9"
 services:
-
   postgres:
     container_name: postgres
     image: postgres
     volumes:
       - pg-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: 'postgresadmin'
-      POSTGRES_PASSWORD: 'admin123'
-      POSTGRES_DB: 'rpsdb'
+      POSTGRES_USER: "postgresadmin"
+      POSTGRES_PASSWORD: "admin123"
+      POSTGRES_DB: "rpsdb"
     ports:
       - 5432:5432
   app:
@@ -19,21 +18,12 @@ services:
     env_file:
       - .env
     environment:
-      PG_URL: 'postgres://postgresadmin:admin123@postgres:5432/rpsdb'
+      PG_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
     ports:
       - 8080:8080
       - 8081:8081
     depends_on:
       - postgres
-
-  integration:
-    build:
-      context: .
-      dockerfile: integration-test/Dockerfile
-    container_name: integration
-    image: integration
-    depends_on:
-      - app
 
 volumes:
   pg-data:

@@ -27,6 +27,7 @@ Using the principles of Robert Martin (aka Uncle Bob).
 - [Clean Architecture](#clean-architecture)
 
 ## Quick start
+
 Local development:
 ```sh
 # Postgres

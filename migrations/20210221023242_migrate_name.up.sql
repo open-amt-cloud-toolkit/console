@@ -4,6 +4,28 @@
 **********************************************************************/
 CREATE EXTENSION IF NOT EXISTS citext;
 CREATE USER rpsdb;
+CREATE TABLE IF NOT EXISTS devices
+(
+    guid uuid NOT NULL,
+    tags text[][] COLLATE pg_catalog."default",
+    hostname character varying(256) COLLATE pg_catalog."default",
+    mpsinstance text COLLATE pg_catalog."default",
+    connectionstatus boolean,
+    mpsusername text COLLATE pg_catalog."default",
+    tenantid character varying(36) COLLATE pg_catalog."default" NOT NULL,
+    friendlyname character varying(256) COLLATE pg_catalog."default",
+    dnssuffix character varying(256) COLLATE pg_catalog."default",
+    lastconnected timestamp with time zone,
+    lastseen timestamp with time zone,
+    lastdisconnected timestamp with time zone,
+    deviceinfo json,
+    username varchar(256),
+    password varchar(256),
+    usetls boolean,
+    allowselfsigned boolean,
+    CONSTRAINT devices_pkey PRIMARY KEY (guid, tenantid),
+    CONSTRAINT device_guid UNIQUE (guid)
+);
 CREATE TABLE IF NOT EXISTS ciraconfigs(
   cira_config_name citext NOT NULL,
   mps_server_address varchar(256),
