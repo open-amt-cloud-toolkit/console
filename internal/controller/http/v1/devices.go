@@ -33,15 +33,15 @@ type DeviceCountResponse struct {
 	Data  []entity.Device `json:"data"`
 }
 
-// @Summary     Show Domains
-// @Description Show all domains
-// @ID          history
-// @Tags  	    domains
+// @Summary     Show Devices
+// @Description Show all devices
+// @ID          devices
+// @Tags  	    devices
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} domainresponse
+// @Success     200 {object} DeviceCountResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/domains [get]
+// @Router      /api/v1/admin/devices [get]
 func (dr *deviceRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
