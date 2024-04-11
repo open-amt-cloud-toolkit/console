@@ -3,6 +3,7 @@ package wsman
 import (
 	"encoding/base64"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/authorization"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
@@ -33,14 +34,14 @@ func NewGoWSMANMessages() *GoWSMANMessages {
 	return &GoWSMANMessages{}
 }
 
-func (g *GoWSMANMessages) SetupWsmanClient(lmsAddress, username, password string, logAMTMessages bool) {
+func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, logAMTMessages bool) {
 	clientParams := client.Parameters{
-		Target:            lmsAddress,
-		Username:          username,
-		Password:          password,
+		Target:            device.Hostname,
+		Username:          device.Username,
+		Password:          device.Password,
 		UseDigest:         true,
-		UseTLS:            true,
-		SelfSignedAllowed: true,
+		UseTLS:            device.UseTLS,
+		SelfSignedAllowed: device.AllowSelfSigned,
 		LogAMTMessages:    logAMTMessages,
 	}
 	g.wsmanMessages = wsman.NewMessages(clientParams)
