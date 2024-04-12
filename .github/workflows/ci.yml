@@ -82,7 +82,8 @@ jobs:
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
-          golangci_lint_flags: "--config=.github/.golangci.yml"
+          fail_on_error: true
+          golangci_lint_flags: "--config=.github/.golangci.yml ./..."
 
   yamllint:
     name: runner / yamllint

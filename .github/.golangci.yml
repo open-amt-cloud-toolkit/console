@@ -2,3 +2,9 @@
 linters-settings:
   dupl:
     threshold: 200
+  lll:
+    line-length: 300
+linters:
+  enable-all: true
+severity:
+  default-severity: error
