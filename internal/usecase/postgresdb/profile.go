@@ -23,7 +23,7 @@ func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error
 	sql, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("profiles").
-		Where("tenant_id = ?").
+		Where("tenant_id = ?", tenantID).
 		ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("ProfileRepo - GetCount - r.Builder: %w", err)
@@ -68,17 +68,17 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 				`).
 		From("profiles").
 		Where("tenantid = ?", tenantID).
-		OrderBy("guid").
+		OrderBy("profileName").
 		Limit(uint64(top)).
 		Offset(uint64(skip)).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("DeviceRepo - Get - r.Builder: %w", err)
+		return nil, fmt.Errorf("ProfileRepo - Get - r.Builder: %w", err)
 	}
 
 	rows, err := r.Pool.Query(ctx, sql, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("DeviceRepo - Get - r.Pool.Query: %w", err)
+		return nil, fmt.Errorf("ProfileRepo - Get - r.Pool.Query: %w", err)
 	}
 	defer rows.Close()
 
@@ -89,7 +89,7 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 
 		err = rows.Scan(&p.ProfileName, &p.AMTPassword, &p.GenerateRandomPassword, &p.CIRAConfigName, &p.Activation, &p.MEBXPassword, &p.GenerateRandomMEBxPassword, &p.CIRAConfigObject, &p.Tags, &p.DhcpEnabled, &p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.WifiConfigs, &p.TenantID, &p.TLSMode, &p.TLSCerts, &p.TLSSigningAuthority, &p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.Ieee8021xProfileName, &p.Ieee8021xProfileObject, &p.Version)
 		if err != nil {
-			return nil, fmt.Errorf("DeviceRepo - Get - rows.Scan: %w", err)
+			return nil, fmt.Errorf("ProfileRepo - Get - rows.Scan: %w", err)
 		}
 
 		profiles = append(profiles, p)
@@ -98,8 +98,8 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 	return profiles, nil
 }
 
-// Get -.
-func (r *ProfileRepo) GetByName(ctx context.Context, guid, tenantID string) (entity.Profile, error) {
+// GetByName -.
+func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID string) (entity.Profile, error) {
 	sql, _, err := r.Builder.
 		Select(`profile_name as "profileName",
 				activation as "activation",
@@ -118,13 +118,13 @@ func (r *ProfileRepo) GetByName(ctx context.Context, guid, tenantID string) (ent
 				xmin as "version"
 				`).
 		From("profiles").
-		Where("guid = ? and tenantid = ?").
+		Where("profile_name = ? and tenantid = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return entity.Profile{}, fmt.Errorf("ProfileRepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, guid, tenantID)
+	rows, err := r.Pool.Query(ctx, sql, profileName, tenantID)
 	if err != nil {
 		return entity.Profile{}, fmt.Errorf("ProfileRepo - Get - r.Pool.Query: %w", err)
 	}
@@ -154,7 +154,7 @@ func (r *ProfileRepo) GetByName(ctx context.Context, guid, tenantID string) (ent
 func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
 	sql, _, err := r.Builder.
 		Delete("profiles").
-		Where("name = ? AND tenant_id = ?", profileName, tenantID).
+		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return false, fmt.Errorf("ProfileRepo - Delete - r.Builder: %w", err)
