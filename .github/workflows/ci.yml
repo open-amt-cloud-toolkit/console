@@ -81,6 +81,8 @@ jobs:
         uses: actions/checkout@cd7d8d697e10461458bc61a30d094dc601a8b017
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_flags: "--config=.github/.golangci.yml"
 
   yamllint:
     name: runner / yamllint
