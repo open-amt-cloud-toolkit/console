@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@cd7d8d697e10461458bc61a30d094dc601a8b017 # v4.0.0
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@3c75220e8d20774b68eea48e869a706ff7249b54 # v6.0.0
+      - uses: wagoid/commitlint-github-action@7f0a61df502599e1f1f50880aaa7ec1e2c0592f2 # v6.0.1
         with:
           configFile: .github/commitlint.config.cjs
       - name: Install Dependencies
@@ -81,6 +81,8 @@ jobs:
         uses: actions/checkout@cd7d8d697e10461458bc61a30d094dc601a8b017
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_flags: "--config=.github/.golangci.yml"
 
   yamllint:
     name: runner / yamllint

@@ -35,7 +35,7 @@ type (
 	Profile interface {
 		GetCount(ctx context.Context, tenantID string) (int, error)
 		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Profile, error)
-		GetByName(ctx context.Context, guid, tenantID string) (entity.Profile, error)
+		GetByName(ctx context.Context, profileName, tenantID string) (entity.Profile, error)
 		Delete(ctx context.Context, profileName, tenantID string) (bool, error)
 		Update(ctx context.Context, p *entity.Profile) (bool, error)
 		Insert(ctx context.Context, p *entity.Profile) (string, error)
@@ -96,5 +96,31 @@ type (
 		// GetRedirectionService() (response redirection.Response, err error)
 		// GetIpsOptInService() (response optin.Response, err error)
 		// PutIpsOptInService(request optin.OptInServiceRequest) (response optin.Response, err error)
+	}
+	IEEE8021xProfile interface {
+		CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error)
+		GetCount(ctx context.Context, tenantID string) (int, error)
+		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.IEEE8021xConfig, error)
+		GetByName(ctx context.Context, profileName, tenantID string) (entity.IEEE8021xConfig, error)
+		Delete(ctx context.Context, profileName, tenantID string) (bool, error)
+		Update(ctx context.Context, p *entity.IEEE8021xConfig) (bool, error)
+		Insert(ctx context.Context, p *entity.IEEE8021xConfig) (string, error)
+	}
+	CIRAConfig interface {
+		GetCount(ctx context.Context, tenantID string) (int, error)
+		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.CIRAConfig, error)
+		GetByName(ctx context.Context, configName, tenantID string) (entity.CIRAConfig, error)
+		Delete(ctx context.Context, profileName, tenantID string) (bool, error)
+		Update(ctx context.Context, p *entity.CIRAConfig) (bool, error)
+		Insert(ctx context.Context, p *entity.CIRAConfig) (string, error)
+	}
+	WirelessProfile interface {
+		CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error)
+		GetCount(ctx context.Context, tenantID string) (int, error)
+		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.WirelessConfig, error)
+		GetByName(ctx context.Context, guid, tenantID string) (entity.WirelessConfig, error)
+		Delete(ctx context.Context, profileName, tenantID string) (bool, error)
+		Update(ctx context.Context, p *entity.WirelessConfig) (bool, error)
+		Insert(ctx context.Context, p *entity.WirelessConfig) (string, error)
 	}
 )
