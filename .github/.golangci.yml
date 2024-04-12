@@ -1,0 +1,4 @@
+# https://golangci-lint.run/usage/configuration/
+linters-settings:
+  dupl:
+    threshold: 200
