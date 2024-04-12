@@ -10,7 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
-// DomainRepo -.
+// DeviceRepo -.
 type DeviceRepo struct {
 	*postgres.DB
 }
@@ -25,7 +25,7 @@ func (r *DeviceRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 	sql, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("devices").
-		Where("tenantid = ?").
+		Where("tenantid = ?", tenantID).
 		ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("DeviceRepo - GetCount - r.Builder: %w", err)
@@ -99,7 +99,7 @@ func (r *DeviceRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 	return domains, nil
 }
 
-// Get -.
+// GetByID -.
 func (r *DeviceRepo) GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error) {
 	sql, _, err := r.Builder.
 		Select(`guid as "guid",

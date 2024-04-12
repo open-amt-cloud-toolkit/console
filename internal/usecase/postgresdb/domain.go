@@ -26,7 +26,7 @@ func (r *DomainRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 	sql, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("domains").
-		Where("tenant_id = ?").
+		Where("tenant_id = ?", tenantID).
 		ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("DomainRepo - GetCount - r.Builder: %w", err)
