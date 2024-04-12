@@ -8,6 +8,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 )
 
 type deviceManagementRoutes struct {
@@ -55,7 +56,7 @@ func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	version, err := r.t.GetAMTVersion()
 	if err != nil {
@@ -77,7 +78,7 @@ func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	features, err := r.t.GetFeatures()
 	if err != nil {
@@ -99,7 +100,7 @@ func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	alarms, err := r.t.GetAlarmOccurrences()
 	if err != nil {
@@ -107,6 +108,10 @@ func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
 		errorResponse(c, http.StatusInternalServerError, "amt problems")
 
 		return
+	}
+
+	if alarms == nil {
+		alarms = []alarmclock.AlarmClockOccurrence{}
 	}
 
 	c.JSON(http.StatusOK, alarms)
@@ -121,7 +126,7 @@ func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	hwInfo, err := r.t.GetHardwareInfo()
 	if err != nil {
@@ -143,7 +148,7 @@ func (r *deviceManagementRoutes) getPowerState(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	features, err := r.t.GetPowerState()
 	if err != nil {
@@ -165,7 +170,7 @@ func (r *deviceManagementRoutes) getPowerCapabilities(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	features, err := r.t.GetPowerCapabilities()
 	if err != nil {
@@ -187,7 +192,7 @@ func (r *deviceManagementRoutes) getGeneralSettings(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	features, err := r.t.GetGeneralSettings()
 	if err != nil {
@@ -209,7 +214,7 @@ func (r *deviceManagementRoutes) cancelUserConsentCode(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	features, err := r.t.CancelUserConsent()
 	if err != nil {
@@ -231,7 +236,7 @@ func (r *deviceManagementRoutes) getUserConsentCode(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	features, err := r.t.GetUserConsentCode()
 	if err != nil {
@@ -260,7 +265,7 @@ func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 		return
 	}
 
-	r.t.SetupWsmanClient(item.Hostname, item.Username, item.Password, true)
+	r.t.SetupWsmanClient(item, true)
 
 	features, err := r.t.SendConsentCode(userConsent.ConsentCode)
 	if err != nil {
