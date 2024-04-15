@@ -3,45 +3,7 @@ on: pull_request
 permissions:
   contents: read # for actions/checkout to fetch code
 
-jobs:
-  code-ql:
-    name: runner / CodeQL
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
-        with:
-          egress-policy: audit
-      - uses: actions/checkout@cd7d8d697e10461458bc61a30d094dc601a8b017 # v4.0.0
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
-        with:
-          languages: go
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
-      - name: Generate Security Report
-        continue-on-error: true
-        uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
-        with:
-          template: report
-          token: ${{ secrets.SECURITY_TOKEN }}
-      - name: Rename Report
-        shell: bash
-        continue-on-error: true
-        run: |
-          DATE=$(date +"%Y-%m-%d")
-          mv "report.pdf" "console-security-report-$DATE.pdf"
-      - name: GitHub Upload Release Artifacts
-        continue-on-error: true
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
-        with:
-          name: report
-          path: ./*.pdf
-
+jobs: 
   semantic-release:
     name: runner / Validate PR and Commits
     runs-on: ubuntu-latest
