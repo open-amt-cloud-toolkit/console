@@ -41,7 +41,7 @@ type (
 		Insert(ctx context.Context, p *entity.Profile) (string, error)
 	}
 	DeviceManagement interface {
-		SetupWsmanClient(lmsaddress, username, password string, logAMTMessages bool)
+		SetupWsmanClient(device entity.Device, logAMTMessages bool)
 		GetAMTVersion() ([]software.SoftwareIdentity, error)
 		GetFeatures() (interface{}, error)
 		GetAlarmOccurrences() ([]alarmclock.AlarmClockOccurrence, error)
