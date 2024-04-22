@@ -107,7 +107,7 @@ jobs:
       - name: Upload Coverage Results
         uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed # v4.3.0
       - name: GitHub Upload Release Artifacts
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
         with:
           name: JUnit Results ${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}
           path: junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml
