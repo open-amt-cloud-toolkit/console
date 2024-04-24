@@ -2,6 +2,8 @@ package postgresdb
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,8 +22,8 @@ func NewWirelessRepo(pg *postgres.DB) *WirelessRepo {
 }
 
 // CheckProfileExits -.
-func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error) {
-	sql, _, err := r.Builder.
+func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName, tenantID string) (bool, error) {
+	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("wirelessconfigs").
 		Where("wireless_profile_name and tenant_id = ?", profileName, tenantID).
@@ -32,9 +34,9 @@ func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName strin
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
 
@@ -46,7 +48,7 @@ func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName strin
 
 // GetCount -.
 func (r *WirelessRepo) GetCount(ctx context.Context, tenantID string) (int, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("wirelessconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -57,9 +59,9 @@ func (r *WirelessRepo) GetCount(ctx context.Context, tenantID string) (int, erro
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -75,18 +77,18 @@ func (r *WirelessRepo) Get(ctx context.Context, top, skip int, tenantID string) 
 		top = 100
 	}
 
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select(`
-			wireless_profile_name as "profileName", 
-			authentication_method as "authenticationMethod", 
-			encryption_method as "encryptionMethod", 
-			ssid as "ssid", 
-			psk_value as "pskValue", 
-			psk_passphrase as "pskPassphrase", 
-			link_policy as "linkPolicy", 
-			tenant_id as "tenantId",
-			ieee8021x_profile_name as "ieee8021xProfileName",
-			xmin as "version"
+			wireless_profile_name,
+			authentication_method,
+			encryption_method,
+			ssid,
+			psk_value,
+			psk_passphrase,
+			link_policy,
+			tenant_id,
+			ieee8021x_profile_name,
+			xmin
 			`).
 		From("wirelessconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -98,13 +100,13 @@ func (r *WirelessRepo) Get(ctx context.Context, top, skip int, tenantID string) 
 		return nil, fmt.Errorf("WirelessRepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("WirelessRepo - Get - r.Pool.Query: %w", err)
 	}
 	defer rows.Close()
 
-	wirelessConfigs := make([]entity.WirelessConfig, 0, top)
+	wirelessConfigs := make([]entity.WirelessConfig, 0)
 
 	for rows.Next() {
 		p := entity.WirelessConfig{}
@@ -122,18 +124,18 @@ func (r *WirelessRepo) Get(ctx context.Context, top, skip int, tenantID string) 
 
 // GetByName -.
 func (r *WirelessRepo) GetByName(ctx context.Context, profileName, tenantID string) (entity.WirelessConfig, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select(`
-			wireless_profile_name as "profileName", 
-			authentication_method as "authenticationMethod", 
-			encryption_method as "encryptionMethod", 
-			ssid as "ssid", 
-			psk_value as "pskValue",
-			psk_passphrase as "pskPassphrase", 
-			link_policy as "linkPolicy", 
-			tenant_id as "tenantId",
-			ieee8021x_profile_name as "ieee8021xProfileName",
-			xmin as "version"
+			wireless_profile_name,
+			authentication_method,
+			encryption_method,
+			ssid,
+			psk_value,
+			psk_passphrase,
+			link_policy,
+			tenant_id,
+			ieee8021x_profile_name,
+			xmin
 			`).
 		From("wirelessconfigs").
 		Where("wireless_profile_name = ? and tenant_id = ?", profileName, tenantID).
@@ -142,14 +144,14 @@ func (r *WirelessRepo) GetByName(ctx context.Context, profileName, tenantID stri
 		return entity.WirelessConfig{}, fmt.Errorf("WirelessRepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, profileName, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, profileName, tenantID)
 	if err != nil {
 		return entity.WirelessConfig{}, fmt.Errorf("WirelessRepo - Get - r.Pool.Query: %w", err)
 	}
 
 	defer rows.Close()
 
-	wirelessConfigs := make([]entity.WirelessConfig, 0, 1)
+	wirelessConfigs := make([]entity.WirelessConfig, 0)
 
 	for rows.Next() {
 		p := entity.WirelessConfig{}
@@ -171,7 +173,7 @@ func (r *WirelessRepo) GetByName(ctx context.Context, profileName, tenantID stri
 
 // Delete -.
 func (r *WirelessRepo) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Delete("wirelessconfigs").
 		Where("wireless_profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -179,7 +181,7 @@ func (r *WirelessRepo) Delete(ctx context.Context, profileName, tenantID string)
 		return false, fmt.Errorf("WirelessRepo - Delete - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql)
+	res, err := r.Pool.Exec(ctx, sqlQuery)
 	if err != nil {
 		return false, fmt.Errorf("WirelessRepo - Delete - r.Pool.Exec: %w", err)
 	}
@@ -189,7 +191,7 @@ func (r *WirelessRepo) Delete(ctx context.Context, profileName, tenantID string)
 
 // Update -.
 func (r *WirelessRepo) Update(ctx context.Context, p *entity.WirelessConfig) (bool, error) {
-	sql, args, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Update("wirelessconfigs").
 		Set("authentication_method", p.AuthenticationMethod).
 		Set("encryption_method", p.EncryptionMethod).
@@ -205,7 +207,7 @@ func (r *WirelessRepo) Update(ctx context.Context, p *entity.WirelessConfig) (bo
 		return false, fmt.Errorf("WirelessRepo - Update - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql, args...)
+	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return false, fmt.Errorf("WirelessRepo - Update - r.Pool.Exec: %w", err)
 	}
@@ -216,7 +218,8 @@ func (r *WirelessRepo) Update(ctx context.Context, p *entity.WirelessConfig) (bo
 // Insert -.
 func (r *WirelessRepo) Insert(ctx context.Context, p *entity.WirelessConfig) (string, error) {
 	date := time.Now().Format("2006-01-02 15:04:05")
-	sql, args, err := r.Builder.
+
+	sqlQuery, args, err := r.Builder.
 		Insert("wirelessconfigs").
 		Columns("wireless_profile_name", "authentication_method", "encryption_method", "ssid", "psk_value", "psk_passphrase", "link_policy", "creation_date", "tenant_id", "ieee8021x_profile_name").
 		Values(p.ProfileName, p.AuthenticationMethod, p.EncryptionMethod, p.SSID, p.PSKValue, p.PSKPassphrase, p.LinkPolicy, date, p.TenantID, p.IEEE8021xProfileName).
@@ -228,7 +231,7 @@ func (r *WirelessRepo) Insert(ctx context.Context, p *entity.WirelessConfig) (st
 
 	var version string
 
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&version)
+	err = r.Pool.QueryRow(ctx, sqlQuery, args...).Scan(&version)
 	if err != nil {
 		return "", fmt.Errorf("WirelessRepo - Insert - r.Pool.QueryRow: %w", err)
 	}

@@ -103,6 +103,8 @@ CREATE TABLE IF NOT EXISTS profiles(
   kvm_enabled BOOLEAN NULL,
   sol_enabled BOOLEAN NULL,
   tls_signing_authority varchar(40) NULL,
+  ip_sync_enabled BOOLEAN NULL,
+  local_wifi_sync_enabled BOOLEAN NULL,
   ieee8021x_profile_name citext,
   FOREIGN KEY (ieee8021x_profile_name,tenant_id)  REFERENCES ieee8021xconfigs(profile_name,tenant_id),
   PRIMARY KEY (profile_name, tenant_id)

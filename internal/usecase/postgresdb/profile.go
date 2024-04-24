@@ -2,6 +2,8 @@ package postgresdb
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
@@ -20,7 +22,7 @@ func NewProfileRepo(pg *postgres.DB) *ProfileRepo {
 
 // GetCount -.
 func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("profiles").
 		Where("tenant_id = ?", tenantID).
@@ -31,9 +33,9 @@ func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -49,26 +51,33 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 		top = 100
 	}
 
-	sql, _, err := r.Builder.
-		Select(`profile_name as "profileName",
-				activation as "activation",
-				cira_config_name as "ciraConfigName",
-				generate_random_password as "generateRandomPassword",
-				generate_random_mebx_password as "generateRandomMEBxPassword",
-				tags as "tags",
-				tenantid as "tenantId",
-				friendlyname as "friendlyName",
-				dnssuffix as "dnsSuffix",
-				deviceinfo as "deviceInfo",
-				username as "username",
-				password as "password",
-				usetls as "useTLS",
-				allowselfsigned as "allowSelfSigned",
-				xmin as "version"
+	sqlQuery, _, err := r.Builder.
+		Select(`profile_name,
+            activation,
+            amt_password,
+            generate_random_password,
+            cira_config_name,
+            
+            
+            mebx_password,
+            generate_random_mebx_password,
+            tags,
+            dhcp_enabled,
+            tenant_id,
+            tls_mode,
+            user_consent,
+            ider_enabled,
+            kvm_enabled,
+            sol_enabled,
+            tls_signing_authority,
+            ip_sync_enabled,
+            local_wifi_sync_enabled,
+            ieee8021x_profile_name,
+            xmin
 				`).
 		From("profiles").
-		Where("tenantid = ?", tenantID).
-		OrderBy("profileName").
+		Where("tenant_id = ?", tenantID).
+		OrderBy("profile_name").
 		Limit(uint64(top)).
 		Offset(uint64(skip)).
 		ToSql()
@@ -76,18 +85,22 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 		return nil, fmt.Errorf("ProfileRepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("ProfileRepo - Get - r.Pool.Query: %w", err)
 	}
 	defer rows.Close()
 
-	profiles := make([]entity.Profile, 0, top)
+	profiles := make([]entity.Profile, 0)
 
 	for rows.Next() {
 		p := entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.AMTPassword, &p.GenerateRandomPassword, &p.CIRAConfigName, &p.Activation, &p.MEBXPassword, &p.GenerateRandomMEBxPassword, &p.CIRAConfigObject, &p.Tags, &p.DhcpEnabled, &p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.WifiConfigs, &p.TenantID, &p.TLSMode, &p.TLSCerts, &p.TLSSigningAuthority, &p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.Ieee8021xProfileName, &p.Ieee8021xProfileObject, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
+			&p.CIRAConfigName, &p.MEBXPassword,
+			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DhcpEnabled, &p.TenantID, &p.TLSMode,
+			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
+			&p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.Ieee8021xProfileName, &p.Version)
 		if err != nil {
 			return nil, fmt.Errorf("ProfileRepo - Get - rows.Scan: %w", err)
 		}
@@ -100,42 +113,53 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 
 // GetByName -.
 func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID string) (entity.Profile, error) {
-	sql, _, err := r.Builder.
-		Select(`profile_name as "profileName",
-				activation as "activation",
-				cira_config_name as "ciraConfigName",
-				generate_random_password as "generateRandomPassword",
-				generate_random_mebx_password as "generateRandomMEBxPassword",
-				tags as "tags",
-				tenantid as "tenantId",
-				friendlyname as "friendlyName",
-				dnssuffix as "dnsSuffix",
-				deviceinfo as "deviceInfo",
-				username as "username",
-				password as "password",
-				usetls as "useTLS",
-				allowselfsigned as "allowSelfSigned",
-				xmin as "version"
+	sqlQuery, _, err := r.Builder.
+		Select(`profile_name,
+            activation,
+            amt_password,
+            generate_random_password,
+            cira_config_name,
+           
+            mebx_password,
+            generate_random_mebx_password,
+            tags,
+            dhcp_enabled,
+            tenant_id,
+            tls_mode,
+            user_consent,
+            ider_enabled,
+            kvm_enabled,
+            sol_enabled,
+            tls_signing_authority,
+            ip_sync_enabled,
+            local_wifi_sync_enabled,
+            ieee8021x_profile_name,
+            xmin
 				`).
 		From("profiles").
-		Where("profile_name = ? and tenantid = ?", profileName, tenantID).
+		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return entity.Profile{}, fmt.Errorf("ProfileRepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, profileName, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, profileName, tenantID)
 	if err != nil {
 		return entity.Profile{}, fmt.Errorf("ProfileRepo - Get - r.Pool.Query: %w", err)
 	}
 
 	defer rows.Close()
 
-	profiles := make([]entity.Profile, 0, 1)
+	profiles := make([]entity.Profile, 0)
+
 	for rows.Next() {
 		p := entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.AMTPassword, &p.GenerateRandomPassword, &p.CIRAConfigName, &p.Activation, &p.MEBXPassword, &p.GenerateRandomMEBxPassword, &p.CIRAConfigObject, &p.Tags, &p.DhcpEnabled, &p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.WifiConfigs, &p.TenantID, &p.TLSMode, &p.TLSCerts, &p.TLSSigningAuthority, &p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.Ieee8021xProfileName, &p.Ieee8021xProfileObject, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
+			&p.CIRAConfigName, &p.MEBXPassword,
+			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DhcpEnabled, &p.TenantID, &p.TLSMode,
+			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
+			&p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.Ieee8021xProfileName, &p.Version)
 		if err != nil {
 			return p, fmt.Errorf("ProfileRepo - Get - rows.Scan: %w", err)
 		}
@@ -152,7 +176,7 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
 
 // Delete -.
 func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Delete("profiles").
 		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -160,7 +184,7 @@ func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) 
 		return false, fmt.Errorf("ProfileRepo - Delete - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql)
+	res, err := r.Pool.Exec(ctx, sqlQuery)
 	if err != nil {
 		return false, fmt.Errorf("ProfileRepo - Delete - r.Pool.Exec: %w", err)
 	}
@@ -170,7 +194,7 @@ func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) 
 
 // Update -.
 func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, error) {
-	sql, args, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Update("profiles").
 		Set("activation", p.Activation).
 		Set("amt_password", p.AMTPassword).
@@ -196,7 +220,7 @@ func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, erro
 		return false, fmt.Errorf("ProfileRepo - Update - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql, args...)
+	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return false, fmt.Errorf("ProfileRepo - Update - r.Pool.Exec: %w", err)
 	}
@@ -206,10 +230,22 @@ func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, erro
 
 // Insert -.
 func (r *ProfileRepo) Insert(ctx context.Context, p *entity.Profile) (string, error) {
-	sql, args, err := r.Builder.
+	ciraConfigName := p.CIRAConfigName
+
+	ieee8021xProfileName := p.Ieee8021xProfileName
+
+	if *p.CIRAConfigName == "" {
+		ciraConfigName = nil
+	}
+
+	if *p.Ieee8021xProfileName == "" {
+		ieee8021xProfileName = nil
+	}
+
+	sqlQuery, args, err := r.Builder.
 		Insert("profiles").
-		Columns("activation", "amt_password", "generate_random_password", "cira_config_name", "mebx_password", "generate_random_mebx_password", "tags", "dhcp_enabled", "tls_mode", "user_consent", "ider_enabled", "kvm_enabled", "sol_enabled", "tls_signing_authority", "ieee8021x_profile_name", "ip_sync_enabled", "local_wifi_sync_enabled").
-		Values(p.Activation, p.AMTPassword, p.GenerateRandomPassword, p.CIRAConfigName, p.MEBXPassword, p.GenerateRandomMEBxPassword, p.Tags, p.DhcpEnabled, p.TLSMode, p.UserConsent, p.IDEREnabled, p.KVMEnabled, p.SOLEnabled, p.TLSSigningAuthority, p.Ieee8021xProfileName, p.IPSyncEnabled, p.LocalWifiSyncEnabled).
+		Columns("profile_name", "activation", "amt_password", "generate_random_password", "cira_config_name", "mebx_password", "generate_random_mebx_password", "tags", "dhcp_enabled", "tls_mode", "user_consent", "ider_enabled", "kvm_enabled", "sol_enabled", "tls_signing_authority", "ieee8021x_profile_name", "ip_sync_enabled", "local_wifi_sync_enabled", "tenant_id").
+		Values(p.ProfileName, p.Activation, p.AMTPassword, p.GenerateRandomPassword, ciraConfigName, p.MEBXPassword, p.GenerateRandomMEBxPassword, p.Tags, p.DhcpEnabled, p.TLSMode, p.UserConsent, p.IDEREnabled, p.KVMEnabled, p.SOLEnabled, p.TLSSigningAuthority, ieee8021xProfileName, p.IPSyncEnabled, p.LocalWifiSyncEnabled, p.TenantID).
 		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
@@ -218,7 +254,7 @@ func (r *ProfileRepo) Insert(ctx context.Context, p *entity.Profile) (string, er
 
 	var version string
 
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&version)
+	err = r.Pool.QueryRow(ctx, sqlQuery, args...).Scan(&version)
 	if err != nil {
 		return "", fmt.Errorf("ProfileRepo - Insert - r.Pool.QueryRow: %w", err)
 	}

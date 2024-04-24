@@ -42,7 +42,7 @@ func Run(cfg *config.Config) {
 
 	handler.Use(cors.New(defaultConfig))
 	v1.NewRouter(handler, log, *usecases)
-	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
+	httpServer := httpserver.New(handler, httpserver.Port("127.0.0.1", cfg.HTTP.Port))
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)

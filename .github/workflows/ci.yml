@@ -4,26 +4,6 @@ permissions:
   contents: read # for actions/checkout to fetch code
 
 jobs: 
-  semantic-release:
-    name: runner / Validate PR and Commits
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
-        with:
-          egress-policy: audit
-      - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.0.0
-        with:
-          fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@7f0a61df502599e1f1f50880aaa7ec1e2c0592f2 # v6.0.1
-        with:
-          configFile: .github/commitlint.config.cjs
-      - name: Install Dependencies
-        run: npm install @commitlint/config-conventional@18.5
-      - uses: JulienKode/pull-request-name-linter-action@8c05fb989d9f156ce61e33754f9802c9d3cffa58 # v0.5.0
-        with:
-          configuration-path: ./.github/commitlint.config.cjs
-
   formatting:
     name: runner / formatting
     runs-on: ubuntu-latest

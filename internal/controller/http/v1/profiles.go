@@ -20,17 +20,17 @@ func newProfileRoutes(handler *gin.RouterGroup, t usecase.Profile, l logger.Inte
 
 	h := handler.Group("/profiles")
 	{
-		h.GET("/", r.get)
-		h.GET("/:name", r.getByName)
-		h.POST("/", r.insert)
-		h.PATCH("/", r.update)
-		h.DELETE("/:name", r.delete)
+		h.GET("", r.get)
+		h.GET(":name", r.getByName)
+		h.POST("", r.insert)
+		h.PATCH("", r.update)
+		h.DELETE(":name", r.delete)
 	}
 }
 
 type ProfileCountResponse struct {
-	Count int              `json:"totalAccount"`
-	Data  []entity.Profile `json:"profile"`
+	Count int              `json:"totalCount"`
+	Data  []entity.Profile `json:"data"`
 }
 
 // @Summary     Show Profiles
