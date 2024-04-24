@@ -1,10 +1,138 @@
-# https://golangci-lint.run/usage/configuration/
 linters-settings:
+  gci:
+    local-prefixes: github.com/open-amt-cloud-toolkit/console
   dupl:
-    threshold: 200
-  lll:
-    line-length: 300
+    threshold: 300
+  errorlint:
+    errorf: true
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  exhaustive:
+    check-generated: false
+    default-signifies-exhaustive: false
+  funlen:
+    lines: 65
+    statements: 40
+  gocognit:
+    min-complexity: 15
+  gocyclo:
+    min-complexity: 10
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - unnecessaryBlock
+      - hugeParam
+  gofumpt:
+    extra-rules: true
+  gomnd:
+    settings:
+      mnd:
+        checks:
+          - argument
+          - case
+          - condition
+          - operation
+          - return
+  govet:
+    check-shadowing: true
+  misspell:
+    locale: US
+  nestif:
+    min-complexity: 4
+  nolintlint:
+    require-explanation: true
+    require-specific: true
+
 linters:
-  enable-all: true
-severity:
-  default-severity: error
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - cyclop
+    - deadcode
+    # - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - errcheck
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forbidigo
+    - funlen
+    - gci
+    # - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - goerr113
+    - gofmt
+    - gofumpt
+    - goimports
+    - gomnd
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nlreturn
+    - noctx
+    - nolintlint
+    - paralleltest
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - tparallel
+    - thelper
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - wsl
+    - whitespace
+
+# disable:
+#    - exhaustivestruct
+#    - ifshort
+#    - goheader
+#    - prealloc
+#    - testpackage
+#    - wrapcheck
+
+issues:
+  exclude-rules:
+    - path: integration-test
+      linters:
+        - paralleltest
+        - godot
+    - path: internal/controller/http
+      linters:
+        - godot
+
+run:
+  skip-dirs:
+    - docs

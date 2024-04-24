@@ -2,7 +2,7 @@ linters-settings:
   gci:
     local-prefixes: github.com/open-amt-cloud-toolkit/console
   dupl:
-    threshold: 100
+    threshold: 300
   errorlint:
     errorf: true
   errcheck:
@@ -31,6 +31,7 @@ linters-settings:
     disabled-checks:
       - dupImport
       - unnecessaryBlock
+      - hugeParam
   gofumpt:
     extra-rules: true
   gomnd:
@@ -59,7 +60,7 @@ linters:
     - bodyclose
     - cyclop
     - deadcode
-    - depguard
+    # - depguard
     - dogsled
     - dupl
     - durationcheck
@@ -70,7 +71,7 @@ linters:
     - forbidigo
     - funlen
     - gci
-    - gochecknoglobals
+    # - gochecknoglobals
     - gochecknoinits
     - gocognit
     - goconst

@@ -2,6 +2,8 @@ package postgresdb
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
@@ -19,8 +21,8 @@ func NewIEEE8021xRepo(pg *postgres.DB) *IEEE8021xRepo {
 }
 
 // CheckProfileExits -.
-func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error) {
-	sql, _, err := r.Builder.
+func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName, tenantID string) (bool, error) {
+	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("ieee8021xconfigs").
 		Where("profile_name and tenant_id = ?", profileName, tenantID).
@@ -31,9 +33,9 @@ func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName stri
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
 
@@ -45,7 +47,7 @@ func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName stri
 
 // GetCount -.
 func (r *IEEE8021xRepo) GetCount(ctx context.Context, tenantID string) (int, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("ieee8021xconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -56,9 +58,9 @@ func (r *IEEE8021xRepo) GetCount(ctx context.Context, tenantID string) (int, err
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -74,14 +76,14 @@ func (r *IEEE8021xRepo) Get(ctx context.Context, top, skip int, tenantID string)
 		top = 100
 	}
 
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select(`
-			profile_name as "profileName",
-        	auth_Protocol as "authenticationProtocol",
-        	pxe_timeout as "pxeTimeout",
-       		wired_interface as "wiredInterface",
-        	tenant_id as "tenantId",
-        	xmin as "version"
+			profile_name,
+        	auth_Protocol,
+        	pxe_timeout,
+       		wired_interface,
+        	tenant_id,
+        	xmin
 			`).
 		From("ieee8021xconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -92,13 +94,13 @@ func (r *IEEE8021xRepo) Get(ctx context.Context, top, skip int, tenantID string)
 		return nil, fmt.Errorf("IEEE8021xRepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("IEEE8021xRepo - Get - r.Pool.Query: %w", err)
 	}
 	defer rows.Close()
 
-	ieee8021xConfigs := make([]entity.IEEE8021xConfig, 0, top)
+	ieee8021xConfigs := make([]entity.IEEE8021xConfig, 0)
 
 	for rows.Next() {
 		p := entity.IEEE8021xConfig{}
@@ -116,14 +118,14 @@ func (r *IEEE8021xRepo) Get(ctx context.Context, top, skip int, tenantID string)
 
 // GetByName -.
 func (r *IEEE8021xRepo) GetByName(ctx context.Context, profileName, tenantID string) (entity.IEEE8021xConfig, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select(`
-			profile_name as "profileName",
-        	auth_Protocol as "authenticationProtocol",
-        	pxe_timeout as "pxeTimeout",
-        	wired_interface as "wiredInterface",
-        	tenant_id as "tenantId",
-        	xmin as "version"
+			profile_name,
+        	auth_Protocol,
+        	pxe_timeout,
+        	wired_interface,
+        	tenant_id,
+        	xmin
 			`).
 		From("ieee8021xconfigs").
 		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
@@ -132,14 +134,15 @@ func (r *IEEE8021xRepo) GetByName(ctx context.Context, profileName, tenantID str
 		return entity.IEEE8021xConfig{}, fmt.Errorf("IEEE8021xRepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, profileName, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, profileName, tenantID)
 	if err != nil {
 		return entity.IEEE8021xConfig{}, fmt.Errorf("IEEE8021xRepo - Get - r.Pool.Query: %w", err)
 	}
 
 	defer rows.Close()
 
-	ieee8021xConfigs := make([]entity.IEEE8021xConfig, 0, 1)
+	ieee8021xConfigs := make([]entity.IEEE8021xConfig, 0)
+
 	for rows.Next() {
 		p := entity.IEEE8021xConfig{}
 
@@ -160,7 +163,7 @@ func (r *IEEE8021xRepo) GetByName(ctx context.Context, profileName, tenantID str
 
 // Delete -.
 func (r *IEEE8021xRepo) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Delete("ieee8021xconfigs").
 		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -168,7 +171,7 @@ func (r *IEEE8021xRepo) Delete(ctx context.Context, profileName, tenantID string
 		return false, fmt.Errorf("IEEE8021xRepo - Delete - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql)
+	res, err := r.Pool.Exec(ctx, sqlQuery)
 	if err != nil {
 		return false, fmt.Errorf("IEEE8021xRepo - Delete - r.Pool.Exec: %w", err)
 	}
@@ -178,7 +181,7 @@ func (r *IEEE8021xRepo) Delete(ctx context.Context, profileName, tenantID string
 
 // Update -.
 func (r *IEEE8021xRepo) Update(ctx context.Context, p *entity.IEEE8021xConfig) (bool, error) {
-	sql, args, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Update("ieee8021xconfigs").
 		Set("auth_protocol", p.AuthenticationProtocol).
 		Set("servername", p.ServerName).
@@ -196,7 +199,7 @@ func (r *IEEE8021xRepo) Update(ctx context.Context, p *entity.IEEE8021xConfig) (
 		return false, fmt.Errorf("IEEE8021xRepo - Update - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql, args...)
+	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return false, fmt.Errorf("IEEE8021xRepo - Update - r.Pool.Exec: %w", err)
 	}
@@ -206,7 +209,7 @@ func (r *IEEE8021xRepo) Update(ctx context.Context, p *entity.IEEE8021xConfig) (
 
 // Insert -.
 func (r *IEEE8021xRepo) Insert(ctx context.Context, p *entity.IEEE8021xConfig) (string, error) {
-	sql, args, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Insert("ieee8021xconfigs").
 		Columns("profile_name", "auth_protocol", "pxe_timeout", "wired_interface", "tenant_id").
 		Values(p.ProfileName, p.AuthenticationProtocol, p.PxeTimeout, p.WiredInterface, p.TenantID).
@@ -218,7 +221,7 @@ func (r *IEEE8021xRepo) Insert(ctx context.Context, p *entity.IEEE8021xConfig) (
 
 	var version string
 
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&version)
+	err = r.Pool.QueryRow(ctx, sqlQuery, args...).Scan(&version)
 	if err != nil {
 		return "", fmt.Errorf("IEEE8021xRepo - Insert - r.Pool.QueryRow: %w", err)
 	}

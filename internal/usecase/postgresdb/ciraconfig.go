@@ -2,6 +2,8 @@ package postgresdb
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
@@ -20,7 +22,7 @@ func NewCIRARepo(pg *postgres.DB) *CIRARepo {
 
 // GetCount -.
 func (r *CIRARepo) GetCount(ctx context.Context, tenantID string) (int, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("ciraconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -31,9 +33,9 @@ func (r *CIRARepo) GetCount(ctx context.Context, tenantID string) (int, error) {
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -49,20 +51,20 @@ func (r *CIRARepo) Get(ctx context.Context, top, skip int, tenantID string) ([]e
 		top = 100
 	}
 
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select(`
-			cira_config_name as "configName", 
-			mps_server_address as "mpsServerAddress", 
-			mps_port as "mpsPort", 
-			user_name as "username", 
-			password as "password", 
-			common_name as "commonName",
-			server_address_format as "serverAddressFormat", 
-			auth_method as "authMethod", 
-			mps_root_certificate as "mpsRootCertificate", 
-			proxydetails as "proxyDetails", 
-			tenant_id  as "tenantId",
-			xmin as "version"
+			cira_config_name,
+			mps_server_address,
+			mps_port,
+			user_name,
+			password,
+			common_name,
+			server_address_format,
+			auth_method,
+			mps_root_certificate,
+			proxydetails,
+			tenant_id ,
+			xmin
 			`).
 		From("ciraconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -74,13 +76,13 @@ func (r *CIRARepo) Get(ctx context.Context, top, skip int, tenantID string) ([]e
 		return nil, fmt.Errorf("CIRARepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("CIRARepo - Get - r.Pool.Query: %w", err)
 	}
 	defer rows.Close()
 
-	configs := make([]entity.CIRAConfig, 0, top)
+	configs := make([]entity.CIRAConfig, 0)
 
 	for rows.Next() {
 		p := entity.CIRAConfig{}
@@ -98,20 +100,20 @@ func (r *CIRARepo) Get(ctx context.Context, top, skip int, tenantID string) ([]e
 
 // GetByName -.
 func (r *CIRARepo) GetByName(ctx context.Context, configName, tenantID string) (entity.CIRAConfig, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Select(`
-			cira_config_name as "configName", 
-			mps_server_address as "mpsServerAddress", 
-			mps_port as "mpsPort", 
-			user_name as "username", 
-			password as "password", 
-			common_name as "commonName", 
-			server_address_format as "serverAddressFormat", 
-			auth_method as "authMethod", 
-			mps_root_certificate as "mpsRootCertificate", 
-			proxydetails as "proxyDetails", 
-			tenant_id as "tenantId",
-			xmin as "version"
+			cira_config_name,
+			mps_server_address,
+			mps_port,
+			user_name,
+			password,
+			common_name,
+			server_address_format,
+			auth_method,
+			mps_root_certificate,
+			proxydetails,
+			tenant_id,
+			xmin
 			`).
 		From("ciraconfigs").
 		Where("cira_config_name = ? and tenant_id = ?", configName, tenantID).
@@ -120,14 +122,15 @@ func (r *CIRARepo) GetByName(ctx context.Context, configName, tenantID string) (
 		return entity.CIRAConfig{}, fmt.Errorf("CIRARepo - Get - r.Builder: %w", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sql, configName, tenantID)
+	rows, err := r.Pool.Query(ctx, sqlQuery, configName, tenantID)
 	if err != nil {
 		return entity.CIRAConfig{}, fmt.Errorf("CIRARepo - Get - r.Pool.Query: %w", err)
 	}
 
 	defer rows.Close()
 
-	configs := make([]entity.CIRAConfig, 0, 1)
+	configs := make([]entity.CIRAConfig, 0)
+
 	for rows.Next() {
 		p := entity.CIRAConfig{}
 
@@ -148,7 +151,7 @@ func (r *CIRARepo) GetByName(ctx context.Context, configName, tenantID string) (
 
 // Delete -.
 func (r *CIRARepo) Delete(ctx context.Context, configName, tenantID string) (bool, error) {
-	sql, _, err := r.Builder.
+	sqlQuery, _, err := r.Builder.
 		Delete("ciraconfigs").
 		Where("cira_config_name = ? AND tenant_id = ?", configName, tenantID).
 		ToSql()
@@ -156,7 +159,7 @@ func (r *CIRARepo) Delete(ctx context.Context, configName, tenantID string) (boo
 		return false, fmt.Errorf("CIRARepo - Delete - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql)
+	res, err := r.Pool.Exec(ctx, sqlQuery)
 	if err != nil {
 		return false, fmt.Errorf("CIRARepo - Delete - r.Pool.Exec: %w", err)
 	}
@@ -166,7 +169,7 @@ func (r *CIRARepo) Delete(ctx context.Context, configName, tenantID string) (boo
 
 // Update -.
 func (r *CIRARepo) Update(ctx context.Context, p *entity.CIRAConfig) (bool, error) {
-	sql, args, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Update("ciraconfigs").
 		Set("mps_server_address", p.MPSServerAddress).
 		Set("mps_port", p.MpsPort).
@@ -184,7 +187,7 @@ func (r *CIRARepo) Update(ctx context.Context, p *entity.CIRAConfig) (bool, erro
 		return false, fmt.Errorf("CIRARepo - Update - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sql, args...)
+	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return false, fmt.Errorf("CIRARepo - Update - r.Pool.Exec: %w", err)
 	}
@@ -194,7 +197,7 @@ func (r *CIRARepo) Update(ctx context.Context, p *entity.CIRAConfig) (bool, erro
 
 // Insert -.
 func (r *CIRARepo) Insert(ctx context.Context, p *entity.CIRAConfig) (string, error) {
-	sql, args, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Insert("ciraconfigs").
 		Columns("cira_config_name", "mps_server_address", "mps_port", "user_name", "password", "common_name", "server_address_format", "auth_method", "mps_root_certificate", "proxydetails", "tenant_id").
 		Values(p.ConfigName, p.MPSServerAddress, p.MpsPort, p.Username, p.Password, p.CommonName, p.ServerAddressFormat, p.AuthMethod, p.MpsRootCertificate, p.ProxyDetails, p.TenantID).
@@ -206,7 +209,7 @@ func (r *CIRARepo) Insert(ctx context.Context, p *entity.CIRAConfig) (string, er
 
 	var version string
 
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&version)
+	err = r.Pool.QueryRow(ctx, sqlQuery, args...).Scan(&version)
 	if err != nil {
 		return "", fmt.Errorf("CIRARepo - Insert - r.Pool.QueryRow: %w", err)
 	}
