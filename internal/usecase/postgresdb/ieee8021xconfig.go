@@ -19,7 +19,7 @@ func NewIEEE8021xRepo(pg *postgres.DB) *IEEE8021xRepo {
 }
 
 // CheckProfileExits -.
-func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error) {
+func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName, tenantID string) (bool, error) {
 	sql, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("ieee8021xconfigs").
@@ -33,7 +33,7 @@ func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName stri
 
 	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if err.Error() == NoRowsInResultSet {
 			return false, nil
 		}
 
@@ -58,7 +58,7 @@ func (r *IEEE8021xRepo) GetCount(ctx context.Context, tenantID string) (int, err
 
 	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if err.Error() == NoRowsInResultSet {
 			return 0, nil
 		}
 
@@ -140,6 +140,7 @@ func (r *IEEE8021xRepo) GetByName(ctx context.Context, profileName, tenantID str
 	defer rows.Close()
 
 	ieee8021xConfigs := make([]entity.IEEE8021xConfig, 0, 1)
+
 	for rows.Next() {
 		p := entity.IEEE8021xConfig{}
 

@@ -35,7 +35,7 @@ func (r *DeviceRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 
 	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if err.Error() == NoRowsInResultSet {
 			return 0, nil
 		}
 

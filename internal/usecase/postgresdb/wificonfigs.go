@@ -20,7 +20,7 @@ func NewWirelessRepo(pg *postgres.DB) *WirelessRepo {
 }
 
 // CheckProfileExits -.
-func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error) {
+func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName, tenantID string) (bool, error) {
 	sql, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("wirelessconfigs").
@@ -34,7 +34,7 @@ func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName strin
 
 	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if err.Error() == NoRowsInResultSet {
 			return false, nil
 		}
 
@@ -59,7 +59,7 @@ func (r *WirelessRepo) GetCount(ctx context.Context, tenantID string) (int, erro
 
 	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if err.Error() == NoRowsInResultSet {
 			return 0, nil
 		}
 

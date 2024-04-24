@@ -98,7 +98,7 @@ type (
 		// PutIpsOptInService(request optin.OptInServiceRequest) (response optin.Response, err error)
 	}
 	IEEE8021xProfile interface {
-		CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error)
+		CheckProfileExists(ctx context.Context, profileName, tenantID string) (bool, error)
 		GetCount(ctx context.Context, tenantID string) (int, error)
 		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.IEEE8021xConfig, error)
 		GetByName(ctx context.Context, profileName, tenantID string) (entity.IEEE8021xConfig, error)
@@ -115,7 +115,7 @@ type (
 		Insert(ctx context.Context, p *entity.CIRAConfig) (string, error)
 	}
 	WirelessProfile interface {
-		CheckProfileExists(ctx context.Context, profileName string, tenantID string) (bool, error)
+		CheckProfileExists(ctx context.Context, profileName, tenantID string) (bool, error)
 		GetCount(ctx context.Context, tenantID string) (int, error)
 		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.WirelessConfig, error)
 		GetByName(ctx context.Context, guid, tenantID string) (entity.WirelessConfig, error)

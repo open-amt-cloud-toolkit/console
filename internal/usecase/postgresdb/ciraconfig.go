@@ -33,7 +33,7 @@ func (r *CIRARepo) GetCount(ctx context.Context, tenantID string) (int, error) {
 
 	err = r.Pool.QueryRow(ctx, sql, tenantID).Scan(&count)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if err.Error() == NoRowsInResultSet {
 			return 0, nil
 		}
 
@@ -128,6 +128,7 @@ func (r *CIRARepo) GetByName(ctx context.Context, configName, tenantID string) (
 	defer rows.Close()
 
 	configs := make([]entity.CIRAConfig, 0, 1)
+
 	for rows.Next() {
 		p := entity.CIRAConfig{}
 

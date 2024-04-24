@@ -3,7 +3,6 @@ package wsman
 import (
 	"encoding/base64"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/authorization"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
@@ -24,6 +23,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
+
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 )
 
 type GoWSMANMessages struct {
@@ -427,7 +428,7 @@ func (g *GoWSMANMessages) EnableWiFi() error {
 
 	// always turn wifi on via state change request
 	// Enumeration 32769 - WiFi is enabled in S0 + Sx/AC
-	_, err = g.wsmanMessages.CIM.WiFiPort.RequestStateChange(32769)
+	_, err = g.wsmanMessages.CIM.WiFiPort.RequestStateChange(int(wifi.EnabledStateWifiEnabledS0SxAC))
 	if err != nil {
 		return err // utils.WSMANMessageError
 	}
@@ -471,7 +472,7 @@ func (g *GoWSMANMessages) RequestRedirectionStateChange(requestedState redirecti
 	return g.wsmanMessages.AMT.RedirectionService.RequestStateChange(requestedState)
 }
 
-func (g *GoWSMANMessages) RequestKVMStateChange(requestedState kvm.KVMRedirectionSAPRequestedStateInputs) (response kvm.Response, err error) {
+func (g *GoWSMANMessages) RequestKVMStateChange(requestedState kvm.KVMRedirectionSAPRequestStateChangeInput) (response kvm.Response, err error) {
 	return g.wsmanMessages.CIM.KVMRedirectionSAP.RequestStateChange(requestedState)
 }
 
