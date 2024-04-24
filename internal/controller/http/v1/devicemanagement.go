@@ -316,8 +316,8 @@ func (r *deviceManagementRoutes) getPowerCapabilities(c *gin.Context) {
 	for _, v := range version {
 		if v.InstanceID == "AMT" {
 			splitversion := strings.Split(v.VersionString, ".")
-			amtversion, err = strconv.Atoi(splitversion[0])
 
+			amtversion, err = strconv.Atoi(splitversion[0])
 			if err != nil {
 				r.l.Error(err, "http - v1 - getPowerCapabilities")
 				errorResponse(c, http.StatusInternalServerError, "error converting version")

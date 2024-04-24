@@ -15,6 +15,8 @@ const (
 	_defaultMaxPoolSize  = 1
 	_defaultConnAttempts = 10
 	_defaultConnTimeout  = time.Second
+
+	UniqueViolation = "23505"
 )
 
 // DB -.
