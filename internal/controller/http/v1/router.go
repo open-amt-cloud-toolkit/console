@@ -52,8 +52,11 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Repositories) 
 
 	h := handler.Group("/api/v1/admin")
 	{
-		newProfileRoutes(h, t.Profiles, l)
 		newDomainRoutes(h, t.Domains, l)
+		newProfileRoutes(h, t.Profiles, l)
+		newCIRAConfigRoutes(h, t.CIRAConfigs, l)
+		newWirelessConfigRoutes(h, t.WirelessProfiles, l)
+		newIEEE8021xConfigRoutes(h, t.IEEE8021xProfiles, l)
 	}
 
 	// Catch-all route to serve index.html for any route not matched above to be handled by Angular

@@ -140,12 +140,12 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
 		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
-		return entity.Profile{}, fmt.Errorf("ProfileRepo - Get - r.Builder: %w", err)
+		return entity.Profile{}, fmt.Errorf("ProfileRepo - GetByName - r.Builder: %w", err)
 	}
 
 	rows, err := r.Pool.Query(ctx, sqlQuery, profileName, tenantID)
 	if err != nil {
-		return entity.Profile{}, fmt.Errorf("ProfileRepo - Get - r.Pool.Query: %w", err)
+		return entity.Profile{}, fmt.Errorf("ProfileRepo - GetByName - r.Pool.Query: %w", err)
 	}
 
 	defer rows.Close()
@@ -161,14 +161,14 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
 			&p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.Ieee8021xProfileName, &p.Version)
 		if err != nil {
-			return p, fmt.Errorf("ProfileRepo - Get - rows.Scan: %w", err)
+			return p, fmt.Errorf("ProfileRepo - GetByName - rows.Scan: %w", err)
 		}
 
 		profiles = append(profiles, p)
 	}
 
 	if len(profiles) == 0 {
-		return entity.Profile{}, nil
+		return entity.Profile{}, fmt.Errorf("ProfileRepo - GetByName - Not Found: %w", err)
 	}
 
 	return profiles[0], nil

@@ -163,7 +163,7 @@ func (r *IEEE8021xRepo) GetByName(ctx context.Context, profileName, tenantID str
 
 // Delete -.
 func (r *IEEE8021xRepo) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
-	sqlQuery, _, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Delete("ieee8021xconfigs").
 		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -171,7 +171,7 @@ func (r *IEEE8021xRepo) Delete(ctx context.Context, profileName, tenantID string
 		return false, fmt.Errorf("IEEE8021xRepo - Delete - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sqlQuery)
+	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return false, fmt.Errorf("IEEE8021xRepo - Delete - r.Pool.Exec: %w", err)
 	}
@@ -193,7 +193,6 @@ func (r *IEEE8021xRepo) Update(ctx context.Context, p *entity.IEEE8021xConfig) (
 		Set("pxe_timeout", p.PxeTimeout).
 		Set("wired_interface", p.WiredInterface).
 		Where("profile_name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).
-		Suffix("AND xmin::text = ?", p.Version).
 		ToSql()
 	if err != nil {
 		return false, fmt.Errorf("IEEE8021xRepo - Update - r.Builder: %w", err)

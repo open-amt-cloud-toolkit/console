@@ -2,14 +2,14 @@ package entity
 
 type CIRAConfig struct {
 	ConfigName          string `json:"configName" example:"My CIRA Config"`
-	MPSServerAddress    string `json:"mpsServerAddress" example:"https://example.com"`
-	MpsPort             int    `json:"mpsPort" example:"443"`
-	Username            string `json:"username" example:"my_username"`
+	MPSServerAddress    string `json:"mpsServerAddress" binding:"required,ipv4|ipv6|url" example:"https://example.com"`
+	MpsPort             int    `json:"mpsPort" binding:"required,gt=1024,lt=49151" example:"443"`
+	Username            string `json:"username" binding:"alphanum" example:"my_username"`
 	Password            string `json:"password,omitempty" example:"my_password"`
 	CommonName          string `json:"commonName" example:"example.com"`
-	ServerAddressFormat int    `json:"serverAddressFormat" example:"201"`
-	AuthMethod          int    `json:"authMethod" example:"2"`
-	MpsRootCertificate  string `json:"mpsRootCertificate" example:"-----BEGIN CERTIFICATE-----\n..."`
+	ServerAddressFormat int    `json:"serverAddressFormat" binding:"required,oneof=3 4 201" example:"201"` // 3 = IPV4, 4= IPV6, 201 = FQDN
+	AuthMethod          int    `json:"authMethod" binding:"required,oneof=1 2" example:"2"`                // 1 = Mutal Auth, 2 = Username and Password
+	MpsRootCertificate  string `json:"mpsRootCertificate" binding:"required" example:"-----BEGIN CERTIFICATE-----\n..."`
 	ProxyDetails        string `json:"proxyDetails" example:"http://example.com"`
 	TenantID            string `json:"tenantId" example:"abc123"`
 	RegeneratePassword  bool   `json:"regeneratePassword,omitempty" example:"true"`

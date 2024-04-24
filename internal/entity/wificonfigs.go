@@ -8,14 +8,14 @@ type ProfileWifiConfigs struct {
 
 type WirelessConfig struct {
 	ProfileName            string           `json:"profileName,omitempty" example:"My Profile"`
-	AuthenticationMethod   int              `json:"authenticationMethod" example:"1"`
-	EncryptionMethod       int              `json:"encryptionMethod" example:"2"`
-	SSID                   string           `json:"ssid" example:"abc"`
+	AuthenticationMethod   int              `json:"authenticationMethod" binding:"oneof=4 5 6 7" example:"1"`
+	EncryptionMethod       int              `json:"encryptionMethod" binding:"oneof=3 4" example:"2"`
+	SSID                   string           `json:"ssid" binding:"max=32" example:"abc"`
 	PSKValue               int              `json:"pskValue" example:"3"`
-	PSKPassphrase          string           `json:"pskPassphrase" example:"abc"`
-	LinkPolicy             []string         `json:"linkPolicy"`
+	PSKPassphrase          string           `json:"pskPassphrase" binding:"min=8,max=32" example:"abc"`
+	LinkPolicy             []int            `json:"linkPolicy"`
 	TenantID               string           `json:"tenantId" example:"abc123"`
-	IEEE8021xProfileName   string           `json:"ieee8021xProfileName,omitempty" example:"My Profile"`
+	IEEE8021xProfileName   *string          `json:"ieee8021xProfileName,omitempty" example:"My Profile"`
 	IEEE8021xProfileObject *IEEE8021xConfig `json:"ieee8021xProfileObject,omitempty"`
 	Version                string           `json:"version"`
 }
