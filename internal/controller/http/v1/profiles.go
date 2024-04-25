@@ -134,14 +134,9 @@ func (pr *profileRoutes) update(c *gin.Context) {
 }
 
 func (pr *profileRoutes) delete(c *gin.Context) {
-	var profile entity.Profile
-	if err := c.ShouldBindUri(&profile); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	name := c.Param("name")
 
-		return
-	}
-
-	deleteSuccessful, err := pr.t.Delete(c.Request.Context(), profile.ProfileName, "")
+	deleteSuccessful, err := pr.t.Delete(c.Request.Context(), name, "")
 	if err != nil {
 		pr.l.Error(err, "http - profiles - v1 - delete")
 		errorResponse(c, http.StatusInternalServerError, "database problems")

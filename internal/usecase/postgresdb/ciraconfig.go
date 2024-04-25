@@ -2,9 +2,10 @@ package postgresdb
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
@@ -35,7 +36,7 @@ func (r *CIRARepo) GetCount(ctx context.Context, tenantID string) (int, error) {
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -63,9 +64,9 @@ func (r *CIRARepo) Get(ctx context.Context, top, skip int, tenantID string) ([]e
 			auth_method,
 			mps_root_certificate,
 			proxydetails,
-			tenant_id ,
-			xmin
-			`).
+			tenant_id,
+      		CAST(xmin as text) as xmin
+		`).
 		From("ciraconfigs").
 		Where("tenant_id = ?", tenantID).
 		OrderBy("cira_config_name").
@@ -80,6 +81,7 @@ func (r *CIRARepo) Get(ctx context.Context, top, skip int, tenantID string) ([]e
 	if err != nil {
 		return nil, fmt.Errorf("CIRARepo - Get - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	configs := make([]entity.CIRAConfig, 0)
@@ -113,8 +115,8 @@ func (r *CIRARepo) GetByName(ctx context.Context, configName, tenantID string) (
 			mps_root_certificate,
 			proxydetails,
 			tenant_id,
-			xmin
-			`).
+      		CAST(xmin as text) as xmin
+		`).
 		From("ciraconfigs").
 		Where("cira_config_name = ? and tenant_id = ?", configName, tenantID).
 		ToSql()

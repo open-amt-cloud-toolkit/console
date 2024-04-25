@@ -2,11 +2,11 @@ package postgresdb
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
@@ -37,7 +37,7 @@ func (r *DeviceRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -54,7 +54,7 @@ func (r *DeviceRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 	}
 
 	sqlQuery, _, err := r.Builder.
-		Select(`guid 
+		Select(`guid, 
 				hostname, 
 				tags, 
 				mpsinstance, 
@@ -68,7 +68,7 @@ func (r *DeviceRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 				password, 
 				usetls, 
 				allowselfsigned 
-				`).
+		`).
 		From("devices").
 		Where("tenantid = ?", tenantID).
 		OrderBy("guid").
@@ -83,6 +83,7 @@ func (r *DeviceRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 	if err != nil {
 		return nil, fmt.Errorf("DeviceRepo - Get - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	domains := make([]entity.Device, 0)
@@ -118,7 +119,7 @@ func (r *DeviceRepo) GetByID(ctx context.Context, guid, tenantID string) (entity
 				password,
 				usetls,
 				allowselfsigned
-				`).
+		`).
 		From("devices").
 		Where("guid = ? and tenantid = ?").
 		ToSql()
@@ -130,6 +131,7 @@ func (r *DeviceRepo) GetByID(ctx context.Context, guid, tenantID string) (entity
 	if err != nil {
 		return entity.Device{}, fmt.Errorf("DeviceRepo - Get - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	devices := make([]entity.Device, 0)
@@ -166,6 +168,7 @@ func (r *DeviceRepo) GetDistinctTags(ctx context.Context, tenantID string) ([]st
 	if err != nil {
 		return []string{}, fmt.Errorf("DeviceRepo - GetDistinctTags - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	tags := make([]string, 0)
@@ -201,7 +204,6 @@ func (r *DeviceRepo) GetByTags(ctx context.Context, tags []string, method string
             dnssuffix,
             deviceinfo`).
 		From("devices")
-
 	if method == "AND" {
 		builder = builder.Where("tags @> ? and tenantId = ?", tags, tenantID)
 	} else {
@@ -220,6 +222,7 @@ func (r *DeviceRepo) GetByTags(ctx context.Context, tags []string, method string
 	if err != nil {
 		return []entity.Device{}, fmt.Errorf("DeviceRepo - GetByTags - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	devices := make([]entity.Device, 0)

@@ -51,6 +51,7 @@ func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, logAMTMessages 
 		SelfSignedAllowed: device.AllowSelfSigned,
 		LogAMTMessages:    logAMTMessages,
 	}
+
 	g.wsmanMessages = wsman.NewMessages(clientParams)
 }
 
@@ -121,13 +122,11 @@ func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, erro
 
 	if features.EnableIDER {
 		requestedState++
-
 		listenerEnabled = 1
 	}
 
 	if features.EnableSOL {
 		requestedState += 2
-
 		listenerEnabled = 1
 	}
 
@@ -135,6 +134,7 @@ func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, erro
 	if err != nil {
 		return features, err
 	}
+
 	// kvm
 	kvmRequestedState := kvm.RedirectionSAP_Disable // disabled
 	if features.EnableKVM {
@@ -167,6 +167,7 @@ func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, erro
 	if err != nil {
 		return features, err
 	}
+
 	// user consent
 	optInResponse, err := g.wsmanMessages.IPS.OptInService.Get()
 	if err != nil {
@@ -176,6 +177,7 @@ func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, erro
 	consentCode := optin.OptInRequiredAll // default to all if not valid user consent
 
 	consent := strings.ToLower(features.UserConsent)
+
 	switch consent {
 	case "kvm":
 		consentCode = optin.OptInRequiredKVM
@@ -325,28 +327,21 @@ func (g *GoWSMANMessages) GetHardwareInfo() (interface{}, error) {
 		"CIM_Chassis": map[string]interface{}{
 			"response":  chassisResult.Body.PackageResponse,
 			"responses": []interface{}{},
-		},
-		"CIM_Chip": map[string]interface{}{
+		}, "CIM_Chip": map[string]interface{}{
 			"responses": []interface{}{chipResult.Body.PackageResponse},
-		},
-		"CIM_Card": map[string]interface{}{
+		}, "CIM_Card": map[string]interface{}{
 			"response":  cardResult.Body.PackageResponse,
 			"responses": []interface{}{},
-		},
-		"CIM_BIOSElement": map[string]interface{}{
+		}, "CIM_BIOSElement": map[string]interface{}{
 			"response":  biosResult.Body.GetResponse,
 			"responses": []interface{}{},
-		},
-		"CIM_Processor": map[string]interface{}{
+		}, "CIM_Processor": map[string]interface{}{
 			"responses": []interface{}{processorResult.Body.PackageResponse},
-		},
-		"CIM_PhysicalMemory": map[string]interface{}{
+		}, "CIM_PhysicalMemory": map[string]interface{}{
 			"responses": physicalMemoryResult.Body.PullResponse.MemoryItems,
-		},
-		"CIM_MediaAccessDevice": map[string]interface{}{
+		}, "CIM_MediaAccessDevice": map[string]interface{}{
 			"responses": []interface{}{mediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
-		},
-		"CIM_PhysicalPackage": map[string]interface{}{
+		}, "CIM_PhysicalPackage": map[string]interface{}{
 			"responses": []interface{}{ppPullResult.Body.PullResponse.PhysicalPackage},
 		},
 	}, nil
@@ -451,7 +446,9 @@ func (g *GoWSMANMessages) GetAuditLog(startIndex int) (dto.AuditLog, error) {
 	}
 
 	auditLogResponse := dto.AuditLog{}
+
 	auditLogResponse.TotalCount = response.Body.ReadRecordsResponse.TotalRecordCount
+
 	auditLogResponse.Records = response.Body.DecodedRecordsResponse
 
 	return auditLogResponse, nil
@@ -502,9 +499,13 @@ func (g *GoWSMANMessages) CreateTLSCredentialContext(certHandle string) (respons
 }
 
 // GetPublicPrivateKeyPairs
+
 // NOTE: RSA Key encoded as DES PKCS#1. The Exponent (E) is 65537 (0x010001).
+
 // When this structure is used as an output parameter (GET or PULL method),
+
 // only the public section of the key is exported.
+
 func (g *GoWSMANMessages) GetPublicPrivateKeyPairs() ([]publicprivate.PublicPrivateKeyPair, error) {
 	response, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
 	if err != nil {

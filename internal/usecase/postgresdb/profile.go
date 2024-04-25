@@ -2,25 +2,29 @@ package postgresdb
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // ProfileRepo -.
+
 type ProfileRepo struct {
 	*postgres.DB
 }
 
 // New -.
+
 func NewProfileRepo(pg *postgres.DB) *ProfileRepo {
 	return &ProfileRepo{pg}
 }
 
 // GetCount -.
+
 func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error) {
 	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
@@ -35,7 +39,7 @@ func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -46,6 +50,7 @@ func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error
 }
 
 // Get -.
+
 func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Profile, error) {
 	if top == 0 {
 		top = 100
@@ -57,8 +62,6 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
             amt_password,
             generate_random_password,
             cira_config_name,
-            
-            
             mebx_password,
             generate_random_mebx_password,
             tags,
@@ -73,7 +76,7 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
             ip_sync_enabled,
             local_wifi_sync_enabled,
             ieee8021x_profile_name,
-            xmin
+            CAST(xmin as text) as xmin
 				`).
 		From("profiles").
 		Where("tenant_id = ?", tenantID).
@@ -89,6 +92,7 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 	if err != nil {
 		return nil, fmt.Errorf("ProfileRepo - Get - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	profiles := make([]entity.Profile, 0)
@@ -112,6 +116,7 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 }
 
 // GetByName -.
+
 func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID string) (entity.Profile, error) {
 	sqlQuery, _, err := r.Builder.
 		Select(`profile_name,
@@ -119,7 +124,6 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
             amt_password,
             generate_random_password,
             cira_config_name,
-           
             mebx_password,
             generate_random_mebx_password,
             tags,
@@ -134,7 +138,7 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
             ip_sync_enabled,
             local_wifi_sync_enabled,
             ieee8021x_profile_name,
-            xmin
+            CAST(xmin as text) as xmin
 				`).
 		From("profiles").
 		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
@@ -175,8 +179,9 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
 }
 
 // Delete -.
+
 func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
-	sqlQuery, _, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Delete("profiles").
 		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -184,7 +189,7 @@ func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) 
 		return false, fmt.Errorf("ProfileRepo - Delete - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sqlQuery)
+	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return false, fmt.Errorf("ProfileRepo - Delete - r.Pool.Exec: %w", err)
 	}
@@ -193,6 +198,7 @@ func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) 
 }
 
 // Update -.
+
 func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Update("profiles").
@@ -229,6 +235,7 @@ func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, erro
 }
 
 // Insert -.
+
 func (r *ProfileRepo) Insert(ctx context.Context, p *entity.Profile) (string, error) {
 	ciraConfigName := p.CIRAConfigName
 

@@ -2,9 +2,10 @@ package postgresdb
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
@@ -35,7 +36,7 @@ func (r *IEEE8021xRepo) CheckProfileExists(ctx context.Context, profileName, ten
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return false, nil
 		}
 
@@ -60,7 +61,7 @@ func (r *IEEE8021xRepo) GetCount(ctx context.Context, tenantID string) (int, err
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -78,12 +79,12 @@ func (r *IEEE8021xRepo) Get(ctx context.Context, top, skip int, tenantID string)
 
 	sqlQuery, _, err := r.Builder.
 		Select(`
-			profile_name,
+			    profile_name,
         	auth_Protocol,
         	pxe_timeout,
        		wired_interface,
         	tenant_id,
-        	xmin
+          CAST(xmin as text) as xmin
 			`).
 		From("ieee8021xconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -98,6 +99,7 @@ func (r *IEEE8021xRepo) Get(ctx context.Context, top, skip int, tenantID string)
 	if err != nil {
 		return nil, fmt.Errorf("IEEE8021xRepo - Get - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	ieee8021xConfigs := make([]entity.IEEE8021xConfig, 0)
@@ -120,12 +122,12 @@ func (r *IEEE8021xRepo) Get(ctx context.Context, top, skip int, tenantID string)
 func (r *IEEE8021xRepo) GetByName(ctx context.Context, profileName, tenantID string) (entity.IEEE8021xConfig, error) {
 	sqlQuery, _, err := r.Builder.
 		Select(`
-			profile_name,
+			    profile_name,
         	auth_Protocol,
         	pxe_timeout,
         	wired_interface,
         	tenant_id,
-        	xmin
+          CAST(xmin as text) as xmin
 			`).
 		From("ieee8021xconfigs").
 		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).

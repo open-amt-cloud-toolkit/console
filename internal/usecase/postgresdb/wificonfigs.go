@@ -2,10 +2,11 @@ package postgresdb
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
@@ -36,7 +37,7 @@ func (r *WirelessRepo) CheckProfileExists(ctx context.Context, profileName, tena
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return false, nil
 		}
 
@@ -61,7 +62,7 @@ func (r *WirelessRepo) GetCount(ctx context.Context, tenantID string) (int, erro
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -88,7 +89,7 @@ func (r *WirelessRepo) Get(ctx context.Context, top, skip int, tenantID string) 
 			link_policy,
 			tenant_id,
 			ieee8021x_profile_name,
-			xmin
+      		CAST(xmin as text) as xmin
 			`).
 		From("wirelessconfigs").
 		Where("tenant_id = ?", tenantID).
@@ -104,6 +105,7 @@ func (r *WirelessRepo) Get(ctx context.Context, top, skip int, tenantID string) 
 	if err != nil {
 		return nil, fmt.Errorf("WirelessRepo - Get - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	wirelessConfigs := make([]entity.WirelessConfig, 0)
@@ -135,7 +137,7 @@ func (r *WirelessRepo) GetByName(ctx context.Context, profileName, tenantID stri
 			link_policy,
 			tenant_id,
 			ieee8021x_profile_name,
-			xmin
+			CAST(xmin as text) as xmin
 			`).
 		From("wirelessconfigs").
 		Where("wireless_profile_name = ? and tenant_id = ?", profileName, tenantID).
@@ -231,6 +233,7 @@ func (r *WirelessRepo) Insert(ctx context.Context, p *entity.WirelessConfig) (st
 		Insert("wirelessconfigs").
 		Columns("wireless_profile_name", "authentication_method", "encryption_method", "ssid", "psk_value", "psk_passphrase", "link_policy", "creation_date", "tenant_id", "ieee8021x_profile_name").
 		Values(p.ProfileName, p.AuthenticationMethod, p.EncryptionMethod, p.SSID, p.PSKValue, p.PSKPassphrase, p.LinkPolicy, date, p.TenantID, ieeeProfileName).
+		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
 		return "", fmt.Errorf("WirelessRepo - Insert - r.Builder: %w", err)
