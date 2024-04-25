@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - name: Format
         run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
       - name: Run go vet
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
@@ -31,7 +31,7 @@ jobs:
     name: runner / yamllint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - uses: reviewdog/action-yamllint@v1
         with:
           fail_on_error: true
@@ -42,7 +42,7 @@ jobs:
     name: runner / dotenv-linter
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - uses: dotenv-linter/action-dotenv-linter@v2
         with:
           reporter: github-pr-review
@@ -51,7 +51,7 @@ jobs:
     name: runner / check-dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
       - name: WriteGoList
         run: go list -json -m all > go.list
@@ -69,7 +69,7 @@ jobs:
         go-version: [1.21.x, 1.22.x]
         os: [windows-2019, windows-2022, ubuntu-22.04, ubuntu-20.04]
     steps:
-      - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
       - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
         with:
           go-version: ${{ matrix.go-version }}
