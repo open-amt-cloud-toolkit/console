@@ -93,16 +93,11 @@ func (r *domainRoutes) get(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} DomainCountResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/domains [get]
+// @Router      /api/v1/admin/domains/:name [get]
 func (r *domainRoutes) getByName(c *gin.Context) {
-	var domain entity.Domain
-	if err := c.ShouldBindUri(&domain); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+	name := c.Param("name")
 
-		return
-	}
-
-	item, err := r.t.GetByName(c.Request.Context(), domain.ProfileName, "")
+	item, err := r.t.GetByName(c.Request.Context(), name, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - getByName")
 		errorResponse(c, http.StatusInternalServerError, "database problems")
@@ -179,14 +174,9 @@ func (r *domainRoutes) update(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/domains [delete]
 func (r *domainRoutes) delete(c *gin.Context) {
-	var domain entity.Domain
-	if err := c.ShouldBindUri(&domain); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	name := c.Param("name")
 
-		return
-	}
-
-	deleteSuccessful, err := r.t.Delete(c.Request.Context(), domain.ProfileName, "")
+	deleteSuccessful, err := r.t.Delete(c.Request.Context(), name, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - delete")
 		errorResponse(c, http.StatusInternalServerError, "database problems")

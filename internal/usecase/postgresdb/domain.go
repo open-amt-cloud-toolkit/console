@@ -2,11 +2,10 @@ package postgresdb
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
@@ -37,7 +36,7 @@ func (r *DomainRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -55,12 +54,13 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 
 	sqlQuery, _, err := r.Builder.
 		Select(`name,
-				domain_suffix,
-				provisioning_cert,
-				provisioning_cert_storage_format,
-				provisioning_cert_key,
-				tenant_id,
-				xmin`).
+            domain_suffix,
+            provisioning_cert,
+            provisioning_cert_storage_format,
+            provisioning_cert_key,
+            tenant_id,
+            CAST(xmin as text) as xmin
+        `).
 		From("domains").
 		Where("tenant_id = ?", tenantID).
 		OrderBy("name").
@@ -75,6 +75,7 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 	if err != nil {
 		return nil, fmt.Errorf("DomainRepo - Get - r.Pool.Query: %w", err)
 	}
+
 	defer rows.Close()
 
 	domains := make([]entity.Domain, 0)
@@ -94,17 +95,16 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 }
 
 // GetDomainByDomainSuffix -.
-//
-
 func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*entity.Domain, error) {
 	sqlQuery, _, err := r.Builder.
 		Select(`name,
-				domain_suffix,
-				provisioning_cert,
-				provisioning_cert_storage_format,
-				provisioning_cert_key,
-				tenant_id,
-				xmin`).
+            domain_suffix,
+            provisioning_cert,
+            provisioning_cert_storage_format,
+            provisioning_cert_key,
+            tenant_id,
+            CAST(xmin as text) as xmin
+        `).
 		From("domains").
 		Where("domain_suffix = ? AND tenant_id = ?", domainSuffix, tenantID).
 		ToSql()
@@ -113,6 +113,7 @@ func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, 
 	}
 
 	row := r.Pool.QueryRow(ctx, sqlQuery)
+
 	d := entity.Domain{}
 
 	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.TenantID, &d.Version)
@@ -128,10 +129,8 @@ func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, 
 }
 
 // GetByName -.
-//
-
 func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string) (*entity.Domain, error) {
-	sqlQuery, _, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Select(`
         name,
 				domain_suffix,
@@ -139,7 +138,7 @@ func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string)
 				provisioning_cert_storage_format,
 				provisioning_cert_key,
 				tenant_id,
-				xmin
+        CAST(xmin as text) as xmin
     `).
 		From("domains").
 		Where("name = ? AND tenant_id = ?", domainName, tenantID).
@@ -148,7 +147,8 @@ func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string)
 		return nil, fmt.Errorf("DomainRepo - GetByName - r.Builder: %w", err)
 	}
 
-	row := r.Pool.QueryRow(ctx, sqlQuery)
+	row := r.Pool.QueryRow(ctx, sqlQuery, args...)
+
 	d := entity.Domain{}
 
 	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.TenantID, &d.Version)
@@ -165,7 +165,7 @@ func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string)
 
 // Delete -.
 func (r *DomainRepo) Delete(ctx context.Context, domainName, tenantID string) (bool, error) {
-	sqlQuery, _, err := r.Builder.
+	sqlQuery, args, err := r.Builder.
 		Delete("domains").
 		Where("name = ? AND tenant_id = ?", domainName, tenantID).
 		ToSql()
@@ -173,7 +173,7 @@ func (r *DomainRepo) Delete(ctx context.Context, domainName, tenantID string) (b
 		return false, fmt.Errorf("DomainRepo - Delete - r.Builder: %w", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sqlQuery)
+	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
 		return false, fmt.Errorf("DomainRepo - Delete - r.Pool.Exec: %w", err)
 	}
