@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 type profileRoutes struct {
-	t usecase.Profile
+	t profiles.Feature
 	l logger.Interface
 }
 
-func newProfileRoutes(handler *gin.RouterGroup, t usecase.Profile, l logger.Interface) {
+func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Interface) {
 	r := &profileRoutes{t, l}
 
 	h := handler.Group("/profiles")
@@ -77,14 +77,9 @@ func (pr *profileRoutes) get(c *gin.Context) {
 }
 
 func (pr *profileRoutes) getByName(c *gin.Context) {
-	var profile entity.Profile
-	if err := c.ShouldBindUri(&profile); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+	name := c.Param("name")
 
-		return
-	}
-
-	item, err := pr.t.GetByName(c.Request.Context(), profile.ProfileName, "")
+	item, err := pr.t.GetByName(c.Request.Context(), name, "")
 	if err != nil {
 		pr.l.Error(err, "http - profiles - v1 - getByName")
 		errorResponse(c, http.StatusInternalServerError, "database problems")

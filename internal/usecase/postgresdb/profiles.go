@@ -219,7 +219,7 @@ func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, erro
 		Set("ieee8021x_profile_name", p.Ieee8021xProfileName).
 		Set("ip_sync_enabled", p.IPSyncEnabled).
 		Set("local_wifi_sync_enabled", p.LocalWifiSyncEnabled).
-		Where("name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).
+		Where("profile_name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).
 		Suffix("AND xmin::text = ?", p.Version).
 		ToSql()
 	if err != nil {
@@ -241,12 +241,16 @@ func (r *ProfileRepo) Insert(ctx context.Context, p *entity.Profile) (string, er
 
 	ieee8021xProfileName := p.Ieee8021xProfileName
 
-	if *p.CIRAConfigName == "" {
-		ciraConfigName = nil
+	if ciraConfigName != nil {
+		if *p.CIRAConfigName == "" {
+			ciraConfigName = nil
+		}
 	}
 
-	if *p.Ieee8021xProfileName == "" {
-		ieee8021xProfileName = nil
+	if ieee8021xProfileName != nil {
+		if *p.Ieee8021xProfileName == "" {
+			ieee8021xProfileName = nil
+		}
 	}
 
 	sqlQuery, args, err := r.Builder.

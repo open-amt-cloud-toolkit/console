@@ -9,17 +9,17 @@ import (
 	"github.com/jackc/pgconn"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 type ieee8021xConfigRoutes struct {
-	t usecase.IEEE8021xProfile
+	t ieee8021xconfigs.Feature
 	l logger.Interface
 }
 
-func newIEEE8021xConfigRoutes(handler *gin.RouterGroup, t usecase.IEEE8021xProfile, l logger.Interface) {
+func newIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Feature, l logger.Interface) {
 	r := &ieee8021xConfigRoutes{t, l}
 
 	h := handler.Group("/ieee8021xconfigs")
