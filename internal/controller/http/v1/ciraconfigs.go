@@ -9,17 +9,17 @@ import (
 	"github.com/jackc/pgconn"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 type ciraConfigRoutes struct {
-	cira usecase.CIRAConfig
+	cira ciraconfigs.Feature
 	l    logger.Interface
 }
 
-func newCIRAConfigRoutes(handler *gin.RouterGroup, t usecase.CIRAConfig, l logger.Interface) {
+func newCIRAConfigRoutes(handler *gin.RouterGroup, t ciraconfigs.Feature, l logger.Interface) {
 	r := &ciraConfigRoutes{t, l}
 
 	h := handler.Group("/ciraconfigs")

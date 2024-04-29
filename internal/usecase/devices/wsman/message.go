@@ -6,6 +6,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/authorization"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
@@ -23,6 +24,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
@@ -32,6 +34,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
+
+var connections map[string]wsman.Messages = make(map[string]wsman.Messages)
 
 type GoWSMANMessages struct {
 	wsmanMessages wsman.Messages
@@ -52,7 +56,12 @@ func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, logAMTMessages 
 		LogAMTMessages:    logAMTMessages,
 	}
 
-	g.wsmanMessages = wsman.NewMessages(clientParams)
+	if _, ok := connections[device.GUID]; ok {
+		g.wsmanMessages = connections[device.GUID]
+	} else {
+		connections[device.GUID] = wsman.NewMessages(clientParams)
+		g.wsmanMessages = connections[device.GUID]
+	}
 }
 
 func (g *GoWSMANMessages) GetAMTVersion() ([]software.SoftwareIdentity, error) {
@@ -223,6 +232,7 @@ func (g *GoWSMANMessages) GetAlarmOccurrences() ([]ipsAlarmClock.AlarmClockOccur
 func (g *GoWSMANMessages) CreateAlarmOccurrences(name string, startTime time.Time, interval int, deleteOnCompletion bool) (amtAlarmClock.AddAlarmOutput, error) {
 	alarmOccurrence := amtAlarmClock.AlarmClockOccurrence{
 		InstanceID:         name,
+		ElementName:        name,
 		StartTime:          startTime,
 		Interval:           interval,
 		DeleteOnCompletion: deleteOnCompletion,
@@ -347,20 +357,18 @@ func (g *GoWSMANMessages) GetHardwareInfo() (interface{}, error) {
 	}, nil
 }
 
-func (g *GoWSMANMessages) GetPowerState() (interface{}, error) {
+func (g *GoWSMANMessages) GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error) {
 	response, err := g.wsmanMessages.CIM.ServiceAvailableToElement.Enumerate()
 	if err != nil {
-		return []amtAlarmClock.AlarmClockOccurrence{}, err
+		return []service.CIM_AssociatedPowerManagementService{}, err
 	}
 
 	response, err = g.wsmanMessages.CIM.ServiceAvailableToElement.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
-		return []amtAlarmClock.AlarmClockOccurrence{}, err
+		return []service.CIM_AssociatedPowerManagementService{}, err
 	}
 
-	return map[string]interface{}{
-		"powerstate": response.Body.PullResponse.AssociatedPowerManagementService[0].PowerState,
-	}, nil
+	return response.Body.PullResponse.AssociatedPowerManagementService, nil
 }
 
 func (g *GoWSMANMessages) GetPowerCapabilities() (boot.BootCapabilitiesResponse, error) {
@@ -439,19 +447,13 @@ func (g *GoWSMANMessages) ChangeBootOrder(bootSource string) (cimBoot.ChangeBoot
 	return response.Body.ChangeBootOrder_OUTPUT, nil
 }
 
-func (g *GoWSMANMessages) GetAuditLog(startIndex int) (dto.AuditLog, error) {
+func (g *GoWSMANMessages) GetAuditLog(startIndex int) (auditlog.Response, error) {
 	response, err := g.wsmanMessages.AMT.AuditLog.ReadRecords(startIndex)
 	if err != nil {
-		return dto.AuditLog{}, err
+		return auditlog.Response{}, err
 	}
 
-	auditLogResponse := dto.AuditLog{}
-
-	auditLogResponse.TotalCount = response.Body.ReadRecordsResponse.TotalRecordCount
-
-	auditLogResponse.Records = response.Body.DecodedRecordsResponse
-
-	return auditLogResponse, nil
+	return response, nil
 }
 
 func (g *GoWSMANMessages) GetEventLog() (messagelog.GetRecordsResponse, error) {
@@ -643,35 +645,41 @@ func (g *GoWSMANMessages) DeleteKeyPair(instanceID string) error {
 	return err
 }
 
-func (g *GoWSMANMessages) EnableWiFi() error {
+func (g *GoWSMANMessages) GetWiFiPortConfigurationService() (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
 	response, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Get()
 	if err != nil {
-		return err
+		return wifiportconfiguration.WiFiPortConfigurationServiceResponse{}, err
 	}
 
+	return response.Body.WiFiPortConfigurationService, nil
+}
+
+func (g *GoWSMANMessages) PutWiFiPortConfigurationService(request wifiportconfiguration.WiFiPortConfigurationServiceRequest) (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
 	// if local sync not enable, enable it
-	if response.Body.WiFiPortConfigurationService.LocalProfileSynchronizationEnabled == wifiportconfiguration.LocalSyncDisabled {
-		putRequest := wifiportconfiguration.WiFiPortConfigurationServiceRequest{
-			RequestedState:                     response.Body.WiFiPortConfigurationService.RequestedState,
-			EnabledState:                       response.Body.WiFiPortConfigurationService.EnabledState,
-			HealthState:                        response.Body.WiFiPortConfigurationService.HealthState,
-			ElementName:                        response.Body.WiFiPortConfigurationService.ElementName,
-			SystemCreationClassName:            response.Body.WiFiPortConfigurationService.SystemCreationClassName,
-			SystemName:                         response.Body.WiFiPortConfigurationService.SystemName,
-			CreationClassName:                  response.Body.WiFiPortConfigurationService.CreationClassName,
-			Name:                               response.Body.WiFiPortConfigurationService.Name,
-			LocalProfileSynchronizationEnabled: wifiportconfiguration.UnrestrictedSync,
-			LastConnectedSsidUnderMeControl:    response.Body.WiFiPortConfigurationService.LastConnectedSsidUnderMeControl,
-			NoHostCsmeSoftwarePolicy:           response.Body.WiFiPortConfigurationService.NoHostCsmeSoftwarePolicy,
-			UEFIWiFiProfileShareEnabled:        response.Body.WiFiPortConfigurationService.UEFIWiFiProfileShareEnabled,
-		}
-
-		_, err = g.wsmanMessages.AMT.WiFiPortConfigurationService.Put(putRequest)
-		if err != nil {
-			return err
-		}
+	// if response.Body.WiFiPortConfigurationService.LocalProfileSynchronizationEnabled == wifiportconfiguration.LocalSyncDisabled {
+	// 	putRequest := wifiportconfiguration.WiFiPortConfigurationServiceRequest{
+	// 		RequestedState:                     response.Body.WiFiPortConfigurationService.RequestedState,
+	// 		EnabledState:                       response.Body.WiFiPortConfigurationService.EnabledState,
+	// 		HealthState:                        response.Body.WiFiPortConfigurationService.HealthState,
+	// 		ElementName:                        response.Body.WiFiPortConfigurationService.ElementName,
+	// 		SystemCreationClassName:            response.Body.WiFiPortConfigurationService.SystemCreationClassName,
+	// 		SystemName:                         response.Body.WiFiPortConfigurationService.SystemName,
+	// 		CreationClassName:                  response.Body.WiFiPortConfigurationService.CreationClassName,
+	// 		Name:                               response.Body.WiFiPortConfigurationService.Name,
+	// 		LocalProfileSynchronizationEnabled: wifiportconfiguration.UnrestrictedSync,
+	// 		LastConnectedSsidUnderMeControl:    response.Body.WiFiPortConfigurationService.LastConnectedSsidUnderMeControl,
+	// 		NoHostCsmeSoftwarePolicy:           response.Body.WiFiPortConfigurationService.NoHostCsmeSoftwarePolicy,
+	// 		UEFIWiFiProfileShareEnabled:        response.Body.WiFiPortConfigurationService.UEFIWiFiProfileShareEnabled,
+	// 	}
+	response, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Put(request)
+	if err != nil {
+		return wifiportconfiguration.WiFiPortConfigurationServiceResponse{}, err
 	}
 
+	return response.Body.WiFiPortConfigurationService, nil
+}
+
+func (g *GoWSMANMessages) WiFiRequestStateChange() (err error) {
 	// always turn wifi on via state change request
 	// Enumeration 32769 - WiFi is enabled in S0 + Sx/AC
 	_, err = g.wsmanMessages.CIM.WiFiPort.RequestStateChange(int(wifi.EnabledStateWifiEnabledS0SxAC))

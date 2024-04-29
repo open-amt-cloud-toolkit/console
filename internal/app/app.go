@@ -30,9 +30,7 @@ func Run(cfg *config.Config) {
 	defer pg.Close()
 
 	// Use case
-	usecases := usecase.New(
-		pg,
-	)
+	usecases := usecase.NewUseCases(pg)
 
 	// HTTP Server
 	handler := gin.New()
