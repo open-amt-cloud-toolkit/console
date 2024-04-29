@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 type deviceRoutes struct {
-	t usecase.Device
+	t devices.Feature
 	l logger.Interface
 }
 
-func newDeviceRoutes(handler *gin.RouterGroup, t usecase.Device, l logger.Interface) {
+func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
 
 	h := handler.Group("/devices")
