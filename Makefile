@@ -58,7 +58,13 @@ integration-test: ### run integration-test
 .PHONY: integration-test
 
 mock: ### run mockgen
-	mockgen -source ./internal/usecase/interfaces.go -package usecase_test > ./internal/usecase/mocks_test.go
+	mockgen -source ./internal/usecase/ciraconfigs/interfaces.go -package ciraconfigs_test > ./internal/usecase/ciraconfigs/mocks_test.go
+	mockgen -source ./internal/usecase/devices/interfaces.go -package devices_test > ./internal/usecase/devices/mocks_test.go
+	mockgen -source ./internal/usecase/domains/interfaces.go -package domains_test > ./internal/usecase/domains/mocks_test.go
+	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package ieee8021xconfigs_test > ./internal/usecase/ieee8021xconfigs/mocks_test.go
+	mockgen -source ./internal/usecase/profiles/interfaces.go -package profiles_test > ./internal/usecase/profiles/mocks_test.go
+	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package wificonfigs_test > ./internal/usecase/wificonfigs/mocks_test.go
+
 .PHONY: mock
 
 migrate-create:  ### create new migration
@@ -71,4 +77,4 @@ migrate-up: ### migration up
 
 bin-deps:
 	GOBIN=$(LOCAL_BIN) go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-	GOBIN=$(LOCAL_BIN) go install github.com/golang/mock/mockgen@latest
+	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest
