@@ -8,16 +8,16 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 type domainRoutes struct {
-	t usecase.Domain
+	t domains.Feature
 	l logger.Interface
 }
 
-func newDomainRoutes(handler *gin.RouterGroup, t usecase.Domain, l logger.Interface) {
+func newDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Interface) {
 	r := &domainRoutes{t, l}
 
 	h := handler.Group("/domains")

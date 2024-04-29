@@ -80,16 +80,16 @@ func (r *WirelessRepo) Get(ctx context.Context, top, skip int, tenantID string) 
 
 	sqlQuery, _, err := r.Builder.
 		Select(`
-			wireless_profile_name,
-			authentication_method,
-			encryption_method,
-			ssid,
-			psk_value,
-			psk_passphrase,
-			link_policy,
-			tenant_id,
-			ieee8021x_profile_name,
-      		CAST(xmin as text) as xmin
+        wireless_profile_name,
+        authentication_method,
+        encryption_method,
+        ssid,
+        psk_value,
+        psk_passphrase,
+        link_policy,
+        tenant_id,
+        ieee8021x_profile_name,
+        CAST(xmin as text) as xmin
 			`).
 		From("wirelessconfigs").
 		Where("tenant_id = ?", tenantID).

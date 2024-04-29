@@ -3,27 +3,21 @@ package v1
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
-	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 type deviceManagementRoutes struct {
-	dm usecase.DeviceManagement
-	d  usecase.Device
-	l  logger.Interface
+	d devices.Feature
+	l logger.Interface
 }
 
-func newAmtRoutes(handler *gin.RouterGroup, dm usecase.DeviceManagement, d usecase.Device, l logger.Interface) {
-	r := &deviceManagementRoutes{dm, d, l}
+func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interface) {
+	r := &deviceManagementRoutes{d, l}
 
 	h := handler.Group("/amt")
 	{
@@ -53,59 +47,26 @@ func newAmtRoutes(handler *gin.RouterGroup, dm usecase.DeviceManagement, d useca
 }
 
 func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getAmtVersion")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	version, err := r.dm.GetAMTVersion()
+	version, err := r.d.GetVersion(c, guid)
 	if err != nil {
-		r.l.Error(err, "http - v1 - getAmtVersion")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		r.l.Error(err, "http - v1 - GetVersion")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	data, err := r.dm.GetSetupAndConfiguration()
-	if err != nil {
-		r.l.Error(err, "http - v1 - getAmtVersion")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
-	}
-
-	response := map[string]interface{}{
-		"CIM_SoftwareIdentity": map[string]interface{}{
-			"responses": version,
-		},
-		"AMT_SetupAndConfigurationService": map[string]interface{}{
-			"response": data[0],
-		},
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, version)
 }
 
 func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getFeatures")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err := r.dm.GetFeatures()
+	features, err := r.d.GetFeatures(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getFeatures")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
@@ -114,27 +75,20 @@ func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 }
 
 func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
+	guid := c.Param("guid")
+
 	var features dto.Features
+
 	if err := c.ShouldBindJSON(&features); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
 
 		return
 	}
 
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - setFeatures")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err = r.dm.SetFeatures(features)
+	features, err := r.d.SetFeatures(c, guid, features)
 	if err != nil {
 		r.l.Error(err, "http - v1 - setFeatures")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
@@ -143,32 +97,22 @@ func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
 }
 
 func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	alarms, err := r.dm.GetAlarmOccurrences()
+	alarms, err := r.d.GetAlarmOccurrences(c, guid)
 	if err != nil {
-		r.l.Error(err, "http - v1 - getAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		r.l.Error(err, "http - v1 - getFeatures")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
-	}
-
-	if alarms == nil {
-		alarms = []alarmclock.AlarmClockOccurrence{}
 	}
 
 	c.JSON(http.StatusOK, alarms)
 }
 
 func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
+	guid := c.Param("guid")
+
 	alarm := dto.AlarmClockOccurrence{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
@@ -176,20 +120,10 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 		return
 	}
 
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - createAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	alarmReference, err := r.dm.CreateAlarmOccurrences(alarm.InstanceID, alarm.StartTime, alarm.Interval, alarm.DeleteOnCompletion)
+	alarmReference, err := r.d.CreateAlarmOccurrences(c, guid, alarm)
 	if err != nil {
 		r.l.Error(err, "http - v1 - createAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
@@ -198,6 +132,8 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 }
 
 func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
+	guid := c.Param("guid")
+
 	alarm := dto.AlarmClockOccurrence{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
@@ -205,20 +141,10 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 		return
 	}
 
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - deleteAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	err = r.dm.DeleteAlarmOccurrences(alarm.InstanceID)
+	err := r.d.DeleteAlarmOccurrences(c, guid, alarm.InstanceID)
 	if err != nil {
 		r.l.Error(err, "http - v1 - deleteAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
@@ -227,20 +153,12 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 }
 
 func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getHardwareInfo")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	hwInfo, err := r.dm.GetHardwareInfo()
+	hwInfo, err := r.d.GetHardwareInfo(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getHardwareInfo")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "database problems")
 
 		return
 	}
@@ -249,198 +167,78 @@ func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 }
 
 func (r *deviceManagementRoutes) getPowerState(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
+	guid := c.Param("guid")
+
+	state, err := r.d.GetPowerState(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getPowerState")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	if item.GUID == "" {
-		errorResponse(c, http.StatusNotFound, "device not found")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err := r.dm.GetPowerState()
-	if err != nil {
-		r.l.Error(err, "http - v1 - getPowerState")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
-	}
-
-	c.JSON(http.StatusOK, features)
+	c.JSON(http.StatusOK, state)
 }
 
-var MinAMTVersion = 9
-
 func (r *deviceManagementRoutes) getPowerCapabilities(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
+	guid := c.Param("guid")
+
+	power, err := r.d.GetPowerCapabilities(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getPowerCapabilities")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	if item.GUID == "" {
-		errorResponse(c, http.StatusNotFound, "device not found")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	version, err := r.dm.GetAMTVersion()
-	if err != nil {
-		r.l.Error(err, "http - v1 - getPowerCapabilities")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
-	}
-
-	capabilities, err := r.dm.GetPowerCapabilities()
-	if err != nil {
-		r.l.Error(err, "http - v1 - getPowerCapabilities")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
-	}
-
-	amtversion := 0
-
-	for _, v := range version {
-		if v.InstanceID == "AMT" {
-			splitversion := strings.Split(v.VersionString, ".")
-
-			amtversion, err = strconv.Atoi(splitversion[0])
-			if err != nil {
-				r.l.Error(err, "http - v1 - getPowerCapabilities")
-				errorResponse(c, http.StatusInternalServerError, "error converting version")
-
-				return
-			}
-		}
-	}
-
-	response := map[string]interface{}{
-		"Power up":    2,
-		"Power cycle": 5,
-		"Power down":  8,
-		"Reset":       10,
-	}
-
-	if amtversion > MinAMTVersion {
-		response["Soft-off"] = 12
-		response["Soft-reset"] = 14
-		response["Sleep"] = 4
-		response["Hibernate"] = 7
-	}
-
-	if capabilities.BIOSSetup {
-		response["Power up to BIOS"] = 100
-		response["Reset to BIOS"] = 101
-	}
-
-	if capabilities.SecureErase {
-		response["Reset to Secure Erase"] = 104
-	}
-
-	response["Reset to IDE-R Floppy"] = 200
-	response["Power on to IDE-R Floppy"] = 201
-	response["Reset to IDE-R CDROM"] = 202
-	response["Power on to IDE-R CDROM"] = 203
-
-	if capabilities.ForceDiagnosticBoot {
-		response["Power on to diagnostic"] = 300
-		response["Reset to diagnostic"] = 301
-	}
-
-	response["Reset to PXE"] = 400
-	response["Power on to PXE"] = 401
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, power)
 }
 
 func (r *deviceManagementRoutes) getGeneralSettings(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getGeneralSettings")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err := r.dm.GetGeneralSettings()
+	generalSettings, err := r.d.GetGeneralSettings(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getGeneralSettings")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	response := map[string]interface{}{
-		"Body": features,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, generalSettings)
 }
 
 func (r *deviceManagementRoutes) cancelUserConsentCode(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - cancelUserConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err := r.dm.CancelUserConsent()
+	result, err := r.d.CancelUserConsent(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - cancelUserConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	c.JSON(http.StatusOK, features)
+	c.JSON(http.StatusOK, result)
 }
 
 func (r *deviceManagementRoutes) getUserConsentCode(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getUserConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err := r.dm.GetUserConsentCode()
+	response, err := r.d.GetUserConsentCode(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getUserConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
-	}
-
-	response := map[string]interface{}{
-		"Body": features,
 	}
 
 	c.JSON(http.StatusOK, response)
 }
 
 func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
+	guid := c.Param("guid")
+
 	var userConsent dto.UserConsent
 	if err := c.ShouldBindJSON(&userConsent); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
@@ -448,28 +246,20 @@ func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 		return
 	}
 
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - sendConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err := r.dm.SendConsentCode(userConsent.ConsentCode)
+	response, err := r.d.SendConsentCode(c, userConsent, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - sendConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	c.JSON(http.StatusOK, features)
+	c.JSON(http.StatusOK, response)
 }
 
 func (r *deviceManagementRoutes) powerAction(c *gin.Context) {
+	guid := c.Param("guid")
+
 	var powerAction dto.PowerAction
 	if err := c.ShouldBindJSON(&powerAction); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
@@ -477,37 +267,19 @@ func (r *deviceManagementRoutes) powerAction(c *gin.Context) {
 		return
 	}
 
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - powerAction")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	features, err := r.dm.SendPowerAction(powerAction.Action)
+	response, err := r.d.SendPowerAction(c, guid, powerAction.Action)
 	if err != nil {
 		r.l.Error(err, "http - v1 - powerAction")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	c.JSON(http.StatusOK, features)
+	c.JSON(http.StatusOK, response)
 }
 
 func (r *deviceManagementRoutes) getAuditLog(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getAuditLog")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
+	guid := c.Param("guid")
 
 	startIndex := c.Query("startIndex")
 
@@ -519,40 +291,34 @@ func (r *deviceManagementRoutes) getAuditLog(c *gin.Context) {
 		return
 	}
 
-	auditlogoutput, err := r.dm.GetAuditLog(startIdx)
+	auditLogs, err := r.d.GetAuditLog(c, startIdx, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getAuditLog")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	c.JSON(http.StatusOK, auditlogoutput)
+	c.JSON(http.StatusOK, auditLogs)
 }
 
 func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - getEventLog")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	guid := c.Param("guid")
 
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	eventLogOutput, err := r.dm.GetEventLog()
+	eventLogs, err := r.d.GetEventLog(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getEventLog")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
+		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
 	}
 
-	c.JSON(http.StatusOK, eventLogOutput)
+	c.JSON(http.StatusOK, eventLogs)
 }
 
 func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
+	guid := c.Param("guid")
+
 	var bootSetting dto.BootSetting
 	if err := c.ShouldBindJSON(&bootSetting); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
@@ -560,92 +326,10 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 		return
 	}
 
-	item, err := r.d.GetByID(c.Request.Context(), c.Param("guid"), "")
-	if err != nil || item.GUID == "" {
-		r.l.Error(err, "http - v1 - setBootOptions")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	r.dm.SetupWsmanClient(item, true)
-
-	// bootData, err := r.t.GetBootData()
-	// if err != nil {
-	// 	r.l.Error(err, "http - v1 - setBootOptions")
-	// 	errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-	// 	return
-	// }
-	newData := boot.BootSettingDataRequest{
-		UseSOL:                 bootSetting.UseSOL,
-		UseSafeMode:            false,
-		ReflashBIOS:            false,
-		BIOSSetup:              bootSetting.Action < 104,
-		BIOSPause:              false,
-		LockPowerButton:        false,
-		LockResetButton:        false,
-		LockKeyboard:           false,
-		LockSleepButton:        false,
-		UserPasswordBypass:     false,
-		ForcedProgressEvents:   false,
-		FirmwareVerbosity:      0,
-		ConfigurationDataReset: false,
-		UseIDER:                bootSetting.Action > 199 || bootSetting.Action < 300,
-		EnforceSecureBoot:      false,
-		BootMediaIndex:         0,
-		SecureErase:            false,
-		RPEEnabled:             false,
-		PlatformErase:          false,
-	}
-
-	if bootSetting.Action == 202 || bootSetting.Action == 203 {
-		newData.IDERBootDevice = 1 // boot on ider
-	} else {
-		newData.IDERBootDevice = 0 // boot on floppy
-	}
-	// force boot mode
-	_, err = r.dm.SetBootConfigRole(1)
+	features, err := r.d.SetBootOptions(c, guid, bootSetting)
 	if err != nil {
 		r.l.Error(err, "http - v1 - setBootOptions")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
-	}
-
-	if bootSetting.Action == 400 || bootSetting.Action == 401 { // pxe boots
-		_, err = r.dm.ChangeBootOrder(string(cimBoot.PXE)) // "Intel(r) AMT: Force PXE Boot"
-	} else if bootSetting.Action == 202 || bootSetting.Action == 203 {
-		_, err = r.dm.ChangeBootOrder(string(cimBoot.CD)) // "Intel(r) AMT: Force CD/DVD Boot"
-	}
-
-	if err != nil {
-		r.l.Error(err, "http - v1 - changeBootOrder")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
-	}
-
-	_, err = r.dm.SetBootData(newData)
-	if err != nil {
-		r.l.Error(err, "http - v1 - setBootOptions")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
-	}
-
-	if bootSetting.Action == 101 || bootSetting.Action == 200 || bootSetting.Action == 202 || bootSetting.Action == 301 || bootSetting.Action == 400 {
-		bootSetting.Action = int(power.MasterBusReset) // reset
-	} else {
-		bootSetting.Action = int(power.PowerOn) // power on
-	}
-
-	features, err := r.dm.SendPowerAction(bootSetting.Action)
-	if err != nil {
-		r.l.Error(err, "http - v1 - setBootOptions")
-		errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-		return
+		errorResponse(c, http.StatusInternalServerError, "problems")
 	}
 
 	c.JSON(http.StatusOK, features)

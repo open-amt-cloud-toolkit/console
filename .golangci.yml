@@ -132,6 +132,10 @@ issues:
     - path: internal/controller/http
       linters:
         - godot
+    - path: (.+)_test.go
+      linters:
+        - funlen
+        - goerr113
 
 run:
   skip-dirs:

@@ -15,12 +15,12 @@ import (
 
 // NewRouter -.
 // Swagger spec:
-// @title       Go Clean Template API
-// @description Using a translation service as an example
+// @title       Console API for Device Management Toolkit
+// @description Provides a single pane of glass for managing devices with Intel® Active Management Technology and other device technologies
 // @version     1.0
-// @host        localhost:8080
+// @host        localhost:8181
 // @BasePath    /v1
-func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Repositories) {
+func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
@@ -47,14 +47,14 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Repositories) 
 	h2 := handler.Group("/api/v1")
 	{
 		newDeviceRoutes(h2, t.Devices, l)
-		newAmtRoutes(h2, t.DeviceManagement, t.Devices, l)
+		newAmtRoutes(h2, t.Devices, l)
 	}
 
 	h := handler.Group("/api/v1/admin")
 	{
 		newDomainRoutes(h, t.Domains, l)
-		newProfileRoutes(h, t.Profiles, l)
 		newCIRAConfigRoutes(h, t.CIRAConfigs, l)
+		newProfileRoutes(h, t.Profiles, l)
 		newWirelessConfigRoutes(h, t.WirelessProfiles, l)
 		newIEEE8021xConfigRoutes(h, t.IEEE8021xProfiles, l)
 	}
