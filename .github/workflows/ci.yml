@@ -59,7 +59,7 @@ jobs:
         uses: sonatype-nexus-community/nancy-github-action@main
         continue-on-error: true
       - name: "Dependency Review"
-        uses: actions/dependency-review-action@5bbc3ba658137598168acb2ab73b21c432dd411b # v4.2.5
+        uses: actions/dependency-review-action@e58c696e52cac8e62d61cc21fda89565d71505d7 # v4.3.1
 
   tests:
     name: runner / build and tests
