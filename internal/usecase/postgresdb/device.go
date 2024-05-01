@@ -9,17 +9,19 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // DeviceRepo -.
 type DeviceRepo struct {
 	*postgres.DB
+	log logger.Interface
 }
 
 // New -.
-func NewDeviceRepo(pg *postgres.DB) *DeviceRepo {
-	return &DeviceRepo{pg}
+func NewDeviceRepo(pg *postgres.DB, log logger.Interface) *DeviceRepo {
+	return &DeviceRepo{pg, log}
 }
 
 // GetCount -.

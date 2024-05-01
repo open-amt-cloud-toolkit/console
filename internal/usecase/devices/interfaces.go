@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/gorilla/websocket"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
@@ -22,7 +24,7 @@ import (
 
 type (
 	Management interface {
-		SetupWsmanClient(device entity.Device, logAMTMessages bool)
+		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool)
 		GetAMTVersion() ([]software.SoftwareIdentity, error)
 		GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error)
 		GetFeatures() (interface{}, error)
@@ -34,7 +36,7 @@ type (
 		GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error)
 		GetPowerCapabilities() (boot.BootCapabilitiesResponse, error)
 		GetGeneralSettings() (interface{}, error)
-		CancelUserConsent() (interface{}, error)
+		CancelUserConsentRequest() (interface{}, error)
 		GetUserConsentCode() (optin.StartOptIn_OUTPUT, error)
 		SendConsentCode(code int) (interface{}, error)
 		SendPowerAction(action int) (power.PowerActionResponse, error)
@@ -44,6 +46,13 @@ type (
 		ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error)
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
+	}
+	Redirection interface {
+		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages
+		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error
+		RedirectClose(ctx context.Context, deviceConnection *DeviceConnection) error
+		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)
+		RedirectSend(ctx context.Context, deviceConnection *DeviceConnection, message []byte) error
 	}
 	Repository interface {
 		GetCount(context.Context, string) (int, error)
@@ -83,5 +92,6 @@ type (
 		SetBootOptions(ctx context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error)
 		GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error)
 		GetEventLog(ctx context.Context, guid string) (messagelog.GetRecordsResponse, error)
+		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
 	}
 )

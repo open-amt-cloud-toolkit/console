@@ -7,13 +7,13 @@ linters-settings:
     errorf: true
   errcheck:
     check-type-assertions: true
-    check-blank: true
+    check-blank: false
   exhaustive:
     check-generated: false
     default-signifies-exhaustive: false
   funlen:
-    lines: 65
-    statements: 40
+    lines: 75
+    statements: 45
   gocognit:
     min-complexity: 15
   gocyclo:

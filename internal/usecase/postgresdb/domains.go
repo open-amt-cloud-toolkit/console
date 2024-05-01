@@ -8,17 +8,19 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // DomainRepo -.
 type DomainRepo struct {
 	*postgres.DB
+	log logger.Interface
 }
 
 // New -.
-func NewDomainRepo(pg *postgres.DB) *DomainRepo {
-	return &DomainRepo{pg}
+func NewDomainRepo(pg *postgres.DB, log logger.Interface) *DomainRepo {
+	return &DomainRepo{pg, log}
 }
 
 // GetCount -.

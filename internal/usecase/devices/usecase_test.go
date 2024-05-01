@@ -11,6 +11,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var (
@@ -40,8 +41,8 @@ func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository) {
 
 	repo := NewMockRepository(mockCtl)
 	management := NewMockManagement(mockCtl)
-
-	u := devices.New(repo, management)
+	log := logger.New("error")
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
 
 	return u, repo
 }
