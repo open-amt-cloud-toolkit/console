@@ -11,6 +11,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var (
@@ -39,9 +40,11 @@ func ieee8021xconfigsTest(t *testing.T) (*ieee8021xconfigs.UseCase, *MockReposit
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
+	log := logger.New("error")
+
 	repo := NewMockRepository(mockCtl)
 
-	useCase := ieee8021xconfigs.New(repo)
+	useCase := ieee8021xconfigs.New(repo, log)
 
 	return useCase, repo
 }
