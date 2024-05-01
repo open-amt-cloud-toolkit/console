@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -17,39 +15,52 @@ type (
 
 	// App -.
 	App struct {
-		Name    string `env-required:"true" yaml:"name"    env:"APP_NAME"`
-		Version string `env-required:"true" yaml:"version" env:"APP_VERSION"`
+		Name string `env-required:"false" yaml:"name" env:"APP_NAME"`
 	}
 
 	// HTTP -.
 	HTTP struct {
-		Port           string   `env-required:"true" yaml:"port" env:"HTTP_PORT"`
-		AllowedOrigins []string `env-required:"true" yaml:"allowed_origins" env:"HTTP_ALLOWED_ORIGINS"`
-		AllowedHeaders []string `env-required:"true" yaml:"allowed_headers" env:"HTTP_ALLOWED_HEADERS"`
+		Port           string   `env-required:"false" yaml:"port" env:"HTTP_PORT"`
+		AllowedOrigins []string `env-required:"false" yaml:"allowed_origins" env:"HTTP_ALLOWED_ORIGINS"`
+		AllowedHeaders []string `env-required:"false" yaml:"allowed_headers" env:"HTTP_ALLOWED_HEADERS"`
 	}
 
 	// Log -.
 	Log struct {
-		Level string `env-required:"true" yaml:"log_level"   env:"LOG_LEVEL"`
+		Level string `env-required:"false" yaml:"log_level"   env:"LOG_LEVEL"`
 	}
 
 	// PG -.
 	PG struct {
-		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX"`
-		URL     string `env-required:"true"                 env:"PG_URL"`
+		PoolMax int    `env-required:"false" yaml:"pool_max" env:"PG_POOL_MAX"`
+		URL     string `env-required:"true"                  env:"PG_URL"`
 	}
 )
 
 // NewConfig returns app config.
 func NewConfig() (*Config, error) {
-	cfg := &Config{}
-
-	err := cleanenv.ReadConfig("./config/config.yml", cfg)
-	if err != nil {
-		return nil, fmt.Errorf("config error: %w", err)
+	// set defaults
+	cfg := &Config{
+		App: App{
+			Name: "console",
+		},
+		HTTP: HTTP{
+			Port:           "8181",
+			AllowedOrigins: []string{"*"},
+			AllowedHeaders: []string{"*"},
+		},
+		Log: Log{
+			Level: "info",
+		},
+		PG: PG{
+			PoolMax: 2,
+		},
 	}
 
-	err = cleanenv.ReadEnv(cfg)
+	_ = cleanenv.ReadConfig("./config/config.yml", cfg)
+	// its ok to ignore the error here, as we have default values set if the config file is not found
+
+	err := cleanenv.ReadEnv(cfg)
 	if err != nil {
 		return nil, err
 	}
