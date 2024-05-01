@@ -1,18 +1,15 @@
 app:
-  name: 'rps-config'
-  version: '1.0.0'
+  name: "console"
 
 http:
-  port: '8181'
-  allowed_origins: 
-    - '*'
-  allowed_headers: 
-    - '*'
+  port: "8181"
+  allowed_origins:
+    - "*"
+  allowed_headers:
+    - "*"
 
 logger:
-  log_level: 'debug'
-  rollbar_env: 'go-clean-template'
+  log_level: "debug"
 
 postgres:
-  pool_max: 2
-
+  pool_max: 5
