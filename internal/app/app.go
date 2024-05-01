@@ -35,8 +35,13 @@ func Run(cfg *config.Config) {
 	// Use case
 	usecases := usecase.NewUseCases(pg, log)
 
+	if os.Getenv("GIN_MODE") != "debug" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	// HTTP Server
 	handler := gin.New()
+
 	defaultConfig := cors.DefaultConfig()
 	defaultConfig.AllowOrigins = cfg.HTTP.AllowedOrigins
 	defaultConfig.AllowHeaders = cfg.HTTP.AllowedHeaders
