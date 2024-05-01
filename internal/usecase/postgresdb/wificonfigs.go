@@ -9,17 +9,19 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // WirelessRepo -.
 type WirelessRepo struct {
 	*postgres.DB
+	logger.Interface
 }
 
 // New -.
-func NewWirelessRepo(pg *postgres.DB) *WirelessRepo {
-	return &WirelessRepo{pg}
+func NewWirelessRepo(pg *postgres.DB, log logger.Interface) *WirelessRepo {
+	return &WirelessRepo{pg, log}
 }
 
 // CheckProfileExits -.

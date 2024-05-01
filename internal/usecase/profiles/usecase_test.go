@@ -11,6 +11,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var (
@@ -40,8 +41,8 @@ func profilesTest(t *testing.T) (*profiles.UseCase, *MockRepository) {
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
-
-	useCase := profiles.New(repo)
+	log := logger.New("error")
+	useCase := profiles.New(repo, log)
 
 	return useCase, repo
 }
