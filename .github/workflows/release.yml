@@ -1,0 +1,84 @@
+#*********************************************************************
+# Copyright (c) Intel Corporation 2023
+# SPDX-License-Identifier: Apache-2.0
+#*********************************************************************/
+
+# This workflow will release new versions when required using semantic-release
+
+name: Semantic-Release CI
+
+on:
+  push:
+    branches: [notyet]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Console
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          persist-credentials: false
+      - name: Check out Sample Web UI
+        uses: actions/checkout@master
+        with:
+          repository: open-amt-cloud-toolkit/sample-web-ui
+          ref: enterprise #TODO: pull latest tagged version
+          path: ./temp
+      - run: npm ci
+        working-directory: ./temp
+      - run: npm run build-enterprise
+        working-directory: ./temp
+      - name: move files
+        run: mv ./temp/ui/* ./internal/controller/http/v1/ui
+      - name: Docker Login
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
+        with:
+          registry: vprodemo.azurecr.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          logout: true
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@cb425203a562475bca039ba4dbf90c7f9ac790f4 # v4.1.0
+        with:
+          semantic_version:
+            19.0.5 # It is recommended to specify a version range
+            # for semantic-release when using
+            # semantic-release-action lower than @v3
+          extra_plugins: |
+            @semantic-release/exec@6.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.ROSIE_TOKEN }}
+
+    # - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+    #   if: ${{ steps.version.outputs.next != 'none' }}
+    #   with:
+    #     repository: open-amt-cloud-toolkit/e2e-testing
+    #     ref: docker-release
+    #     clean: true
+    #     token: ${{ secrets.ROSIE_TOKEN }}
+
+    # - name: Create docker-release @ ${{ steps.version.outputs.next }}
+    #   if: ${{ steps.version.outputs.next != 'none' }}
+    #   env:
+    #     RELEASE_YAML: release/sample-web-ui.yml
+    #     NEXT_VERSION: ${{ steps.version.outputs.next }}
+    #   run: |
+    #     echo "Releasing ${{ github.repository }}@$NEXT_VERSION"
+    #     if [ "$NEXT_VERSION" != "" ]; then
+    #       CURRENT_VERSION=$(sed -nre 's/(.*):v[0-9]*(([0-9]+\\.)*[0-9]+).*/v\\2/p' $RELEASE_YAML)
+    #       sed -i "s/$CURRENT_VERSION/$NEXT_VERSION/g" $RELEASE_YAML
+    #       echo "========================="
+    #       git config --local user.email "github-actions[bot]@users.noreply.github.com"
+    #       git config --local user.name "github-actions[bot]"
+    #       git status
+    #       git add .
+    #       git commit -m "release(sample-web-ui): automated release of $NEXT_VERSION @ ${GITHUB_SHA::7}"
+    #       git push origin docker-release
+    #     fi

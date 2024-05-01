@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
@@ -15,12 +16,13 @@ import (
 
 type ProfileRepo struct {
 	*postgres.DB
+	log logger.Interface
 }
 
 // New -.
 
-func NewProfileRepo(pg *postgres.DB) *ProfileRepo {
-	return &ProfileRepo{pg}
+func NewProfileRepo(pg *postgres.DB, log logger.Interface) *ProfileRepo {
+	return &ProfileRepo{pg, log}
 }
 
 // GetCount -.

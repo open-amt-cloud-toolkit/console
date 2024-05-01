@@ -1,0 +1,35 @@
+{
+  "branches": [
+    "main",
+    "next"
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "console_linux_x64",
+            "label": "Linux x64 RPC Executable"
+          },
+          {
+            "path": "console_windows_x64.exe",
+            "label": "Windows x64 RPC Executable"
+          }
+        ]
+      }
+    ],
+    "@semantic-release/github",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "docker build -t vprodemo.azurecr.io/console:v${nextRelease.version} . && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags \"-s -w -X 'github.com/open-amt-cloud-toolkit/console/internal/app.Version=${nextRelease.version}'\" -trimpath -o console_linux_x64 ./cmd/app/main.go && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags \"-s -w -X 'github.com/open-amt-cloud-toolkit/console/internal/app.Version=${nextRelease.version}'\" -trimpath -o console_windows_x64.exe ./cmd/app/main.go",
+        "publishCmd": "docker push vprodemo.azurecr.io/console:v${nextRelease.version}",
+        "verifyReleaseCmd": "echo v${nextRelease.version} > .nextVersion"
+      }
+    ]
+  ]
+}

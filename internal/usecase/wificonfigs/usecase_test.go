@@ -11,6 +11,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var (
@@ -40,8 +41,8 @@ func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *MockRepository) {
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
-
-	useCase := wificonfigs.New(repo)
+	log := logger.New("error")
+	useCase := wificonfigs.New(repo, log)
 
 	return useCase, repo
 }

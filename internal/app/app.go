@@ -12,16 +12,19 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/config"
 	v1 "github.com/open-amt-cloud-toolkit/console/internal/controller/http/v1"
+	wsv1 "github.com/open-amt-cloud-toolkit/console/internal/controller/ws/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/httpserver"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
+var Version = "DEVELOPMENT"
+
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
 	log := logger.New(cfg.Log.Level)
-
+	log.Info("app - Run - version: " + Version)
 	// Repository
 	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
 	if err != nil {
@@ -30,16 +33,22 @@ func Run(cfg *config.Config) {
 	defer pg.Close()
 
 	// Use case
-	usecases := usecase.NewUseCases(pg)
+	usecases := usecase.NewUseCases(pg, log)
+
+	if os.Getenv("GIN_MODE") != "debug" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	// HTTP Server
 	handler := gin.New()
+
 	defaultConfig := cors.DefaultConfig()
 	defaultConfig.AllowOrigins = cfg.HTTP.AllowedOrigins
 	defaultConfig.AllowHeaders = cfg.HTTP.AllowedHeaders
 
 	handler.Use(cors.New(defaultConfig))
 	v1.NewRouter(handler, log, *usecases)
+	wsv1.RegisterRoutes(handler, log, usecases.Devices)
 	httpServer := httpserver.New(handler, httpserver.Port("127.0.0.1", cfg.HTTP.Port))
 
 	// Waiting signal
