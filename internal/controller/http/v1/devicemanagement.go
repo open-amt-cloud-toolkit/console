@@ -112,7 +112,6 @@ func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
 
 func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 	guid := c.Param("guid")
-
 	alarm := dto.AlarmClockOccurrence{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
@@ -320,6 +319,7 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 	guid := c.Param("guid")
 
 	var bootSetting dto.BootSetting
+
 	if err := c.ShouldBindJSON(&bootSetting); err != nil {
 		errorResponse(c, http.StatusBadRequest, err.Error())
 

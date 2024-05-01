@@ -9,7 +9,6 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-
 	"github.com/open-amt-cloud-toolkit/console/config"
 	v1 "github.com/open-amt-cloud-toolkit/console/internal/controller/http/v1"
 	wsv1 "github.com/open-amt-cloud-toolkit/console/internal/controller/ws/v1"

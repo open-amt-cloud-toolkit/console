@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgconn"
-
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"

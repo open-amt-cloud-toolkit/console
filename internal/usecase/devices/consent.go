@@ -39,7 +39,6 @@ func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[strin
 	response := map[string]interface{}{
 		"Body": code,
 	}
-
 	return response, nil
 }
 

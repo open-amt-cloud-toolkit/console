@@ -139,6 +139,5 @@ func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface
 	response := map[string]interface{}{
 		"Body": generalSettings,
 	}
-
 	return response, nil
 }

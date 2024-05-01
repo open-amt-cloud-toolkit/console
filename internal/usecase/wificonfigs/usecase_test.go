@@ -350,13 +350,11 @@ func TestUpdate(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-
 			wirelessconfig := &entity.WirelessConfig{
 				ProfileName: "example-wirelessconfig",
 				TenantID:    "tenant-id-456",
 				Version:     "123",
 			}
-
 			useCase, repo := wificonfigsTest(t)
 
 			tc.mock(repo, wirelessconfig)
@@ -399,13 +397,11 @@ func TestInsert(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-
 			wirelessconfig := &entity.WirelessConfig{
 				ProfileName: "new-wirelessconfig",
 				TenantID:    "tenant-id-789",
 				Version:     "123",
 			}
-
 			useCase, repo := wificonfigsTest(t)
 
 			tc.mock(repo, wirelessconfig)

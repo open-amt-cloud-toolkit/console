@@ -8,12 +8,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
-	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 //go:embed all:ui

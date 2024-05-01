@@ -47,7 +47,6 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 		"powerstate": state[0].PowerState,
 	}, nil
 }
-
 func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
 	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
@@ -116,7 +115,6 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 
 	response["Reset to PXE"] = 400
 	response["Power on to PXE"] = 401
-
 	return response
 }
 
@@ -204,7 +202,6 @@ func changeBootOrder(bootSetting dto.BootSetting, err error, uc *UseCase) error 
 	} else if bootSetting.Action == 202 || bootSetting.Action == 203 {
 		_, err = uc.device.ChangeBootOrder(string(cimBoot.CD))
 	}
-
 	return err
 }
 
@@ -224,13 +221,11 @@ func parseVersion(version []software.SoftwareIdentity) (int, error) {
 	for _, v := range version {
 		if v.InstanceID == "AMT" {
 			splitversion := strings.Split(v.VersionString, ".")
-
 			amtversion, err = strconv.Atoi(splitversion[0])
 			if err != nil {
 				return 0, err
 			}
 		}
 	}
-
 	return amtversion, nil
 }

@@ -4,6 +4,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
@@ -39,9 +41,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	ipsAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
-
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
 
 var connections map[string]wsman.Messages = make(map[string]wsman.Messages)
@@ -65,7 +64,6 @@ func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, isRedirection, 
 		LogAMTMessages:    logAMTMessages,
 		IsRedirection:     isRedirection,
 	}
-
 	if _, ok := connections[device.GUID]; ok {
 		g.wsmanMessages = connections[device.GUID]
 	} else {
@@ -469,7 +467,6 @@ func (g *GoWSMANMessages) GetPowerState() ([]service.CIM_AssociatedPowerManageme
 	if err != nil {
 		return []service.CIM_AssociatedPowerManagementService{}, err
 	}
-
 	return response.Body.PullResponse.AssociatedPowerManagementService, nil
 }
 
@@ -746,7 +743,6 @@ func (g *GoWSMANMessages) DeleteKeyPair(instanceID string) error {
 
 	return err
 }
-
 func (g *GoWSMANMessages) GetWiFiPortConfigurationService() (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
 	response, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Get()
 	if err != nil {
@@ -755,7 +751,6 @@ func (g *GoWSMANMessages) GetWiFiPortConfigurationService() (wifiportconfigurati
 
 	return response.Body.WiFiPortConfigurationService, nil
 }
-
 func (g *GoWSMANMessages) PutWiFiPortConfigurationService(request wifiportconfiguration.WiFiPortConfigurationServiceRequest) (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
 	// if local sync not enable, enable it
 	// if response.Body.WiFiPortConfigurationService.LocalProfileSynchronizationEnabled == wifiportconfiguration.LocalSyncDisabled {
@@ -788,7 +783,6 @@ func (g *GoWSMANMessages) WiFiRequestStateChange() (err error) {
 	if err != nil {
 		return err // utils.WSMANMessageError
 	}
-
 	return nil
 }
 
