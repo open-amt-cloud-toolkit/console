@@ -2,6 +2,9 @@
 package v1
 
 import (
+	"embed"
+	"io/fs"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +15,9 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+//go:embed all:ui
+var content embed.FS
 
 // NewRouter -.
 // Swagger spec:
@@ -26,13 +32,22 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases) {
 	handler.Use(gin.Recovery())
 	// Static files
 	// Serve static assets (js, css, images, etc.)
-	handler.StaticFile("/", "./ui/index.html")
-	handler.StaticFile("/main.js", "./ui/main.js")
-	handler.StaticFile("/polyfills.js", "./ui/polyfills.js")
-	handler.StaticFile("/runtime.js", "./ui/runtime.js")
-	handler.StaticFile("/styles.css", "./ui/styles.css")
-	handler.StaticFile("/vendor.js", "./ui/vendor.js")
-	handler.StaticFile("/favicon.ico", "./ui/favicon.ico")
+	// Create subdirectory view of the embedded file system
+	staticFiles, err := fs.Sub(content, "ui")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Set up HTTP server to handle requests
+	handler.StaticFileFS("/", "./", http.FS(staticFiles)) // Serve static files from "/" route
+	handler.StaticFileFS("/main.js", "./main.js", http.FS(staticFiles))
+	handler.StaticFileFS("/polyfills.js", "./polyfills.js", http.FS(staticFiles))
+	handler.StaticFileFS("/runtime.js", "./runtime.js", http.FS(staticFiles))
+	handler.StaticFileFS("/styles.css", "./styles.css", http.FS(staticFiles))
+	handler.StaticFileFS("/vendor.js", "./vendor.js", http.FS(staticFiles))
+	handler.StaticFileFS("/favicon.ico", "./favicon.ico", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/logo.png", "./assets/logo.png", http.FS(staticFiles))
+
 	// Swagger
 	swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
 	handler.GET("/swagger/*any", swaggerHandler)
@@ -61,6 +76,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases) {
 
 	// Catch-all route to serve index.html for any route not matched above to be handled by Angular
 	handler.NoRoute(func(c *gin.Context) {
-		c.File("./ui/index.html")
+		c.FileFromFS("./", http.FS(staticFiles)) // Serve static files from "/" route
 	})
 }

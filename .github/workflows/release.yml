@@ -30,13 +30,13 @@ jobs:
       with:
           repository: open-amt-cloud-toolkit/sample-web-ui
           ref: enterprise #TODO: pull latest tagged version
-          path: ./ui
+          path: ./temp
     - run: npm ci
+      working-directory: ./temp
     - run: npm run build-enterprise
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
-      with:
-        node-version: "20.x"
+      working-directory: ./temp
+    - name: move files
+      run: mv ./temp/ui/* ./internal/controller/http/v1/ui
     - name: Docker Login
       uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
       with:
