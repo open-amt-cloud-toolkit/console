@@ -11,6 +11,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var (
@@ -40,8 +41,8 @@ func ciraconfigsTest(t *testing.T) (*ciraconfigs.UseCase, *MockRepository) {
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
-
-	useCase := ciraconfigs.New(repo)
+	log := logger.New("error")
+	useCase := ciraconfigs.New(repo, log)
 
 	return useCase, repo
 }

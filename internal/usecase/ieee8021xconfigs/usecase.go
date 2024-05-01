@@ -5,17 +5,20 @@ import (
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 // UseCase -.
 type UseCase struct {
 	repo Repository
+	log  logger.Interface
 }
 
 // New -.
-func New(r Repository) *UseCase {
+func New(r Repository, log logger.Interface) *UseCase {
 	return &UseCase{
 		repo: r,
+		log:  log,
 	}
 }
 
