@@ -14,8 +14,11 @@ import (
 	reflect "reflect"
 	time "time"
 
+	websocket "github.com/gorilla/websocket"
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
 	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	wsman "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
 	boot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
@@ -53,19 +56,19 @@ func (m *MockManagement) EXPECT() *MockManagementMockRecorder {
 	return m.recorder
 }
 
-// CancelUserConsent mocks base method.
-func (m *MockManagement) CancelUserConsent() (any, error) {
+// CancelUserConsentRequest mocks base method.
+func (m *MockManagement) CancelUserConsentRequest() (any, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CancelUserConsent")
+	ret := m.ctrl.Call(m, "CancelUserConsentRequest")
 	ret0, _ := ret[0].(any)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CancelUserConsent indicates an expected call of CancelUserConsent.
-func (mr *MockManagementMockRecorder) CancelUserConsent() *gomock.Call {
+// CancelUserConsentRequest indicates an expected call of CancelUserConsentRequest.
+func (mr *MockManagementMockRecorder) CancelUserConsentRequest() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelUserConsent", reflect.TypeOf((*MockManagement)(nil).CancelUserConsent))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelUserConsentRequest", reflect.TypeOf((*MockManagement)(nil).CancelUserConsentRequest))
 }
 
 // ChangeBootOrder mocks base method.
@@ -368,15 +371,109 @@ func (mr *MockManagementMockRecorder) SetFeatures(arg0 any) *gomock.Call {
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockManagement) SetupWsmanClient(device entity.Device, logAMTMessages bool) {
+func (m *MockManagement) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetupWsmanClient", device, logAMTMessages)
+	m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
 }
 
 // SetupWsmanClient indicates an expected call of SetupWsmanClient.
-func (mr *MockManagementMockRecorder) SetupWsmanClient(device, logAMTMessages any) *gomock.Call {
+func (mr *MockManagementMockRecorder) SetupWsmanClient(device, isRedirection, logAMTMessages any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockManagement)(nil).SetupWsmanClient), device, logAMTMessages)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockManagement)(nil).SetupWsmanClient), device, isRedirection, logAMTMessages)
+}
+
+// MockRedirection is a mock of Redirection interface.
+type MockRedirection struct {
+	ctrl     *gomock.Controller
+	recorder *MockRedirectionMockRecorder
+}
+
+// MockRedirectionMockRecorder is the mock recorder for MockRedirection.
+type MockRedirectionMockRecorder struct {
+	mock *MockRedirection
+}
+
+// NewMockRedirection creates a new mock instance.
+func NewMockRedirection(ctrl *gomock.Controller) *MockRedirection {
+	mock := &MockRedirection{ctrl: ctrl}
+	mock.recorder = &MockRedirectionMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockRedirection) EXPECT() *MockRedirectionMockRecorder {
+	return m.recorder
+}
+
+// RedirectClose mocks base method.
+func (m *MockRedirection) RedirectClose(ctx context.Context, deviceConnection *devices.DeviceConnection) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RedirectClose", ctx, deviceConnection)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RedirectClose indicates an expected call of RedirectClose.
+func (mr *MockRedirectionMockRecorder) RedirectClose(ctx, deviceConnection any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedirectClose", reflect.TypeOf((*MockRedirection)(nil).RedirectClose), ctx, deviceConnection)
+}
+
+// RedirectConnect mocks base method.
+func (m *MockRedirection) RedirectConnect(ctx context.Context, deviceConnection *devices.DeviceConnection) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RedirectConnect", ctx, deviceConnection)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RedirectConnect indicates an expected call of RedirectConnect.
+func (mr *MockRedirectionMockRecorder) RedirectConnect(ctx, deviceConnection any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedirectConnect", reflect.TypeOf((*MockRedirection)(nil).RedirectConnect), ctx, deviceConnection)
+}
+
+// RedirectListen mocks base method.
+func (m *MockRedirection) RedirectListen(ctx context.Context, deviceConnection *devices.DeviceConnection) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RedirectListen", ctx, deviceConnection)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RedirectListen indicates an expected call of RedirectListen.
+func (mr *MockRedirectionMockRecorder) RedirectListen(ctx, deviceConnection any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedirectListen", reflect.TypeOf((*MockRedirection)(nil).RedirectListen), ctx, deviceConnection)
+}
+
+// RedirectSend mocks base method.
+func (m *MockRedirection) RedirectSend(ctx context.Context, deviceConnection *devices.DeviceConnection, message []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RedirectSend", ctx, deviceConnection, message)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RedirectSend indicates an expected call of RedirectSend.
+func (mr *MockRedirectionMockRecorder) RedirectSend(ctx, deviceConnection, message any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedirectSend", reflect.TypeOf((*MockRedirection)(nil).RedirectSend), ctx, deviceConnection, message)
+}
+
+// SetupWsmanClient mocks base method.
+func (m *MockRedirection) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
+	ret0, _ := ret[0].(wsman.Messages)
+	return ret0
+}
+
+// SetupWsmanClient indicates an expected call of SetupWsmanClient.
+func (mr *MockRedirectionMockRecorder) SetupWsmanClient(device, isRedirection, logAMTMessages any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockRedirection)(nil).SetupWsmanClient), device, isRedirection, logAMTMessages)
 }
 
 // MockRepository is a mock of Repository interface.
@@ -619,21 +716,6 @@ func (mr *MockFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockFeature)(nil).Get), ctx, top, skip, tenantID)
 }
 
-// GetAMTVersion mocks base method.
-func (m *MockFeature) GetAMTVersion(ctx context.Context, guid string) ([]software.SoftwareIdentity, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAMTVersion", ctx, guid)
-	ret0, _ := ret[0].([]software.SoftwareIdentity)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAMTVersion indicates an expected call of GetAMTVersion.
-func (mr *MockFeatureMockRecorder) GetAMTVersion(ctx, guid any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTVersion", reflect.TypeOf((*MockFeature)(nil).GetAMTVersion), ctx, guid)
-}
-
 // GetAlarmOccurrences mocks base method.
 func (m *MockFeature) GetAlarmOccurrences(ctx context.Context, guid string) ([]alarmclock0.AlarmClockOccurrence, error) {
 	m.ctrl.T.Helper()
@@ -815,10 +897,10 @@ func (mr *MockFeatureMockRecorder) GetPowerState(ctx, guid any) *gomock.Call {
 }
 
 // GetUserConsentCode mocks base method.
-func (m *MockFeature) GetUserConsentCode(ctx context.Context, guid string) (optin.StartOptIn_OUTPUT, error) {
+func (m *MockFeature) GetUserConsentCode(ctx context.Context, guid string) (map[string]any, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserConsentCode", ctx, guid)
-	ret0, _ := ret[0].(optin.StartOptIn_OUTPUT)
+	ret0, _ := ret[0].(map[string]any)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -827,6 +909,21 @@ func (m *MockFeature) GetUserConsentCode(ctx context.Context, guid string) (opti
 func (mr *MockFeatureMockRecorder) GetUserConsentCode(ctx, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserConsentCode", reflect.TypeOf((*MockFeature)(nil).GetUserConsentCode), ctx, guid)
+}
+
+// GetVersion mocks base method.
+func (m *MockFeature) GetVersion(ctx context.Context, guid string) (map[string]any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
+	ret0, _ := ret[0].(map[string]any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVersion indicates an expected call of GetVersion.
+func (mr *MockFeatureMockRecorder) GetVersion(ctx, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockFeature)(nil).GetVersion), ctx, guid)
 }
 
 // Insert mocks base method.
@@ -842,6 +939,20 @@ func (m *MockFeature) Insert(ctx context.Context, d *entity.Device) (string, err
 func (mr *MockFeatureMockRecorder) Insert(ctx, d any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockFeature)(nil).Insert), ctx, d)
+}
+
+// Redirect mocks base method.
+func (m *MockFeature) Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Redirect", ctx, conn, guid, mode)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Redirect indicates an expected call of Redirect.
+func (mr *MockFeatureMockRecorder) Redirect(ctx, conn, guid, mode any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Redirect", reflect.TypeOf((*MockFeature)(nil).Redirect), ctx, conn, guid, mode)
 }
 
 // SendConsentCode mocks base method.
@@ -875,10 +986,10 @@ func (mr *MockFeatureMockRecorder) SendPowerAction(ctx, guid, action any) *gomoc
 }
 
 // SetBootOptions mocks base method.
-func (m *MockFeature) SetBootOptions(ctx context.Context, guid string, bootSetting dto.BootSetting) (any, error) {
+func (m *MockFeature) SetBootOptions(ctx context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetBootOptions", ctx, guid, bootSetting)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(power.PowerActionResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

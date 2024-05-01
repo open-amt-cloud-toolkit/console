@@ -11,6 +11,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var (
@@ -42,8 +43,8 @@ func domainsTest(t *testing.T) (*domains.UseCase, *MockRepository) {
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
-
-	useCase := domains.New(repo)
+	log := logger.New("error")
+	useCase := domains.New(repo, log)
 
 	return useCase, repo
 }

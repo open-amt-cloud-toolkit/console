@@ -8,17 +8,19 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // CIRARepo -.
 type CIRARepo struct {
 	*postgres.DB
+	log logger.Interface
 }
 
 // New -.
-func NewCIRARepo(pg *postgres.DB) *CIRARepo {
-	return &CIRARepo{pg}
+func NewCIRARepo(pg *postgres.DB, log logger.Interface) *CIRARepo {
+	return &CIRARepo{pg, log}
 }
 
 // GetCount -.

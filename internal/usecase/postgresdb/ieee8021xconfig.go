@@ -8,17 +8,19 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // IEEE8021xRepo -.
 type IEEE8021xRepo struct {
 	*postgres.DB
+	log logger.Interface
 }
 
 // New -.
-func NewIEEE8021xRepo(pg *postgres.DB) *IEEE8021xRepo {
-	return &IEEE8021xRepo{pg}
+func NewIEEE8021xRepo(pg *postgres.DB, log logger.Interface) *IEEE8021xRepo {
+	return &IEEE8021xRepo{pg, log}
 }
 
 // CheckProfileExits -.
