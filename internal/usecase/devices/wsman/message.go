@@ -26,6 +26,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/computer"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
+	cimIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
@@ -38,6 +39,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	ipsAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
+	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
@@ -638,7 +640,7 @@ func (g *GoWSMANMessages) GetWiFiSettings() ([]wifi.WiFiEndpointSettingsResponse
 	return response.Body.PullResponse.EndpointSettingsItems, nil
 }
 
-func (g *GoWSMANMessages) GetEthernetSettings() ([]ethernetport.SettingsResponse, error) {
+func (g *GoWSMANMessages) GetEthernetPortSettings() ([]ethernetport.SettingsResponse, error) {
 	response, err := g.wsmanMessages.AMT.EthernetPortSettings.Enumerate()
 	if err != nil {
 		return nil, err
@@ -652,7 +654,7 @@ func (g *GoWSMANMessages) GetEthernetSettings() ([]ethernetport.SettingsResponse
 	return response.Body.PullResponse.EthernetPortItems, nil
 }
 
-func (g *GoWSMANMessages) PutEthernetSettings(ethernetPortSettings ethernetport.SettingsRequest, instanceID string) (ethernetport.Response, error) {
+func (g *GoWSMANMessages) PutEthernetPortSettings(ethernetPortSettings ethernetport.SettingsRequest, instanceID string) (ethernetport.Response, error) {
 	return g.wsmanMessages.AMT.EthernetPortSettings.Put(instanceID, ethernetPortSettings)
 }
 
@@ -844,6 +846,59 @@ func (g *GoWSMANMessages) GetIpsOptInService() (response optin.Response, err err
 	return g.wsmanMessages.IPS.OptInService.Get()
 }
 
-func (g *GoWSMANMessages) PutIpsOptInService(request optin.OptInServiceRequest) (response optin.Response, err error) {
-	return g.wsmanMessages.IPS.OptInService.Put(request)
+func (g *GoWSMANMessages) GetIPSIEEE8021xSettings() (response ipsIEEE8021x.Response, err error) {
+	return g.wsmanMessages.IPS.IEEE8021xSettings.Get()
+}
+
+type NetworkResults struct {
+	EthernetPortSettingsResult []ethernetport.SettingsResponse
+	IPSIEEE8021xSettingsResult ipsIEEE8021x.IEEE8021xSettingsResponse
+	WiFiSettingsResult         []wifi.WiFiEndpointSettingsResponse
+	CIMIEEE8021xSettingsResult cimIEEE8021x.PullResponse
+}
+
+func (g *GoWSMANMessages) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Response, err error) {
+	response, err = g.wsmanMessages.CIM.IEEE8021xSettings.Enumerate()
+	if err != nil {
+		return cimIEEE8021x.Response{}, err
+	}
+
+	response, err = g.wsmanMessages.CIM.IEEE8021xSettings.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return cimIEEE8021x.Response{}, err
+	}
+
+	return response, nil
+}
+
+func (g *GoWSMANMessages) GetNetworkSettings() (interface{}, error) {
+	networkResults := NetworkResults{}
+
+	var err error
+
+	networkResults.EthernetPortSettingsResult, err = g.GetEthernetPortSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := g.GetIPSIEEE8021xSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
+
+	networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	cimResponse, err := g.GetCIMIEEE8021xSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
+
+	return networkResults, nil
 }
