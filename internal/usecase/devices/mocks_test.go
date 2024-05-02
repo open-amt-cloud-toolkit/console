@@ -235,6 +235,21 @@ func (mr *MockManagementMockRecorder) GetHardwareInfo() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHardwareInfo", reflect.TypeOf((*MockManagement)(nil).GetHardwareInfo))
 }
 
+// GetNetworkSettings mocks base method.
+func (m *MockManagement) GetNetworkSettings() (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNetworkSettings")
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNetworkSettings indicates an expected call of GetNetworkSettings.
+func (mr *MockManagementMockRecorder) GetNetworkSettings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkSettings", reflect.TypeOf((*MockManagement)(nil).GetNetworkSettings))
+}
+
 // GetPowerCapabilities mocks base method.
 func (m *MockManagement) GetPowerCapabilities() (boot.BootCapabilitiesResponse, error) {
 	m.ctrl.T.Helper()
@@ -864,6 +879,21 @@ func (m *MockFeature) GetHardwareInfo(ctx context.Context, guid string) (any, er
 func (mr *MockFeatureMockRecorder) GetHardwareInfo(ctx, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHardwareInfo", reflect.TypeOf((*MockFeature)(nil).GetHardwareInfo), ctx, guid)
+}
+
+// GetNetworkSettings mocks base method.
+func (m *MockFeature) GetNetworkSettings(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNetworkSettings", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNetworkSettings indicates an expected call of GetNetworkSettings.
+func (mr *MockFeatureMockRecorder) GetNetworkSettings(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkSettings", reflect.TypeOf((*MockFeature)(nil).GetNetworkSettings), c, guid)
 }
 
 // GetPowerCapabilities mocks base method.
