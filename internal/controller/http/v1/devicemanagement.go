@@ -43,6 +43,8 @@ func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 		h.GET("userConsentCode/cancel/:guid", r.cancelUserConsentCode)
 		h.GET("userConsentCode/:guid", r.getUserConsentCode)
 		h.POST("userConsentCode/:guid", r.sendConsentCode)
+
+		h.GET("networkSettings/:guid", r.getNetworkSettings)
 	}
 }
 
@@ -333,4 +335,18 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, features)
+}
+
+func (r *deviceManagementRoutes) getNetworkSettings(c *gin.Context) {
+	guid := c.Param("guid")
+
+	network, err := r.d.GetNetworkSettings(c, guid)
+	if err != nil {
+		r.l.Error(err, "http - v1 - getNetworkSettings")
+		errorResponse(c, http.StatusInternalServerError, "problems")
+
+		return
+	}
+
+	c.JSON(http.StatusOK, network)
 }
