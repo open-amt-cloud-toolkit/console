@@ -1,5 +1,8 @@
 name: CI
-on: pull_request
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
 permissions:
   contents: read # for actions/checkout to fetch code
 
