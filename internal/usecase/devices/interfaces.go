@@ -46,6 +46,7 @@ type (
 		ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error)
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
+		GetNetworkSettings() (interface{}, error)
 	}
 	Redirection interface {
 		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages
@@ -93,5 +94,6 @@ type (
 		GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error)
 		GetEventLog(ctx context.Context, guid string) (messagelog.GetRecordsResponse, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
+		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
 	}
 )
