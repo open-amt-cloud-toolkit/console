@@ -86,10 +86,10 @@ func (mr *MockRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.
 }
 
 // GetByName mocks base method.
-func (m *MockRepository) GetByName(ctx context.Context, guid, tenantID string) (entity.WirelessConfig, error) {
+func (m *MockRepository) GetByName(ctx context.Context, guid, tenantID string) (*entity.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, guid, tenantID)
-	ret0, _ := ret[0].(entity.WirelessConfig)
+	ret0, _ := ret[0].(*entity.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -184,12 +184,11 @@ func (mr *MockFeatureMockRecorder) CheckProfileExists(ctx, profileName, tenantID
 }
 
 // Delete mocks base method.
-func (m *MockFeature) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
+func (m *MockFeature) Delete(ctx context.Context, profileName, tenantID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, profileName, tenantID)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Delete indicates an expected call of Delete.
@@ -214,10 +213,10 @@ func (mr *MockFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Cal
 }
 
 // GetByName mocks base method.
-func (m *MockFeature) GetByName(ctx context.Context, guid, tenantID string) (entity.WirelessConfig, error) {
+func (m *MockFeature) GetByName(ctx context.Context, guid, tenantID string) (*entity.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, guid, tenantID)
-	ret0, _ := ret[0].(entity.WirelessConfig)
+	ret0, _ := ret[0].(*entity.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -244,10 +243,10 @@ func (mr *MockFeatureMockRecorder) GetCount(ctx, tenantID any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, p *entity.WirelessConfig) (string, error) {
+func (m *MockFeature) Insert(ctx context.Context, p *entity.WirelessConfig) (*entity.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, p)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*entity.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -259,10 +258,10 @@ func (mr *MockFeatureMockRecorder) Insert(ctx, p any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, p *entity.WirelessConfig) (bool, error) {
+func (m *MockFeature) Update(ctx context.Context, p *entity.WirelessConfig) (*entity.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, p)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*entity.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

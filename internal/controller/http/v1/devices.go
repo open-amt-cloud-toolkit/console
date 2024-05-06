@@ -55,7 +55,7 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 	count, err := dr.t.GetCount(c.Request.Context(), "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - getCount")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -79,7 +79,7 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 func (dr *deviceRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -96,7 +96,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 		items, err = dr.t.GetByTags(c.Request.Context(), tags, c.Query("method"), odata.Top, odata.Skip, "")
 		if err != nil {
 			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
+			errorResponse(c, err)
 
 			return
 		}
@@ -104,7 +104,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 		items, err = dr.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 		if err != nil {
 			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
+			errorResponse(c, err)
 
 			return
 		}
@@ -114,7 +114,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 		count, err := dr.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
+			errorResponse(c, err)
 
 			return
 		}
@@ -142,20 +142,20 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 func (dr *deviceRoutes) insert(c *gin.Context) {
 	var device entity.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	_, err := dr.t.Insert(c.Request.Context(), &device)
+	newDevice, err := dr.t.Insert(c.Request.Context(), &device)
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - insert")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, device)
+	c.JSON(http.StatusOK, newDevice)
 }
 
 // @Summary     Edit Devices
@@ -170,20 +170,20 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 func (dr *deviceRoutes) update(c *gin.Context) {
 	var device entity.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	updateSuccessful, err := dr.t.Update(c.Request.Context(), &device)
-	if err != nil || !updateSuccessful {
+	updatedDevice, err := dr.t.Update(c.Request.Context(), &device)
+	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - update")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, device)
+	c.JSON(http.StatusOK, updatedDevice)
 }
 
 // @Summary     Remove Devices
@@ -198,15 +198,15 @@ func (dr *deviceRoutes) update(c *gin.Context) {
 func (dr *deviceRoutes) delete(c *gin.Context) {
 	guid := c.Param("guid")
 
-	deleteSuccessful, err := dr.t.Delete(c.Request.Context(), guid, "")
+	err := dr.t.Delete(c.Request.Context(), guid, "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - delete")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusNoContent, deleteSuccessful)
+	c.JSON(http.StatusNoContent, nil)
 }
 
 func (dr *deviceRoutes) redirectStatus(c *gin.Context) {
@@ -231,7 +231,7 @@ func (dr *deviceRoutes) getTags(c *gin.Context) {
 	tags, err := dr.t.GetDistinctTags(c.Request.Context(), "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - tags")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}

@@ -54,7 +54,7 @@ func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 	version, err := r.d.GetVersion(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - GetVersion")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -68,7 +68,7 @@ func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 	features, err := r.d.GetFeatures(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getFeatures")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -82,7 +82,7 @@ func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
 	var features dto.Features
 
 	if err := c.ShouldBindJSON(&features); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -90,7 +90,7 @@ func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
 	features, err := r.d.SetFeatures(c, guid, features)
 	if err != nil {
 		r.l.Error(err, "http - v1 - setFeatures")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -104,7 +104,7 @@ func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
 	alarms, err := r.d.GetAlarmOccurrences(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getFeatures")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -117,7 +117,7 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 
 	alarm := dto.AlarmClockOccurrence{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -125,7 +125,7 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 	alarmReference, err := r.d.CreateAlarmOccurrences(c, guid, alarm)
 	if err != nil {
 		r.l.Error(err, "http - v1 - createAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -138,7 +138,7 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 
 	alarm := dto.AlarmClockOccurrence{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -146,7 +146,7 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 	err := r.d.DeleteAlarmOccurrences(c, guid, alarm.InstanceID)
 	if err != nil {
 		r.l.Error(err, "http - v1 - deleteAlarmOccurrences")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -160,7 +160,7 @@ func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 	hwInfo, err := r.d.GetHardwareInfo(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getHardwareInfo")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -174,7 +174,7 @@ func (r *deviceManagementRoutes) getPowerState(c *gin.Context) {
 	state, err := r.d.GetPowerState(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getPowerState")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -188,7 +188,7 @@ func (r *deviceManagementRoutes) getPowerCapabilities(c *gin.Context) {
 	power, err := r.d.GetPowerCapabilities(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getPowerCapabilities")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -202,7 +202,7 @@ func (r *deviceManagementRoutes) getGeneralSettings(c *gin.Context) {
 	generalSettings, err := r.d.GetGeneralSettings(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getGeneralSettings")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -216,7 +216,7 @@ func (r *deviceManagementRoutes) cancelUserConsentCode(c *gin.Context) {
 	result, err := r.d.CancelUserConsent(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - cancelUserConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -230,7 +230,7 @@ func (r *deviceManagementRoutes) getUserConsentCode(c *gin.Context) {
 	response, err := r.d.GetUserConsentCode(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getUserConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -243,7 +243,7 @@ func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 
 	var userConsent dto.UserConsent
 	if err := c.ShouldBindJSON(&userConsent); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -251,7 +251,7 @@ func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 	response, err := r.d.SendConsentCode(c, userConsent, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - sendConsentCode")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -264,7 +264,7 @@ func (r *deviceManagementRoutes) powerAction(c *gin.Context) {
 
 	var powerAction dto.PowerAction
 	if err := c.ShouldBindJSON(&powerAction); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -272,7 +272,7 @@ func (r *deviceManagementRoutes) powerAction(c *gin.Context) {
 	response, err := r.d.SendPowerAction(c, guid, powerAction.Action)
 	if err != nil {
 		r.l.Error(err, "http - v1 - powerAction")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -288,7 +288,7 @@ func (r *deviceManagementRoutes) getAuditLog(c *gin.Context) {
 	startIdx, err := strconv.Atoi(startIndex)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getAuditLog")
-		errorResponse(c, http.StatusInternalServerError, "error converting start index")
+		errorResponse(c, err)
 
 		return
 	}
@@ -296,7 +296,7 @@ func (r *deviceManagementRoutes) getAuditLog(c *gin.Context) {
 	auditLogs, err := r.d.GetAuditLog(c, startIdx, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getAuditLog")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -310,7 +310,7 @@ func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 	eventLogs, err := r.d.GetEventLog(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getEventLog")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -323,7 +323,7 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 
 	var bootSetting dto.BootSetting
 	if err := c.ShouldBindJSON(&bootSetting); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -331,7 +331,7 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 	features, err := r.d.SetBootOptions(c, guid, bootSetting)
 	if err != nil {
 		r.l.Error(err, "http - v1 - setBootOptions")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 	}
 
 	c.JSON(http.StatusOK, features)
@@ -343,7 +343,7 @@ func (r *deviceManagementRoutes) getNetworkSettings(c *gin.Context) {
 	network, err := r.d.GetNetworkSettings(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getNetworkSettings")
-		errorResponse(c, http.StatusInternalServerError, "problems")
+		errorResponse(c, err)
 
 		return
 	}

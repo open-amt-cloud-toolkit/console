@@ -58,7 +58,7 @@ type (
 	Repository interface {
 		GetCount(context.Context, string) (int, error)
 		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error)
-		GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error)
+		GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error)
 		GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
 		GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error)
 		Delete(ctx context.Context, guid, tenantID string) (bool, error)
@@ -69,12 +69,12 @@ type (
 		// Repository/Database Calls
 		GetCount(context.Context, string) (int, error)
 		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error)
-		GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error)
+		GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error)
 		GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
 		GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error)
-		Delete(ctx context.Context, guid, tenantID string) (bool, error)
-		Update(ctx context.Context, d *entity.Device) (bool, error)
-		Insert(ctx context.Context, d *entity.Device) (string, error)
+		Delete(ctx context.Context, guid, tenantID string) error
+		Update(ctx context.Context, d *entity.Device) (*entity.Device, error)
+		Insert(ctx context.Context, d *entity.Device) (*entity.Device, error)
 		// Management Calls
 		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
 		GetFeatures(ctx context.Context, guid string) (interface{}, error)

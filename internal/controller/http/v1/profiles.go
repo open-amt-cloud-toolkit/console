@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
@@ -26,6 +28,13 @@ func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Int
 		h.PATCH("", r.update)
 		h.DELETE(":name", r.delete)
 	}
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		err := v.RegisterValidation("storageformat", entity.StorageFormatValidation)
+		if err != nil {
+			l.Error(err, "error registering validation")
+		}
+	}
 }
 
 type ProfileCountResponse struct {
@@ -42,27 +51,27 @@ type ProfileCountResponse struct {
 // @Success     200 {object} ProfileCountResponse
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/profiles [get]
-func (pr *profileRoutes) get(c *gin.Context) {
+func (r *profileRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	items, err := pr.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
+	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
-		pr.l.Error(err, "http - profiles - v1 - getCount")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		r.l.Error(err, "http - v1 - getCount")
+		errorResponse(c, err)
 
 		return
 	}
 
 	if odata.Count {
-		count, err := pr.t.GetCount(c.Request.Context(), "")
+		count, err := r.t.GetCount(c.Request.Context(), "")
 		if err != nil {
-			pr.l.Error(err, "http - profiles - v1 - getCount")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
+			r.l.Error(err, "http - v1 - getCount")
+			errorResponse(c, err)
 		}
 
 		countResponse := ProfileCountResponse{
@@ -76,13 +85,23 @@ func (pr *profileRoutes) get(c *gin.Context) {
 	}
 }
 
-func (pr *profileRoutes) getByName(c *gin.Context) {
+// @Summary     Show Profiles
+// @Description Show profile by name
+// @ID          profile
+// @Tags              profiles
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} ProfileCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/profiles/:name [get]
+
+func (r *profileRoutes) getByName(c *gin.Context) {
 	name := c.Param("name")
 
-	item, err := pr.t.GetByName(c.Request.Context(), name, "")
+	item, err := r.t.GetByName(c.Request.Context(), name, "")
 	if err != nil {
-		pr.l.Error(err, "http - profiles - v1 - getByName")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		r.l.Error(err, "http - v1 - getByName")
+		errorResponse(c, err)
 
 		return
 	}
@@ -90,54 +109,84 @@ func (pr *profileRoutes) getByName(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
-func (pr *profileRoutes) insert(c *gin.Context) {
+// @Summary     Add Profile
+// @Description Add Profile
+// @ID          profiles
+// @Tags              profiles
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} ProfileResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/profiles [post]
+
+func (r *profileRoutes) insert(c *gin.Context) {
 	var profile entity.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	_, err := pr.t.Insert(c.Request.Context(), &profile)
+	newProfile, err := r.t.Insert(c.Request.Context(), &profile)
 	if err != nil {
-		pr.l.Error(err, "http - profiles - v1 - insert")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		r.l.Error(err, "http - v1 - insert")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, profile)
+	c.JSON(http.StatusCreated, newProfile)
 }
 
-func (pr *profileRoutes) update(c *gin.Context) {
+// @Summary     Edit Profile
+// @Description Edit a Profile
+// @ID          updateProfile
+// @Tags              profiles
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} ProfileResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/Profiles [patch]
+
+func (r *profileRoutes) update(c *gin.Context) {
 	var profile entity.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	updateSuccessful, err := pr.t.Update(c.Request.Context(), &profile)
-	if err != nil || !updateSuccessful {
-		pr.l.Error(err, "http - profiles - v1 - update")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+	updatedProfile, err := r.t.Update(c.Request.Context(), &profile)
+	if err != nil {
+		r.l.Error(err, "http - v1 - update")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, profile)
+	c.JSON(http.StatusOK, updatedProfile)
 }
 
-func (pr *profileRoutes) delete(c *gin.Context) {
+// @Summary     Remove Profiles
+// @Description Remove a Profile
+// @ID          deleteProfile
+// @Tags              profiles
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/profiles [delete]
+
+func (r *profileRoutes) delete(c *gin.Context) {
 	name := c.Param("name")
 
-	deleteSuccessful, err := pr.t.Delete(c.Request.Context(), name, "")
+	err := r.t.Delete(c.Request.Context(), name, "")
 	if err != nil {
-		pr.l.Error(err, "http - profiles - v1 - delete")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		r.l.Error(err, "http - v1 - delete")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, deleteSuccessful)
+	c.JSON(http.StatusNoContent, nil)
 }

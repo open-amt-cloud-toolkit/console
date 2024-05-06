@@ -2,8 +2,6 @@ package ciraconfigs_test
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,16 +9,11 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-var (
-	errInternalServErr = errors.New("internal server error")
-	errDB              = errors.New("database error")
-	errGetByName       = fmt.Errorf("CIRAConfigsUseCase - GetByName - s.repo.GetByName: ciraconfig not found")
-	errDelete          = fmt.Errorf("CIRAConfigsUseCase - Delete - s.repo.Delete: ciraconfig not found")
-	errNotFound        = errors.New("ciraconfig not found")
-)
+var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name       string
@@ -62,10 +55,10 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, errInternalServErr)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, errTest)
 			},
 			res: 0,
-			err: errInternalServErr,
+			err: ciraconfigs.ErrDatabase,
 		},
 	}
 
@@ -81,8 +74,8 @@ func TestGetCount(t *testing.T) {
 
 			res, err := useCase.GetCount(context.Background(), "")
 
-			require.Equal(t, res, tc.res)
-			require.ErrorIs(t, err, tc.err)
+			require.Equal(t, tc.res, res)
+			require.IsType(t, tc.err, err)
 		})
 	}
 }
@@ -123,10 +116,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
-					Return(nil, errDB)
+					Return(nil, errTest)
 			},
 			res: []entity.CIRAConfig(nil),
-			err: errDB,
+			err: errTest,
 		},
 		{
 			name:     "zero results",
@@ -169,7 +162,7 @@ func TestGet(t *testing.T) {
 func TestGetByName(t *testing.T) {
 	t.Parallel()
 
-	ciraconfig := entity.CIRAConfig{
+	ciraconfig := &entity.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
 		Version:    "1.0.0",
@@ -199,10 +192,10 @@ func TestGetByName(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "unknown-ciraconfig", "tenant-id-456").
-					Return(entity.CIRAConfig{}, errNotFound)
+					Return(nil, nil)
 			},
-			res: entity.CIRAConfig{},
-			err: errGetByName,
+			res: (*entity.CIRAConfig)(nil),
+			err: ciraconfigs.ErrNotFound,
 		},
 	}
 
@@ -222,6 +215,7 @@ func TestGetByName(t *testing.T) {
 			if tc.err != nil {
 				require.Contains(t, err.Error(), tc.err.Error())
 			} else {
+				require.Equal(t, tc.res, res)
 				require.NoError(t, err)
 			}
 		})
@@ -241,7 +235,6 @@ func TestDelete(t *testing.T) {
 					Delete(context.Background(), "example-ciraconfig", "tenant-id-456").
 					Return(true, nil)
 			},
-			res: true,
 			err: nil,
 		},
 		{
@@ -251,10 +244,9 @@ func TestDelete(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "nonexistent-ciraconfig", "tenant-id-456").
-					Return(false, errNotFound)
+					Return(false, nil)
 			},
-			res: false,
-			err: errDelete,
+			err: ciraconfigs.ErrNotFound,
 		},
 	}
 
@@ -267,9 +259,7 @@ func TestDelete(t *testing.T) {
 
 			tc.mock(repo)
 
-			result, err := useCase.Delete(context.Background(), tc.configName, tc.tenantID)
-
-			require.Equal(t, tc.res, result)
+			err := useCase.Delete(context.Background(), tc.configName, tc.tenantID)
 
 			if tc.err != nil {
 				require.Error(t, err)
@@ -297,8 +287,11 @@ func TestUpdate(t *testing.T) {
 				repo.EXPECT().
 					Update(context.Background(), ciraconfig).
 					Return(true, nil)
+				repo.EXPECT().
+					GetByName(context.Background(), "test-config", "tenant-id-456").
+					Return(ciraconfig, nil)
 			},
-			res: true,
+			res: ciraconfig,
 			err: nil,
 		},
 		{
@@ -306,10 +299,10 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ciraconfig).
-					Return(false, errInternalServErr)
+					Return(false, errTest)
 			},
-			res: false,
-			err: errInternalServErr,
+			res: (*entity.CIRAConfig)(nil),
+			err: ciraconfigs.ErrDatabase,
 		},
 	}
 
@@ -325,7 +318,7 @@ func TestUpdate(t *testing.T) {
 			result, err := useCase.Update(context.Background(), ciraconfig)
 
 			require.Equal(t, tc.res, result)
-			require.ErrorIs(t, err, tc.err)
+			require.IsType(t, tc.err, err)
 		})
 	}
 }
@@ -346,8 +339,11 @@ func TestInsert(t *testing.T) {
 				repo.EXPECT().
 					Insert(context.Background(), ciraconfig).
 					Return("unique-ciraconfig-id", nil)
+				repo.EXPECT().
+					GetByName(context.Background(), "test-config", "tenant-id-456").
+					Return(ciraconfig, nil)
 			},
-			res: "unique-ciraconfig-id",
+			res: ciraconfig,
 			err: nil,
 		},
 		{
@@ -355,10 +351,10 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ciraconfig).
-					Return("", errInternalServErr)
+					Return("", errTest)
 			},
-			res: "",
-			err: errInternalServErr,
+			res: (*entity.CIRAConfig)(nil),
+			err: ciraconfigs.ErrDatabase,
 		},
 	}
 
@@ -371,9 +367,9 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo)
 
-			id, err := useCase.Insert(context.Background(), ciraconfig)
+			config, err := useCase.Insert(context.Background(), ciraconfig)
 
-			require.Equal(t, tc.res, id)
+			require.Equal(t, tc.res, config)
 
 			if tc.err != nil {
 				require.Error(t, err)

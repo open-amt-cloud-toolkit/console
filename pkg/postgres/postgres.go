@@ -3,11 +3,13 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -76,4 +78,15 @@ func (p *DB) Close() {
 	if p.Pool != nil {
 		p.Pool.Close()
 	}
+}
+
+func CheckNotUnique(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == UniqueViolation {
+			return true
+		}
+	}
+
+	return false
 }

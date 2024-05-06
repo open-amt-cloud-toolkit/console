@@ -545,10 +545,10 @@ func (mr *MockRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.
 }
 
 // GetByID mocks base method.
-func (m *MockRepository) GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error) {
+func (m *MockRepository) GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(entity.Device)
+	ret0, _ := ret[0].(*entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -688,12 +688,11 @@ func (mr *MockFeatureMockRecorder) CreateAlarmOccurrences(ctx, guid, alarm any) 
 }
 
 // Delete mocks base method.
-func (m *MockFeature) Delete(ctx context.Context, guid, tenantID string) (bool, error) {
+func (m *MockFeature) Delete(ctx context.Context, guid, tenantID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, guid, tenantID)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Delete indicates an expected call of Delete.
@@ -762,10 +761,10 @@ func (mr *MockFeatureMockRecorder) GetAuditLog(ctx, startIndex, guid any) *gomoc
 }
 
 // GetByID mocks base method.
-func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error) {
+func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(entity.Device)
+	ret0, _ := ret[0].(*entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -957,10 +956,10 @@ func (mr *MockFeatureMockRecorder) GetVersion(ctx, guid any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, d *entity.Device) (string, error) {
+func (m *MockFeature) Insert(ctx context.Context, d *entity.Device) (*entity.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1046,10 +1045,10 @@ func (mr *MockFeatureMockRecorder) SetFeatures(ctx, guid, features any) *gomock.
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, d *entity.Device) (bool, error) {
+func (m *MockFeature) Update(ctx context.Context, d *entity.Device) (*entity.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
