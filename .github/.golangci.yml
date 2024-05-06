@@ -35,14 +35,12 @@ linters-settings:
   gofumpt:
     extra-rules: true
   gomnd:
-    settings:
-      mnd:
-        checks:
-          - argument
-          - case
-          - condition
-          - operation
-          - return
+    checks:
+      - argument
+      - case
+      - condition
+      - operation
+      - return
   govet:
     check-shadowing: true
   misspell:

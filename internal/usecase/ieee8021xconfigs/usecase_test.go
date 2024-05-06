@@ -2,8 +2,6 @@ package ieee8021xconfigs_test
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,16 +9,11 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-var (
-	errInternalServerErr = errors.New("internal server error")
-	errDB                = errors.New("database error")
-	errNotFound          = errors.New("ieee8021xconfig not found")
-	errGetByName         = fmt.Errorf("IEEE8021xUseCase - GetByName - s.repo.GetByName: ieee8021xconfig not found")
-	errDelete            = fmt.Errorf("IEEE8021xUseCase - Delete - s.repo.Delete: ieee8021xconfig not found")
-)
+var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name        string
@@ -68,10 +61,10 @@ func TestCheckProfileExists(t *testing.T) {
 			profileName: "nonexistent-ieee8021xconfig",
 			tenantID:    "tenant-id-456",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().CheckProfileExists(context.Background(), "nonexistent-ieee8021xconfig", "tenant-id-456").Return(false, errInternalServerErr)
+				repo.EXPECT().CheckProfileExists(context.Background(), "nonexistent-ieee8021xconfig", "tenant-id-456").Return(false, errTest)
 			},
 			res: false,
-			err: errInternalServerErr,
+			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}
 
@@ -86,8 +79,8 @@ func TestCheckProfileExists(t *testing.T) {
 
 			res, err := useCase.CheckProfileExists(context.Background(), tc.profileName, tc.tenantID)
 
-			require.Equal(t, res, tc.res)
-			require.ErrorIs(t, err, tc.err)
+			require.Equal(t, tc.res, res)
+			require.IsType(t, tc.err, err)
 		})
 	}
 }
@@ -107,10 +100,10 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, errInternalServerErr)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, errTest)
 			},
 			res: 0,
-			err: errInternalServerErr,
+			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}
 
@@ -125,8 +118,8 @@ func TestGetCount(t *testing.T) {
 
 			res, err := useCase.GetCount(context.Background(), "")
 
-			require.Equal(t, res, tc.res)
-			require.ErrorIs(t, err, tc.err)
+			require.Equal(t, tc.res, res)
+			require.IsType(t, tc.err, err)
 		})
 	}
 }
@@ -167,10 +160,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
-					Return(nil, errDB)
+					Return(nil, errTest)
 			},
 			res: []entity.IEEE8021xConfig(nil),
-			err: errDB,
+			err: errTest,
 		},
 		{
 			name:     "zero results",
@@ -212,7 +205,7 @@ func TestGet(t *testing.T) {
 func TestGetByName(t *testing.T) {
 	t.Parallel()
 
-	ieee8021xconfig := entity.IEEE8021xConfig{
+	ieee8021xconfig := &entity.IEEE8021xConfig{
 		ProfileName: "test-profile",
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
@@ -242,10 +235,10 @@ func TestGetByName(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "unknown-ieee8021xconfig", "tenant-id-456").
-					Return(entity.IEEE8021xConfig{}, errNotFound)
+					Return(nil, nil)
 			},
-			res: entity.IEEE8021xConfig{},
-			err: errGetByName,
+			res: (*entity.IEEE8021xConfig)(nil),
+			err: ieee8021xconfigs.ErrNotFound,
 		},
 	}
 
@@ -283,7 +276,6 @@ func TestDelete(t *testing.T) {
 					Delete(context.Background(), "example-ieee8021xconfig", "tenant-id-456").
 					Return(true, nil)
 			},
-			res: true,
 			err: nil,
 		},
 		{
@@ -293,10 +285,9 @@ func TestDelete(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "nonexistent-ieee8021xconfig", "tenant-id-456").
-					Return(false, errNotFound)
+					Return(false, nil)
 			},
-			res: false,
-			err: errDelete,
+			err: ieee8021xconfigs.ErrNotFound,
 		},
 	}
 
@@ -308,9 +299,7 @@ func TestDelete(t *testing.T) {
 
 			tc.mock(repo)
 
-			result, err := useCase.Delete(context.Background(), tc.profileName, tc.tenantID)
-
-			require.Equal(t, tc.res, result)
+			err := useCase.Delete(context.Background(), tc.profileName, tc.tenantID)
 
 			if tc.err != nil {
 				require.Error(t, err)
@@ -338,8 +327,11 @@ func TestUpdate(t *testing.T) {
 				repo.EXPECT().
 					Update(context.Background(), ieee8021xconfig).
 					Return(true, nil)
+				repo.EXPECT().
+					GetByName(context.Background(), ieee8021xconfig.ProfileName, ieee8021xconfig.TenantID).
+					Return(ieee8021xconfig, nil)
 			},
-			res: true,
+			res: ieee8021xconfig,
 			err: nil,
 		},
 		{
@@ -347,10 +339,10 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ieee8021xconfig).
-					Return(false, errInternalServerErr)
+					Return(false, errTest)
 			},
-			res: false,
-			err: errInternalServerErr,
+			res: (*entity.IEEE8021xConfig)(nil),
+			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}
 
@@ -365,7 +357,7 @@ func TestUpdate(t *testing.T) {
 			result, err := useCase.Update(context.Background(), ieee8021xconfig)
 
 			require.Equal(t, tc.res, result)
-			require.ErrorIs(t, err, tc.err)
+			require.IsType(t, tc.err, err)
 		})
 	}
 }
@@ -386,8 +378,11 @@ func TestInsert(t *testing.T) {
 				repo.EXPECT().
 					Insert(context.Background(), ieee8021xconfig).
 					Return("unique-ieee8021xconfig", nil)
+				repo.EXPECT().
+					GetByName(context.Background(), ieee8021xconfig.ProfileName, ieee8021xconfig.TenantID).
+					Return(ieee8021xconfig, nil)
 			},
-			res: "unique-ieee8021xconfig",
+			res: ieee8021xconfig,
 			err: nil,
 		},
 		{
@@ -395,10 +390,10 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ieee8021xconfig).
-					Return("", errInternalServerErr)
+					Return("", errTest)
 			},
-			res: "",
-			err: errInternalServerErr,
+			res: (*entity.IEEE8021xConfig)(nil),
+			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}
 
@@ -410,9 +405,9 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo)
 
-			id, err := useCase.Insert(context.Background(), ieee8021xconfig)
+			config, err := useCase.Insert(context.Background(), ieee8021xconfig)
 
-			require.Equal(t, tc.res, id)
+			require.Equal(t, tc.res, config)
 
 			if tc.err != nil {
 				require.Error(t, err)

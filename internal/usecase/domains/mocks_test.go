@@ -169,12 +169,11 @@ func (m *MockFeature) EXPECT() *MockFeatureMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockFeature) Delete(ctx context.Context, name, tenantID string) (bool, error) {
+func (m *MockFeature) Delete(ctx context.Context, name, tenantID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, name, tenantID)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Delete indicates an expected call of Delete.
@@ -244,10 +243,10 @@ func (mr *MockFeatureMockRecorder) GetDomainByDomainSuffix(ctx, domainSuffix, te
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, d *entity.Domain) (string, error) {
+func (m *MockFeature) Insert(ctx context.Context, d *entity.Domain) (*entity.Domain, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*entity.Domain)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -259,10 +258,10 @@ func (mr *MockFeatureMockRecorder) Insert(ctx, d any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, d *entity.Domain) (bool, error) {
+func (m *MockFeature) Update(ctx context.Context, d *entity.Domain) (*entity.Domain, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*entity.Domain)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -2,13 +2,13 @@ package entity
 
 type Profile struct {
 	ProfileName                string               `json:"profileName,omitempty" binding:"required" example:"My Profile"`
-	AMTPassword                string               `json:"amtPassword,omitempty" binding:"required_without=GenerateRandomPassword,min=8,max=32" example:"my_password"`
+	AMTPassword                string               `json:"amtPassword,omitempty" binding:"required_without=GenerateRandomPassword,len=0|min=8,max=32" example:"my_password"`
 	CreationDate               string               `json:"creationDate,omitempty" example:"2021-07-01T00:00:00Z"`
 	CreatedBy                  string               `json:"created_by,omitempty" example:"admin"`
 	GenerateRandomPassword     bool                 `json:"generateRandomPassword,omitempty" example:"true"`
 	CIRAConfigName             *string              `json:"ciraConfigName,omitempty" example:"My CIRA Config"`
 	Activation                 string               `json:"activation" binding:"required,oneof=ccmactivate acmactivate" example:"activate"`
-	MEBXPassword               string               `json:"mebxPassword,omitempty" binding:"required_without=GenerateRandomMEBxPassword" example:"my_password"`
+	MEBXPassword               string               `json:"mebxPassword,omitempty" binding:"required_without=GenerateRandomMEBxPassword,len=0|min=8,max=32" example:"my_password"`
 	GenerateRandomMEBxPassword bool                 `json:"generateRandomMEBxPassword,omitempty" example:"true"`
 	CIRAConfigObject           *CIRAConfig          `json:"ciraConfigObject,omitempty"`
 	Tags                       []string             `json:"tags,omitempty" example:"tag1,tag2"`

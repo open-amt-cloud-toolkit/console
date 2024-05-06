@@ -12,7 +12,7 @@ type WirelessConfig struct {
 	EncryptionMethod       int              `json:"encryptionMethod" binding:"oneof=3 4" example:"2"`
 	SSID                   string           `json:"ssid" binding:"max=32" example:"abc"`
 	PSKValue               int              `json:"pskValue" example:"3"`
-	PSKPassphrase          string           `json:"pskPassphrase" binding:"min=8,max=32" example:"abc"`
+	PSKPassphrase          string           `json:"pskPassphrase,omitempty" binding:"min=8,max=32" example:"abc"`
 	LinkPolicy             []int            `json:"linkPolicy"`
 	TenantID               string           `json:"tenantId" example:"abc123"`
 	IEEE8021xProfileName   *string          `json:"ieee8021xProfileName,omitempty" example:"My Profile"`

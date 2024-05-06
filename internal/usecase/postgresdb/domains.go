@@ -3,11 +3,11 @@ package postgresdb
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
@@ -17,6 +17,11 @@ type DomainRepo struct {
 	*postgres.DB
 	log logger.Interface
 }
+
+var (
+	ErrDomainDatabase  = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DomainRepo")}
+	ErrDomainNotUnique = consoleerrors.NotUniqueError{Console: consoleerrors.CreateConsoleError("DomainRepo")}
+)
 
 // New -.
 func NewDomainRepo(pg *postgres.DB, log logger.Interface) *DomainRepo {
@@ -31,7 +36,7 @@ func (r *DomainRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 		Where("tenant_id = ?", tenantID).
 		ToSql()
 	if err != nil {
-		return 0, fmt.Errorf("DomainRepo - GetCount - r.Builder: %w", err)
+		return 0, ErrDomainDatabase.Wrap("GetCount", "r.Builder: ", err)
 	}
 
 	var count int
@@ -42,7 +47,7 @@ func (r *DomainRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 			return 0, nil
 		}
 
-		return 0, fmt.Errorf("DomainRepo - GetCount - r.Pool.QueryRow: %w", err)
+		return 0, ErrDomainDatabase.Wrap("GetCount", "r.Pool.QueryRow", err)
 	}
 
 	return count, nil
@@ -57,9 +62,7 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 	sqlQuery, _, err := r.Builder.
 		Select(`name,
             domain_suffix,
-            provisioning_cert,
             provisioning_cert_storage_format,
-            provisioning_cert_key,
             tenant_id,
             CAST(xmin as text) as xmin
         `).
@@ -70,12 +73,12 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 		Offset(uint64(skip)).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("DomainRepo - Get - r.Builder: %w", err)
+		return nil, ErrDomainDatabase.Wrap("Get", "r.Builder: ", err)
 	}
 
 	rows, err := r.Pool.Query(ctx, sqlQuery, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("DomainRepo - Get - r.Pool.Query: %w", err)
+		return nil, ErrDomainDatabase.Wrap("Get", "r.Pool.Query", err)
 	}
 
 	defer rows.Close()
@@ -85,9 +88,9 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 	for rows.Next() {
 		d := entity.Domain{}
 
-		err = rows.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.TenantID, &d.Version)
+		err = rows.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.TenantID, &d.Version)
 		if err != nil {
-			return nil, fmt.Errorf("DomainRepo - Get - rows.Scan: %w", err)
+			return nil, ErrDomainDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
 
 		domains = append(domains, d)
@@ -111,7 +114,7 @@ func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, 
 		Where("domain_suffix = ? AND tenant_id = ?", domainSuffix, tenantID).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("DomainRepo - GetDomainByDomainSuffix - r.Builder: %w", err)
+		return nil, ErrDomainDatabase.Wrap("GetDomainByDomainSuffix", "r.Builder: ", err)
 	}
 
 	row := r.Pool.QueryRow(ctx, sqlQuery)
@@ -124,7 +127,7 @@ func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, 
 			return nil, nil
 		}
 
-		return nil, fmt.Errorf("DomainRepo - GetDomainByDomainSuffix - row.Scan: %w", err)
+		return nil, ErrDomainDatabase.Wrap("GetDomainByDomainSuffix", "row.Scan: ", err)
 	}
 
 	return &d, nil
@@ -136,9 +139,7 @@ func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string)
 		Select(`
         name,
 				domain_suffix,
-				provisioning_cert,
 				provisioning_cert_storage_format,
-				provisioning_cert_key,
 				tenant_id,
         CAST(xmin as text) as xmin
     `).
@@ -146,20 +147,20 @@ func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string)
 		Where("name = ? AND tenant_id = ?", domainName, tenantID).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("DomainRepo - GetByName - r.Builder: %w", err)
+		return nil, ErrDomainDatabase.Wrap("GetByName", "r.Builder: ", err)
 	}
 
 	row := r.Pool.QueryRow(ctx, sqlQuery, args...)
 
 	d := entity.Domain{}
 
-	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.TenantID, &d.Version)
+	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.TenantID, &d.Version)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 
-		return nil, fmt.Errorf("DomainRepo - GetByName - row.Scan: %w", err)
+		return nil, ErrDomainDatabase.Wrap("GetByName", "row.Scan: ", err)
 	}
 
 	return &d, nil
@@ -172,12 +173,12 @@ func (r *DomainRepo) Delete(ctx context.Context, domainName, tenantID string) (b
 		Where("name = ? AND tenant_id = ?", domainName, tenantID).
 		ToSql()
 	if err != nil {
-		return false, fmt.Errorf("DomainRepo - Delete - r.Builder: %w", err)
+		return false, ErrDomainDatabase.Wrap("Delete", "r.Builder: ", err)
 	}
 
 	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
-		return false, fmt.Errorf("DomainRepo - Delete - r.Pool.Exec: %w", err)
+		return false, ErrDomainDatabase.Wrap("Delete", "r.Pool.Exec", err)
 	}
 
 	return res.RowsAffected() > 0, nil
@@ -196,12 +197,12 @@ func (r *DomainRepo) Update(ctx context.Context, d *entity.Domain) (bool, error)
 		Suffix("AND xmin::text = ?", d.Version).
 		ToSql()
 	if err != nil {
-		return false, fmt.Errorf("DomainRepo - Update - r.Builder: %w", err)
+		return false, ErrDomainDatabase.Wrap("Update", "r.Builder: ", err)
 	}
 
 	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
 	if err != nil {
-		return false, fmt.Errorf("DomainRepo - Update - r.Pool.Exec: %w", err)
+		return false, ErrDomainDatabase.Wrap("Update", "r.Pool.Exec", err)
 	}
 
 	return res.RowsAffected() > 0, nil
@@ -216,14 +217,18 @@ func (r *DomainRepo) Insert(ctx context.Context, d *entity.Domain) (string, erro
 		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
-		return "", fmt.Errorf("DomainRepo - Insert - r.Builder: %w", err)
+		return "", ErrDomainDatabase.Wrap("Insert", "r.Builder: ", err)
 	}
 
 	var version string
 
 	err = r.Pool.QueryRow(ctx, sqlQuery, args...).Scan(&version)
 	if err != nil {
-		return "", fmt.Errorf("DomainRepo - Insert - r.Pool.QueryRow: %w", err)
+		if postgres.CheckNotUnique(err) {
+			return "", ErrProfileNotUnique
+		}
+
+		return "", ErrDomainDatabase.Wrap("Insert", "r.Pool.QueryRow", err)
 	}
 
 	return version, nil

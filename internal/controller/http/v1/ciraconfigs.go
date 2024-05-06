@@ -1,17 +1,13 @@
 package v1
 
 import (
-	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgconn"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 type ciraConfigRoutes struct {
@@ -40,7 +36,8 @@ type CIRAConfigCountResponse struct {
 func (r *ciraConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		r.l.Error(err, "http - CIRA configs - v1 - getCount")
+		errorResponse(c, err)
 
 		return
 	}
@@ -48,7 +45,7 @@ func (r *ciraConfigRoutes) get(c *gin.Context) {
 	configs, err := r.cira.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - getCount")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -57,7 +54,7 @@ func (r *ciraConfigRoutes) get(c *gin.Context) {
 		count, err := r.cira.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - CIRA configs - v1 - getCount")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
+			errorResponse(c, err)
 		}
 
 		countResponse := CIRAConfigCountResponse{
@@ -76,13 +73,8 @@ func (r *ciraConfigRoutes) getByName(c *gin.Context) {
 
 	foundConfig, err := r.cira.GetByName(c.Request.Context(), configName, "")
 	if err != nil {
-		if strings.Contains(err.Error(), "Not Found") {
-			r.l.Error(err, "CIRA Config "+configName+" not found")
-			errorResponse(c, http.StatusNotFound, "database problems")
-		} else {
-			r.l.Error(err, "http - CIRA configs - v1 - getByName")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
-		}
+		r.l.Error(err, "http - CIRA configs - v1 - getByName")
+		errorResponse(c, err)
 
 		return
 	}
@@ -93,57 +85,36 @@ func (r *ciraConfigRoutes) getByName(c *gin.Context) {
 func (r *ciraConfigRoutes) insert(c *gin.Context) {
 	var config entity.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		r.l.Error(err, "http - CIRA configs - v1 - insert")
+		errorResponse(c, err)
 
 		return
 	}
 
-	version, err := r.cira.Insert(c.Request.Context(), &config)
+	newCiraConfig, err := r.cira.Insert(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - insert")
-
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == postgres.UniqueViolation {
-				errorResponse(c, http.StatusBadRequest, pgErr.Message)
-			}
-
-			return
-		}
-
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusCreated, version)
+	c.JSON(http.StatusCreated, newCiraConfig)
 }
 
 func (r *ciraConfigRoutes) update(c *gin.Context) {
 	var config entity.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		r.l.Error(err, "http - CIRA configs - v1 - update")
+		errorResponse(c, err)
 
 		return
 	}
 
-	updated, err := r.cira.Update(c.Request.Context(), &config)
+	updatedConfig, err := r.cira.Update(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - update")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	if !updated {
-		errorResponse(c, http.StatusNotFound, "not found")
-
-		return
-	}
-
-	updatedConfig, err := r.cira.GetByName(c, config.ConfigName, config.TenantID)
-	if err != nil {
-		r.l.Error(err, "http - CIRA configs - v1 - getByName")
+		errorResponse(c, err)
 
 		return
 	}
@@ -154,17 +125,13 @@ func (r *ciraConfigRoutes) update(c *gin.Context) {
 func (r *ciraConfigRoutes) delete(c *gin.Context) {
 	configName := c.Param("ciraConfigName")
 
-	deleted, err := r.cira.Delete(c.Request.Context(), configName, "")
+	err := r.cira.Delete(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - delete")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	if !deleted {
-		errorResponse(c, http.StatusNotFound, "not found")
-	}
-
-	c.JSON(http.StatusNoContent, deleted)
+	c.JSON(http.StatusNoContent, nil)
 }

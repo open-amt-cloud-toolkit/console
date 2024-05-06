@@ -45,11 +45,11 @@ func (uc *UseCase) Redirect(c context.Context, conn *websocket.Conn, guid, mode 
 	if _, ok := uc.redirConnections[key]; ok {
 		deviceConnection = uc.redirConnections[key]
 	} else {
-		wsmanConnection := uc.redirection.SetupWsmanClient(device, true, true)
+		wsmanConnection := uc.redirection.SetupWsmanClient(*device, true, true)
 		deviceConnection = &DeviceConnection{
 			Conn:          conn,
 			wsmanMessages: wsmanConnection,
-			Device:        device,
+			Device:        *device,
 			Direct:        false,
 			Mode:          mode,
 			Challenge: client.AuthChallenge{

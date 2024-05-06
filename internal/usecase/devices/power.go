@@ -20,7 +20,7 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 		return power.PowerActionResponse{}, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	response, err := uc.device.SendPowerAction(action)
 	if err != nil {
@@ -36,7 +36,7 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 		return nil, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	state, err := uc.device.GetPowerState()
 	if err != nil {
@@ -58,7 +58,7 @@ func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[str
 		return nil, nil
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	version, err := uc.device.GetAMTVersion()
 	if err != nil {
@@ -126,7 +126,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 		return power.PowerActionResponse{}, nil
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	// bootData, err := r.t.GetBootData()
 	// if err != nil {

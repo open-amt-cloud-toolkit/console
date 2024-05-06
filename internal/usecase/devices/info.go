@@ -15,7 +15,7 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interf
 		return nil, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	version, err := uc.device.GetAMTVersion()
 	if err != nil {
@@ -45,7 +45,7 @@ func (uc *UseCase) GetFeatures(c context.Context, guid string) (interface{}, err
 		return nil, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	features, err := uc.device.GetFeatures()
 	if err != nil {
@@ -61,7 +61,7 @@ func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Feat
 		return features, err
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	features, err = uc.device.SetFeatures(features)
 	if err != nil {
@@ -77,7 +77,7 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 		return nil, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	hwInfo, err := uc.device.GetHardwareInfo()
 	if err != nil {
@@ -88,12 +88,12 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 }
 
 func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dto.AuditLog, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return dto.AuditLog{}, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	response, err := uc.device.GetAuditLog(startIndex)
 	if err != nil {
@@ -108,12 +108,12 @@ func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (
 }
 
 func (uc *UseCase) GetEventLog(c context.Context, guid string) (messagelog.GetRecordsResponse, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return messagelog.GetRecordsResponse{}, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	eventLogs, err := uc.device.GetEventLog()
 	if err != nil {
@@ -129,7 +129,7 @@ func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface
 		return nil, utils.ErrNotFound
 	}
 
-	uc.device.SetupWsmanClient(item, false, true)
+	uc.device.SetupWsmanClient(*item, false, true)
 
 	generalSettings, err := uc.device.GetGeneralSettings()
 	if err != nil {

@@ -1,17 +1,13 @@
 package v1
 
 import (
-	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgconn"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 type ieee8021xConfigRoutes struct {
@@ -40,7 +36,7 @@ type IEEE8021xConfigCountResponse struct {
 func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -48,7 +44,7 @@ func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - getCount")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -57,7 +53,7 @@ func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 		count, err := r.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - IEEE8021x configs - v1 - getCount")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
+			errorResponse(c, err)
 		}
 
 		countResponse := IEEE8021xConfigCountResponse{
@@ -76,13 +72,8 @@ func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 
 	config, err := r.t.GetByName(c.Request.Context(), configName, "")
 	if err != nil {
-		if strings.Contains(err.Error(), "Not Found") {
-			r.l.Error(err, "IEEE8021x Config "+configName+" not found")
-			errorResponse(c, http.StatusNotFound, "database problems")
-		} else {
-			r.l.Error(err, "http - IEEE8021x configs - v1 - getByName")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
-		}
+		r.l.Error(err, "http - IEEE8021x configs - v1 - getByName")
+		errorResponse(c, err)
 
 		return
 	}
@@ -93,57 +84,34 @@ func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 	var config entity.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	version, err := r.t.Insert(c.Request.Context(), &config)
+	newConfig, err := r.t.Insert(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - insert")
-
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == postgres.UniqueViolation {
-				errorResponse(c, http.StatusBadRequest, pgErr.Message)
-			}
-
-			return
-		}
-
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusCreated, version)
+	c.JSON(http.StatusCreated, newConfig)
 }
 
 func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 	var config entity.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	updated, err := r.t.Update(c.Request.Context(), &config)
+	updatedConfig, err := r.t.Update(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - update")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
-
-		return
-	}
-
-	if !updated {
-		errorResponse(c, http.StatusNotFound, "not found")
-
-		return
-	}
-
-	updatedConfig, err := r.t.GetByName(c, config.ProfileName, config.TenantID)
-	if err != nil {
-		r.l.Error(err, "http - IEEE8021x configs - v1 - getByName")
+		errorResponse(c, err)
 
 		return
 	}
@@ -154,13 +122,13 @@ func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 func (r *ieee8021xConfigRoutes) delete(c *gin.Context) {
 	configName := c.Param("profileName")
 
-	configs, err := r.t.Delete(c.Request.Context(), configName, "")
+	err := r.t.Delete(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - delete")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusNoContent, configs)
+	c.JSON(http.StatusNoContent, nil)
 }
