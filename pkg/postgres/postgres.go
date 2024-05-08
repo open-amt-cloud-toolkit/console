@@ -4,11 +4,15 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
-	_ "github.com/jackc/pgx/v5/stdlib" // pgx driver i think
+	_ "github.com/jackc/pgx/v5/stdlib"
+
+	// "github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -43,12 +47,17 @@ func New(url string, opts ...Option) (*DB, error) {
 	}
 
 	pg.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-
 	var err error
-
-	pg.Pool, err = sql.Open("pgx", url)
-	if err != nil {
-		return nil, err
+	if strings.HasPrefix(url, "postgres://") {
+		pg.Pool, err = sql.Open("pgx", url)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		pg.Pool, err = sql.Open("sqlite3", "./console.db")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return pg, nil

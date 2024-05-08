@@ -54,6 +54,7 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 
 func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.WirelessConfig, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
+
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
 	}

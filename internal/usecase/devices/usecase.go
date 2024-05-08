@@ -58,7 +58,6 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 	if d.Tags == nil {
 		d.Tags = []string{}
 	}
-
 	tags := strings.Join(d.Tags, ", ")
 
 	d1 := &entity.Device{
