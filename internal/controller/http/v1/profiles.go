@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -28,18 +26,11 @@ func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Int
 		h.PATCH("", r.update)
 		h.DELETE(":name", r.delete)
 	}
-
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := v.RegisterValidation("storageformat", entity.StorageFormatValidation)
-		if err != nil {
-			l.Error(err, "error registering validation")
-		}
-	}
 }
 
 type ProfileCountResponse struct {
-	Count int              `json:"totalCount"`
-	Data  []entity.Profile `json:"data"`
+	Count int           `json:"totalCount"`
+	Data  []dto.Profile `json:"data"`
 }
 
 // @Summary     Show Profiles
@@ -61,7 +52,7 @@ func (r *profileRoutes) get(c *gin.Context) {
 
 	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
-		r.l.Error(err, "http - v1 - getCount")
+		r.l.Error(err, "http - v1 - get")
 		errorResponse(c, err)
 
 		return
@@ -120,7 +111,7 @@ func (r *profileRoutes) getByName(c *gin.Context) {
 // @Router      /api/v1/admin/profiles [post]
 
 func (r *profileRoutes) insert(c *gin.Context) {
-	var profile entity.Profile
+	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
 		errorResponse(c, err)
 
@@ -149,7 +140,7 @@ func (r *profileRoutes) insert(c *gin.Context) {
 // @Router      /api/v1/admin/Profiles [patch]
 
 func (r *profileRoutes) update(c *gin.Context) {
-	var profile entity.Profile
+	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
 		errorResponse(c, err)
 

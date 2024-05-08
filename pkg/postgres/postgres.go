@@ -2,15 +2,13 @@
 package postgres
 
 import (
-	"context"
+	"database/sql"
 	"errors"
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib" // pgx driver i think
 )
 
 const (
@@ -28,7 +26,7 @@ type DB struct {
 	connTimeout  time.Duration
 
 	Builder squirrel.StatementBuilderType
-	Pool    *pgxpool.Pool
+	Pool    *sql.DB
 }
 
 // New -.
@@ -46,28 +44,11 @@ func New(url string, opts ...Option) (*DB, error) {
 
 	pg.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
-	poolConfig, err := pgxpool.ParseConfig(url)
+	var err error
+
+	pg.Pool, err = sql.Open("pgx", url)
 	if err != nil {
-		return nil, fmt.Errorf("postgres - NewPostgres - pgxpool.ParseConfig: %w", err)
-	}
-
-	poolConfig.MaxConns = int32(pg.maxPoolSize)
-
-	for pg.connAttempts > 0 {
-		pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
-		if err == nil {
-			break
-		}
-
-		log.Printf("Postgres is trying to connect, attempts left: %d", pg.connAttempts)
-
-		time.Sleep(pg.connTimeout)
-
-		pg.connAttempts--
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("postgres - NewPostgres - connAttempts == 0: %w", err)
+		return nil, err
 	}
 
 	return pg, nil

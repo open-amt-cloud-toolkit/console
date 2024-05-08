@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -93,6 +94,19 @@ func TestGet(t *testing.T) {
 		},
 	}
 
+	testProfileDTOs := []dto.Profile{
+		{
+			ProfileName: "test-profile-1",
+			TenantID:    "tenant-id-456",
+			Tags:        []string{""},
+		},
+		{
+			ProfileName: "test-profile-2",
+			TenantID:    "tenant-id-456",
+			Tags:        []string{""},
+		},
+	}
+
 	tests := []test{
 		{
 			name:     "successful retrieval",
@@ -104,7 +118,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testProfiles, nil)
 			},
-			res: testProfiles,
+			res: testProfileDTOs,
 			err: nil,
 		},
 		{
@@ -117,7 +131,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, profiles.ErrDatabase)
 			},
-			res: []entity.Profile(nil),
+			res: []dto.Profile(nil),
 			err: profiles.ErrDatabase,
 		},
 		{
@@ -130,7 +144,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Profile{}, nil)
 			},
-			res: []entity.Profile{},
+			res: []dto.Profile{},
 			err: nil,
 		},
 	}
@@ -166,6 +180,13 @@ func TestGetByName(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
+	profileDTO := &dto.Profile{
+		ProfileName: "test-profile",
+		TenantID:    "tenant-id-456",
+		Version:     "1.0.0",
+		Tags:        []string{""},
+	}
+
 	tests := []test{
 		{
 			name: "successful retrieval",
@@ -178,7 +199,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "test-profile", "tenant-id-456").
 					Return(profile, nil)
 			},
-			res: profile,
+			res: profileDTO,
 			err: nil,
 		},
 		{
@@ -192,7 +213,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-profile", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*entity.Profile)(nil),
+			res: (*dto.Profile)(nil),
 			err: profiles.ErrNotFound,
 		},
 	}
@@ -275,6 +296,13 @@ func TestUpdate(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
+	profileDTO := &dto.Profile{
+		ProfileName: "example-profile",
+		TenantID:    "tenant-id-456",
+		Version:     "1.0.0",
+		Tags:        []string{""},
+	}
+
 	tests := []test{
 		{
 			name: "successful update",
@@ -286,7 +314,7 @@ func TestUpdate(t *testing.T) {
 					GetByName(context.Background(), profile.ProfileName, profile.TenantID).
 					Return(profile, nil)
 			},
-			res: profile,
+			res: profileDTO,
 			err: nil,
 		},
 		{
@@ -296,7 +324,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), profile).
 					Return(false, errTest)
 			},
-			res: (*entity.Profile)(nil),
+			res: (*dto.Profile)(nil),
 			err: profiles.ErrDatabase,
 		},
 	}
@@ -309,7 +337,7 @@ func TestUpdate(t *testing.T) {
 
 			tc.mock(repo)
 
-			result, err := useCase.Update(context.Background(), profile)
+			result, err := useCase.Update(context.Background(), profileDTO)
 
 			require.Equal(t, tc.res, result)
 			require.IsType(t, err, tc.err)
@@ -324,6 +352,14 @@ func TestInsert(t *testing.T) {
 		ProfileName: "new-profile",
 		TenantID:    "tenant-id-789",
 		Version:     "1.0.0",
+		Tags:        "",
+	}
+
+	profileDTO := &dto.Profile{
+		ProfileName: "new-profile",
+		TenantID:    "tenant-id-789",
+		Version:     "1.0.0",
+		Tags:        []string{""},
 	}
 
 	tests := []test{
@@ -337,7 +373,7 @@ func TestInsert(t *testing.T) {
 					GetByName(context.Background(), profile.ProfileName, profile.TenantID).
 					Return(profile, nil)
 			},
-			res: profile,
+			res: profileDTO,
 			err: nil,
 		},
 		{
@@ -347,7 +383,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), profile).
 					Return("", errTest)
 			},
-			res: (*entity.Profile)(nil),
+			res: (*dto.Profile)(nil),
 			err: profiles.ErrDatabase,
 		},
 	}
@@ -360,7 +396,7 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo)
 
-			id, err := useCase.Insert(context.Background(), profile)
+			id, err := useCase.Insert(context.Background(), profileDTO)
 
 			require.Equal(t, tc.res, id)
 

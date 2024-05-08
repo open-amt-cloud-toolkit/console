@@ -716,10 +716,10 @@ func (mr *MockFeatureMockRecorder) DeleteAlarmOccurrences(ctx, guid, instanceID 
 }
 
 // Get mocks base method.
-func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error) {
+func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]entity.Device)
+	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -761,10 +761,10 @@ func (mr *MockFeatureMockRecorder) GetAuditLog(ctx, startIndex, guid any) *gomoc
 }
 
 // GetByID mocks base method.
-func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error) {
+func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(*entity.Device)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -776,10 +776,10 @@ func (mr *MockFeatureMockRecorder) GetByID(ctx, guid, tenantID any) *gomock.Call
 }
 
 // GetByTags mocks base method.
-func (m *MockFeature) GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error) {
+func (m *MockFeature) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByTags", ctx, tags, method, limit, offset, tenantID)
-	ret0, _ := ret[0].([]entity.Device)
+	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -956,10 +956,10 @@ func (mr *MockFeatureMockRecorder) GetVersion(ctx, guid any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, d *entity.Device) (*entity.Device, error) {
+func (m *MockFeature) Insert(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(*entity.Device)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1045,10 +1045,10 @@ func (mr *MockFeatureMockRecorder) SetFeatures(ctx, guid, features any) *gomock.
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, d *entity.Device) (*entity.Device, error) {
+func (m *MockFeature) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(*entity.Device)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

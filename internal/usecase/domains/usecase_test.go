@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -96,6 +97,17 @@ func TestGet(t *testing.T) {
 		},
 	}
 
+	testDomainDTOs := []dto.Domain{
+		{
+			ProfileName: "test-domain-1",
+			TenantID:    "tenant-id-456",
+		},
+		{
+			ProfileName: "test-domain-2",
+			TenantID:    "tenant-id-456",
+		},
+	}
+
 	tests := []test{
 		{
 			name:     "successful retrieval",
@@ -107,7 +119,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testDomains, nil)
 			},
-			res: testDomains,
+			res: testDomainDTOs,
 			err: nil,
 		},
 		{
@@ -120,7 +132,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, errTest)
 			},
-			res: []entity.Domain(nil),
+			res: []dto.Domain(nil),
 			err: errTest,
 		},
 		{
@@ -133,7 +145,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Domain{}, nil)
 			},
-			res: []entity.Domain{},
+			res: []dto.Domain{},
 			err: nil,
 		},
 	}
@@ -174,6 +186,16 @@ func TestGetDomainByDomainSuffix(t *testing.T) {
 		Version:                       "1.0.0",
 	}
 
+	domainDTO := dto.Domain{
+		ProfileName:                   "test-domain",
+		DomainSuffix:                  "test.com",
+		ProvisioningCert:              "test-cert",
+		ProvisioningCertStorageFormat: "test-format",
+		ProvisioningCertPassword:      "test-password",
+		TenantID:                      "tenant-id-456",
+		Version:                       "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name:         "successful retrieval",
@@ -184,7 +206,7 @@ func TestGetDomainByDomainSuffix(t *testing.T) {
 					GetDomainByDomainSuffix(context.Background(), "test.com", "tenant-id-456").
 					Return(&domain, nil)
 			},
-			res: &domain,
+			res: &domainDTO,
 			err: nil,
 		},
 		{
@@ -242,6 +264,16 @@ func TestGetByName(t *testing.T) {
 		Version:                       "1.0.0",
 	}
 
+	domainDTO := &dto.Domain{
+		ProfileName:                   "test-domain",
+		DomainSuffix:                  "test-domain",
+		ProvisioningCert:              "test-cert",
+		ProvisioningCertStorageFormat: "test-format",
+		ProvisioningCertPassword:      "test-password",
+		TenantID:                      "tenant-id-456",
+		Version:                       "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name: "successful retrieval",
@@ -254,7 +286,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "test-domain", "tenant-id-456").
 					Return(domain, nil)
 			},
-			res: domain,
+			res: domainDTO,
 			err: nil,
 		},
 		{
@@ -268,7 +300,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-domain", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*entity.Domain)(nil),
+			res: (*dto.Domain)(nil),
 			err: domains.ErrNotFound,
 		},
 	}
@@ -352,6 +384,11 @@ func TestUpdate(t *testing.T) {
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
 	}
+	domainDTO := &dto.Domain{
+		ProfileName: "example-domain",
+		TenantID:    "tenant-id-456",
+		Version:     "1.0.0",
+	}
 
 	tests := []test{
 		{
@@ -364,7 +401,7 @@ func TestUpdate(t *testing.T) {
 					GetByName(context.Background(), domain.ProfileName, domain.TenantID).
 					Return(domain, nil)
 			},
-			res: domain,
+			res: domainDTO,
 			err: nil,
 		},
 		{
@@ -374,7 +411,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), domain).
 					Return(false, errTest)
 			},
-			res: (*entity.Domain)(nil),
+			res: (*dto.Domain)(nil),
 			err: domains.ErrDatabase,
 		},
 	}
@@ -388,7 +425,7 @@ func TestUpdate(t *testing.T) {
 
 			tc.mock(repo)
 
-			result, err := useCase.Update(context.Background(), domain)
+			result, err := useCase.Update(context.Background(), domainDTO)
 
 			require.Equal(t, tc.res, result)
 			require.IsType(t, tc.err, err)
@@ -400,6 +437,15 @@ func TestInsert(t *testing.T) {
 	t.Parallel()
 
 	domain := &entity.Domain{
+		ProfileName:                   "new-domain",
+		DomainSuffix:                  "newdomain.com",
+		ProvisioningCert:              "cert-data",
+		ProvisioningCertStorageFormat: "PEM",
+		ProvisioningCertPassword:      "password",
+		TenantID:                      "tenant-id-789",
+		Version:                       "1.0.0",
+	}
+	domainDTO := &dto.Domain{
 		ProfileName:                   "new-domain",
 		DomainSuffix:                  "newdomain.com",
 		ProvisioningCert:              "cert-data",
@@ -420,7 +466,7 @@ func TestInsert(t *testing.T) {
 					GetByName(context.Background(), domain.ProfileName, domain.TenantID).
 					Return(domain, nil)
 			},
-			res: domain,
+			res: domainDTO,
 			err: nil,
 		},
 		{
@@ -430,7 +476,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), domain).
 					Return("", errTest)
 			},
-			res: (*entity.Domain)(nil),
+			res: (*dto.Domain)(nil),
 			err: domains.ErrDatabase,
 		},
 	}
@@ -443,7 +489,7 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo)
 
-			id, err := useCase.Insert(context.Background(), domain)
+			id, err := useCase.Insert(context.Background(), domainDTO)
 
 			require.Equal(t, tc.res, id)
 

@@ -2,9 +2,8 @@ package postgresdb
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-
-	"github.com/jackc/pgx/v5"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -32,7 +31,7 @@ func NewProfileRepo(pg *postgres.DB, log logger.Interface) *ProfileRepo {
 
 // GetCount -.
 
-func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error) {
+func (r *ProfileRepo) GetCount(_ context.Context, tenantID string) (int, error) {
 	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("profiles").
@@ -44,9 +43,9 @@ func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -58,33 +57,33 @@ func (r *ProfileRepo) GetCount(ctx context.Context, tenantID string) (int, error
 
 // Get -.
 
-func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Profile, error) {
+func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.Profile, error) {
 	if top == 0 {
 		top = 100
 	}
 
 	sqlQuery, _, err := r.Builder.
-		Select(`profile_name,
-            activation,
-            amt_password,
-            generate_random_password,
-            cira_config_name,
-            mebx_password,
-            generate_random_mebx_password,
-            tags,
-            dhcp_enabled,
-            tenant_id,
-            tls_mode,
-            user_consent,
-            ider_enabled,
-            kvm_enabled,
-            sol_enabled,
-            tls_signing_authority,
-            ip_sync_enabled,
-            local_wifi_sync_enabled,
-            ieee8021x_profile_name,
-            CAST(xmin as text) as xmin
-				`).
+		Select(
+			"profile_name",
+			"activation",
+			"amt_password",
+			"generate_random_password",
+			"cira_config_name",
+			"mebx_password",
+			"generate_random_mebx_password",
+			"tags",
+			"dhcp_enabled",
+			"tenant_id",
+			"tls_mode",
+			"user_consent",
+			"ider_enabled",
+			"kvm_enabled",
+			"sol_enabled",
+			"tls_signing_authority",
+			"ip_sync_enabled",
+			"local_wifi_sync_enabled",
+			"ieee8021x_profile_name",
+			"CAST(xmin as text) as xmin").
 		From("profiles").
 		Where("tenant_id = ?", tenantID).
 		OrderBy("profile_name").
@@ -95,12 +94,16 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 		return nil, ErrProfileDatabase.Wrap("Get", "r.Builder", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sqlQuery, tenantID)
+	rows, err := r.Pool.Query(sqlQuery, tenantID)
 	if err != nil {
 		return nil, ErrProfileDatabase.Wrap("Get", "r.Pool.Query", err)
 	}
 
 	defer rows.Close()
+
+	if rows.Err() != nil {
+		return nil, ErrDeviceDatabase.Wrap("Get", "rows.Err", rows.Err())
+	}
 
 	profiles := make([]entity.Profile, 0)
 
@@ -124,29 +127,28 @@ func (r *ProfileRepo) Get(ctx context.Context, top, skip int, tenantID string) (
 
 // GetByName -.
 
-func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID string) (*entity.Profile, error) {
+func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string) (*entity.Profile, error) {
 	sqlQuery, _, err := r.Builder.
-		Select(`profile_name,
-            activation,
-            amt_password,
-            generate_random_password,
-            cira_config_name,
-            mebx_password,
-            generate_random_mebx_password,
-            tags,
-            dhcp_enabled,
-            tenant_id,
-            tls_mode,
-            user_consent,
-            ider_enabled,
-            kvm_enabled,
-            sol_enabled,
-            tls_signing_authority,
-            ip_sync_enabled,
-            local_wifi_sync_enabled,
-            ieee8021x_profile_name,
-            CAST(xmin as text) as xmin
-				`).
+		Select("profile_name",
+			"activation",
+			"amt_password",
+			"generate_random_password",
+			"cira_config_name",
+			"mebx_password",
+			"generate_random_mebx_password",
+			"tags",
+			"dhcp_enabled",
+			"tenant_id",
+			"tls_mode",
+			"user_consent",
+			"ider_enabled",
+			"kvm_enabled",
+			"sol_enabled",
+			"tls_signing_authority",
+			"ip_sync_enabled",
+			"local_wifi_sync_enabled",
+			"ieee8021x_profile_name",
+			"CAST(xmin as text) as xmin").
 		From("profiles").
 		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -154,12 +156,16 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
 		return nil, ErrProfileDatabase.Wrap("GetByName", "r.Builder", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sqlQuery, profileName, tenantID)
+	rows, err := r.Pool.Query(sqlQuery, profileName, tenantID)
 	if err != nil {
 		return nil, ErrProfileDatabase.Wrap("GetByName", "r.Pool.Query", err)
 	}
 
 	defer rows.Close()
+
+	if rows.Err() != nil {
+		return nil, ErrDeviceDatabase.Wrap("Get", "rows.Err", rows.Err())
+	}
 
 	profiles := make([]*entity.Profile, 0)
 
@@ -187,7 +193,7 @@ func (r *ProfileRepo) GetByName(ctx context.Context, profileName, tenantID strin
 
 // Delete -.
 
-func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
+func (r *ProfileRepo) Delete(_ context.Context, profileName, tenantID string) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Delete("profiles").
 		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
@@ -196,17 +202,22 @@ func (r *ProfileRepo) Delete(ctx context.Context, profileName, tenantID string) 
 		return false, ErrProfileDatabase.Wrap("Delete", "r.Builder", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
+	res, err := r.Pool.Exec(sqlQuery, args...)
 	if err != nil {
 		return false, ErrProfileDatabase.Wrap("Delete", "r.Pool.Exec", err)
 	}
 
-	return res.RowsAffected() > 0, nil
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return false, ErrProfileDatabase.Wrap("Delete", "res.RowsAffected", err)
+	}
+
+	return rowsAffected > 0, nil
 }
 
 // Update -.
 
-func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, error) {
+func (r *ProfileRepo) Update(_ context.Context, p *entity.Profile) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Update("profiles").
 		Set("activation", p.Activation).
@@ -233,17 +244,22 @@ func (r *ProfileRepo) Update(ctx context.Context, p *entity.Profile) (bool, erro
 		return false, ErrProfileDatabase.Wrap("Update", "r.Builder", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
+	res, err := r.Pool.Exec(sqlQuery, args...)
 	if err != nil {
 		return false, ErrProfileDatabase.Wrap("Update", "r.Pool.Exec", err)
 	}
 
-	return res.RowsAffected() > 0, nil
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return false, ErrProfileDatabase.Wrap("Update", "res.RowsAffected", err)
+	}
+
+	return rowsAffected > 0, nil
 }
 
 // Insert -.
 
-func (r *ProfileRepo) Insert(ctx context.Context, p *entity.Profile) (string, error) {
+func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, error) {
 	ciraConfigName := p.CIRAConfigName
 
 	ieee8021xProfileName := p.Ieee8021xProfileName
@@ -272,7 +288,7 @@ func (r *ProfileRepo) Insert(ctx context.Context, p *entity.Profile) (string, er
 
 	var version string
 
-	err = r.Pool.QueryRow(ctx, sqlQuery, args...).Scan(&version)
+	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
 	if err != nil {
 		if postgres.CheckNotUnique(err) {
 			return "", ErrProfileNotUnique

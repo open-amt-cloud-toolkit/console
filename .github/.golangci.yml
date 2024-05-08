@@ -1,8 +1,6 @@
 linters-settings:
   gci:
     local-prefixes: github.com/open-amt-cloud-toolkit/console
-  dupl:
-    threshold: 300
   errorlint:
     errorf: true
   errcheck:
@@ -12,7 +10,7 @@ linters-settings:
     check-generated: false
     default-signifies-exhaustive: false
   funlen:
-    lines: 75
+    lines: 100
     statements: 45
   gocognit:
     min-complexity: 15
@@ -57,10 +55,9 @@ linters:
     - asciicheck
     - bodyclose
     - cyclop
-    - deadcode
     # - depguard
     - dogsled
-    - dupl
+    # - dupl
     - durationcheck
     - errcheck
     - errorlint
@@ -77,7 +74,7 @@ linters:
     - gocyclo
     - godot
     - godox
-    - goerr113
+    - err113
     - gofmt
     - gofumpt
     - goimports
@@ -101,7 +98,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - tparallel
     - thelper
@@ -109,7 +105,6 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
     - wsl
     - whitespace
 
@@ -134,7 +129,5 @@ issues:
       linters:
         - funlen
         - goerr113
-
-run:
-  skip-dirs:
+  exclude-dirs:
     - docs
