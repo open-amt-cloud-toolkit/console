@@ -24,7 +24,7 @@ import (
 
 type (
 	Management interface {
-		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool)
+		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool)
 		GetAMTVersion() ([]software.SoftwareIdentity, error)
 		GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error)
 		GetFeatures() (interface{}, error)
@@ -49,7 +49,7 @@ type (
 		GetNetworkSettings() (interface{}, error)
 	}
 	Redirection interface {
-		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages
+		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages
 		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectClose(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)

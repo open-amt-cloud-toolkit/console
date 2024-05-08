@@ -352,7 +352,6 @@ func TestInsert(t *testing.T) {
 				repo.EXPECT().
 					Insert(context.Background(), device).
 					Return("unique-device-id", nil)
-				deviceDTO.GUID = device.GUID
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "tenant-id-456").
 					Return(device, nil)

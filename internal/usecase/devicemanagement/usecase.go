@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
@@ -40,7 +39,7 @@ func New() *GoWSMANMessages {
 	return &GoWSMANMessages{}
 }
 
-func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, logAMTMessages bool) {
+func (g *GoWSMANMessages) SetupWsmanClient(device dto.Device, logAMTMessages bool) {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,

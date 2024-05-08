@@ -42,7 +42,6 @@ import (
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
 
@@ -56,7 +55,7 @@ func NewGoWSMANMessages() *GoWSMANMessages {
 	return &GoWSMANMessages{}
 }
 
-func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) {
+func (g *GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,

@@ -3,15 +3,14 @@ package devices
 import (
 	"context"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
-
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 )
 
 type Redirector struct{}
 
-func (g *Redirector) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages {
+func (g *Redirector) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
