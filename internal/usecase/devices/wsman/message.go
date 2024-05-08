@@ -538,8 +538,13 @@ func (g *GoWSMANMessages) SetBootData(data boot.BootSettingDataRequest) (interfa
 	return bootSettingData.Body, nil
 }
 
-func (g *GoWSMANMessages) SetBootConfigRole(_ int) (interface{}, error) {
-	return nil, nil
+func (g *GoWSMANMessages) SetBootConfigRole(role int) (interface{}, error) {
+	response, err := g.wsmanMessages.CIM.BootService.SetBootConfigRole("Intel(r) AMT: Boot Configuration 0", role)
+	if err != nil {
+		return cimBoot.ChangeBootOrder_OUTPUT{}, err
+	}
+
+	return response.Body.ChangeBootOrder_OUTPUT, nil
 }
 
 func (g *GoWSMANMessages) ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error) {
