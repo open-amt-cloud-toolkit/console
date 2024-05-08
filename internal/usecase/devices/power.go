@@ -123,18 +123,11 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
 	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
-		return power.PowerActionResponse{}, nil
+		return power.PowerActionResponse{}, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
 
-	// bootData, err := r.t.GetBootData()
-	// if err != nil {
-	// 	r.l.Error(err, "http - v1 - setBootOptions")
-	// 	errorResponse(c, http.StatusInternalServerError, "amt problems")
-
-	// 	return
-	// }
 	newData := boot.BootSettingDataRequest{
 		UseSOL:                 bootSetting.UseSOL,
 		UseSafeMode:            false,
@@ -166,7 +159,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 		return power.PowerActionResponse{}, err
 	}
 
-	err = changeBootOrder(bootSetting, err, uc)
+	err = uc.changeBootOrder(bootSetting, err)
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
@@ -178,7 +171,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 
 	// reset
 	// power on
-	determineBootAction(bootSetting)
+	determineBootAction(&bootSetting)
 
 	powerActionResult, err := uc.device.SendPowerAction(bootSetting.Action)
 	if err != nil {
@@ -198,7 +191,7 @@ func determineIDERBootDevice(bootSetting dto.BootSetting, newData boot.BootSetti
 
 // "Intel(r) AMT: Force PXE Boot".
 // "Intel(r) AMT: Force CD/DVD Boot".
-func changeBootOrder(bootSetting dto.BootSetting, err error, uc *UseCase) error {
+func (uc *UseCase) changeBootOrder(bootSetting dto.BootSetting, err error) error {
 	if bootSetting.Action == 400 || bootSetting.Action == 401 {
 		_, err = uc.device.ChangeBootOrder(string(cimBoot.PXE))
 	} else if bootSetting.Action == 202 || bootSetting.Action == 203 {
@@ -208,7 +201,7 @@ func changeBootOrder(bootSetting dto.BootSetting, err error, uc *UseCase) error 
 	return err
 }
 
-func determineBootAction(bootSetting dto.BootSetting) {
+func determineBootAction(bootSetting *dto.BootSetting) {
 	if bootSetting.Action == 101 || bootSetting.Action == 200 || bootSetting.Action == 202 || bootSetting.Action == 301 || bootSetting.Action == 400 {
 		bootSetting.Action = int(power.MasterBusReset)
 	} else {

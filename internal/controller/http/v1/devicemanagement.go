@@ -34,6 +34,7 @@ func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 		h.GET("power/state/:guid", r.getPowerState)
 		h.POST("power/action/:guid", r.powerAction)
 		h.POST("power/bootOptions/:guid", r.setBootOptions)
+		h.POST("power/bootoptions/:guid", r.setBootOptions)
 		h.GET("power/capabilities/:guid", r.getPowerCapabilities)
 
 		h.GET("log/audit/:guid", r.getAuditLog)
@@ -332,6 +333,8 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 	if err != nil {
 		r.l.Error(err, "http - v1 - setBootOptions")
 		errorResponse(c, err)
+
+		return
 	}
 
 	c.JSON(http.StatusOK, features)
