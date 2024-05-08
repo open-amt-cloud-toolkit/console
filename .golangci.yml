@@ -55,7 +55,6 @@ linters:
     - asciicheck
     - bodyclose
     - cyclop
-    - deadcode
     # - depguard
     - dogsled
     # - dupl
@@ -75,7 +74,7 @@ linters:
     - gocyclo
     - godot
     - godox
-    - goerr113
+    - err113
     - gofmt
     - gofumpt
     - goimports
@@ -99,7 +98,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - tparallel
     - thelper
@@ -107,7 +105,6 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
     - wsl
     - whitespace
 
@@ -132,7 +129,5 @@ issues:
       linters:
         - funlen
         - goerr113
-
-run:
-  skip-dirs:
+  exclude-dirs:
     - docs
