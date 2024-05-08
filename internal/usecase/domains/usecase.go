@@ -2,9 +2,10 @@ package domains
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -22,66 +23,144 @@ func New(r Repository, log logger.Interface) *UseCase {
 	}
 }
 
+var (
+	ErrDomainsUseCase = consoleerrors.CreateConsoleError("DomainsUseCase")
+	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
+	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
+)
+
 // History - getting translate history from store.
 func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	count, err := uc.repo.GetCount(ctx, tenantID)
 	if err != nil {
-		return 0, fmt.Errorf("DomainsUseCase - Count - s.repo.GetCount: %w", err)
+		return 0, ErrDatabase.Wrap("Get", "uc.repo.GetCount", err)
 	}
 
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Domain, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Domain, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("DomainsUseCase - Get - s.repo.Get: %w", err)
+		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
 	}
 
-	return data, nil
+	// iterate over the data and convert each entity to dto
+	d1 := make([]dto.Domain, len(data))
+
+	for i := range data {
+		tmpEntity := data[i] // create a new variable to avoid memory aliasing
+		d1[i] = *uc.entityToDTO(&tmpEntity)
+	}
+
+	return d1, nil
 }
 
-func (uc *UseCase) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*entity.Domain, error) {
+func (uc *UseCase) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*dto.Domain, error) {
 	data, err := uc.repo.GetDomainByDomainSuffix(ctx, domainSuffix, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("DomainsUseCase - GetDomainByDomainSuffix - s.repo.GetDomainByDomainSuffix: %w", err)
+		return nil, ErrDatabase.Wrap("GetDomainByDomainSuffix", "uc.repo.GetDomainByDomainSuffix", err)
 	}
 
-	return data, nil
+	if data == nil {
+		return nil, ErrNotFound
+	}
+
+	d2 := uc.entityToDTO(data)
+
+	return d2, nil
 }
 
-func (uc *UseCase) GetByName(ctx context.Context, domainName, tenantID string) (*entity.Domain, error) {
+func (uc *UseCase) GetByName(ctx context.Context, domainName, tenantID string) (*dto.Domain, error) {
 	data, err := uc.repo.GetByName(ctx, domainName, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("DomainsUseCase - GetByName - s.repo.GetByName: %w", err)
+		return nil, ErrDatabase.Wrap("GetByName", "uc.repo.GetByName", err)
 	}
 
-	return data, nil
+	if data == nil {
+		return nil, ErrNotFound
+	}
+
+	d2 := uc.entityToDTO(data)
+
+	return d2, nil
 }
 
-func (uc *UseCase) Delete(ctx context.Context, domainName, tenantID string) (bool, error) {
-	data, err := uc.repo.Delete(ctx, domainName, tenantID)
+func (uc *UseCase) Delete(ctx context.Context, domainName, tenantID string) error {
+	isSuccessful, err := uc.repo.Delete(ctx, domainName, tenantID)
 	if err != nil {
-		return false, fmt.Errorf("DomainsUseCase - Delete - s.repo.Delete: %w", err)
+		return ErrDatabase.Wrap("Delete", "uc.repo.Delete", err)
 	}
 
-	return data, nil
+	if !isSuccessful {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *entity.Domain) (bool, error) {
-	data, err := uc.repo.Update(ctx, d)
+func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
+	d1 := uc.dtoToEntity(d)
+
+	_, err := uc.repo.Update(ctx, d1)
 	if err != nil {
-		return false, fmt.Errorf("DomainsUseCase - Update - s.repo.Update: %w", err)
+		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
 	}
 
-	return data, nil
+	updateDomain, err := uc.repo.GetByName(ctx, d.ProfileName, d.TenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	d2 := uc.entityToDTO(updateDomain)
+
+	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *entity.Domain) (string, error) {
-	data, err := uc.repo.Insert(ctx, d)
+func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
+	d1 := uc.dtoToEntity(d)
+
+	_, err := uc.repo.Insert(ctx, d1)
 	if err != nil {
-		return "", fmt.Errorf("DomainsUseCase - Insert - s.repo.Insert: %w", err)
+		return nil, ErrDatabase.Wrap("Insert", "uc.repo.Insert", err)
 	}
 
-	return data, nil
+	newDomain, err := uc.repo.GetByName(ctx, d.ProfileName, d.TenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	d2 := uc.entityToDTO(newDomain)
+
+	return d2, nil
+}
+
+// convert dto.Domain to entity.Domain.
+func (uc *UseCase) dtoToEntity(d *dto.Domain) *entity.Domain {
+	d1 := &entity.Domain{
+		ProfileName:                   d.ProfileName,
+		DomainSuffix:                  d.DomainSuffix,
+		ProvisioningCert:              d.ProvisioningCert,
+		ProvisioningCertPassword:      d.ProvisioningCertPassword,
+		ProvisioningCertStorageFormat: d.ProvisioningCertStorageFormat,
+		TenantID:                      d.TenantID,
+		Version:                       d.Version,
+	}
+
+	return d1
+}
+
+// convert entity.Domain to dto.Domain.
+func (uc *UseCase) entityToDTO(d *entity.Domain) *dto.Domain {
+	d1 := &dto.Domain{
+		ProfileName:                   d.ProfileName,
+		DomainSuffix:                  d.DomainSuffix,
+		ProvisioningCert:              d.ProvisioningCert,
+		ProvisioningCertPassword:      d.ProvisioningCertPassword,
+		ProvisioningCertStorageFormat: d.ProvisioningCertStorageFormat,
+		TenantID:                      d.TenantID,
+		Version:                       d.Version,
+	}
+
+	return d1
 }

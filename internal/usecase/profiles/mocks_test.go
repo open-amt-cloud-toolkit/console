@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -71,10 +72,10 @@ func (mr *MockRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.
 }
 
 // GetByName mocks base method.
-func (m *MockRepository) GetByName(ctx context.Context, profileName, tenantID string) (entity.Profile, error) {
+func (m *MockRepository) GetByName(ctx context.Context, profileName, tenantID string) (*entity.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, profileName, tenantID)
-	ret0, _ := ret[0].(entity.Profile)
+	ret0, _ := ret[0].(*entity.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -154,12 +155,11 @@ func (m *MockFeature) EXPECT() *MockFeatureMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockFeature) Delete(ctx context.Context, profileName, tenantID string) (bool, error) {
+func (m *MockFeature) Delete(ctx context.Context, profileName, tenantID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, profileName, tenantID)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Delete indicates an expected call of Delete.
@@ -169,10 +169,10 @@ func (mr *MockFeatureMockRecorder) Delete(ctx, profileName, tenantID any) *gomoc
 }
 
 // Get mocks base method.
-func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Profile, error) {
+func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]entity.Profile)
+	ret0, _ := ret[0].([]dto.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -184,10 +184,10 @@ func (mr *MockFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Cal
 }
 
 // GetByName mocks base method.
-func (m *MockFeature) GetByName(ctx context.Context, profileName, tenantID string) (entity.Profile, error) {
+func (m *MockFeature) GetByName(ctx context.Context, profileName, tenantID string) (*dto.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, profileName, tenantID)
-	ret0, _ := ret[0].(entity.Profile)
+	ret0, _ := ret[0].(*dto.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -214,10 +214,10 @@ func (mr *MockFeatureMockRecorder) GetCount(ctx, tenantID any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, p *entity.Profile) (string, error) {
+func (m *MockFeature) Insert(ctx context.Context, p *dto.Profile) (*dto.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, p)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*dto.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -229,10 +229,10 @@ func (mr *MockFeatureMockRecorder) Insert(ctx, p any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, p *entity.Profile) (bool, error) {
+func (m *MockFeature) Update(ctx context.Context, p *dto.Profile) (*dto.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, p)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*dto.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

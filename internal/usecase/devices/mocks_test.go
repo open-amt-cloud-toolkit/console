@@ -235,6 +235,21 @@ func (mr *MockManagementMockRecorder) GetHardwareInfo() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHardwareInfo", reflect.TypeOf((*MockManagement)(nil).GetHardwareInfo))
 }
 
+// GetNetworkSettings mocks base method.
+func (m *MockManagement) GetNetworkSettings() (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNetworkSettings")
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNetworkSettings indicates an expected call of GetNetworkSettings.
+func (mr *MockManagementMockRecorder) GetNetworkSettings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkSettings", reflect.TypeOf((*MockManagement)(nil).GetNetworkSettings))
+}
+
 // GetPowerCapabilities mocks base method.
 func (m *MockManagement) GetPowerCapabilities() (boot.BootCapabilitiesResponse, error) {
 	m.ctrl.T.Helper()
@@ -530,10 +545,10 @@ func (mr *MockRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.
 }
 
 // GetByID mocks base method.
-func (m *MockRepository) GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error) {
+func (m *MockRepository) GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(entity.Device)
+	ret0, _ := ret[0].(*entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -673,12 +688,11 @@ func (mr *MockFeatureMockRecorder) CreateAlarmOccurrences(ctx, guid, alarm any) 
 }
 
 // Delete mocks base method.
-func (m *MockFeature) Delete(ctx context.Context, guid, tenantID string) (bool, error) {
+func (m *MockFeature) Delete(ctx context.Context, guid, tenantID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, guid, tenantID)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Delete indicates an expected call of Delete.
@@ -702,10 +716,10 @@ func (mr *MockFeatureMockRecorder) DeleteAlarmOccurrences(ctx, guid, instanceID 
 }
 
 // Get mocks base method.
-func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error) {
+func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]entity.Device)
+	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -747,10 +761,10 @@ func (mr *MockFeatureMockRecorder) GetAuditLog(ctx, startIndex, guid any) *gomoc
 }
 
 // GetByID mocks base method.
-func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error) {
+func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(entity.Device)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -762,10 +776,10 @@ func (mr *MockFeatureMockRecorder) GetByID(ctx, guid, tenantID any) *gomock.Call
 }
 
 // GetByTags mocks base method.
-func (m *MockFeature) GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error) {
+func (m *MockFeature) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByTags", ctx, tags, method, limit, offset, tenantID)
-	ret0, _ := ret[0].([]entity.Device)
+	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -866,6 +880,21 @@ func (mr *MockFeatureMockRecorder) GetHardwareInfo(ctx, guid any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHardwareInfo", reflect.TypeOf((*MockFeature)(nil).GetHardwareInfo), ctx, guid)
 }
 
+// GetNetworkSettings mocks base method.
+func (m *MockFeature) GetNetworkSettings(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNetworkSettings", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNetworkSettings indicates an expected call of GetNetworkSettings.
+func (mr *MockFeatureMockRecorder) GetNetworkSettings(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkSettings", reflect.TypeOf((*MockFeature)(nil).GetNetworkSettings), c, guid)
+}
+
 // GetPowerCapabilities mocks base method.
 func (m *MockFeature) GetPowerCapabilities(ctx context.Context, guid string) (map[string]any, error) {
 	m.ctrl.T.Helper()
@@ -927,10 +956,10 @@ func (mr *MockFeatureMockRecorder) GetVersion(ctx, guid any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, d *entity.Device) (string, error) {
+func (m *MockFeature) Insert(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1016,10 +1045,10 @@ func (mr *MockFeatureMockRecorder) SetFeatures(ctx, guid, features any) *gomock.
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, d *entity.Device) (bool, error) {
+func (m *MockFeature) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

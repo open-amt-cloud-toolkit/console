@@ -1,18 +1,18 @@
 package entity
 
 type TLSCerts struct {
-	RootCertificate   CertCreationResult `json:"rootCertificate"`
-	IssuedCertificate CertCreationResult `json:"issuedCertificate"`
-	Version           string             `json:"version"`
+	RootCertificate   CertCreationResult
+	IssuedCertificate CertCreationResult
+	Version           string
 }
 
 type CertCreationResult struct {
-	H             string `json:"h:"`
-	Cert          string `json:"cert"`
-	Pem           string `json:"pem"`
-	CertBin       string `json:"certBin"`
-	PrivateKey    string `json:"privateKey"`
-	PrivateKeyBin string `json:"privateKeyBin"`
-	Checked       bool   `json:"checked" example:"true"`
-	Key           []byte `json:"key"`
+	H             string
+	Cert          string
+	PEM           string
+	CertBin       string
+	PrivateKey    string
+	PrivateKeyBin string
+	Checked       bool
+	Key           []byte
 }

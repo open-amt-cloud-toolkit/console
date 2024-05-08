@@ -1,17 +1,13 @@
 package v1
 
 import (
-	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgconn"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 type WirelessConfigRoutes struct {
@@ -32,15 +28,10 @@ func newWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l 
 	}
 }
 
-type WirelessConfigCountResponse struct {
-	Count int                     `json:"totalCount"`
-	Data  []entity.WirelessConfig `json:"data"`
-}
-
 func (r *WirelessConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
@@ -48,7 +39,7 @@ func (r *WirelessConfigRoutes) get(c *gin.Context) {
 	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - getCount")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
@@ -57,10 +48,10 @@ func (r *WirelessConfigRoutes) get(c *gin.Context) {
 		count, err := r.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - wireless configs - v1 - getCount")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
+			errorResponse(c, err)
 		}
 
-		countResponse := WirelessConfigCountResponse{
+		countResponse := dto.WirelessConfigCountResponse{
 			Count: count,
 			Data:  items,
 		}
@@ -76,13 +67,8 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 
 	config, err := r.t.GetByName(c.Request.Context(), profileName, "")
 	if err != nil {
-		if strings.Contains(err.Error(), "Not Found") {
-			r.l.Error(err, "wireless Config "+profileName+" not found")
-			errorResponse(c, http.StatusNotFound, "database problems")
-		} else {
-			r.l.Error(err, "http - wireless configs - v1 - getByName")
-			errorResponse(c, http.StatusInternalServerError, "database problems")
-		}
+		r.l.Error(err, "http - wireless configs - v1 - getByName")
+		errorResponse(c, err)
 
 		return
 	}
@@ -91,63 +77,54 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 }
 
 func (r *WirelessConfigRoutes) insert(c *gin.Context) {
-	var config entity.WirelessConfig
+	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	version, err := r.t.Insert(c.Request.Context(), &config)
+	insertedConfig, err := r.t.Insert(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - insert")
 
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == postgres.UniqueViolation {
-				errorResponse(c, http.StatusBadRequest, pgErr.Message)
-			}
-
-			return
-		}
-
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusCreated, version)
+	c.JSON(http.StatusCreated, insertedConfig)
 }
 
 func (r *WirelessConfigRoutes) update(c *gin.Context) {
-	var config entity.WirelessConfig
+	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, http.StatusBadRequest, err.Error())
+		errorResponse(c, err)
 
 		return
 	}
 
-	configs, err := r.t.Update(c.Request.Context(), &config)
+	updatedWirelessConfig, err := r.t.Update(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - update")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, configs)
+	c.JSON(http.StatusOK, updatedWirelessConfig)
 }
 
 func (r *WirelessConfigRoutes) delete(c *gin.Context) {
 	configName := c.Param("profileName")
 
-	configs, err := r.t.Delete(c.Request.Context(), configName, "")
+	err := r.t.Delete(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - delete")
-		errorResponse(c, http.StatusInternalServerError, "database problems")
+		errorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusNoContent, configs)
+	c.JSON(http.StatusNoContent, nil)
 }

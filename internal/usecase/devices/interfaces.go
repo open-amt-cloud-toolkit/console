@@ -46,6 +46,7 @@ type (
 		ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error)
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
+		GetNetworkSettings() (interface{}, error)
 	}
 	Redirection interface {
 		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages
@@ -57,7 +58,7 @@ type (
 	Repository interface {
 		GetCount(context.Context, string) (int, error)
 		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error)
-		GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error)
+		GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error)
 		GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
 		GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error)
 		Delete(ctx context.Context, guid, tenantID string) (bool, error)
@@ -67,13 +68,13 @@ type (
 	Feature interface {
 		// Repository/Database Calls
 		GetCount(context.Context, string) (int, error)
-		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error)
-		GetByID(ctx context.Context, guid, tenantID string) (entity.Device, error)
+		Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error)
+		GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error)
 		GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
-		GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error)
-		Delete(ctx context.Context, guid, tenantID string) (bool, error)
-		Update(ctx context.Context, d *entity.Device) (bool, error)
-		Insert(ctx context.Context, d *entity.Device) (string, error)
+		GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error)
+		Delete(ctx context.Context, guid, tenantID string) error
+		Update(ctx context.Context, d *dto.Device) (*dto.Device, error)
+		Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
 		// Management Calls
 		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
 		GetFeatures(ctx context.Context, guid string) (interface{}, error)
@@ -93,5 +94,6 @@ type (
 		GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error)
 		GetEventLog(ctx context.Context, guid string) (messagelog.GetRecordsResponse, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
+		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
 	}
 )

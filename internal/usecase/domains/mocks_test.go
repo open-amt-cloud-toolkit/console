@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -169,12 +170,11 @@ func (m *MockFeature) EXPECT() *MockFeatureMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockFeature) Delete(ctx context.Context, name, tenantID string) (bool, error) {
+func (m *MockFeature) Delete(ctx context.Context, name, tenantID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, name, tenantID)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Delete indicates an expected call of Delete.
@@ -184,10 +184,10 @@ func (mr *MockFeatureMockRecorder) Delete(ctx, name, tenantID any) *gomock.Call 
 }
 
 // Get mocks base method.
-func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Domain, error) {
+func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Domain, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]entity.Domain)
+	ret0, _ := ret[0].([]dto.Domain)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -199,10 +199,10 @@ func (mr *MockFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Cal
 }
 
 // GetByName mocks base method.
-func (m *MockFeature) GetByName(ctx context.Context, name, tenantID string) (*entity.Domain, error) {
+func (m *MockFeature) GetByName(ctx context.Context, name, tenantID string) (*dto.Domain, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, name, tenantID)
-	ret0, _ := ret[0].(*entity.Domain)
+	ret0, _ := ret[0].(*dto.Domain)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -229,10 +229,10 @@ func (mr *MockFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
 }
 
 // GetDomainByDomainSuffix mocks base method.
-func (m *MockFeature) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*entity.Domain, error) {
+func (m *MockFeature) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*dto.Domain, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDomainByDomainSuffix", ctx, domainSuffix, tenantID)
-	ret0, _ := ret[0].(*entity.Domain)
+	ret0, _ := ret[0].(*dto.Domain)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -244,10 +244,10 @@ func (mr *MockFeatureMockRecorder) GetDomainByDomainSuffix(ctx, domainSuffix, te
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, d *entity.Domain) (string, error) {
+func (m *MockFeature) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*dto.Domain)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -259,10 +259,10 @@ func (mr *MockFeatureMockRecorder) Insert(ctx, d any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, d *entity.Domain) (bool, error) {
+func (m *MockFeature) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*dto.Domain)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
