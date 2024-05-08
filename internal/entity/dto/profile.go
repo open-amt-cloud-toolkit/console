@@ -12,10 +12,10 @@ type Profile struct {
 	GenerateRandomMEBxPassword bool                 `json:"generateRandomMEBxPassword" example:"true"`
 	CIRAConfigObject           *CIRAConfig          `json:"ciraConfigObject,omitempty"`
 	Tags                       []string             `json:"tags,omitempty" example:"tag1,tag2"`
-	DhcpEnabled                bool                 `json:"dhcpEnabled" example:"true"`
+	DHCPEnabled                bool                 `json:"dhcpEnabled" example:"true"`
 	IPSyncEnabled              bool                 `json:"ipSyncEnabled" example:"true"`
-	LocalWifiSyncEnabled       bool                 `json:"localWifiSyncEnabled" example:"true"`
-	WifiConfigs                []ProfileWifiConfigs `json:"wifiConfigs,omitempty"`
+	LocalWiFiSyncEnabled       bool                 `json:"localWifiSyncEnabled" example:"true"`
+	WiFiConfigs                []ProfileWiFiConfigs `json:"wifiConfigs,omitempty"`
 	TenantID                   string               `json:"tenantId" example:"abc123"`
 	TLSMode                    int                  `json:"tlsMode,omitempty" binding:"omitempty,min=1,max=4" example:"1"`
 	TLSCerts                   *TLSCerts            `json:"tlsCerts,omitempty"`
@@ -24,7 +24,7 @@ type Profile struct {
 	IDEREnabled                bool                 `json:"iderEnabled" example:"true"`
 	KVMEnabled                 bool                 `json:"kvmEnabled" example:"true"`
 	SOLEnabled                 bool                 `json:"solEnabled" example:"true"`
-	Ieee8021xProfileName       *string              `json:"ieee8021xProfileName,omitempty" example:"My Profile"`
-	Ieee8021xProfileObject     *IEEE8021xConfig     `json:"ieee8021xProfileObject,omitempty"`
+	IEEE8021xProfileName       *string              `json:"ieee8021xProfileName,omitempty" example:"My Profile"`
+	IEEE8021xProfileObject     *IEEE8021xConfig     `json:"ieee8021xProfileObject,omitempty"`
 	Version                    string               `json:"version,omitempty" example:"1.0.0"`
 }

@@ -4,10 +4,10 @@ import "time"
 
 type Device struct {
 	ConnectionStatus bool
-	MpsInstance      string
+	MPSInstance      string
 	Hostname         string
 	GUID             string
-	Mpsusername      string
+	MPSUsername      string
 	Tags             string
 	TenantID         string
 	FriendlyName     string

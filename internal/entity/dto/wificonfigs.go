@@ -19,7 +19,7 @@ type WirelessConfig struct {
 	Version                string           `json:"version"`
 }
 
-type ProfileWifiConfigs struct {
+type ProfileWiFiConfigs struct {
 	Priority    int    `json:"priority,omitempty" example:"1"`
 	ProfileName string `json:"profileName" example:"My Profile"`
 	TenantID    string `json:"tenantId" example:"abc123"`

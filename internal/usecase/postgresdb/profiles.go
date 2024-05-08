@@ -112,9 +112,9 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 
 		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
 			&p.CIRAConfigName, &p.MEBXPassword,
-			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DhcpEnabled, &p.TenantID, &p.TLSMode,
+			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
-			&p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.Ieee8021xProfileName, &p.Version)
+			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.Version)
 		if err != nil {
 			return nil, ErrProfileDatabase.Wrap("Get", "rows.Scan", err)
 		}
@@ -174,9 +174,9 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 
 		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
 			&p.CIRAConfigName, &p.MEBXPassword,
-			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DhcpEnabled, &p.TenantID, &p.TLSMode,
+			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
-			&p.IPSyncEnabled, &p.LocalWifiSyncEnabled, &p.Ieee8021xProfileName, &p.Version)
+			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.Version)
 		if err != nil {
 			return p, ErrProfileDatabase.Wrap("GetByName", "rows.Scan", err)
 		}
@@ -227,16 +227,16 @@ func (r *ProfileRepo) Update(_ context.Context, p *entity.Profile) (bool, error)
 		Set("mebx_password", p.MEBXPassword).
 		Set("generate_random_mebx_password", p.GenerateRandomMEBxPassword).
 		Set("tags", p.Tags).
-		Set("dhcp_enabled", p.DhcpEnabled).
+		Set("dhcp_enabled", p.DHCPEnabled).
 		Set("tls_mode", p.TLSMode).
 		Set("user_consent", p.UserConsent).
 		Set("ider_enabled", p.IDEREnabled).
 		Set("kvm_enabled", p.KVMEnabled).
 		Set("sol_enabled", p.SOLEnabled).
 		Set("tls_signing_authority", p.TLSSigningAuthority).
-		Set("ieee8021x_profile_name", p.Ieee8021xProfileName).
+		Set("ieee8021x_profile_name", p.IEEE8021xProfileName).
 		Set("ip_sync_enabled", p.IPSyncEnabled).
-		Set("local_wifi_sync_enabled", p.LocalWifiSyncEnabled).
+		Set("local_wifi_sync_enabled", p.LocalWiFiSyncEnabled).
 		Where("profile_name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).
 		Suffix("AND xmin::text = ?", p.Version).
 		ToSql()
@@ -262,7 +262,7 @@ func (r *ProfileRepo) Update(_ context.Context, p *entity.Profile) (bool, error)
 func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, error) {
 	ciraConfigName := p.CIRAConfigName
 
-	ieee8021xProfileName := p.Ieee8021xProfileName
+	ieee8021xProfileName := p.IEEE8021xProfileName
 
 	if ciraConfigName != nil {
 		if *p.CIRAConfigName == "" {
@@ -271,7 +271,7 @@ func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, erro
 	}
 
 	if ieee8021xProfileName != nil {
-		if *p.Ieee8021xProfileName == "" {
+		if *p.IEEE8021xProfileName == "" {
 			ieee8021xProfileName = nil
 		}
 	}
@@ -279,7 +279,7 @@ func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, erro
 	sqlQuery, args, err := r.Builder.
 		Insert("profiles").
 		Columns("profile_name", "activation", "amt_password", "generate_random_password", "cira_config_name", "mebx_password", "generate_random_mebx_password", "tags", "dhcp_enabled", "tls_mode", "user_consent", "ider_enabled", "kvm_enabled", "sol_enabled", "tls_signing_authority", "ieee8021x_profile_name", "ip_sync_enabled", "local_wifi_sync_enabled", "tenant_id").
-		Values(p.ProfileName, p.Activation, p.AMTPassword, p.GenerateRandomPassword, ciraConfigName, p.MEBXPassword, p.GenerateRandomMEBxPassword, p.Tags, p.DhcpEnabled, p.TLSMode, p.UserConsent, p.IDEREnabled, p.KVMEnabled, p.SOLEnabled, p.TLSSigningAuthority, ieee8021xProfileName, p.IPSyncEnabled, p.LocalWifiSyncEnabled, p.TenantID).
+		Values(p.ProfileName, p.Activation, p.AMTPassword, p.GenerateRandomPassword, ciraConfigName, p.MEBXPassword, p.GenerateRandomMEBxPassword, p.Tags, p.DHCPEnabled, p.TLSMode, p.UserConsent, p.IDEREnabled, p.KVMEnabled, p.SOLEnabled, p.TLSSigningAuthority, ieee8021xProfileName, p.IPSyncEnabled, p.LocalWiFiSyncEnabled, p.TenantID).
 		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {

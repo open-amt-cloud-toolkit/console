@@ -9,7 +9,7 @@ type IEEE8021xConfig struct {
 	Password               string
 	RoamingIdentity        string
 	ActiveInS0             bool
-	PxeTimeout             *int
+	PXETimeout             *int
 	WiredInterface         bool
 	TenantID               string
 	Version                string

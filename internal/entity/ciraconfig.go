@@ -2,14 +2,14 @@ package entity
 
 type CIRAConfig struct {
 	ConfigName          string
-	MPSServerAddress    string
-	MpsPort             int
+	MPSAddress          string
+	MPSPort             int
 	Username            string
 	Password            string
 	CommonName          string
 	ServerAddressFormat int
 	AuthMethod          int
-	MpsRootCertificate  string
+	MPSRootCertificate  string
 	ProxyDetails        string
 	TenantID            string
 	RegeneratePassword  bool
