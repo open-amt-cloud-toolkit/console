@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -26,11 +26,6 @@ func newWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l 
 		h.PATCH("", r.update)
 		h.DELETE(":profileName", r.delete)
 	}
-}
-
-type WirelessConfigCountResponse struct {
-	Count int                     `json:"totalCount"`
-	Data  []entity.WirelessConfig `json:"data"`
 }
 
 func (r *WirelessConfigRoutes) get(c *gin.Context) {
@@ -56,7 +51,7 @@ func (r *WirelessConfigRoutes) get(c *gin.Context) {
 			errorResponse(c, err)
 		}
 
-		countResponse := WirelessConfigCountResponse{
+		countResponse := dto.WirelessConfigCountResponse{
 			Count: count,
 			Data:  items,
 		}
@@ -82,7 +77,7 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 }
 
 func (r *WirelessConfigRoutes) insert(c *gin.Context) {
-	var config entity.WirelessConfig
+	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		errorResponse(c, err)
 
@@ -102,7 +97,7 @@ func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 }
 
 func (r *WirelessConfigRoutes) update(c *gin.Context) {
-	var config entity.WirelessConfig
+	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		errorResponse(c, err)
 

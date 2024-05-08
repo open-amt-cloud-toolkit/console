@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -30,7 +30,7 @@ func newDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Inter
 	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := v.RegisterValidation("storageformat", entity.StorageFormatValidation)
+		err := v.RegisterValidation("storageformat", dto.StorageFormatValidation)
 		if err != nil {
 			l.Error(err, "error registering validation")
 		}
@@ -38,8 +38,8 @@ func newDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Inter
 }
 
 type DomainCountResponse struct {
-	Count int             `json:"totalCount"`
-	Data  []entity.Domain `json:"data"`
+	Count int          `json:"totalCount"`
+	Data  []dto.Domain `json:"data"`
 }
 
 // @Summary     Show Domains
@@ -118,7 +118,7 @@ func (r *domainRoutes) getByName(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/domains [post]
 func (r *domainRoutes) insert(c *gin.Context) {
-	var domain entity.Domain
+	var domain dto.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
 		errorResponse(c, err)
 
@@ -146,7 +146,7 @@ func (r *domainRoutes) insert(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/Domains [patch]
 func (r *domainRoutes) update(c *gin.Context) {
-	var domain entity.Domain
+	var domain dto.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
 		errorResponse(c, err)
 

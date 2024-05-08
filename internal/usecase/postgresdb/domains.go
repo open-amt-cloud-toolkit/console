@@ -2,9 +2,9 @@ package postgresdb
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-
-	"github.com/jackc/pgx/v5"
+	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -29,7 +29,7 @@ func NewDomainRepo(pg *postgres.DB, log logger.Interface) *DomainRepo {
 }
 
 // GetCount -.
-func (r *DomainRepo) GetCount(ctx context.Context, tenantID string) (int, error) {
+func (r *DomainRepo) GetCount(_ context.Context, tenantID string) (int, error) {
 	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("domains").
@@ -41,9 +41,9 @@ func (r *DomainRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 
 	var count int
 
-	err = r.Pool.QueryRow(ctx, sqlQuery, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(sqlQuery, tenantID).Scan(&count)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
 		}
 
@@ -54,7 +54,7 @@ func (r *DomainRepo) GetCount(ctx context.Context, tenantID string) (int, error)
 }
 
 // Get -.
-func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Domain, error) {
+func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.Domain, error) {
 	if top == 0 {
 		top = 100
 	}
@@ -76,12 +76,16 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 		return nil, ErrDomainDatabase.Wrap("Get", "r.Builder: ", err)
 	}
 
-	rows, err := r.Pool.Query(ctx, sqlQuery, tenantID)
+	rows, err := r.Pool.Query(sqlQuery, tenantID)
 	if err != nil {
 		return nil, ErrDomainDatabase.Wrap("Get", "r.Pool.Query", err)
 	}
 
 	defer rows.Close()
+
+	if rows.Err() != nil {
+		return nil, ErrDeviceDatabase.Wrap("Get", "rows.Err", rows.Err())
+	}
 
 	domains := make([]entity.Domain, 0)
 
@@ -100,7 +104,7 @@ func (r *DomainRepo) Get(ctx context.Context, top, skip int, tenantID string) ([
 }
 
 // GetDomainByDomainSuffix -.
-func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*entity.Domain, error) {
+func (r *DomainRepo) GetDomainByDomainSuffix(_ context.Context, domainSuffix, tenantID string) (*entity.Domain, error) {
 	sqlQuery, _, err := r.Builder.
 		Select(`name,
             domain_suffix,
@@ -117,13 +121,13 @@ func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, 
 		return nil, ErrDomainDatabase.Wrap("GetDomainByDomainSuffix", "r.Builder: ", err)
 	}
 
-	row := r.Pool.QueryRow(ctx, sqlQuery)
+	row := r.Pool.QueryRow(sqlQuery)
 
 	d := entity.Domain{}
 
 	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.TenantID, &d.Version)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 
@@ -134,15 +138,15 @@ func (r *DomainRepo) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, 
 }
 
 // GetByName -.
-func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string) (*entity.Domain, error) {
+func (r *DomainRepo) GetByName(_ context.Context, domainName, tenantID string) (*entity.Domain, error) {
 	sqlQuery, args, err := r.Builder.
-		Select(`
-        name,
-				domain_suffix,
-				provisioning_cert_storage_format,
-				tenant_id,
-        CAST(xmin as text) as xmin
-    `).
+		Select(
+			"name",
+			"domain_suffix",
+			"provisioning_cert_storage_format",
+			"tenant_id",
+			"CAST(xmin as text) as xmin",
+		).
 		From("domains").
 		Where("name = ? AND tenant_id = ?", domainName, tenantID).
 		ToSql()
@@ -150,13 +154,13 @@ func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string)
 		return nil, ErrDomainDatabase.Wrap("GetByName", "r.Builder: ", err)
 	}
 
-	row := r.Pool.QueryRow(ctx, sqlQuery, args...)
+	row := r.Pool.QueryRow(sqlQuery, args...)
 
 	d := entity.Domain{}
 
 	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.TenantID, &d.Version)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 
@@ -167,7 +171,7 @@ func (r *DomainRepo) GetByName(ctx context.Context, domainName, tenantID string)
 }
 
 // Delete -.
-func (r *DomainRepo) Delete(ctx context.Context, domainName, tenantID string) (bool, error) {
+func (r *DomainRepo) Delete(_ context.Context, domainName, tenantID string) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Delete("domains").
 		Where("name = ? AND tenant_id = ?", domainName, tenantID).
@@ -176,16 +180,21 @@ func (r *DomainRepo) Delete(ctx context.Context, domainName, tenantID string) (b
 		return false, ErrDomainDatabase.Wrap("Delete", "r.Builder: ", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
+	res, err := r.Pool.Exec(sqlQuery, args...)
 	if err != nil {
 		return false, ErrDomainDatabase.Wrap("Delete", "r.Pool.Exec", err)
 	}
 
-	return res.RowsAffected() > 0, nil
+	result, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("DomainRepo - Delete - r.Pool.Exec: %w", err)
+	}
+
+	return result > 0, nil
 }
 
 // Update -.
-func (r *DomainRepo) Update(ctx context.Context, d *entity.Domain) (bool, error) {
+func (r *DomainRepo) Update(_ context.Context, d *entity.Domain) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Update("domains").
 		Set("name", d.ProfileName).
@@ -200,16 +209,21 @@ func (r *DomainRepo) Update(ctx context.Context, d *entity.Domain) (bool, error)
 		return false, ErrDomainDatabase.Wrap("Update", "r.Builder: ", err)
 	}
 
-	res, err := r.Pool.Exec(ctx, sqlQuery, args...)
+	res, err := r.Pool.Exec(sqlQuery, args...)
 	if err != nil {
 		return false, ErrDomainDatabase.Wrap("Update", "r.Pool.Exec", err)
 	}
 
-	return res.RowsAffected() > 0, nil
+	result, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("DomainRepo - Update - r.Pool.Exec: %w", err)
+	}
+
+	return result > 0, nil
 }
 
 // Insert -.
-func (r *DomainRepo) Insert(ctx context.Context, d *entity.Domain) (string, error) {
+func (r *DomainRepo) Insert(_ context.Context, d *entity.Domain) (string, error) {
 	sqlQuery, args, err := r.Builder.
 		Insert("domains").
 		Columns("name", "domain_suffix", "provisioning_cert", "provisioning_cert_storage_format", "provisioning_cert_key", "tenant_id").
@@ -222,7 +236,7 @@ func (r *DomainRepo) Insert(ctx context.Context, d *entity.Domain) (string, erro
 
 	var version string
 
-	err = r.Pool.QueryRow(ctx, sqlQuery, args...).Scan(&version)
+	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
 	if err != nil {
 		if postgres.CheckNotUnique(err) {
 			return "", ErrProfileNotUnique

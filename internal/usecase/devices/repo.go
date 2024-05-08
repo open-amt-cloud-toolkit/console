@@ -3,8 +3,11 @@ package devices
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/google/uuid"
+
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
@@ -24,16 +27,24 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
 	}
 
-	return data, nil
+	// iterate over the data and convert each entity to dto
+	d1 := make([]dto.Device, len(data))
+
+	for i := range data {
+		tmpEntity := data[i] // create a new variable to avoid memory aliasing
+		d1[i] = *uc.entityToDTO(&tmpEntity)
+	}
+
+	return d1, nil
 }
 
-func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error) {
+func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
 	data, err := uc.repo.GetByID(ctx, guid, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByID", "uc.repo.GetByID", err)
@@ -43,7 +54,9 @@ func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*entity.
 		return nil, ErrNotFound
 	}
 
-	return data, nil
+	d2 := uc.entityToDTO(data)
+
+	return d2, nil
 }
 
 func (uc *UseCase) GetDistinctTags(ctx context.Context, tenantID string) ([]string, error) {
@@ -52,16 +65,34 @@ func (uc *UseCase) GetDistinctTags(ctx context.Context, tenantID string) ([]stri
 		return nil, ErrDatabase.Wrap("GetDistinctTags", "uc.repo.GetDistinctTags", err)
 	}
 
-	return data, nil
+	allTags := make([]string, 0)
+
+	for _, v := range data {
+		tags := strings.Split(v, ",")
+
+		allTags = append(allTags, tags...)
+	}
+
+	return allTags, nil
 }
 
-func (uc *UseCase) GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error) {
-	data, err := uc.repo.GetByTags(ctx, tags, method, limit, offset, tenantID)
+func (uc *UseCase) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error) {
+	splitTags := strings.Split(tags, ",")
+
+	data, err := uc.repo.GetByTags(ctx, splitTags, method, limit, offset, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("DevicesUseCase - GetByTags - uc.repo.GetByTags: %w", err)
 	}
 
-	return data, nil
+	// iterate over the data and convert each entity to dto
+	d1 := make([]dto.Device, len(data))
+
+	for i := range data {
+		tmpEntity := data[i] // create a new variable to avoid memory aliasing
+		d1[i] = *uc.entityToDTO(&tmpEntity)
+	}
+
+	return d1, nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, guid, tenantID string) error {
@@ -77,30 +108,42 @@ func (uc *UseCase) Delete(ctx context.Context, guid, tenantID string) error {
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *entity.Device) (*entity.Device, error) {
-	_, err := uc.repo.Update(ctx, d)
+func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
+	d1 := uc.dtoToEntity(d)
+
+	_, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
 	}
 
-	updateDevice, err := uc.repo.GetByID(ctx, d.GUID, d.TenantID)
+	updateDevice, err := uc.repo.GetByID(ctx, d1.GUID, d1.TenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	return updateDevice, nil
+	d2 := uc.entityToDTO(updateDevice)
+
+	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *entity.Device) (*entity.Device, error) {
-	_, err := uc.repo.Insert(ctx, d)
+func (uc *UseCase) Insert(ctx context.Context, d *dto.Device) (*dto.Device, error) {
+	d1 := uc.dtoToEntity(d)
+
+	if d1.GUID == "" {
+		d1.GUID = uuid.New().String()
+	}
+
+	_, err := uc.repo.Insert(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Insert", "uc.repo.Insert", err)
 	}
 
-	newDevice, err := uc.repo.GetByID(ctx, d.GUID, d.TenantID)
+	newDevice, err := uc.repo.GetByID(ctx, d1.GUID, d1.TenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	return newDevice, nil
+	d2 := uc.entityToDTO(newDevice)
+
+	return d2, nil
 }

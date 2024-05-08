@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -19,7 +20,7 @@ type test struct {
 	name        string
 	top         int
 	skip        int
-	input       entity.WirelessConfig
+	input       dto.WirelessConfig
 	profileName string
 	tenantID    string
 	mock        func(*MockRepository, ...interface{})
@@ -125,7 +126,7 @@ func TestGetCount(t *testing.T) {
 func TestGet(t *testing.T) {
 	t.Parallel()
 
-	testWifiConfigs := []entity.WirelessConfig{
+	testWifiConfigsEntity := []entity.WirelessConfig{
 		{
 			ProfileName: "test-wirelessconfig-1",
 			TenantID:    "tenant-id-456",
@@ -133,6 +134,19 @@ func TestGet(t *testing.T) {
 		{
 			ProfileName: "test-wirelessconfig-2",
 			TenantID:    "tenant-id-456",
+		},
+	}
+
+	testWifiConfigDTOs := []dto.WirelessConfig{
+		{
+			ProfileName: "test-wirelessconfig-1",
+			TenantID:    "tenant-id-456",
+			LinkPolicy:  []int{},
+		},
+		{
+			ProfileName: "test-wirelessconfig-2",
+			TenantID:    "tenant-id-456",
+			LinkPolicy:  []int{},
 		},
 	}
 
@@ -145,9 +159,9 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository, args ...interface{}) {
 				repo.EXPECT().
 					Get(context.Background(), args[0], args[1], args[2]).
-					Return(testWifiConfigs, nil)
+					Return(testWifiConfigsEntity, nil)
 			},
-			res: testWifiConfigs,
+			res: testWifiConfigDTOs,
 			err: nil,
 		},
 		{
@@ -160,7 +174,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), args[0], args[1], args[2]).
 					Return(nil, errTest)
 			},
-			res: []entity.WirelessConfig(nil),
+			res: []dto.WirelessConfig(nil),
 			err: errTest,
 		},
 		{
@@ -173,7 +187,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), args[0], args[1], args[2]).
 					Return([]entity.WirelessConfig{}, nil)
 			},
-			res: []entity.WirelessConfig{},
+			res: []dto.WirelessConfig{},
 			err: nil,
 		},
 	}
@@ -203,30 +217,37 @@ func TestGet(t *testing.T) {
 func TestGetByName(t *testing.T) {
 	t.Parallel()
 
-	wirelessConfig := &entity.WirelessConfig{
+	WirelessConfigEntity := &entity.WirelessConfig{
 		ProfileName: "test-WirelessConfig",
 		TenantID:    "tenant-id-456",
 		Version:     "123",
 	}
 
+	wirelessConfigDTO := &dto.WirelessConfig{
+		ProfileName: "test-WirelessConfig",
+		TenantID:    "tenant-id-456",
+		Version:     "123",
+		LinkPolicy:  []int{},
+	}
+
 	tests := []test{
 		{
 			name: "successful retrieval",
-			input: entity.WirelessConfig{
+			input: dto.WirelessConfig{
 				ProfileName: "test-wirelessConfig",
 				TenantID:    "tenant-id-456",
 			},
 			mock: func(repo *MockRepository, args ...interface{}) {
 				repo.EXPECT().
 					GetByName(context.Background(), args[0], args[1]).
-					Return(wirelessConfig, nil)
+					Return(WirelessConfigEntity, nil)
 			},
-			res: wirelessConfig,
+			res: wirelessConfigDTO,
 			err: nil,
 		},
 		{
 			name: "WirelessConfig not found",
-			input: entity.WirelessConfig{
+			input: dto.WirelessConfig{
 				ProfileName: "unknown-WirelessConfig",
 				TenantID:    "tenant-id-456",
 			},
@@ -235,7 +256,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), args[0], args[1]).
 					Return(nil, nil)
 			},
-			res: (*entity.WirelessConfig)(nil),
+			res: (*dto.WirelessConfig)(nil),
 			err: wificonfigs.ErrNotFound,
 		},
 	}
@@ -316,6 +337,14 @@ func TestUpdate(t *testing.T) {
 		ProfileName: "test-WirelessConfig",
 		TenantID:    "tenant-id-456",
 		Version:     "123",
+		LinkPolicy:  new(string),
+	}
+
+	wirelessConfigDTO := &dto.WirelessConfig{
+		ProfileName: "test-WirelessConfig",
+		TenantID:    "tenant-id-456",
+		Version:     "123",
+		LinkPolicy:  []int{},
 	}
 
 	tests := []test{
@@ -326,10 +355,10 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), wirelessConfig).
 					Return(true, nil)
 				repo.EXPECT().
-					GetByName(context.Background(), wirelessConfig.ProfileName, wirelessConfig.TenantID).
+					GetByName(context.Background(), wirelessConfigDTO.ProfileName, wirelessConfigDTO.TenantID).
 					Return(wirelessConfig, nil)
 			},
-			res: wirelessConfig,
+			res: wirelessConfigDTO,
 			err: nil,
 		},
 		{
@@ -339,7 +368,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), wirelessConfig).
 					Return(false, errTest)
 			},
-			res: (*entity.WirelessConfig)(nil),
+			res: (*dto.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,
 		},
 	}
@@ -353,7 +382,7 @@ func TestUpdate(t *testing.T) {
 
 			tc.mock(repo)
 
-			result, err := useCase.Update(context.Background(), wirelessConfig)
+			result, err := useCase.Update(context.Background(), wirelessConfigDTO)
 
 			require.Equal(t, tc.res, result)
 			require.IsType(t, err, tc.err)
@@ -368,6 +397,14 @@ func TestInsert(t *testing.T) {
 		ProfileName: "test-WirelessConfig",
 		TenantID:    "tenant-id-456",
 		Version:     "123",
+		LinkPolicy:  new(string),
+	}
+
+	wirelessConfigDTO := &dto.WirelessConfig{
+		ProfileName: "test-WirelessConfig",
+		TenantID:    "tenant-id-456",
+		Version:     "123",
+		LinkPolicy:  []int{},
 	}
 
 	tests := []test{
@@ -378,10 +415,10 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), wirelessConfig).
 					Return("unique-wirelessconfig-id", nil)
 				repo.EXPECT().
-					GetByName(context.Background(), wirelessConfig.ProfileName, wirelessConfig.TenantID).
+					GetByName(context.Background(), wirelessConfigDTO.ProfileName, wirelessConfigDTO.TenantID).
 					Return(wirelessConfig, nil)
 			},
-			res: wirelessConfig,
+			res: wirelessConfigDTO,
 			err: nil,
 		},
 		{
@@ -391,7 +428,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), wirelessConfig).
 					Return("", errTest)
 			},
-			res: (*entity.WirelessConfig)(nil),
+			res: (*dto.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,
 		},
 	}
@@ -405,7 +442,7 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo)
 
-			id, err := useCase.Insert(context.Background(), wirelessConfig)
+			id, err := useCase.Insert(context.Background(), wirelessConfigDTO)
 
 			require.Equal(t, tc.res, id)
 

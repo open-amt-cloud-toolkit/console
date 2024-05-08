@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -29,8 +29,8 @@ func newIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Featu
 }
 
 type IEEE8021xConfigCountResponse struct {
-	Count int                      `json:"totalCount"`
-	Data  []entity.IEEE8021xConfig `json:"data"`
+	Count int                   `json:"totalCount"`
+	Data  []dto.IEEE8021xConfig `json:"data"`
 }
 
 func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
@@ -82,7 +82,7 @@ func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 }
 
 func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
-	var config entity.IEEE8021xConfig
+	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		errorResponse(c, err)
 
@@ -101,7 +101,7 @@ func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 }
 
 func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
-	var config entity.IEEE8021xConfig
+	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		errorResponse(c, err)
 

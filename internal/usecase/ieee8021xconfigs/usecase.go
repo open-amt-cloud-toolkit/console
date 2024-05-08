@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -47,7 +48,7 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.IEEE8021xConfig, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.IEEE8021xConfig, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
@@ -57,10 +58,18 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]e
 		return nil, ErrNotFound
 	}
 
-	return data, nil
+	// iterate over the data and convert each entity to dto
+	d1 := make([]dto.IEEE8021xConfig, len(data))
+
+	for i := range data {
+		tmpEntity := data[i] // create a new variable to avoid memory aliasing
+		d1[i] = *uc.entityToDTO(&tmpEntity)
+	}
+
+	return d1, nil
 }
 
-func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*entity.IEEE8021xConfig, error) {
+func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*dto.IEEE8021xConfig, error) {
 	data, err := uc.repo.GetByName(ctx, profileName, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByName", "uc.repo.GetByName", err)
@@ -70,7 +79,9 @@ func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) 
 		return nil, ErrNotFound
 	}
 
-	return data, nil
+	d2 := uc.entityToDTO(data)
+
+	return d2, nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) error {
@@ -86,8 +97,10 @@ func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) err
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *entity.IEEE8021xConfig) (*entity.IEEE8021xConfig, error) {
-	_, err := uc.repo.Update(ctx, d)
+func (uc *UseCase) Update(ctx context.Context, d *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+	d1 := uc.dtoToEntity(d)
+
+	_, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
 	}
@@ -97,11 +110,15 @@ func (uc *UseCase) Update(ctx context.Context, d *entity.IEEE8021xConfig) (*enti
 		return nil, err
 	}
 
-	return updatedCiraConfig, nil
+	d2 := uc.entityToDTO(updatedCiraConfig)
+
+	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *entity.IEEE8021xConfig) (*entity.IEEE8021xConfig, error) {
-	_, err := uc.repo.Insert(ctx, d)
+func (uc *UseCase) Insert(ctx context.Context, d *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+	d1 := uc.dtoToEntity(d)
+
+	_, err := uc.repo.Insert(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Insert", "uc.repo.Insert", err)
 	}
@@ -111,5 +128,47 @@ func (uc *UseCase) Insert(ctx context.Context, d *entity.IEEE8021xConfig) (*enti
 		return nil, err
 	}
 
-	return newConfig, nil
+	d2 := uc.entityToDTO(newConfig)
+
+	return d2, nil
+}
+
+// convert dto.Domain to entity.Domain.
+func (uc *UseCase) dtoToEntity(d *dto.IEEE8021xConfig) *entity.IEEE8021xConfig {
+	d1 := &entity.IEEE8021xConfig{
+		ProfileName:            d.ProfileName,
+		AuthenticationProtocol: d.AuthenticationProtocol,
+		ServerName:             d.ServerName,
+		Domain:                 d.Domain,
+		Username:               d.Username,
+		Password:               d.Password,
+		RoamingIdentity:        d.RoamingIdentity,
+		ActiveInS0:             d.ActiveInS0,
+		PxeTimeout:             d.PxeTimeout,
+		WiredInterface:         d.WiredInterface,
+		TenantID:               d.TenantID,
+		Version:                d.Version,
+	}
+
+	return d1
+}
+
+// convert entity.Domain to dto.Domain.
+func (uc *UseCase) entityToDTO(d *entity.IEEE8021xConfig) *dto.IEEE8021xConfig {
+	d1 := &dto.IEEE8021xConfig{
+		ProfileName:            d.ProfileName,
+		AuthenticationProtocol: d.AuthenticationProtocol,
+		ServerName:             d.ServerName,
+		Domain:                 d.Domain,
+		Username:               d.Username,
+		Password:               d.Password,
+		RoamingIdentity:        d.RoamingIdentity,
+		ActiveInS0:             d.ActiveInS0,
+		PxeTimeout:             d.PxeTimeout,
+		WiredInterface:         d.WiredInterface,
+		TenantID:               d.TenantID,
+		Version:                d.Version,
+	}
+
+	return d1
 }

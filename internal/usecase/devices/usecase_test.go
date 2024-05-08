@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -94,6 +95,19 @@ func TestGet(t *testing.T) {
 		},
 	}
 
+	testDeviceDTOs := []dto.Device{
+		{
+			GUID:     "guid-123",
+			TenantID: "tenant-id-456",
+			Tags:     []string{""},
+		},
+		{
+			GUID:     "guid-456",
+			TenantID: "tenant-id-456",
+			Tags:     []string{""},
+		},
+	}
+
 	tests := []test{
 		{
 			name:     "successful retrieval",
@@ -105,7 +119,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testDevices, nil)
 			},
-			res: testDevices,
+			res: testDeviceDTOs,
 			err: nil,
 		},
 		{
@@ -118,7 +132,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, errTest)
 			},
-			res: []entity.Device(nil),
+			res: []dto.Device(nil),
 			err: errTest,
 		},
 		{
@@ -131,7 +145,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Device{}, nil)
 			},
-			res: []entity.Device{},
+			res: []dto.Device{},
 			err: nil,
 		},
 	}
@@ -166,6 +180,11 @@ func TestGetByID(t *testing.T) {
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
+	deviceDTO := &dto.Device{
+		GUID:     "device-guid-123",
+		TenantID: "tenant-id-456",
+		Tags:     []string{""},
+	}
 
 	tests := []test{
 		{
@@ -177,7 +196,7 @@ func TestGetByID(t *testing.T) {
 					GetByID(gomock.Any(), "device-guid-123", "tenant-id-456").
 					Return(device, nil)
 			},
-			res: device,
+			res: deviceDTO,
 			err: nil,
 		},
 		{
@@ -271,6 +290,12 @@ func TestUpdate(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
+	deviceDTO := &dto.Device{
+		GUID:     "device-guid-123",
+		TenantID: "tenant-id-456",
+		Tags:     []string{""},
+	}
+
 	tests := []test{
 		{
 			name: "successful update",
@@ -282,7 +307,7 @@ func TestUpdate(t *testing.T) {
 					GetByID(gomock.Any(), "device-guid-123", "tenant-id-456").
 					Return(device, nil)
 			},
-			res: device,
+			res: deviceDTO,
 			err: nil,
 		},
 		{
@@ -292,7 +317,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), device).
 					Return(false, errTest)
 			},
-			res: (*entity.Device)(nil),
+			res: (*dto.Device)(nil),
 			err: devices.ErrDatabase,
 		},
 	}
@@ -304,7 +329,7 @@ func TestUpdate(t *testing.T) {
 			useCase, repo := devicesTest(t)
 			tc.mock(repo)
 
-			result, err := useCase.Update(context.Background(), device)
+			result, err := useCase.Update(context.Background(), deviceDTO)
 
 			require.Equal(t, tc.res, result)
 			require.IsType(t, tc.err, err)
@@ -315,33 +340,38 @@ func TestUpdate(t *testing.T) {
 func TestInsert(t *testing.T) {
 	t.Parallel()
 
-	device := &entity.Device{
-		GUID:     "device-guid-123",
-		TenantID: "tenant-id-456",
-	}
-
 	tests := []test{
 		{
 			name: "successful insertion",
 			mock: func(repo *MockRepository) {
+				device := &entity.Device{
+					GUID:     "device-guid-123",
+					TenantID: "tenant-id-456",
+				}
+
 				repo.EXPECT().
 					Insert(context.Background(), device).
 					Return("unique-device-id", nil)
 				repo.EXPECT().
-					GetByID(gomock.Any(), "device-guid-123", "tenant-id-456").
+					GetByID(gomock.Any(), device.GUID, "tenant-id-456").
 					Return(device, nil)
 			},
-			res: device,
+			res: nil, // little bit different in that the expectation is handled in the loop
 			err: nil,
 		},
 		{
 			name: "insertion fails - database error",
 			mock: func(repo *MockRepository) {
+				device := &entity.Device{
+					GUID:     "device-guid-123",
+					TenantID: "tenant-id-456",
+				}
+
 				repo.EXPECT().
 					Insert(context.Background(), device).
 					Return("", errTest)
 			},
-			res: (*entity.Device)(nil),
+			res: (*dto.Device)(nil),
 			err: devices.ErrDatabase,
 		},
 	}
@@ -353,15 +383,22 @@ func TestInsert(t *testing.T) {
 			useCase, repo := devicesTest(t)
 			tc.mock(repo)
 
-			id, err := useCase.Insert(context.Background(), device)
+			deviceDTO := &dto.Device{
+				GUID:     "device-guid-123",
+				TenantID: "tenant-id-456",
+				Tags:     []string{""},
+			}
 
-			require.Equal(t, tc.res, id)
+			insertedDevice, err := useCase.Insert(context.Background(), deviceDTO)
 
 			if tc.err != nil {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.err.Error())
+				require.Equal(t, tc.res, insertedDevice)
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, deviceDTO.TenantID, insertedDevice.TenantID)
+				require.NotEmpty(t, deviceDTO.GUID)
 			}
 		})
 	}

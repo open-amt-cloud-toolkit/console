@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -138,6 +139,17 @@ func TestGet(t *testing.T) {
 		},
 	}
 
+	IEEE8021xConfigDTOs := []dto.IEEE8021xConfig{
+		{
+			ProfileName: "test-IEEE8021xConfig-1",
+			TenantID:    "tenant-id-456",
+		},
+		{
+			ProfileName: "test-IEEE8021xConfig-2",
+			TenantID:    "tenant-id-456",
+		},
+	}
+
 	tests := []test{
 		{
 			name:     "successful retrieval",
@@ -149,7 +161,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(IEEE8021xConfigs, nil)
 			},
-			res: IEEE8021xConfigs,
+			res: IEEE8021xConfigDTOs,
 			err: nil,
 		},
 		{
@@ -162,7 +174,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, errTest)
 			},
-			res: []entity.IEEE8021xConfig(nil),
+			res: []dto.IEEE8021xConfig(nil),
 			err: errTest,
 		},
 		{
@@ -175,7 +187,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.IEEE8021xConfig{}, nil)
 			},
-			res: []entity.IEEE8021xConfig{},
+			res: []dto.IEEE8021xConfig{},
 			err: nil,
 		},
 	}
@@ -211,6 +223,12 @@ func TestGetByName(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
+	ieee8021xconfigDTO := &dto.IEEE8021xConfig{
+		ProfileName: "test-profile",
+		TenantID:    "tenant-id-456",
+		Version:     "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name: "successful retrieval",
@@ -223,7 +241,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "test-ieee8021xconfig", "tenant-id-456").
 					Return(ieee8021xconfig, nil)
 			},
-			res: ieee8021xconfig,
+			res: ieee8021xconfigDTO,
 			err: nil,
 		},
 		{
@@ -237,7 +255,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-ieee8021xconfig", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*entity.IEEE8021xConfig)(nil),
+			res: (*dto.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrNotFound,
 		},
 	}
@@ -320,6 +338,12 @@ func TestUpdate(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
+	ieee8021xconfigDTO := &dto.IEEE8021xConfig{
+		ProfileName: "example-ieee8021xconfig",
+		TenantID:    "tenant-id-456",
+		Version:     "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name: "successful update",
@@ -331,7 +355,7 @@ func TestUpdate(t *testing.T) {
 					GetByName(context.Background(), ieee8021xconfig.ProfileName, ieee8021xconfig.TenantID).
 					Return(ieee8021xconfig, nil)
 			},
-			res: ieee8021xconfig,
+			res: ieee8021xconfigDTO,
 			err: nil,
 		},
 		{
@@ -341,7 +365,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), ieee8021xconfig).
 					Return(false, errTest)
 			},
-			res: (*entity.IEEE8021xConfig)(nil),
+			res: (*dto.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}
@@ -354,7 +378,7 @@ func TestUpdate(t *testing.T) {
 
 			tc.mock(repo)
 
-			result, err := useCase.Update(context.Background(), ieee8021xconfig)
+			result, err := useCase.Update(context.Background(), ieee8021xconfigDTO)
 
 			require.Equal(t, tc.res, result)
 			require.IsType(t, tc.err, err)
@@ -371,6 +395,12 @@ func TestInsert(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
+	ieee8021xconfigDTO := &dto.IEEE8021xConfig{
+		ProfileName: "new-ieee8021xconfig",
+		TenantID:    "tenant-id-789",
+		Version:     "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name: "successful insertion",
@@ -382,7 +412,7 @@ func TestInsert(t *testing.T) {
 					GetByName(context.Background(), ieee8021xconfig.ProfileName, ieee8021xconfig.TenantID).
 					Return(ieee8021xconfig, nil)
 			},
-			res: ieee8021xconfig,
+			res: ieee8021xconfigDTO,
 			err: nil,
 		},
 		{
@@ -392,7 +422,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), ieee8021xconfig).
 					Return("", errTest)
 			},
-			res: (*entity.IEEE8021xConfig)(nil),
+			res: (*dto.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}
@@ -405,7 +435,7 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo)
 
-			config, err := useCase.Insert(context.Background(), ieee8021xconfig)
+			config, err := useCase.Insert(context.Background(), ieee8021xconfigDTO)
 
 			require.Equal(t, tc.res, config)
 

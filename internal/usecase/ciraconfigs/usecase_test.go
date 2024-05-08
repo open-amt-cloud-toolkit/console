@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -21,7 +22,7 @@ type test struct {
 	skip       int
 	configName string
 	tenantID   string
-	input      entity.CIRAConfig
+	input      dto.CIRAConfig
 	mock       func(*MockRepository)
 	res        interface{}
 	err        error
@@ -55,7 +56,7 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, errTest)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, ciraconfigs.ErrDatabase)
 			},
 			res: 0,
 			err: ciraconfigs.ErrDatabase,
@@ -94,6 +95,17 @@ func TestGet(t *testing.T) {
 		},
 	}
 
+	testCIRAConfigDTOs := []dto.CIRAConfig{
+		{
+			ConfigName: "test-config-1",
+			TenantID:   "tenant-id-456",
+		},
+		{
+			ConfigName: "test-config-2",
+			TenantID:   "tenant-id-456",
+		},
+	}
+
 	tests := []test{
 		{
 			name:     "successful retrieval",
@@ -105,7 +117,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testCIRAConfigs, nil)
 			},
-			res: testCIRAConfigs,
+			res: testCIRAConfigDTOs,
 			err: nil,
 		},
 		{
@@ -118,7 +130,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, errTest)
 			},
-			res: []entity.CIRAConfig(nil),
+			res: []dto.CIRAConfig(nil),
 			err: errTest,
 		},
 		{
@@ -131,7 +143,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.CIRAConfig{}, nil)
 			},
-			res: []entity.CIRAConfig{},
+			res: []dto.CIRAConfig{},
 			err: nil,
 		},
 	}
@@ -168,10 +180,16 @@ func TestGetByName(t *testing.T) {
 		Version:    "1.0.0",
 	}
 
+	ciraconfigDTO := &dto.CIRAConfig{
+		ConfigName: "test-config",
+		TenantID:   "tenant-id-456",
+		Version:    "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name: "successful retrieval",
-			input: entity.CIRAConfig{
+			input: dto.CIRAConfig{
 				ConfigName: "test-config",
 				TenantID:   "tenant-id-456",
 			},
@@ -180,12 +198,12 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "test-config", "tenant-id-456").
 					Return(ciraconfig, nil)
 			},
-			res: ciraconfig,
+			res: ciraconfigDTO,
 			err: nil,
 		},
 		{
 			name: "ciraconfig not found",
-			input: entity.CIRAConfig{
+			input: dto.CIRAConfig{
 				ConfigName: "unknown-ciraconfig",
 				TenantID:   "tenant-id-456",
 			},
@@ -194,7 +212,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-ciraconfig", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*entity.CIRAConfig)(nil),
+			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrNotFound,
 		},
 	}
@@ -280,6 +298,12 @@ func TestUpdate(t *testing.T) {
 		Version:    "1.0.0",
 	}
 
+	ciraconfigDTO := &dto.CIRAConfig{
+		ConfigName: "test-config",
+		TenantID:   "tenant-id-456",
+		Version:    "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name: "successful update",
@@ -291,7 +315,7 @@ func TestUpdate(t *testing.T) {
 					GetByName(context.Background(), "test-config", "tenant-id-456").
 					Return(ciraconfig, nil)
 			},
-			res: ciraconfig,
+			res: ciraconfigDTO,
 			err: nil,
 		},
 		{
@@ -301,7 +325,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), ciraconfig).
 					Return(false, errTest)
 			},
-			res: (*entity.CIRAConfig)(nil),
+			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrDatabase,
 		},
 	}
@@ -315,7 +339,7 @@ func TestUpdate(t *testing.T) {
 
 			tc.mock(repo)
 
-			result, err := useCase.Update(context.Background(), ciraconfig)
+			result, err := useCase.Update(context.Background(), ciraconfigDTO)
 
 			require.Equal(t, tc.res, result)
 			require.IsType(t, tc.err, err)
@@ -332,6 +356,12 @@ func TestInsert(t *testing.T) {
 		Version:    "1.0.0",
 	}
 
+	ciraconfigDTO := &dto.CIRAConfig{
+		ConfigName: "test-config",
+		TenantID:   "tenant-id-456",
+		Version:    "1.0.0",
+	}
+
 	tests := []test{
 		{
 			name: "successful insertion",
@@ -343,7 +373,7 @@ func TestInsert(t *testing.T) {
 					GetByName(context.Background(), "test-config", "tenant-id-456").
 					Return(ciraconfig, nil)
 			},
-			res: ciraconfig,
+			res: ciraconfigDTO,
 			err: nil,
 		},
 		{
@@ -353,7 +383,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), ciraconfig).
 					Return("", errTest)
 			},
-			res: (*entity.CIRAConfig)(nil),
+			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrDatabase,
 		},
 	}
@@ -367,7 +397,7 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo)
 
-			config, err := useCase.Insert(context.Background(), ciraconfig)
+			config, err := useCase.Insert(context.Background(), ciraconfigDTO)
 
 			require.Equal(t, tc.res, config)
 

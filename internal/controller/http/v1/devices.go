@@ -2,11 +2,10 @@ package v1
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -33,8 +32,8 @@ func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Inter
 }
 
 type DeviceCountResponse struct {
-	Count int             `json:"totalCount"`
-	Data  []entity.Device `json:"data"`
+	Count int          `json:"totalCount"`
+	Data  []dto.Device `json:"data"`
 }
 type DeviceStatResponse struct {
 	TotalCount        int `json:"totalCount"`
@@ -86,13 +85,11 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 
 	tags := c.Query("tags")
 
-	var items []entity.Device
+	var items []dto.Device
 
 	var err error
 
 	if tags != "" {
-		tags := strings.Split(tags, ",")
-
 		items, err = dr.t.GetByTags(c.Request.Context(), tags, c.Query("method"), odata.Top, odata.Skip, "")
 		if err != nil {
 			dr.l.Error(err, "http - devices - v1 - get")
@@ -140,7 +137,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/devices [post]
 func (dr *deviceRoutes) insert(c *gin.Context) {
-	var device entity.Device
+	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
 		errorResponse(c, err)
 
@@ -168,7 +165,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/devices [patch]
 func (dr *deviceRoutes) update(c *gin.Context) {
-	var device entity.Device
+	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
 		errorResponse(c, err)
 

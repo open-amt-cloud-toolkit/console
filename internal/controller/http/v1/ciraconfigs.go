@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -29,8 +29,8 @@ func newCIRAConfigRoutes(handler *gin.RouterGroup, t ciraconfigs.Feature, l logg
 }
 
 type CIRAConfigCountResponse struct {
-	Count int                 `json:"totalCount"`
-	Data  []entity.CIRAConfig `json:"data"`
+	Count int              `json:"totalCount"`
+	Data  []dto.CIRAConfig `json:"data"`
 }
 
 func (r *ciraConfigRoutes) get(c *gin.Context) {
@@ -55,6 +55,8 @@ func (r *ciraConfigRoutes) get(c *gin.Context) {
 		if err != nil {
 			r.l.Error(err, "http - CIRA configs - v1 - getCount")
 			errorResponse(c, err)
+
+			return
 		}
 
 		countResponse := CIRAConfigCountResponse{
@@ -83,7 +85,7 @@ func (r *ciraConfigRoutes) getByName(c *gin.Context) {
 }
 
 func (r *ciraConfigRoutes) insert(c *gin.Context) {
-	var config entity.CIRAConfig
+	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - insert")
 		errorResponse(c, err)
@@ -103,7 +105,7 @@ func (r *ciraConfigRoutes) insert(c *gin.Context) {
 }
 
 func (r *ciraConfigRoutes) update(c *gin.Context) {
-	var config entity.CIRAConfig
+	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - update")
 		errorResponse(c, err)
