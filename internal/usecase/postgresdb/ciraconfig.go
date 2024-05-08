@@ -99,7 +99,7 @@ func (r *CIRARepo) Get(_ context.Context, top, skip int, tenantID string) ([]ent
 	for rows.Next() {
 		p := entity.CIRAConfig{}
 
-		err = rows.Scan(&p.ConfigName, &p.MPSServerAddress, &p.MpsPort, &p.Username, &p.Password, &p.CommonName, &p.ServerAddressFormat, &p.AuthMethod, &p.MpsRootCertificate, &p.ProxyDetails, &p.TenantID, &p.Version)
+		err = rows.Scan(&p.ConfigName, &p.MPSAddress, &p.MPSPort, &p.Username, &p.Password, &p.CommonName, &p.ServerAddressFormat, &p.AuthMethod, &p.MPSRootCertificate, &p.ProxyDetails, &p.TenantID, &p.Version)
 		if err != nil {
 			return nil, ErrCIRARepoDatabase.Wrap("Get", "rows.Scan", err)
 		}
@@ -148,7 +148,7 @@ func (r *CIRARepo) GetByName(_ context.Context, configName, tenantID string) (*e
 	for rows.Next() {
 		p := &entity.CIRAConfig{}
 
-		err = rows.Scan(&p.ConfigName, &p.MPSServerAddress, &p.MpsPort, &p.Username, &p.Password, &p.CommonName, &p.ServerAddressFormat, &p.AuthMethod, &p.MpsRootCertificate, &p.ProxyDetails, &p.TenantID, &p.Version)
+		err = rows.Scan(&p.ConfigName, &p.MPSAddress, &p.MPSPort, &p.Username, &p.Password, &p.CommonName, &p.ServerAddressFormat, &p.AuthMethod, &p.MPSRootCertificate, &p.ProxyDetails, &p.TenantID, &p.Version)
 		if err != nil {
 			return p, ErrCIRARepoDatabase.Wrap("GetByName", "rows.Scan", err)
 		}
@@ -190,14 +190,14 @@ func (r *CIRARepo) Delete(_ context.Context, configName, tenantID string) (bool,
 func (r *CIRARepo) Update(_ context.Context, p *entity.CIRAConfig) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Update("ciraconfigs").
-		Set("mps_server_address", p.MPSServerAddress).
-		Set("mps_port", p.MpsPort).
+		Set("mps_server_address", p.MPSAddress).
+		Set("mps_port", p.MPSPort).
 		Set("user_name", p.Username).
 		Set("password", p.Password).
 		Set("common_name", p.CommonName).
 		Set("server_address_format", p.ServerAddressFormat).
 		Set("auth_method", p.AuthMethod).
-		Set("mps_root_certificate", p.MpsRootCertificate).
+		Set("mps_root_certificate", p.MPSRootCertificate).
 		Set("proxydetails", p.ProxyDetails).
 		Where("cira_config_name = ? AND tenant_id = ?", p.ConfigName, p.TenantID).
 		ToSql()
@@ -223,7 +223,7 @@ func (r *CIRARepo) Insert(_ context.Context, p *entity.CIRAConfig) (string, erro
 	sqlQuery, args, err := r.Builder.
 		Insert("ciraconfigs").
 		Columns("cira_config_name", "mps_server_address", "mps_port", "user_name", "password", "common_name", "server_address_format", "auth_method", "mps_root_certificate", "proxydetails", "tenant_id").
-		Values(p.ConfigName, p.MPSServerAddress, p.MpsPort, p.Username, p.Password, p.CommonName, p.ServerAddressFormat, p.AuthMethod, p.MpsRootCertificate, p.ProxyDetails, p.TenantID).
+		Values(p.ConfigName, p.MPSAddress, p.MPSPort, p.Username, p.Password, p.CommonName, p.ServerAddressFormat, p.AuthMethod, p.MPSRootCertificate, p.ProxyDetails, p.TenantID).
 		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {

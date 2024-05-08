@@ -99,7 +99,7 @@ func (r *DeviceRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 	for rows.Next() {
 		d := entity.Device{}
 
-		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MpsInstance, &d.ConnectionStatus, &d.Mpsusername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned)
+		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned)
 		if err != nil {
 			return nil, ErrDeviceDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -151,7 +151,7 @@ func (r *DeviceRepo) GetByID(_ context.Context, guid, tenantID string) (*entity.
 	for rows.Next() {
 		d := &entity.Device{}
 
-		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MpsInstance, &d.ConnectionStatus, &d.Mpsusername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned)
+		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned)
 		if err != nil {
 			return d, ErrDeviceDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -250,7 +250,7 @@ func (r *DeviceRepo) GetByTags(_ context.Context, tags []string, method string, 
 	for rows.Next() {
 		d := entity.Device{}
 
-		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MpsInstance, &d.ConnectionStatus, &d.Mpsusername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo)
+		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo)
 		if err != nil {
 			return []entity.Device{d}, ErrDeviceDatabase.Wrap("GetByTags", "rows.Scan", err)
 		}
@@ -295,9 +295,9 @@ func (r *DeviceRepo) Update(_ context.Context, d *entity.Device) (bool, error) {
 		Set("guid", d.GUID).
 		Set("hostname", d.Hostname).
 		Set("tags", d.Tags).
-		Set("mpsinstance", d.MpsInstance).
+		Set("mpsinstance", d.MPSInstance).
 		Set("connectionstatus", d.ConnectionStatus).
-		Set("mpsusername", d.Mpsusername).
+		Set("mpsusername", d.MPSUsername).
 		Set("tenantid", d.TenantID).
 		Set("friendlyname", d.FriendlyName).
 		Set("dnssuffix", d.DNSSuffix).
@@ -330,7 +330,7 @@ func (r *DeviceRepo) Insert(_ context.Context, d *entity.Device) (string, error)
 	sqlQuery, args, err := r.Builder.
 		Insert("devices").
 		Columns("guid", "hostname", "tags", "mpsinstance", "connectionstatus", "mpsusername", "tenantid", "friendlyname", "dnssuffix", "deviceinfo", "username", "password", "usetls", "allowselfsigned").
-		Values(d.GUID, d.Hostname, d.Tags, d.MpsInstance, d.ConnectionStatus, d.Mpsusername, d.TenantID, d.FriendlyName, d.DNSSuffix, d.DeviceInfo, d.Username, d.Password, d.UseTLS, d.AllowSelfSigned).
+		Values(d.GUID, d.Hostname, d.Tags, d.MPSInstance, d.ConnectionStatus, d.MPSUsername, d.TenantID, d.FriendlyName, d.DNSSuffix, d.DeviceInfo, d.Username, d.Password, d.UseTLS, d.AllowSelfSigned).
 		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {

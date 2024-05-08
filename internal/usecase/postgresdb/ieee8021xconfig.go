@@ -115,7 +115,7 @@ func (r *IEEE8021xRepo) Get(_ context.Context, top, skip int, tenantID string) (
 	for rows.Next() {
 		p := entity.IEEE8021xConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PxeTimeout, &p.WiredInterface, &p.TenantID, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface, &p.TenantID, &p.Version)
 		if err != nil {
 			return nil, ErrIEEE8021xDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -158,7 +158,7 @@ func (r *IEEE8021xRepo) GetByName(_ context.Context, profileName, tenantID strin
 	for rows.Next() {
 		p := &entity.IEEE8021xConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PxeTimeout, &p.WiredInterface, &p.TenantID, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface, &p.TenantID, &p.Version)
 		if err != nil {
 			return p, ErrIEEE8021xDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -207,7 +207,7 @@ func (r *IEEE8021xRepo) Update(_ context.Context, p *entity.IEEE8021xConfig) (bo
 		Set("password", p.Password).
 		Set("roaming_identity", p.RoamingIdentity).
 		Set("active_in_s0", p.ActiveInS0).
-		Set("pxe_timeout", p.PxeTimeout).
+		Set("pxe_timeout", p.PXETimeout).
 		Set("wired_interface", p.WiredInterface).
 		Where("profile_name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).
 		ToSql()
@@ -233,7 +233,7 @@ func (r *IEEE8021xRepo) Insert(_ context.Context, p *entity.IEEE8021xConfig) (st
 	sqlQuery, args, err := r.Builder.
 		Insert("ieee8021xconfigs").
 		Columns("profile_name", "auth_protocol", "pxe_timeout", "wired_interface", "tenant_id").
-		Values(p.ProfileName, p.AuthenticationProtocol, p.PxeTimeout, p.WiredInterface, p.TenantID).
+		Values(p.ProfileName, p.AuthenticationProtocol, p.PXETimeout, p.WiredInterface, p.TenantID).
 		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {

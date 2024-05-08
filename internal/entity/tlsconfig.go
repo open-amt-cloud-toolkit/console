@@ -9,7 +9,7 @@ type TLSCerts struct {
 type CertCreationResult struct {
 	H             string
 	Cert          string
-	Pem           string
+	PEM           string
 	CertBin       string
 	PrivateKey    string
 	PrivateKeyBin string

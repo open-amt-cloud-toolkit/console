@@ -63,10 +63,10 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 
 	d1 := &entity.Device{
 		ConnectionStatus: d.ConnectionStatus,
-		MpsInstance:      d.MpsInstance,
+		MPSInstance:      d.MPSInstance,
 		Hostname:         d.Hostname,
 		GUID:             d.GUID,
-		Mpsusername:      d.Mpsusername,
+		MPSUsername:      d.MPSUsername,
 		Tags:             tags,
 		TenantID:         d.TenantID,
 		FriendlyName:     d.FriendlyName,
@@ -91,10 +91,10 @@ func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 
 	d1 := &dto.Device{
 		ConnectionStatus: d.ConnectionStatus,
-		MpsInstance:      d.MpsInstance,
+		MPSInstance:      d.MPSInstance,
 		Hostname:         d.Hostname,
 		GUID:             d.GUID,
-		Mpsusername:      d.Mpsusername,
+		MPSUsername:      d.MPSUsername,
 		Tags:             tags,
 		TenantID:         d.TenantID,
 		FriendlyName:     d.FriendlyName,

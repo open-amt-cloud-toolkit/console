@@ -11,9 +11,9 @@ type Profile struct {
 	MEBXPassword               string
 	GenerateRandomMEBxPassword bool
 	Tags                       string
-	DhcpEnabled                bool
+	DHCPEnabled                bool
 	IPSyncEnabled              bool
-	LocalWifiSyncEnabled       bool
+	LocalWiFiSyncEnabled       bool
 	TenantID                   string
 	TLSMode                    int
 	TLSSigningAuthority        string
@@ -21,7 +21,7 @@ type Profile struct {
 	IDEREnabled                bool
 	KVMEnabled                 bool
 	SOLEnabled                 bool
-	Ieee8021xProfileName       *string
+	IEEE8021xProfileName       *string
 	Version                    string
 }
 

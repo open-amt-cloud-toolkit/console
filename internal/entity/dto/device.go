@@ -4,10 +4,10 @@ import "time"
 
 type Device struct {
 	ConnectionStatus bool        `json:"connectionStatus"`
-	MpsInstance      string      `json:"mpsInstance"`
+	MPSInstance      string      `json:"mpsInstance"`
 	Hostname         string      `json:"hostname"`
 	GUID             string      `json:"guid"`
-	Mpsusername      string      `json:"mpsusername"`
+	MPSUsername      string      `json:"mpsusername"`
 	Tags             []string    `json:"tags"`
 	TenantID         string      `json:"tenantId"`
 	FriendlyName     string      `json:"friendlyName"`
@@ -23,9 +23,9 @@ type Device struct {
 }
 
 type DeviceInfo struct {
-	FwVersion   string    `json:"fwVersion"`
-	FwBuild     string    `json:"fwBuild"`
-	FwSku       string    `json:"fwSku"`
+	FWVersion   string    `json:"fwVersion"`
+	FWBuild     string    `json:"fwBuild"`
+	FWSku       string    `json:"fwSku"`
 	CurrentMode string    `json:"currentMode"`
 	Features    string    `json:"features"`
 	IPAddress   string    `json:"ipAddress"`

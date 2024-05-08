@@ -141,9 +141,9 @@ func (uc *UseCase) dtoToEntity(d *dto.Profile) *entity.Profile {
 		MEBXPassword:               d.MEBXPassword,
 		GenerateRandomMEBxPassword: d.GenerateRandomMEBxPassword,
 		Tags:                       tags,
-		DhcpEnabled:                d.DhcpEnabled,
+		DHCPEnabled:                d.DHCPEnabled,
 		IPSyncEnabled:              d.IPSyncEnabled,
-		LocalWifiSyncEnabled:       d.LocalWifiSyncEnabled,
+		LocalWiFiSyncEnabled:       d.LocalWiFiSyncEnabled,
 		TenantID:                   d.TenantID,
 		TLSMode:                    d.TLSMode,
 		TLSSigningAuthority:        d.TLSSigningAuthority,
@@ -151,7 +151,7 @@ func (uc *UseCase) dtoToEntity(d *dto.Profile) *entity.Profile {
 		IDEREnabled:                d.IDEREnabled,
 		KVMEnabled:                 d.KVMEnabled,
 		SOLEnabled:                 d.SOLEnabled,
-		Ieee8021xProfileName:       d.Ieee8021xProfileName,
+		IEEE8021xProfileName:       d.IEEE8021xProfileName,
 		Version:                    d.Version,
 	}
 
@@ -174,9 +174,9 @@ func (uc *UseCase) entityToDTO(d *entity.Profile) *dto.Profile {
 		MEBXPassword:               d.MEBXPassword,
 		GenerateRandomMEBxPassword: d.GenerateRandomMEBxPassword,
 		Tags:                       tags,
-		DhcpEnabled:                d.DhcpEnabled,
+		DHCPEnabled:                d.DHCPEnabled,
 		IPSyncEnabled:              d.IPSyncEnabled,
-		LocalWifiSyncEnabled:       d.LocalWifiSyncEnabled,
+		LocalWiFiSyncEnabled:       d.LocalWiFiSyncEnabled,
 		TenantID:                   d.TenantID,
 		TLSMode:                    d.TLSMode,
 		TLSSigningAuthority:        d.TLSSigningAuthority,
@@ -184,7 +184,7 @@ func (uc *UseCase) entityToDTO(d *entity.Profile) *dto.Profile {
 		IDEREnabled:                d.IDEREnabled,
 		KVMEnabled:                 d.KVMEnabled,
 		SOLEnabled:                 d.SOLEnabled,
-		Ieee8021xProfileName:       d.Ieee8021xProfileName,
+		IEEE8021xProfileName:       d.IEEE8021xProfileName,
 		Version:                    d.Version,
 	}
 

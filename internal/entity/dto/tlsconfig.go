@@ -9,7 +9,7 @@ type TLSCerts struct {
 type CertCreationResult struct {
 	H             string `json:"h:"`
 	Cert          string `json:"cert"`
-	Pem           string `json:"pem"`
+	PEM           string `json:"pem"`
 	CertBin       string `json:"certBin"`
 	PrivateKey    string `json:"privateKey"`
 	PrivateKeyBin string `json:"privateKeyBin"`
