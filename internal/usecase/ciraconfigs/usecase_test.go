@@ -10,11 +10,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name       string
@@ -56,10 +53,10 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, ciraconfigs.ErrDatabase)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, ciraconfigs.ErrDatabase.Wrap("", "", nil))
 			},
 			res: 0,
-			err: ciraconfigs.ErrDatabase,
+			err: ciraconfigs.ErrDatabase.Wrap("", "", nil),
 		},
 	}
 
@@ -128,10 +125,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
-					Return(nil, errTest)
+					Return(nil, ciraconfigs.ErrDatabase)
 			},
 			res: []dto.CIRAConfig(nil),
-			err: errTest,
+			err: ciraconfigs.ErrDatabase,
 		},
 		{
 			name:     "zero results",
@@ -323,7 +320,7 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ciraconfig).
-					Return(false, errTest)
+					Return(false, ciraconfigs.ErrDatabase)
 			},
 			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrDatabase,
@@ -381,7 +378,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ciraconfig).
-					Return("", errTest)
+					Return("", ciraconfigs.ErrDatabase)
 			},
 			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrDatabase,

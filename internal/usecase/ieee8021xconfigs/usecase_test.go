@@ -10,11 +10,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name        string
@@ -62,7 +59,7 @@ func TestCheckProfileExists(t *testing.T) {
 			profileName: "nonexistent-ieee8021xconfig",
 			tenantID:    "tenant-id-456",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().CheckProfileExists(context.Background(), "nonexistent-ieee8021xconfig", "tenant-id-456").Return(false, errTest)
+				repo.EXPECT().CheckProfileExists(context.Background(), "nonexistent-ieee8021xconfig", "tenant-id-456").Return(false, ieee8021xconfigs.ErrDatabase)
 			},
 			res: false,
 			err: ieee8021xconfigs.ErrDatabase,
@@ -101,7 +98,7 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, errTest)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, ieee8021xconfigs.ErrDatabase)
 			},
 			res: 0,
 			err: ieee8021xconfigs.ErrDatabase,
@@ -172,10 +169,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
-					Return(nil, errTest)
+					Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
 			res: []dto.IEEE8021xConfig(nil),
-			err: errTest,
+			err: ieee8021xconfigs.ErrDatabase,
 		},
 		{
 			name:     "zero results",
@@ -363,7 +360,7 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ieee8021xconfig).
-					Return(false, errTest)
+					Return(false, ieee8021xconfigs.ErrDatabase)
 			},
 			res: (*dto.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrDatabase,
@@ -420,7 +417,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ieee8021xconfig).
-					Return("", errTest)
+					Return("", ieee8021xconfigs.ErrDatabase)
 			},
 			res: (*dto.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrDatabase,

@@ -9,13 +9,9 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name         string
@@ -58,10 +54,10 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, errTest)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, domains.ErrDatabase)
 			},
 			res: 0,
-			err: devices.ErrDatabase,
+			err: domains.ErrDatabase,
 		},
 	}
 
@@ -130,10 +126,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
-					Return(nil, errTest)
+					Return(nil, domains.ErrDatabase)
 			},
 			res: []dto.Domain(nil),
-			err: errTest,
+			err: domains.ErrDatabase,
 		},
 		{
 			name:     "zero results",
@@ -409,7 +405,7 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Update(context.Background(), domain).
-					Return(false, errTest)
+					Return(false, domains.ErrDatabase)
 			},
 			res: (*dto.Domain)(nil),
 			err: domains.ErrDatabase,
@@ -474,7 +470,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), domain).
-					Return("", errTest)
+					Return("", domains.ErrDatabase)
 			},
 			res: (*dto.Domain)(nil),
 			err: domains.ErrDatabase,

@@ -12,7 +12,7 @@ import (
 )
 
 func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]alarmclock.AlarmClockOccurrence, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return nil, utils.ErrNotFound
 	}
@@ -32,7 +32,7 @@ func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]alarmc
 }
 
 func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm dto.AlarmClockOccurrence) (amtAlarmClock.AddAlarmOutput, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return amtAlarmClock.AddAlarmOutput{}, nil
 	}
@@ -53,7 +53,7 @@ func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm 
 }
 
 func (uc *UseCase) DeleteAlarmOccurrences(c context.Context, guid, instanceID string) error {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return err
 	}

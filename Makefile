@@ -1,4 +1,4 @@
-include .env.example
+include .env
 export
 
 LOCAL_BIN:=$(CURDIR)/bin
@@ -30,7 +30,7 @@ swag-v1: ### swag init
 
 run: ### run app
 	go mod tidy && go mod download && \
-	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=0 go run -tags migrate ./cmd/app
+	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=1 go run ./cmd/app
 .PHONY: run
 
 docker-rm-volume: ### remove docker volume
@@ -72,7 +72,7 @@ migrate-create:  ### create new migration
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+	migrate -path migrations -database '$(DB_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 bin-deps:

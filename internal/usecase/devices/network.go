@@ -7,7 +7,7 @@ import (
 )
 
 func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return nil, utils.ErrNotFound
 	}

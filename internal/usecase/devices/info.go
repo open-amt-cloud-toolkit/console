@@ -10,7 +10,7 @@ import (
 )
 
 func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return nil, utils.ErrNotFound
 	}
@@ -40,7 +40,7 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interf
 }
 
 func (uc *UseCase) GetFeatures(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return nil, utils.ErrNotFound
 	}
@@ -56,7 +56,7 @@ func (uc *UseCase) GetFeatures(c context.Context, guid string) (interface{}, err
 }
 
 func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Features) (dto.Features, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return features, err
 	}
@@ -72,7 +72,7 @@ func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Feat
 }
 
 func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return nil, utils.ErrNotFound
 	}
@@ -88,7 +88,7 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 }
 
 func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dto.AuditLog, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return dto.AuditLog{}, utils.ErrNotFound
 	}
@@ -108,7 +108,7 @@ func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (
 }
 
 func (uc *UseCase) GetEventLog(c context.Context, guid string) (messagelog.GetRecordsResponse, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return messagelog.GetRecordsResponse{}, utils.ErrNotFound
 	}
@@ -124,7 +124,7 @@ func (uc *UseCase) GetEventLog(c context.Context, guid string) (messagelog.GetRe
 }
 
 func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return nil, utils.ErrNotFound
 	}

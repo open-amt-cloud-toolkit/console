@@ -1,4 +1,4 @@
-package postgresdb
+package sqldb
 
 import (
 	"context"
@@ -7,26 +7,26 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // ProfileRepo -.
 
 type ProfileRepo struct {
-	*postgres.DB
+	*db.SQL
 	log logger.Interface
 }
 
 var (
-	ErrProfileDatabase  = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
-	ErrProfileNotUnique = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
+	ErrProfileDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
+	ErrProfileNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
 )
 
 // New -.
 
-func NewProfileRepo(pg *postgres.DB, log logger.Interface) *ProfileRepo {
-	return &ProfileRepo{pg, log}
+func NewProfileRepo(database *db.SQL, log logger.Interface) *ProfileRepo {
+	return &ProfileRepo{database, log}
 }
 
 // GetCount -.
@@ -83,7 +83,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"ip_sync_enabled",
 			"local_wifi_sync_enabled",
 			"ieee8021x_profile_name",
-			"CAST(xmin as text) as xmin").
+		).
 		From("profiles").
 		Where("tenant_id = ?", tenantID).
 		OrderBy("profile_name").
@@ -114,7 +114,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			&p.CIRAConfigName, &p.MEBXPassword,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
-			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.Version)
+			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName)
 		if err != nil {
 			return nil, ErrProfileDatabase.Wrap("Get", "rows.Scan", err)
 		}
@@ -148,7 +148,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 			"ip_sync_enabled",
 			"local_wifi_sync_enabled",
 			"ieee8021x_profile_name",
-			"CAST(xmin as text) as xmin").
+		).
 		From("profiles").
 		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -176,7 +176,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 			&p.CIRAConfigName, &p.MEBXPassword,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
-			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.Version)
+			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName)
 		if err != nil {
 			return p, ErrProfileDatabase.Wrap("GetByName", "rows.Scan", err)
 		}
@@ -238,7 +238,6 @@ func (r *ProfileRepo) Update(_ context.Context, p *entity.Profile) (bool, error)
 		Set("ip_sync_enabled", p.IPSyncEnabled).
 		Set("local_wifi_sync_enabled", p.LocalWiFiSyncEnabled).
 		Where("profile_name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).
-		Suffix("AND xmin::text = ?", p.Version).
 		ToSql()
 	if err != nil {
 		return false, ErrProfileDatabase.Wrap("Update", "r.Builder", err)
@@ -280,17 +279,21 @@ func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, erro
 		Insert("profiles").
 		Columns("profile_name", "activation", "amt_password", "generate_random_password", "cira_config_name", "mebx_password", "generate_random_mebx_password", "tags", "dhcp_enabled", "tls_mode", "user_consent", "ider_enabled", "kvm_enabled", "sol_enabled", "tls_signing_authority", "ieee8021x_profile_name", "ip_sync_enabled", "local_wifi_sync_enabled", "tenant_id").
 		Values(p.ProfileName, p.Activation, p.AMTPassword, p.GenerateRandomPassword, ciraConfigName, p.MEBXPassword, p.GenerateRandomMEBxPassword, p.Tags, p.DHCPEnabled, p.TLSMode, p.UserConsent, p.IDEREnabled, p.KVMEnabled, p.SOLEnabled, p.TLSSigningAuthority, ieee8021xProfileName, p.IPSyncEnabled, p.LocalWiFiSyncEnabled, p.TenantID).
-		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
 		return "", ErrProfileDatabase.Wrap("Insert", "r.Builder", err)
 	}
 
-	var version string
+	version := ""
 
-	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	if r.IsEmbedded {
+		_, err = r.Pool.Exec(sqlQuery, args...)
+	} else {
+		err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	}
+
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
+		if db.CheckNotUnique(err) {
 			return "", ErrProfileNotUnique
 		}
 
