@@ -6,6 +6,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -18,8 +19,8 @@ type UseCase struct {
 
 var (
 	ErrDomainsUseCase = consoleerrors.CreateConsoleError("ProfilesUseCase")
-	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
-	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
+	ErrDatabase       = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
+	ErrNotFound       = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
 )
 
 // New -.

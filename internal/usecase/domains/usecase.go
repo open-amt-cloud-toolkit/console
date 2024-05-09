@@ -5,6 +5,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -25,8 +26,8 @@ func New(r Repository, log logger.Interface) *UseCase {
 
 var (
 	ErrDomainsUseCase = consoleerrors.CreateConsoleError("DomainsUseCase")
-	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
-	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
+	ErrDatabase       = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
+	ErrNotFound       = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
 )
 
 // History - getting translate history from store.
