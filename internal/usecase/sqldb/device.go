@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	errors1 "github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -18,8 +18,8 @@ type DeviceRepo struct {
 }
 
 var (
-	ErrDeviceDatabase  = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DeviceRepo")}
-	ErrDeviceNotUnique = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DeviceRepo")}
+	ErrDeviceDatabase  = DatabaseError{Console: errors1.CreateConsoleError("DeviceRepo")}
+	ErrDeviceNotUnique = DatabaseError{Console: errors1.CreateConsoleError("DeviceRepo")}
 )
 
 // New -.
@@ -331,15 +331,19 @@ func (r *DeviceRepo) Insert(_ context.Context, d *entity.Device) (string, error)
 		Insert("devices").
 		Columns("guid", "hostname", "tags", "mpsinstance", "connectionstatus", "mpsusername", "tenantid", "friendlyname", "dnssuffix", "deviceinfo", "username", "password", "usetls", "allowselfsigned").
 		Values(d.GUID, d.Hostname, d.Tags, d.MPSInstance, d.ConnectionStatus, d.MPSUsername, d.TenantID, d.FriendlyName, d.DNSSuffix, d.DeviceInfo, d.Username, d.Password, d.UseTLS, d.AllowSelfSigned).
-		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
 		return "", ErrDeviceDatabase.Wrap("Insert", "r.Builder", err)
 	}
 
-	var version string
+	version := ""
 
-	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	if r.IsEmbedded {
+		_, err = r.Pool.Exec(sqlQuery, args...)
+	} else {
+		err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	}
+
 	if err != nil {
 		if db.CheckNotUnique(err) {
 			return "", ErrDeviceNotUnique

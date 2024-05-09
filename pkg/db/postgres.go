@@ -29,8 +29,9 @@ type SQL struct {
 	connAttempts int
 	connTimeout  time.Duration
 
-	Builder squirrel.StatementBuilderType
-	Pool    *sql.DB
+	Builder    squirrel.StatementBuilderType
+	Pool       *sql.DB
+	IsEmbedded bool
 }
 
 // New -.
@@ -54,6 +55,7 @@ func New(url string, opts ...Option) (*SQL, error) {
 			return nil, err
 		}
 	} else {
+		pg.IsEmbedded = true
 		pg.Pool, err = sql.Open("sqlite3", "./console.db")
 		if err != nil {
 			return nil, err

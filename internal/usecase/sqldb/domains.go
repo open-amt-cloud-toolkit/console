@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	errors1 "github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -19,8 +19,8 @@ type DomainRepo struct {
 }
 
 var (
-	ErrDomainDatabase  = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DomainRepo")}
-	ErrDomainNotUnique = consoleerrors.NotUniqueError{Console: consoleerrors.CreateConsoleError("DomainRepo")}
+	ErrDomainDatabase  = DatabaseError{Console: errors1.CreateConsoleError("DomainRepo")}
+	ErrDomainNotUnique = NotUniqueError{Console: errors1.CreateConsoleError("DomainRepo")}
 )
 
 // New -.
@@ -60,12 +60,10 @@ func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 	}
 
 	sqlQuery, _, err := r.Builder.
-		Select(`name,
-            domain_suffix,
-            provisioning_cert_storage_format,
-            tenant_id,
-            CAST(xmin as text) as xmin
-        `).
+		Select("name",
+			"domain_suffix",
+			"provisioning_cert_storage_format",
+			"tenant_id").
 		From("domains").
 		Where("tenant_id = ?", tenantID).
 		OrderBy("name").
@@ -92,7 +90,7 @@ func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 	for rows.Next() {
 		d := entity.Domain{}
 
-		err = rows.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.TenantID, &d.Version)
+		err = rows.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.TenantID)
 		if err != nil {
 			return nil, ErrDomainDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -106,14 +104,13 @@ func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 // GetDomainByDomainSuffix -.
 func (r *DomainRepo) GetDomainByDomainSuffix(_ context.Context, domainSuffix, tenantID string) (*entity.Domain, error) {
 	sqlQuery, _, err := r.Builder.
-		Select(`name,
-            domain_suffix,
-            provisioning_cert,
-            provisioning_cert_storage_format,
-            provisioning_cert_key,
-            tenant_id,
-            CAST(xmin as text) as xmin
-        `).
+		Select("name",
+			"domain_suffix",
+			"provisioning_cert",
+			"provisioning_cert_storage_format",
+			"provisioning_cert_key",
+			"tenant_id",
+		).
 		From("domains").
 		Where("domain_suffix = ? AND tenant_id = ?", domainSuffix, tenantID).
 		ToSql()
@@ -125,7 +122,7 @@ func (r *DomainRepo) GetDomainByDomainSuffix(_ context.Context, domainSuffix, te
 
 	d := entity.Domain{}
 
-	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.TenantID, &d.Version)
+	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.TenantID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -145,7 +142,6 @@ func (r *DomainRepo) GetByName(_ context.Context, domainName, tenantID string) (
 			"domain_suffix",
 			"provisioning_cert_storage_format",
 			"tenant_id",
-			"CAST(xmin as text) as xmin",
 		).
 		From("domains").
 		Where("name = ? AND tenant_id = ?", domainName, tenantID).
@@ -158,7 +154,7 @@ func (r *DomainRepo) GetByName(_ context.Context, domainName, tenantID string) (
 
 	d := entity.Domain{}
 
-	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.TenantID, &d.Version)
+	err = row.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.TenantID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -203,7 +199,6 @@ func (r *DomainRepo) Update(_ context.Context, d *entity.Domain) (bool, error) {
 		Set("provisioning_cert_storage_format", d.ProvisioningCertStorageFormat).
 		Set("provisioning_cert_key", d.ProvisioningCertPassword).
 		Where("name = ? AND tenant_id = ?", d.ProfileName, d.TenantID).
-		Suffix("AND xmin::text = ?", d.Version).
 		ToSql()
 	if err != nil {
 		return false, ErrDomainDatabase.Wrap("Update", "r.Builder: ", err)
@@ -228,15 +223,19 @@ func (r *DomainRepo) Insert(_ context.Context, d *entity.Domain) (string, error)
 		Insert("domains").
 		Columns("name", "domain_suffix", "provisioning_cert", "provisioning_cert_storage_format", "provisioning_cert_key", "tenant_id").
 		Values(d.ProfileName, d.DomainSuffix, d.ProvisioningCert, d.ProvisioningCertStorageFormat, d.ProvisioningCertPassword, d.TenantID).
-		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
 		return "", ErrDomainDatabase.Wrap("Insert", "r.Builder: ", err)
 	}
 
-	var version string
+	version := ""
 
-	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	if r.IsEmbedded {
+		_, err = r.Pool.Exec(sqlQuery, args...)
+	} else {
+		err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	}
+
 	if err != nil {
 		if db.CheckNotUnique(err) {
 			return "", ErrProfileNotUnique

@@ -8,6 +8,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -27,10 +28,10 @@ func New(r Repository, log logger.Interface) *UseCase {
 }
 
 var (
-	ErrCountNotUnique = consoleerrors.NotUniqueError{Console: consoleerrors.CreateConsoleError("WifiConfigs")}
+	ErrCountNotUnique = sqldb.NotUniqueError{Console: consoleerrors.CreateConsoleError("WifiConfigs")}
 	ErrDomainsUseCase = consoleerrors.CreateConsoleError("WificonfigsUseCase")
-	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
-	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
+	ErrDatabase       = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
+	ErrNotFound       = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
 )
 
 // History - getting translate history from store.
