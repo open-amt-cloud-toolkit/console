@@ -8,13 +8,13 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // WirelessRepo -.
 type WirelessRepo struct {
-	*postgres.DB
+	*db.SQL
 	logger.Interface
 }
 
@@ -24,7 +24,7 @@ var (
 )
 
 // New -.
-func NewWirelessRepo(pg *postgres.DB, log logger.Interface) *WirelessRepo {
+func NewWirelessRepo(pg *db.SQL, log logger.Interface) *WirelessRepo {
 	return &WirelessRepo{pg, log}
 }
 
@@ -265,7 +265,7 @@ func (r *WirelessRepo) Insert(_ context.Context, p *entity.WirelessConfig) (stri
 
 	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
+		if db.CheckNotUnique(err) {
 			return "", ErrWiFiNotUnique
 		}
 

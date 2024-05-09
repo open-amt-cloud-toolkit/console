@@ -7,13 +7,13 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // IEEE8021xRepo -.
 type IEEE8021xRepo struct {
-	*postgres.DB
+	*db.SQL
 	log logger.Interface
 }
 
@@ -23,7 +23,7 @@ var (
 )
 
 // New -.
-func NewIEEE8021xRepo(pg *postgres.DB, log logger.Interface) *IEEE8021xRepo {
+func NewIEEE8021xRepo(pg *db.SQL, log logger.Interface) *IEEE8021xRepo {
 	return &IEEE8021xRepo{pg, log}
 }
 
@@ -244,7 +244,7 @@ func (r *IEEE8021xRepo) Insert(_ context.Context, p *entity.IEEE8021xConfig) (st
 
 	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
+		if db.CheckNotUnique(err) {
 			return "", ErrIEEE8021xNotUnique
 		}
 

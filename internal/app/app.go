@@ -14,9 +14,9 @@ import (
 	v1 "github.com/open-amt-cloud-toolkit/console/internal/controller/http/v1"
 	wsv1 "github.com/open-amt-cloud-toolkit/console/internal/controller/ws/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/httpserver"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 var Version = "DEVELOPMENT"
@@ -26,7 +26,7 @@ func Run(cfg *config.Config) {
 	log := logger.New(cfg.Log.Level)
 	log.Info("app - Run - version: " + Version)
 	// Repository
-	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
+	pg, err := db.New(cfg.DB.URL, db.MaxPoolSize(cfg.DB.PoolMax))
 	if err != nil {
 		log.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}

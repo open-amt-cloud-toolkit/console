@@ -72,7 +72,7 @@ migrate-create:  ### create new migration
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+	migrate -path migrations -database '$(DB_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 bin-deps:

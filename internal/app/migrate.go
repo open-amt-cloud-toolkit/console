@@ -26,9 +26,9 @@ const (
 
 func init() {
 
-	databaseURL, ok := os.LookupEnv("PG_URL")
+	databaseURL, ok := os.LookupEnv("DB_URL")
 	if !ok || len(databaseURL) == 0 {
-		log.Fatalf("migrate: environment variable not declared: PG_URL")
+		log.Fatalf("migrate: environment variable not declared: DB_URL")
 	}
 	if strings.HasPrefix(databaseURL, "postgres://") {
 		databaseURL += "?sslmode=disable"

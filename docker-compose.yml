@@ -18,7 +18,7 @@ services:
     env_file:
       - .env
     environment:
-      PG_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
+      DB_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
     ports:
       - 8080:8080
       - 8081:8081

@@ -7,18 +7,18 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // CIRARepo -.
 type CIRARepo struct {
-	*postgres.DB
+	*db.SQL
 	log logger.Interface
 }
 
 // New -.
-func NewCIRARepo(pg *postgres.DB, log logger.Interface) *CIRARepo {
+func NewCIRARepo(pg *db.SQL, log logger.Interface) *CIRARepo {
 	return &CIRARepo{pg, log}
 }
 
@@ -234,7 +234,7 @@ func (r *CIRARepo) Insert(_ context.Context, p *entity.CIRAConfig) (string, erro
 
 	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
+		if db.CheckNotUnique(err) {
 			return "", ErrCIRARepoNotUnique.Wrap("Insert", "r.Pool.QueryRow", err)
 		}
 

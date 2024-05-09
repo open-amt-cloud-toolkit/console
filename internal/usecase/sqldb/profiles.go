@@ -7,14 +7,14 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // ProfileRepo -.
 
 type ProfileRepo struct {
-	*postgres.DB
+	*db.SQL
 	log logger.Interface
 }
 
@@ -25,7 +25,7 @@ var (
 
 // New -.
 
-func NewProfileRepo(pg *postgres.DB, log logger.Interface) *ProfileRepo {
+func NewProfileRepo(pg *db.SQL, log logger.Interface) *ProfileRepo {
 	return &ProfileRepo{pg, log}
 }
 
@@ -290,7 +290,7 @@ func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, erro
 
 	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
+		if db.CheckNotUnique(err) {
 			return "", ErrProfileNotUnique
 		}
 

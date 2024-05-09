@@ -9,8 +9,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // Usecases -.
@@ -24,7 +24,7 @@ type Usecases struct {
 }
 
 // New -.
-func NewUseCases(pg *postgres.DB, log logger.Interface) *Usecases {
+func NewUseCases(pg *db.SQL, log logger.Interface) *Usecases {
 	return &Usecases{
 		Domains:           domains.New(sqldb.NewDomainRepo(pg, log), log),
 		Devices:           devices.New(sqldb.NewDeviceRepo(pg, log), wsman.NewGoWSMANMessages(), devices.NewRedirector(), log),

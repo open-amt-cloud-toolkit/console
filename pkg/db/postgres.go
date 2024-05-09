@@ -1,5 +1,5 @@
 // Package postgres implements postgres connection.
-package postgres
+package db
 
 import (
 	"database/sql"
@@ -23,8 +23,8 @@ const (
 	UniqueViolation = "23505"
 )
 
-// DB -.
-type DB struct {
+// SQL -.
+type SQL struct {
 	maxPoolSize  int
 	connAttempts int
 	connTimeout  time.Duration
@@ -34,8 +34,8 @@ type DB struct {
 }
 
 // New -.
-func New(url string, opts ...Option) (*DB, error) {
-	pg := &DB{
+func New(url string, opts ...Option) (*SQL, error) {
+	pg := &SQL{
 		maxPoolSize:  _defaultMaxPoolSize,
 		connAttempts: _defaultConnAttempts,
 		connTimeout:  _defaultConnTimeout,
@@ -64,7 +64,7 @@ func New(url string, opts ...Option) (*DB, error) {
 }
 
 // Close -.
-func (p *DB) Close() {
+func (p *SQL) Close() {
 	if p.Pool != nil {
 		p.Pool.Close()
 	}

@@ -7,13 +7,13 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // DeviceRepo -.
 type DeviceRepo struct {
-	*postgres.DB
+	*db.SQL
 	log logger.Interface
 }
 
@@ -23,7 +23,7 @@ var (
 )
 
 // New -.
-func NewDeviceRepo(pg *postgres.DB, log logger.Interface) *DeviceRepo {
+func NewDeviceRepo(pg *db.SQL, log logger.Interface) *DeviceRepo {
 	return &DeviceRepo{pg, log}
 }
 
@@ -341,7 +341,7 @@ func (r *DeviceRepo) Insert(_ context.Context, d *entity.Device) (string, error)
 
 	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
+		if db.CheckNotUnique(err) {
 			return "", ErrDeviceNotUnique
 		}
 
