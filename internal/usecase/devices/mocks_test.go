@@ -386,7 +386,7 @@ func (mr *MockManagementMockRecorder) SetFeatures(arg0 any) *gomock.Call {
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockManagement) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) {
+func (m *MockManagement) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
 }
@@ -478,7 +478,7 @@ func (mr *MockRedirectionMockRecorder) RedirectSend(ctx, deviceConnection, messa
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockRedirection) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages {
+func (m *MockRedirection) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
 	ret0, _ := ret[0].(wsman.Messages)

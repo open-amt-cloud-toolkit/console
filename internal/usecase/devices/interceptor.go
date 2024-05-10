@@ -13,7 +13,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 type DeviceConnection struct {
 	Conn          *websocket.Conn
 	wsmanMessages wsman.Messages
-	Device        entity.Device
+	Device        dto.Device
 	Direct        bool
 	Mode          string
 	Challenge     client.AuthChallenge
@@ -34,7 +34,7 @@ type DeviceConnection struct {
 
 func (uc *UseCase) Redirect(c context.Context, conn *websocket.Conn, guid, mode string) error {
 	// grab device info from db
-	device, err := uc.repo.GetByID(c, guid, "")
+	device, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return err
 	}

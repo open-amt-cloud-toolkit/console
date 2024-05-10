@@ -1,4 +1,4 @@
-package postgresdb
+package sqldb
 
 import (
 	"context"
@@ -8,24 +8,24 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // WirelessRepo -.
 type WirelessRepo struct {
-	*postgres.DB
+	*db.SQL
 	logger.Interface
 }
 
 var (
-	ErrWiFiDatabase  = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
-	ErrWiFiNotUnique = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
 )
 
 // New -.
-func NewWirelessRepo(pg *postgres.DB, log logger.Interface) *WirelessRepo {
-	return &WirelessRepo{pg, log}
+func NewWirelessRepo(database *db.SQL, log logger.Interface) *WirelessRepo {
+	return &WirelessRepo{database, log}
 }
 
 // CheckProfileExits -.
@@ -95,7 +95,7 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 			"link_policy",
 			"tenant_id",
 			"ieee8021x_profile_name",
-			"CAST(xmin as text) as xmin").
+		).
 		From("wirelessconfigs").
 		Where("tenant_id = ?", tenantID).
 		OrderBy("wireless_profile_name").
@@ -122,7 +122,7 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 	for rows.Next() {
 		p := entity.WirelessConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.PSKPassphrase, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.PSKPassphrase, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName)
 		if err != nil {
 			return nil, ErrWiFiDatabase.Wrap("Get", "rows.Scan", err)
 		}
@@ -146,7 +146,7 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 			"link_policy",
 			"tenant_id",
 			"ieee8021x_profile_name",
-			"CAST(xmin as text) as xmin").
+		).
 		From("wirelessconfigs").
 		Where("wireless_profile_name = ? and tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -170,7 +170,7 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 	for rows.Next() {
 		p := &entity.WirelessConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName)
 		if err != nil {
 			return p, ErrWiFiDatabase.Wrap("GetByName", "rows.Scan", err)
 		}
@@ -220,7 +220,6 @@ func (r *WirelessRepo) Update(_ context.Context, p *entity.WirelessConfig) (bool
 		Set("link_policy", p.LinkPolicy).
 		Set("ieee8021x_profile_name", p.IEEE8021xProfileName).
 		Where("wireless_profile_name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).
-		Suffix("AND xmin::text = ?", p.Version).
 		ToSql()
 	if err != nil {
 		return false, ErrWiFiDatabase.Wrap("Update", "r.Builder", err)
@@ -255,18 +254,22 @@ func (r *WirelessRepo) Insert(_ context.Context, p *entity.WirelessConfig) (stri
 		Insert("wirelessconfigs").
 		Columns("wireless_profile_name", "authentication_method", "encryption_method", "ssid", "psk_value", "psk_passphrase", "link_policy", "creation_date", "tenant_id", "ieee8021x_profile_name").
 		Values(p.ProfileName, p.AuthenticationMethod, p.EncryptionMethod, p.SSID, p.PSKValue, p.PSKPassphrase, p.LinkPolicy, date, p.TenantID, ieeeProfileName).
-		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
 		return "", ErrWiFiDatabase.Wrap("Insert", "r.Builder", err)
 	}
 
-	var version string
+	version := ""
 
-	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	if r.IsEmbedded {
+		_, err = r.Pool.Exec(sqlQuery, args...)
+	} else {
+		err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	}
+
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
-			return "", ErrWiFiNotUnique
+		if db.CheckNotUnique(err) {
+			return "", ErrWiFiNotUnique.Wrap(err.Error())
 		}
 
 		return "", ErrWiFiDatabase.Wrap("Insert", "r.Pool.QueryRow", err)

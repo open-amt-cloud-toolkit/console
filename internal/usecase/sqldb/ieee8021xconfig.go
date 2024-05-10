@@ -1,4 +1,4 @@
-package postgresdb
+package sqldb
 
 import (
 	"context"
@@ -7,24 +7,24 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // IEEE8021xRepo -.
 type IEEE8021xRepo struct {
-	*postgres.DB
+	*db.SQL
 	log logger.Interface
 }
 
 var (
-	ErrIEEE8021xDatabase  = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
-	ErrIEEE8021xNotUnique = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
+	ErrIEEE8021xDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
+	ErrIEEE8021xNotUnique = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
 )
 
 // New -.
-func NewIEEE8021xRepo(pg *postgres.DB, log logger.Interface) *IEEE8021xRepo {
-	return &IEEE8021xRepo{pg, log}
+func NewIEEE8021xRepo(database *db.SQL, log logger.Interface) *IEEE8021xRepo {
+	return &IEEE8021xRepo{database, log}
 }
 
 // CheckProfileExits -.
@@ -89,7 +89,7 @@ func (r *IEEE8021xRepo) Get(_ context.Context, top, skip int, tenantID string) (
 			"pxe_timeout",
 			"wired_interface",
 			"tenant_id",
-			"CAST(xmin as text) as xmin").
+		).
 		From("ieee8021xconfigs").
 		Where("tenant_id = ?", tenantID).
 		Limit(uint64(top)).
@@ -115,7 +115,7 @@ func (r *IEEE8021xRepo) Get(_ context.Context, top, skip int, tenantID string) (
 	for rows.Next() {
 		p := entity.IEEE8021xConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface, &p.TenantID, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface, &p.TenantID)
 		if err != nil {
 			return nil, ErrIEEE8021xDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -134,7 +134,7 @@ func (r *IEEE8021xRepo) GetByName(_ context.Context, profileName, tenantID strin
 			"pxe_timeout",
 			"wired_interface",
 			"tenant_id",
-			"CAST(xmin as text) as xmin").
+		).
 		From("ieee8021xconfigs").
 		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
 		ToSql()
@@ -158,7 +158,7 @@ func (r *IEEE8021xRepo) GetByName(_ context.Context, profileName, tenantID strin
 	for rows.Next() {
 		p := &entity.IEEE8021xConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface, &p.TenantID, &p.Version)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface, &p.TenantID)
 		if err != nil {
 			return p, ErrIEEE8021xDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -234,17 +234,21 @@ func (r *IEEE8021xRepo) Insert(_ context.Context, p *entity.IEEE8021xConfig) (st
 		Insert("ieee8021xconfigs").
 		Columns("profile_name", "auth_protocol", "pxe_timeout", "wired_interface", "tenant_id").
 		Values(p.ProfileName, p.AuthenticationProtocol, p.PXETimeout, p.WiredInterface, p.TenantID).
-		Suffix("RETURNING xmin::text").
 		ToSql()
 	if err != nil {
 		return "", ErrIEEE8021xDatabase.Wrap("Insert", "r.Builder: ", err)
 	}
 
-	var version string
+	version := ""
 
-	err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	if r.IsEmbedded {
+		_, err = r.Pool.Exec(sqlQuery, args...)
+	} else {
+		err = r.Pool.QueryRow(sqlQuery, args...).Scan(&version)
+	}
+
 	if err != nil {
-		if postgres.CheckNotUnique(err) {
+		if db.CheckNotUnique(err) {
 			return "", ErrIEEE8021xNotUnique
 		}
 

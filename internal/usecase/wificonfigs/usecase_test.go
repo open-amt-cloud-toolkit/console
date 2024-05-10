@@ -10,11 +10,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name        string
@@ -60,7 +57,7 @@ func TestCheckProfileExists(t *testing.T) {
 			profileName: "nonexistent-wirelessconfig",
 			tenantID:    "tenant-id-456",
 			mock: func(repo *MockRepository, args ...interface{}) {
-				repo.EXPECT().CheckProfileExists(context.Background(), args[0], args[1]).Return(false, errTest)
+				repo.EXPECT().CheckProfileExists(context.Background(), args[0], args[1]).Return(false, wificonfigs.ErrDatabase)
 			},
 			res: false,
 			err: wificonfigs.ErrDatabase,
@@ -172,10 +169,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository, args ...interface{}) {
 				repo.EXPECT().
 					Get(context.Background(), args[0], args[1], args[2]).
-					Return(nil, errTest)
+					Return(nil, wificonfigs.ErrDatabase)
 			},
 			res: []dto.WirelessConfig(nil),
-			err: errTest,
+			err: wificonfigs.ErrDatabase,
 		},
 		{
 			name:     "zero results",
@@ -366,7 +363,7 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository, _ ...interface{}) {
 				repo.EXPECT().
 					Update(context.Background(), wirelessConfig).
-					Return(false, errTest)
+					Return(false, wificonfigs.ErrDatabase)
 			},
 			res: (*dto.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,
@@ -426,7 +423,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository, _ ...interface{}) {
 				repo.EXPECT().
 					Insert(context.Background(), wirelessConfig).
-					Return("", errTest)
+					Return("", wificonfigs.ErrDatabase)
 			},
 			res: (*dto.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,

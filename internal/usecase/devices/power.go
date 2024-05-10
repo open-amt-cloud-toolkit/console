@@ -15,7 +15,7 @@ import (
 )
 
 func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (power.PowerActionResponse, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return power.PowerActionResponse{}, utils.ErrNotFound
 	}
@@ -31,7 +31,7 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 }
 
 func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return nil, utils.ErrNotFound
 	}
@@ -49,7 +49,7 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 }
 
 func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return nil, nil
 	}
@@ -121,7 +121,7 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 }
 
 func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
 		return power.PowerActionResponse{}, err
 	}

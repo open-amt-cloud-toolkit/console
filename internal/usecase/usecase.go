@@ -6,11 +6,11 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/postgresdb"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	"github.com/open-amt-cloud-toolkit/console/pkg/postgres"
 )
 
 // Usecases -.
@@ -24,13 +24,13 @@ type Usecases struct {
 }
 
 // New -.
-func NewUseCases(pg *postgres.DB, log logger.Interface) *Usecases {
+func NewUseCases(database *db.SQL, log logger.Interface) *Usecases {
 	return &Usecases{
-		Domains:           domains.New(postgresdb.NewDomainRepo(pg, log), log),
-		Devices:           devices.New(postgresdb.NewDeviceRepo(pg, log), wsman.NewGoWSMANMessages(), devices.NewRedirector(), log),
-		Profiles:          profiles.New(postgresdb.NewProfileRepo(pg, log), log),
-		IEEE8021xProfiles: ieee8021xconfigs.New(postgresdb.NewIEEE8021xRepo(pg, log), log),
-		CIRAConfigs:       ciraconfigs.New(postgresdb.NewCIRARepo(pg, log), log),
-		WirelessProfiles:  wificonfigs.New(postgresdb.NewWirelessRepo(pg, log), log),
+		Domains:           domains.New(sqldb.NewDomainRepo(database, log), log),
+		Devices:           devices.New(sqldb.NewDeviceRepo(database, log), wsman.NewGoWSMANMessages(), devices.NewRedirector(), log),
+		Profiles:          profiles.New(sqldb.NewProfileRepo(database, log), log),
+		IEEE8021xProfiles: ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(database, log), log),
+		CIRAConfigs:       ciraconfigs.New(sqldb.NewCIRARepo(database, log), log),
+		WirelessProfiles:  wificonfigs.New(sqldb.NewWirelessRepo(database, log), log),
 	}
 }

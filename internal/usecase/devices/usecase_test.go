@@ -10,11 +10,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name     string
@@ -56,7 +53,7 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, errTest)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, devices.ErrDatabase)
 			},
 			res: 0,
 			err: devices.ErrDatabase,
@@ -130,10 +127,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
-					Return(nil, errTest)
+					Return(nil, devices.ErrDatabase)
 			},
 			res: []dto.Device(nil),
-			err: errTest,
+			err: devices.ErrDatabase,
 		},
 		{
 			name:     "zero results",
@@ -315,7 +312,7 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Update(context.Background(), device).
-					Return(false, errTest)
+					Return(false, devices.ErrDatabase)
 			},
 			res: (*dto.Device)(nil),
 			err: devices.ErrDatabase,
@@ -369,7 +366,7 @@ func TestInsert(t *testing.T) {
 
 				repo.EXPECT().
 					Insert(context.Background(), device).
-					Return("", errTest)
+					Return("", devices.ErrDatabase)
 			},
 			res: (*dto.Device)(nil),
 			err: devices.ErrDatabase,

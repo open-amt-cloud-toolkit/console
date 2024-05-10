@@ -10,11 +10,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name        string
@@ -56,7 +53,7 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, errTest)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, profiles.ErrDatabase)
 			},
 			res: 0,
 			err: profiles.ErrDatabase,
@@ -322,7 +319,7 @@ func TestUpdate(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Update(context.Background(), profile).
-					Return(false, errTest)
+					Return(false, profiles.ErrDatabase)
 			},
 			res: (*dto.Profile)(nil),
 			err: profiles.ErrDatabase,
@@ -381,7 +378,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), profile).
-					Return("", errTest)
+					Return("", profiles.ErrDatabase)
 			},
 			res: (*dto.Profile)(nil),
 			err: profiles.ErrDatabase,

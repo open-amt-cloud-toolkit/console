@@ -12,6 +12,8 @@
 *.so
 *.dylib
 bin/
+*.db
+*.db-journal
 
 # Test binary, built with `go test -c`
 *.test
