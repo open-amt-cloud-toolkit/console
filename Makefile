@@ -63,8 +63,10 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/domains/interfaces.go -package domains_test > ./internal/usecase/domains/mocks_test.go
 	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package ieee8021xconfigs_test > ./internal/usecase/ieee8021xconfigs/mocks_test.go
 	mockgen -source ./internal/usecase/profiles/interfaces.go -package profiles_test > ./internal/usecase/profiles/mocks_test.go
+	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package profiles_test -mock_names Repository=MockProfileWiFiConfigsRepository,Feature=MockProfileWiFiConfigsFeature > ./internal/usecase/profiles/profileswificonfigs_mocks_test.go
+	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package profiles_test -mock_names Repository=MockIEEERepository,Feature=MockIEEEFeature > ./internal/usecase/profiles/ieee_mocks_test.go
 	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package wificonfigs_test > ./internal/usecase/wificonfigs/mocks_test.go
-
+	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package profilewificonfigs_test > ./internal/usecase/profilewificonfigs/mocks_test.go
 .PHONY: mock
 
 migrate-create:  ### create new migration

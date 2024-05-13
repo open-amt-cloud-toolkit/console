@@ -25,6 +25,6 @@ type Profile struct {
 	KVMEnabled                 bool                 `json:"kvmEnabled" example:"true"`
 	SOLEnabled                 bool                 `json:"solEnabled" example:"true"`
 	IEEE8021xProfileName       *string              `json:"ieee8021xProfileName,omitempty" example:"My Profile"`
-	IEEE8021xProfileObject     *IEEE8021xConfig     `json:"ieee8021xProfileObject,omitempty"`
+	IEEE8021xProfile           *IEEE8021xConfig     `json:"ieee8021xProfile,omitempty"`
 	Version                    string               `json:"version,omitempty" example:"1.0.0"`
 }

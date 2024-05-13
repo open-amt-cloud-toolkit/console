@@ -22,7 +22,18 @@ type Profile struct {
 	KVMEnabled                 bool
 	SOLEnabled                 bool
 	IEEE8021xProfileName       *string
-	Version                    string
+
+	// columns to populate from join query
+	Version                string
+	AuthenticationProtocol *int
+	ServerName             string
+	Domain                 string
+	Username               string
+	Password               string
+	RoamingIdentity        string
+	ActiveInS0             bool
+	PXETimeout             *int
+	WiredInterface         *bool
 }
 
 const (

@@ -8,6 +8,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -16,13 +17,15 @@ import (
 // UseCase -.
 type UseCase struct {
 	repo Repository
+	ieee ieee8021xconfigs.Feature
 	log  logger.Interface
 }
 
 // New -.
-func New(r Repository, log logger.Interface) *UseCase {
+func New(r Repository, ieee ieee8021xconfigs.Feature, log logger.Interface) *UseCase {
 	return &UseCase{
 		repo: r,
+		ieee: ieee,
 		log:  log,
 	}
 }
@@ -160,10 +163,11 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 	// convert comma separated string to []int
 	linkPolicyInt := []int{}
 
-	if d.LinkPolicy != nil {
+	if d.LinkPolicy != nil && *d.LinkPolicy != "" {
 		linkPolicy := strings.Split(*d.LinkPolicy, ",")
+
 		// convert []string to []int
-		intLinkPolicy := make([]int, len(linkPolicy))
+		linkPolicyInt = make([]int, len(linkPolicy))
 
 		for i, v := range linkPolicy {
 			val, err := strconv.Atoi(v)
@@ -172,7 +176,7 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 				uc.log.Error("error converting string to int")
 			}
 
-			intLinkPolicy[i] = val
+			linkPolicyInt[i] = val
 		}
 	}
 
@@ -187,6 +191,21 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 		TenantID:             d.TenantID,
 		IEEE8021xProfileName: d.IEEE8021xProfileName,
 		Version:              d.Version,
+	}
+
+	if d.IEEE8021xProfileName != nil && *d.IEEE8021xProfileName != "" {
+		val := &dto.IEEE8021xConfig{
+			AuthenticationProtocol: *d.AuthenticationProtocol,
+			ServerName:             *d.ServerName,
+			Domain:                 *d.Domain,
+			Username:               *d.Username,
+			Password:               *d.Password,
+			RoamingIdentity:        *d.RoamingIdentity,
+			ActiveInS0:             *d.ActiveInS0,
+			PXETimeout:             d.PXETimeout,
+			WiredInterface:         *d.WiredInterface,
+		}
+		d1.IEEE8021xProfileObject = val
 	}
 
 	return d1

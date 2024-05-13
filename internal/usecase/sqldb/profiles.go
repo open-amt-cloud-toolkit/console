@@ -64,7 +64,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 
 	sqlQuery, _, err := r.Builder.
 		Select(
-			"profile_name",
+			"p.profile_name",
 			"activation",
 			"amt_password",
 			"generate_random_password",
@@ -73,7 +73,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"generate_random_mebx_password",
 			"tags",
 			"dhcp_enabled",
-			"tenant_id",
+			"p.tenant_id",
 			"tls_mode",
 			"user_consent",
 			"ider_enabled",
@@ -83,10 +83,34 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"ip_sync_enabled",
 			"local_wifi_sync_enabled",
 			"ieee8021x_profile_name",
+			// ieee8021xconfigs table
+			"auth_Protocol",
+			"pxe_timeout",
+			"wired_interface",
 		).
-		From("profiles").
-		Where("tenant_id = ?", tenantID).
-		OrderBy("profile_name").
+		From("profiles p").
+		LeftJoin("profiles_wirelessconfigs pw ON pw.profile_name = p.profile_name AND pw.tenant_id = p.tenant_id").
+		LeftJoin("ieee8021xconfigs e ON p.ieee8021x_profile_name = e.profile_name AND p.tenant_id = e.tenant_id").
+		Where("p.tenant_id = ?", tenantID).
+		GroupBy("p.activation",
+			"amt_password",
+			"generate_random_password",
+			"cira_config_name",
+			"mebx_password",
+			"generate_random_mebx_password",
+			"tags",
+			"dhcp_enabled",
+			"p.tenant_id",
+			"tls_mode",
+			"user_consent",
+			"ider_enabled",
+			"kvm_enabled",
+			"sol_enabled",
+			"tls_signing_authority",
+			"ip_sync_enabled",
+			"local_wifi_sync_enabled",
+			"ieee8021x_profile_name").
+		OrderBy("p.profile_name").
 		Limit(uint64(top)).
 		Offset(uint64(skip)).
 		ToSql()
@@ -114,7 +138,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			&p.CIRAConfigName, &p.MEBXPassword,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
-			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName)
+			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return nil, ErrProfileDatabase.Wrap("Get", "rows.Scan", err)
 		}
@@ -129,7 +153,8 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 
 func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string) (*entity.Profile, error) {
 	sqlQuery, _, err := r.Builder.
-		Select("profile_name",
+		Select(
+			"p.profile_name",
 			"activation",
 			"amt_password",
 			"generate_random_password",
@@ -138,7 +163,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 			"generate_random_mebx_password",
 			"tags",
 			"dhcp_enabled",
-			"tenant_id",
+			"p.tenant_id",
 			"tls_mode",
 			"user_consent",
 			"ider_enabled",
@@ -148,9 +173,13 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 			"ip_sync_enabled",
 			"local_wifi_sync_enabled",
 			"ieee8021x_profile_name",
+			"auth_Protocol",
+			"pxe_timeout",
+			"wired_interface",
 		).
-		From("profiles").
-		Where("profile_name = ? and tenant_id = ?", profileName, tenantID).
+		From("profiles p").
+		LeftJoin("ieee8021xconfigs e ON p.ieee8021x_profile_name = e.profile_name AND p.tenant_id = e.tenant_id").
+		Where("p.profile_name = ? and p.tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return nil, ErrProfileDatabase.Wrap("GetByName", "r.Builder", err)
@@ -176,7 +205,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 			&p.CIRAConfigName, &p.MEBXPassword,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
-			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName)
+			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return p, ErrProfileDatabase.Wrap("GetByName", "rows.Scan", err)
 		}

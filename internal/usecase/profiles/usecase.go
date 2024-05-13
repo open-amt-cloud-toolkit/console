@@ -6,6 +6,8 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profilewificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -13,8 +15,10 @@ import (
 
 // UseCase -.
 type UseCase struct {
-	repo Repository
-	log  logger.Interface
+	repo           Repository
+	wifiConfigRepo profilewificonfigs.Feature
+	ieee           ieee8021xconfigs.Feature
+	log            logger.Interface
 }
 
 var (
@@ -24,10 +28,12 @@ var (
 )
 
 // New -.
-func New(r Repository, log logger.Interface) *UseCase {
+func New(r Repository, w profilewificonfigs.Feature, i ieee8021xconfigs.Feature, log logger.Interface) *UseCase {
 	return &UseCase{
-		repo: r,
-		log:  log,
+		repo:           r,
+		wifiConfigRepo: w,
+		ieee:           i,
+		log:            log,
 	}
 }
 
@@ -72,12 +78,24 @@ func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) 
 		return nil, ErrNotFound
 	}
 
+	associatedWiFiProfiles, _ := uc.wifiConfigRepo.GetByProfileName(ctx, profileName, tenantID)
+
 	d2 := uc.entityToDTO(data)
+
+	if len(associatedWiFiProfiles) > 0 {
+		d2.WiFiConfigs = associatedWiFiProfiles
+	}
 
 	return d2, nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) error {
+	// remove all wifi configs associated with the profile
+	err := uc.wifiConfigRepo.DeleteByProfileName(ctx, profileName, tenantID)
+	if err != nil {
+		return ErrDatabase.Wrap("Delete", "uc.repo.Delete", err)
+	}
+
 	isSuccessful, err := uc.repo.Delete(ctx, profileName, tenantID)
 	if err != nil {
 		return ErrDatabase.Wrap("Delete", "uc.repo.Delete", err)
@@ -98,6 +116,28 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Profile) (*dto.Profile, er
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
 	}
 
+	// remove all wifi configs associated with the profile
+	err = uc.wifiConfigRepo.DeleteByProfileName(ctx, d.ProfileName, d.TenantID)
+	if err != nil {
+		return nil, ErrDatabase.Wrap("Delete", "uc.wifiRepo.DeleteByProfileName", err)
+	}
+
+	if d.DHCPEnabled {
+		// insert new wifi configs
+		if len(d.WiFiConfigs) > 0 {
+			for _, wifiConfig := range d.WiFiConfigs {
+				wifiConfig.ProfileName = d.ProfileName
+
+				tmpWifiConfig := wifiConfig // create a new variable to avoid memory aliasing
+
+				err = uc.wifiConfigRepo.Insert(ctx, &tmpWifiConfig)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
 	updatedProfile, err := uc.repo.GetByName(ctx, d.ProfileName, d.TenantID)
 	if err != nil {
 		return nil, err
@@ -116,12 +156,26 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.Profile) (*dto.Profile, er
 		return nil, ErrDatabase.Wrap("Insert", "uc.repo.Insert", err)
 	}
 
+	if len(d.WiFiConfigs) > 0 {
+		for _, wifiConfig := range d.WiFiConfigs {
+			wifiConfig.ProfileName = d.ProfileName
+
+			tmpWifiConfig := wifiConfig // create a new variable to avoid memory aliasing
+
+			err = uc.wifiConfigRepo.Insert(ctx, &tmpWifiConfig)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	newProfile, err := uc.repo.GetByName(ctx, d.ProfileName, d.TenantID)
 	if err != nil {
 		return nil, err
 	}
 
 	d2 := uc.entityToDTO(newProfile)
+	d2.WiFiConfigs = d.WiFiConfigs
 
 	return d2, nil
 }
@@ -163,7 +217,6 @@ func (uc *UseCase) dtoToEntity(d *dto.Profile) *entity.Profile {
 func (uc *UseCase) entityToDTO(d *entity.Profile) *dto.Profile {
 	// convert comma separated string to []string
 	tags := strings.Split(d.Tags, ",")
-
 	d1 := &dto.Profile{
 		ProfileName:                d.ProfileName,
 		AMTPassword:                d.AMTPassword,
@@ -187,6 +240,24 @@ func (uc *UseCase) entityToDTO(d *entity.Profile) *dto.Profile {
 		SOLEnabled:                 d.SOLEnabled,
 		IEEE8021xProfileName:       d.IEEE8021xProfileName,
 		Version:                    d.Version,
+	}
+
+	if d.IEEE8021xProfileName != nil && *d.IEEE8021xProfileName != "" {
+		val := &dto.IEEE8021xConfig{
+			ProfileName:            *d.IEEE8021xProfileName,
+			AuthenticationProtocol: *d.AuthenticationProtocol,
+			ServerName:             d.ServerName,
+			Domain:                 d.Domain,
+			Username:               d.Username,
+			Password:               d.Password,
+			RoamingIdentity:        d.RoamingIdentity,
+			ActiveInS0:             d.ActiveInS0,
+			PXETimeout:             d.PXETimeout,
+			WiredInterface:         *d.WiredInterface,
+			TenantID:               d.TenantID,
+			Version:                d.Version,
+		}
+		d1.IEEE8021xProfile = val
 	}
 
 	return d1
