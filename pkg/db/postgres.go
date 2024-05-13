@@ -4,6 +4,8 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -50,20 +52,45 @@ func New(url string, opts ...Option) (*SQL, error) {
 	var err error
 
 	if strings.HasPrefix(url, "postgres://") {
-		db.Pool, err = sql.Open("pgx", url)
+		err = setupHostedDB(db, url)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		db.IsEmbedded = true
-
-		db.Pool, err = sql.Open("sqlite3", "./console.db")
+		err = setupEmbeddedDB(db)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return db, nil
+}
+
+func setupEmbeddedDB(db *SQL) error {
+	db.IsEmbedded = true
+
+	dirname, err := os.UserConfigDir()
+	if err != nil {
+		return err
+	}
+
+	db.Pool, err = sql.Open("sqlite3", filepath.Join(dirname, "device-management-toolkit", "console.db"))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setupHostedDB(db *SQL, url string) error {
+	var err error
+
+	db.Pool, err = sql.Open("pgx", url)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Close -.

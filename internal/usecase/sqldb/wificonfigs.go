@@ -93,11 +93,21 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 			"psk_value",
 			"psk_passphrase",
 			"link_policy",
-			"tenant_id",
+			"w.tenant_id",
 			"ieee8021x_profile_name",
+			"auth_protocol",
+			"servername",
+			"domain",
+			"username",
+			"password",
+			"roaming_identity",
+			"active_in_s0 BOOLEAN",
+			"pxe_timeout integer",
+			"wired_interface",
 		).
-		From("wirelessconfigs").
-		Where("tenant_id = ?", tenantID).
+		From("wirelessconfigs w").
+		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
+		Where("w.tenant_id = ?", tenantID).
 		OrderBy("wireless_profile_name").
 		Limit(uint64(top)).
 		Offset(uint64(skip)).
@@ -122,7 +132,8 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 	for rows.Next() {
 		p := entity.WirelessConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.PSKPassphrase, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.PSKPassphrase, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
+			&p.AuthenticationProtocol, &p.ServerName, &p.Domain, &p.Username, &p.Password, &p.RoamingIdentity, &p.ActiveInS0, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return nil, ErrWiFiDatabase.Wrap("Get", "rows.Scan", err)
 		}
@@ -144,11 +155,21 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 			"psk_value",
 			// "psk_passphrase",
 			"link_policy",
-			"tenant_id",
+			"w.tenant_id",
 			"ieee8021x_profile_name",
+			"auth_protocol",
+			"servername",
+			"domain",
+			"username",
+			"password",
+			"roaming_identity",
+			"active_in_s0",
+			"pxe_timeout",
+			"wired_interface",
 		).
-		From("wirelessconfigs").
-		Where("wireless_profile_name = ? and tenant_id = ?", profileName, tenantID).
+		From("wirelessconfigs w").
+		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
+		Where("w.wireless_profile_name = ? and w.tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return nil, ErrWiFiDatabase.Wrap("GetByName", "r.Builder", err)
@@ -170,7 +191,8 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 	for rows.Next() {
 		p := &entity.WirelessConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName)
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
+			&p.AuthenticationProtocol, &p.ServerName, &p.Domain, &p.Username, &p.Password, &p.RoamingIdentity, &p.ActiveInS0, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return p, ErrWiFiDatabase.Wrap("GetByName", "rows.Scan", err)
 		}
