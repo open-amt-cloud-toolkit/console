@@ -32,7 +32,7 @@ linters-settings:
       - hugeParam
   gofumpt:
     extra-rules: true
-  gomnd:
+  mnd:
     checks:
       - argument
       - case
@@ -78,7 +78,7 @@ linters:
     - gofmt
     - gofumpt
     - goimports
-    - gomnd
+    - mnd
     - gomodguard
     - goprintffuncname
     - gosec

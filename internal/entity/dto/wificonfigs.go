@@ -18,9 +18,3 @@ type WirelessConfig struct {
 	IEEE8021xProfileObject *IEEE8021xConfig `json:"ieee8021xProfileObject,omitempty"`
 	Version                string           `json:"version"`
 }
-
-type ProfileWiFiConfigs struct {
-	Priority    int    `json:"priority,omitempty" example:"1"`
-	ProfileName string `json:"profileName" example:"My Profile"`
-	TenantID    string `json:"tenantId" example:"abc123"`
-}

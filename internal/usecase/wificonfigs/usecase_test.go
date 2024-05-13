@@ -24,6 +24,35 @@ type test struct {
 	res         interface{}
 	err         error
 }
+type MockIEEE8021x struct{}
+
+func (m MockIEEE8021x) CheckProfileExists(_ context.Context, _, _ string) (bool, error) {
+	return false, nil
+}
+
+func (m MockIEEE8021x) GetCount(_ context.Context, _ string) (int, error) {
+	return 0, nil
+}
+
+func (m MockIEEE8021x) Get(_ context.Context, _, _ int, _ string) ([]dto.IEEE8021xConfig, error) {
+	return []dto.IEEE8021xConfig{}, nil
+}
+
+func (m MockIEEE8021x) GetByName(_ context.Context, _, _ string) (*dto.IEEE8021xConfig, error) {
+	return &dto.IEEE8021xConfig{}, nil
+}
+
+func (m MockIEEE8021x) Delete(_ context.Context, _, _ string) error {
+	return nil
+}
+
+func (m MockIEEE8021x) Update(_ context.Context, _ *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+	return &dto.IEEE8021xConfig{}, nil
+}
+
+func (m MockIEEE8021x) Insert(_ context.Context, _ *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+	return &dto.IEEE8021xConfig{}, nil
+}
 
 func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *MockRepository) {
 	t.Helper()
@@ -33,7 +62,8 @@ func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *MockRepository) {
 
 	repo := NewMockRepository(mockCtl)
 	log := logger.New("error")
-	useCase := wificonfigs.New(repo, log)
+	ieeeMock := MockIEEE8021x{}
+	useCase := wificonfigs.New(repo, ieeeMock, log)
 
 	return useCase, repo
 }
@@ -123,10 +153,22 @@ func TestGetCount(t *testing.T) {
 func TestGet(t *testing.T) {
 	t.Parallel()
 
+	linkPolicy := "1,2"
+	ieeeProfileName := "test-8021x"
 	testWifiConfigsEntity := []entity.WirelessConfig{
 		{
-			ProfileName: "test-wirelessconfig-1",
-			TenantID:    "tenant-id-456",
+			ProfileName:            "test-wirelessconfig-1",
+			TenantID:               "tenant-id-456",
+			LinkPolicy:             &linkPolicy,
+			IEEE8021xProfileName:   &ieeeProfileName,
+			AuthenticationProtocol: &[]int{0}[0],
+			ServerName:             &[]string{"server"}[0],
+			Domain:                 &[]string{"domain"}[0],
+			Username:               &[]string{"username"}[0],
+			Password:               &[]string{"password"}[0],
+			RoamingIdentity:        &[]string{"roaming"}[0],
+			ActiveInS0:             &[]bool{true}[0],
+			WiredInterface:         &[]bool{false}[0],
 		},
 		{
 			ProfileName: "test-wirelessconfig-2",
@@ -136,9 +178,20 @@ func TestGet(t *testing.T) {
 
 	testWifiConfigDTOs := []dto.WirelessConfig{
 		{
-			ProfileName: "test-wirelessconfig-1",
-			TenantID:    "tenant-id-456",
-			LinkPolicy:  []int{},
+			ProfileName:          "test-wirelessconfig-1",
+			TenantID:             "tenant-id-456",
+			LinkPolicy:           []int{1, 2},
+			IEEE8021xProfileName: &ieeeProfileName,
+			IEEE8021xProfileObject: &dto.IEEE8021xConfig{
+				AuthenticationProtocol: 0,
+				ServerName:             "server",
+				Domain:                 "domain",
+				Username:               "username",
+				Password:               "password",
+				RoamingIdentity:        "roaming",
+				ActiveInS0:             true,
+				WiredInterface:         false,
+			},
 		},
 		{
 			ProfileName: "test-wirelessconfig-2",
