@@ -80,7 +80,7 @@ jobs:
       uses: github/codeql-action/analyze@ccf74c947955fd1cf117aef6a0e4e66191ef6f61 # v3.25.4
     - name: Generate Security Report
       continue-on-error: true
-      uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
+      uses: rsdmike/github-security-report-action@544ffd6318f4982cb6fe21197e93bebae5ec217e # v3.0.4
       with:
         template: report
         token: ${{ secrets.SECURITY_TOKEN }}
