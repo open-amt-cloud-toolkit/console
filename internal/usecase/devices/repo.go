@@ -51,7 +51,7 @@ func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*dto.Dev
 		return nil, ErrDatabase.Wrap("GetByID", "uc.repo.GetByID", err)
 	}
 
-	if data == nil {
+	if data == nil || data.GUID == "" {
 		return nil, ErrNotFound
 	}
 
