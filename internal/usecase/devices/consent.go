@@ -4,13 +4,12 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 )
 
 func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -25,8 +24,8 @@ func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{
 
 func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[string]interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -45,8 +44,8 @@ func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[strin
 
 func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsent, guid string) (interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
