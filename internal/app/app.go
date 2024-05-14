@@ -24,7 +24,8 @@ var Version = "DEVELOPMENT"
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
 	log := logger.New(cfg.Log.Level)
-	log.Info("app - Run - version: " + Version)
+	cfg.App.Version = Version
+	log.Info("app - Run - version: " + cfg.App.Version)
 	// Repository
 	database, err := db.New(cfg.DB.URL, db.MaxPoolSize(cfg.DB.PoolMax))
 	if err != nil {
@@ -47,7 +48,7 @@ func Run(cfg *config.Config) {
 	defaultConfig.AllowHeaders = cfg.HTTP.AllowedHeaders
 
 	handler.Use(cors.New(defaultConfig))
-	v1.NewRouter(handler, log, *usecases)
+	v1.NewRouter(handler, log, *usecases, cfg)
 	wsv1.RegisterRoutes(handler, log, usecases.Devices)
 	httpServer := httpserver.New(handler, httpserver.Port("127.0.0.1", cfg.HTTP.Port))
 
