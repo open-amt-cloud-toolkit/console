@@ -1,5 +1,6 @@
 app:
   name: "console"
+  repo: "open-amt-cloud-toolkit/console"
 
 http:
   port: "8181"

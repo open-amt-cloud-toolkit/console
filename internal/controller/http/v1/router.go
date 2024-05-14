@@ -12,12 +12,15 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 //go:embed all:ui
 var content embed.FS
+
+var Config *config.Config
 
 // NewRouter -.
 // Swagger spec:
@@ -26,10 +29,12 @@ var content embed.FS
 // @version     1.0
 // @host        localhost:8181
 // @BasePath    /v1
-func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases) {
+func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg *config.Config) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
+
+	Config = cfg
 	// Static files
 	// Serve static assets (js, css, images, etc.)
 	// Create subdirectory view of the embedded file system
@@ -57,6 +62,9 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases) {
 
 	// Prometheus metrics
 	handler.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	// version info
+	handler.GET("/version", LatestReleaseHandler)
 
 	// Routers
 	h2 := handler.Group("/api/v1")

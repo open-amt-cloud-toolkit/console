@@ -15,7 +15,9 @@ type (
 
 	// App -.
 	App struct {
-		Name string `env-required:"false" yaml:"name" env:"APP_NAME"`
+		Name    string `env-required:"false" yaml:"name" env:"APP_NAME"`
+		Repo    string `env-required:"false" yaml:"repo" env:"APP_REPO"`
+		Version string `env-required:"false"`
 	}
 
 	// HTTP -.
@@ -42,7 +44,9 @@ func NewConfig() (*Config, error) {
 	// set defaults
 	cfg := &Config{
 		App: App{
-			Name: "console",
+			Name:    "console",
+			Repo:    "open-amt-cloud-toolkit/console",
+			Version: "DEVELOPMENT",
 		},
 		HTTP: HTTP{
 			Port:           "8181",
