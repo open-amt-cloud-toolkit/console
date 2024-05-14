@@ -195,9 +195,9 @@ func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, erro
 }
 
 func configureKVM(features dto.Features, listenerEnabled int, g *GoWSMANMessages) (int, error) {
-	kvmRequestedState := kvm.RedirectionSAP_Disable
+	kvmRequestedState := kvm.RedirectionSAPDisable
 	if features.EnableKVM {
-		kvmRequestedState = kvm.RedirectionSAP_Enable
+		kvmRequestedState = kvm.RedirectionSAPEnable
 		listenerEnabled = 1
 	}
 
