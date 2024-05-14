@@ -11,7 +11,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 )
 
 func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (power.PowerActionResponse, error) {
@@ -68,7 +67,7 @@ func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[str
 
 	amtversion, err := parseVersion(version)
 	if err != nil {
-		return nil, utils.ErrParseVersion
+		return nil, err
 	}
 
 	response := determinePowerCapabilities(amtversion, capabilities)

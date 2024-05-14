@@ -8,13 +8,12 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 )
 
 func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]alarmclock.AlarmClockOccurrence, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -33,8 +32,8 @@ func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]alarmc
 
 func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm dto.AlarmClockOccurrence) (amtAlarmClock.AddAlarmOutput, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return amtAlarmClock.AddAlarmOutput{}, nil
+	if err != nil {
+		return amtAlarmClock.AddAlarmOutput{}, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -54,7 +53,7 @@ func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm 
 
 func (uc *UseCase) DeleteAlarmOccurrences(c context.Context, guid, instanceID string) error {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
+	if err != nil {
 		return err
 	}
 
