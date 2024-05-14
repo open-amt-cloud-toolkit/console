@@ -2,7 +2,6 @@ package devices_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
@@ -17,8 +16,6 @@ import (
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var ErrGeneral = errors.New("general error")
 
 type powerTest struct {
 	name     string
@@ -83,7 +80,7 @@ func TestSendPowerAction(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, ErrGeneral)
+					Return(nil, ErrTest)
 			},
 			res: power.PowerActionResponse{},
 			err: devices.ErrDatabase,
@@ -97,7 +94,7 @@ func TestSendPowerAction(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SendPowerAction(0).
-					Return(power.PowerActionResponse{}, ErrGeneral)
+					Return(power.PowerActionResponse{}, ErrTest)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -105,7 +102,7 @@ func TestSendPowerAction(t *testing.T) {
 					Return(device, nil)
 			},
 			res: power.PowerActionResponse{},
-			err: ErrGeneral,
+			err: ErrTest,
 		},
 	}
 
@@ -114,7 +111,7 @@ func TestSendPowerAction(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initPowerTest(t)
+			useCase, management, repo := initInterceptorTest(t)
 
 			tc.manMock(management)
 			tc.repoMock(repo)
@@ -162,7 +159,7 @@ func TestGetPowerState(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, ErrGeneral)
+					Return(nil, ErrTest)
 			},
 			res: map[string]interface{}(nil),
 			err: devices.ErrDatabase,
@@ -175,7 +172,7 @@ func TestGetPowerState(t *testing.T) {
 					Return()
 				man.EXPECT().
 					GetPowerState().
-					Return([]service.CIM_AssociatedPowerManagementService{}, ErrGeneral)
+					Return([]service.CIM_AssociatedPowerManagementService{}, ErrTest)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -183,7 +180,7 @@ func TestGetPowerState(t *testing.T) {
 					Return(device, nil)
 			},
 			res: map[string]interface{}(nil),
-			err: ErrGeneral,
+			err: ErrTest,
 		},
 	}
 
@@ -192,7 +189,7 @@ func TestGetPowerState(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initPowerTest(t)
+			useCase, management, repo := initInterceptorTest(t)
 
 			tc.manMock(management)
 			tc.repoMock(repo)
@@ -252,7 +249,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, ErrGeneral)
+					Return(nil, ErrTest)
 			},
 			res: map[string]interface{}(nil),
 			err: devices.ErrDatabase,
@@ -265,7 +262,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					Return()
 				man.EXPECT().
 					GetPowerCapabilities().
-					Return(boot.BootCapabilitiesResponse{}, ErrGeneral)
+					Return(boot.BootCapabilitiesResponse{}, ErrTest)
 				man.EXPECT().
 					GetAMTVersion().
 					Return(nil, nil)
@@ -276,7 +273,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					Return(device, nil)
 			},
 			res: map[string]interface{}(nil),
-			err: ErrGeneral,
+			err: ErrTest,
 		},
 	}
 
@@ -285,7 +282,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initPowerTest(t)
+			useCase, management, repo := initInterceptorTest(t)
 			tc.manMock(management)
 			tc.repoMock(repo)
 
@@ -346,7 +343,7 @@ func TestSetBootOptions(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, ErrGeneral)
+					Return(nil, ErrTest)
 			},
 			res: power.PowerActionResponse{},
 			err: devices.ErrDatabase,
@@ -359,7 +356,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SetBootConfigRole(1).
-					Return(powerActionRes, ErrGeneral)
+					Return(powerActionRes, ErrTest)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -367,7 +364,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(device, nil)
 			},
 			res: power.PowerActionResponse{},
-			err: ErrGeneral,
+			err: ErrTest,
 		},
 		{
 			name: "ChangeBootOrder fails",
@@ -380,7 +377,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(powerActionRes, nil)
 				man.EXPECT().
 					ChangeBootOrder(string(cimBoot.PXE)).
-					Return(cimBoot.ChangeBootOrder_OUTPUT{}, ErrGeneral)
+					Return(cimBoot.ChangeBootOrder_OUTPUT{}, ErrTest)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -388,7 +385,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(device, nil)
 			},
 			res: power.PowerActionResponse{},
-			err: ErrGeneral,
+			err: ErrTest,
 		},
 		{
 			name: "SetBootData fails",
@@ -404,7 +401,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(cimBoot.ChangeBootOrder_OUTPUT{}, nil)
 				man.EXPECT().
 					SetBootData(gomock.Any()).
-					Return(nil, ErrGeneral)
+					Return(nil, ErrTest)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -412,7 +409,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(device, nil)
 			},
 			res: power.PowerActionResponse{},
-			err: ErrGeneral,
+			err: ErrTest,
 		},
 		{
 			name: "GetPowerCapabilities fails",
@@ -431,7 +428,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(nil, nil)
 				man.EXPECT().
 					SendPowerAction(10).
-					Return(powerActionRes, ErrGeneral)
+					Return(powerActionRes, ErrTest)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -439,7 +436,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(device, nil)
 			},
 			res: power.PowerActionResponse{},
-			err: ErrGeneral,
+			err: ErrTest,
 		},
 	}
 
@@ -448,7 +445,7 @@ func TestSetBootOptions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initPowerTest(t)
+			useCase, management, repo := initInterceptorTest(t)
 			tc.manMock(management)
 			tc.repoMock(repo)
 
