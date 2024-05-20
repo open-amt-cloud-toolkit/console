@@ -19,10 +19,16 @@ services:
     environment:
       DB_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
     ports:
-      - 8080:8080
-      - 8081:8081
+      - 8181:8181
     depends_on:
       - postgres
-
+  integration:
+    build:
+      context: .
+      dockerfile: integration-test/Dockerfile
+    container_name: integration
+    image: integration
+    depends_on:
+      - app
 volumes:
   pg-data:

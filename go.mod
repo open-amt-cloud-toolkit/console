@@ -23,18 +23,30 @@ require (
 )
 
 require (
+	github.com/Eun/go-convert v0.0.0-20200421145326-bef6c56666ee // indirect
+	github.com/Eun/go-doppelgangerreader v0.0.0-20190911075941-30f1527f16b2 // indirect
+	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/gookit/color v1.4.2 // indirect
+	github.com/itchyny/gojq v0.12.5 // indirect
+	github.com/itchyny/timefmt-go v0.1.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	lukechampine.com/uint128 v1.2.0 // indirect
 	modernc.org/cc/v3 v3.36.3 // indirect
 	modernc.org/ccgo/v3 v3.16.9 // indirect
@@ -49,6 +61,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.3.1 // indirect
+	github.com/Eun/go-hit v0.5.23
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
