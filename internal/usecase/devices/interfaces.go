@@ -12,6 +12,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
@@ -47,6 +49,8 @@ type (
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
 		GetNetworkSettings() (interface{}, error)
+		GetCredentialRelationships() (credential.Items, error)
+		GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
 	}
 	Redirection interface {
 		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages

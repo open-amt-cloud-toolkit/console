@@ -25,6 +25,8 @@ import (
 	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	setupandconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	boot0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
+	concrete "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
+	credential "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	service "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	software "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
@@ -173,6 +175,36 @@ func (m *MockManagement) GetBootData() (boot.BootCapabilitiesResponse, error) {
 func (mr *MockManagementMockRecorder) GetBootData() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBootData", reflect.TypeOf((*MockManagement)(nil).GetBootData))
+}
+
+// GetConcreteDependencies mocks base method.
+func (m *MockManagement) GetConcreteDependencies() ([]concrete.ConcreteDependency, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConcreteDependencies")
+	ret0, _ := ret[0].([]concrete.ConcreteDependency)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConcreteDependencies indicates an expected call of GetConcreteDependencies.
+func (mr *MockManagementMockRecorder) GetConcreteDependencies() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcreteDependencies", reflect.TypeOf((*MockManagement)(nil).GetConcreteDependencies))
+}
+
+// GetCredentialRelationships mocks base method.
+func (m *MockManagement) GetCredentialRelationships() (credential.Items, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCredentialRelationships")
+	ret0, _ := ret[0].(credential.Items)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCredentialRelationships indicates an expected call of GetCredentialRelationships.
+func (mr *MockManagementMockRecorder) GetCredentialRelationships() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCredentialRelationships", reflect.TypeOf((*MockManagement)(nil).GetCredentialRelationships))
 }
 
 // GetEventLog mocks base method.
