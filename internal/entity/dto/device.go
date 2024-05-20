@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type Device struct {
 	ConnectionStatus bool        `json:"connectionStatus"`

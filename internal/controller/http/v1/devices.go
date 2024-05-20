@@ -23,7 +23,7 @@ func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Inter
 		h.GET("", r.get)
 		h.GET("stats", r.getStats)
 		h.GET("redirectstatus/:guid", r.redirectStatus)
-		h.GET(":guid", r.get)
+		h.GET(":guid", r.getByID)
 		h.GET("tags", r.getTags)
 		h.POST("", r.insert)
 		h.PATCH("", r.update)
@@ -49,7 +49,7 @@ type DeviceStatResponse struct {
 // @Produce     json
 // @Success     200 {object} DeviceCountResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/devices [get]
+// @Router      /api/v1/devices [get]
 func (dr *deviceRoutes) getStats(c *gin.Context) {
 	count, err := dr.t.GetCount(c.Request.Context(), "")
 	if err != nil {
@@ -74,7 +74,7 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} DeviceCountResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/devices [get]
+// @Router      /api/v1/devices [get]
 func (dr *deviceRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
@@ -127,6 +127,36 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 	}
 }
 
+// @Summary     Get Device by ID
+// @Description Get a device by ID
+// @ID          getDevice
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} DeviceCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/devices [get]
+func (dr *deviceRoutes) getByID(c *gin.Context) {
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		errorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - get")
+		errorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
+}
+
 // @Summary     Add Devices
 // @Description Add a devices
 // @ID          insertDevice
@@ -135,7 +165,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} DeviceResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/devices [post]
+// @Router      /api/v1/devices [post]
 func (dr *deviceRoutes) insert(c *gin.Context) {
 	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
@@ -152,7 +182,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, newDevice)
+	c.JSON(http.StatusCreated, newDevice)
 }
 
 // @Summary     Edit Devices
@@ -163,7 +193,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} DeviceResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/devices [patch]
+// @Router      /api/v1/devices [patch]
 func (dr *deviceRoutes) update(c *gin.Context) {
 	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
@@ -191,7 +221,7 @@ func (dr *deviceRoutes) update(c *gin.Context) {
 // @Produce     json
 // @Success     204 {object} noContent
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/devices [delete]
+// @Router      /api/v1/devices [delete]
 func (dr *deviceRoutes) delete(c *gin.Context) {
 	guid := c.Param("guid")
 
@@ -223,7 +253,7 @@ func (dr *deviceRoutes) redirectStatus(c *gin.Context) {
 // @Produce     json
 // @Success     204 {object} noContent
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/devices/tags [get]
+// @Router      /api/v1/devices/tags [get]
 func (dr *deviceRoutes) getTags(c *gin.Context) {
 	tags, err := dr.t.GetDistinctTags(c.Request.Context(), "")
 	if err != nil {

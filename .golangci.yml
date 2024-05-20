@@ -131,3 +131,6 @@ issues:
         - goerr113
   exclude-dirs:
     - docs
+
+run:
+  timeout: 5m
