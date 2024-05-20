@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
@@ -28,13 +26,6 @@ func newDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Inter
 		h.PATCH("", r.update)
 		h.DELETE(":name", r.delete)
 	}
-
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := v.RegisterValidation("storageformat", dto.StorageFormatValidation)
-		if err != nil {
-			l.Error(err, "error registering validation")
-		}
-	}
 }
 
 type DomainCountResponse struct {
@@ -50,7 +41,7 @@ type DomainCountResponse struct {
 // @Produce     json
 // @Success     200 {object} DomainCountResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/domains [get]
+// @Router      /api/v1/admin/domains [Get]
 func (r *domainRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {

@@ -3,7 +3,7 @@ package dto
 type CIRAConfig struct {
 	ConfigName          string `json:"configName" example:"My CIRA Config"`
 	MPSAddress          string `json:"mpsServerAddress" binding:"required,ipv4|ipv6|url" example:"https://example.com"`
-	MPSPort             int    `json:"mpsPort" binding:"required,gt=1024,lt=49151" example:"443"`
+	MPSPort             int    `json:"mpsPort" binding:"required,gt=1024,lt=49151" example:"4433"`
 	Username            string `json:"username" binding:"required,alphanum" example:"my_username"`
 	Password            string `json:"password,omitempty" example:"my_password"`
 	CommonName          string `json:"commonName" example:"example.com"`
