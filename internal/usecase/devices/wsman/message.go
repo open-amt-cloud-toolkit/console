@@ -674,15 +674,15 @@ func (g *GoWSMANMessages) DeletePublicCert(instanceID string) error {
 	return err
 }
 
-func (g *GoWSMANMessages) GetCredentialRelationships() ([]credential.CredentialContext, error) {
+func (g *GoWSMANMessages) GetCredentialRelationships() (credential.Items, error) {
 	response, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
 	if err != nil {
-		return nil, err
+		return credential.Items{}, err
 	}
 
 	response, err = g.wsmanMessages.CIM.CredentialContext.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
-		return nil, err
+		return credential.Items{}, err
 	}
 
 	return response.Body.PullResponse.Items, nil
