@@ -49,10 +49,6 @@ var pxeTime = 120
 var ieee8021xconfigTest = dto.IEEE8021xConfig{
 	ProfileName:            "newprofile",
 	AuthenticationProtocol: 0,
-	ServerName:             "example.com",
-	Domain:                 "domain.com",
-	Username:               "username",
-	Password:               "password",
 	PXETimeout:             &pxeTime,
 	TenantID:               "tenant1",
 }

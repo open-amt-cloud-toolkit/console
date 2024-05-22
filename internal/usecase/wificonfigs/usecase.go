@@ -196,12 +196,6 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 	if d.IEEE8021xProfileName != nil && *d.IEEE8021xProfileName != "" {
 		val := &dto.IEEE8021xConfig{
 			AuthenticationProtocol: *d.AuthenticationProtocol,
-			ServerName:             *d.ServerName,
-			Domain:                 *d.Domain,
-			Username:               *d.Username,
-			Password:               *d.Password,
-			RoamingIdentity:        *d.RoamingIdentity,
-			ActiveInS0:             *d.ActiveInS0,
 			PXETimeout:             d.PXETimeout,
 			WiredInterface:         *d.WiredInterface,
 		}

@@ -42,12 +42,6 @@ CREATE TABLE IF NOT EXISTS ciraconfigs(
 CREATE TABLE IF NOT EXISTS ieee8021xconfigs(
   profile_name TEXT,
   auth_protocol INTEGER,
-  servername TEXT,
-  domain TEXT,
-  username TEXT,
-  password TEXT,
-  roaming_identity TEXT,
-  active_in_s0 BOOLEAN NOT NULL, 
   pxe_timeout INTEGER,
   wired_interface BOOLEAN NOT NULL,
   tenant_id TEXT NOT NULL,
