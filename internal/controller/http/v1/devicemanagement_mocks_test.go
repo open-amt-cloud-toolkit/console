@@ -853,10 +853,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetDistinctTags(ctx, tenantID
 }
 
 // GetEventLog mocks base method.
-func (m *MockDeviceManagementFeature) GetEventLog(ctx context.Context, guid string) (messagelog.GetRecordsResponse, error) {
+func (m *MockDeviceManagementFeature) GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEventLog", ctx, guid)
-	ret0, _ := ret[0].(messagelog.GetRecordsResponse)
+	ret0, _ := ret[0].([]dto.EventLog)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

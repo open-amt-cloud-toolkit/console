@@ -3,8 +3,6 @@ package devices
 import (
 	"context"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
-
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
 
@@ -106,20 +104,43 @@ func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (
 	return auditLogResponse, nil
 }
 
-func (uc *UseCase) GetEventLog(c context.Context, guid string) (messagelog.GetRecordsResponse, error) {
+func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return messagelog.GetRecordsResponse{}, err
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
 
 	eventLogs, err := uc.device.GetEventLog()
 	if err != nil {
-		return messagelog.GetRecordsResponse{}, err
+		return nil, err
 	}
 
-	return eventLogs, nil
+	events := make([]dto.EventLog, len(eventLogs.RefinedEventData))
+
+	for idx, event := range eventLogs.RefinedEventData {
+		dtoEvent := dto.EventLog{
+			// DeviceAddress:   event.DeviceAddress,
+			// EventSensorType: event.EventSensorType,
+			// EventType:       event.EventType,
+			// EventOffset:     event.EventOffset,
+			// EventSourceType: event.EventSourceType,
+			EventSeverity: event.EventSeverity,
+			// SensorNumber:    event.SensorNumber,
+			Entity: event.Entity,
+			// EntityInstance:  event.EntityInstance,
+			// EventData:       event.EventData,
+			Time: event.TimeStamp.String(),
+			// EntityStr:       event.EntityStr,
+			Description: event.Description,
+			// EventTypeDesc:   event.EventTypeDesc,
+		}
+
+		events[idx] = dtoEvent
+	}
+
+	return events, nil
 }
 
 func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface{}, error) {

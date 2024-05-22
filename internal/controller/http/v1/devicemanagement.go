@@ -131,20 +131,24 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, alarmReference)
+	c.JSON(http.StatusCreated, alarmReference)
 }
 
 func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 	guid := c.Param("guid")
 
-	alarm := dto.AlarmClockOccurrence{}
+	alarm := dto.DeleteAlarmOccurrenceRequest{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
 		errorResponse(c, err)
 
 		return
 	}
 
-	err := r.d.DeleteAlarmOccurrences(c.Request.Context(), guid, alarm.InstanceID)
+	if alarm.InstanceID == nil {
+		alarm.InstanceID = new(string)
+	}
+
+	err := r.d.DeleteAlarmOccurrences(c.Request.Context(), guid, *alarm.InstanceID)
 	if err != nil {
 		r.l.Error(err, "http - v1 - deleteAlarmOccurrences")
 		errorResponse(c, err)

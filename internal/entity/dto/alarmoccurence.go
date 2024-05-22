@@ -9,3 +9,6 @@ type AlarmClockOccurrence struct {
 	Interval           string    `json:"interval" binding:"required" example:"1"`
 	DeleteOnCompletion bool      `json:"deleteOnCompletion" binding:"required" example:"true"`
 }
+type DeleteAlarmOccurrenceRequest struct {
+	InstanceID *string `json:"instanceID" binding:"" example:"test"`
+}

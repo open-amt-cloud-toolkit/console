@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/stretchr/testify/require"
@@ -164,10 +163,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetEventLog(context.Background(), "valid-guid").
-					Return(messagelog.GetRecordsResponse{}, nil)
+					Return([]dto.EventLog{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     messagelog.GetRecordsResponse{},
+			response:     []dto.EventLog{},
 		},
 		{
 			name:   "setBootOptions - successful setting",
