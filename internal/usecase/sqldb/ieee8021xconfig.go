@@ -201,12 +201,6 @@ func (r *IEEE8021xRepo) Update(_ context.Context, p *entity.IEEE8021xConfig) (bo
 	sqlQuery, args, err := r.Builder.
 		Update("ieee8021xconfigs").
 		Set("auth_protocol", p.AuthenticationProtocol).
-		Set("servername", p.ServerName).
-		Set("domain", p.Domain).
-		Set("username", p.Username).
-		Set("password", p.Password).
-		Set("roaming_identity", p.RoamingIdentity).
-		Set("active_in_s0", p.ActiveInS0).
 		Set("pxe_timeout", p.PXETimeout).
 		Set("wired_interface", p.WiredInterface).
 		Where("profile_name = ? AND tenant_id = ?", p.ProfileName, p.TenantID).

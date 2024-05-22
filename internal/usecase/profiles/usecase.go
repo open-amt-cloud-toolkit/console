@@ -246,12 +246,6 @@ func (uc *UseCase) entityToDTO(d *entity.Profile) *dto.Profile {
 		val := &dto.IEEE8021xConfig{
 			ProfileName:            *d.IEEE8021xProfileName,
 			AuthenticationProtocol: *d.AuthenticationProtocol,
-			ServerName:             d.ServerName,
-			Domain:                 d.Domain,
-			Username:               d.Username,
-			Password:               d.Password,
-			RoamingIdentity:        d.RoamingIdentity,
-			ActiveInS0:             d.ActiveInS0,
 			PXETimeout:             d.PXETimeout,
 			WiredInterface:         *d.WiredInterface,
 			TenantID:               d.TenantID,

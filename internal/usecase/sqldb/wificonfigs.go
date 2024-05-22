@@ -96,12 +96,6 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 			"w.tenant_id",
 			"ieee8021x_profile_name",
 			"auth_protocol",
-			"servername",
-			"domain",
-			"username",
-			"password",
-			"roaming_identity",
-			"active_in_s0 BOOLEAN",
 			"pxe_timeout integer",
 			"wired_interface",
 		).
@@ -133,7 +127,7 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 		p := entity.WirelessConfig{}
 
 		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.PSKPassphrase, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
-			&p.AuthenticationProtocol, &p.ServerName, &p.Domain, &p.Username, &p.Password, &p.RoamingIdentity, &p.ActiveInS0, &p.PXETimeout, &p.WiredInterface)
+			&p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return nil, ErrWiFiDatabase.Wrap("Get", "rows.Scan", err)
 		}
@@ -158,12 +152,6 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 			"w.tenant_id",
 			"ieee8021x_profile_name",
 			"auth_protocol",
-			"servername",
-			"domain",
-			"username",
-			"password",
-			"roaming_identity",
-			"active_in_s0",
 			"pxe_timeout",
 			"wired_interface",
 		).
@@ -192,7 +180,7 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 		p := &entity.WirelessConfig{}
 
 		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
-			&p.AuthenticationProtocol, &p.ServerName, &p.Domain, &p.Username, &p.Password, &p.RoamingIdentity, &p.ActiveInS0, &p.PXETimeout, &p.WiredInterface)
+			&p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return p, ErrWiFiDatabase.Wrap("GetByName", "rows.Scan", err)
 		}
