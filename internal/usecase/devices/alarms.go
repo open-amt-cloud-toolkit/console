@@ -36,6 +36,8 @@ func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm 
 		return amtAlarmClock.AddAlarmOutput{}, err
 	}
 
+	alarm.InstanceID = alarm.ElementName
+
 	uc.device.SetupWsmanClient(*item, false, true)
 
 	interval, err := strconv.Atoi(alarm.Interval)
