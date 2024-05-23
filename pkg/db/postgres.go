@@ -12,7 +12,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib" // pgx driver
-	_ "github.com/mattn/go-sqlite3"    // sqlite3 driver
+	_ "modernc.org/sqlite"             // sqlite3 driver
 )
 
 const (
@@ -74,7 +74,7 @@ func setupEmbeddedDB(db *SQL) error {
 		return err
 	}
 
-	db.Pool, err = sql.Open("sqlite3", filepath.Join(dirname, "device-management-toolkit", "console.db"))
+	db.Pool, err = sql.Open("sqlite", filepath.Join(dirname, "device-management-toolkit", "console.db"))
 	if err != nil {
 		return err
 	}
