@@ -14,7 +14,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // postgres driver
 	dbdbdb "github.com/golang-migrate/migrate/v4/database/sqlite"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // for file source
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"                               // sqlite3 driver
 )
 
 const (
@@ -67,7 +67,7 @@ func setupLocalDB() error {
 
 	log.Printf("DB path : %s\n", filepath.Join(consoleDir, "console.db"))
 
-	db, err := sql.Open("sqlite3", filepath.Join(consoleDir, "console.db"))
+	db, err := sql.Open("sqlite", filepath.Join(consoleDir, "console.db"))
 	if err != nil {
 		return err
 	}
