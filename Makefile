@@ -76,11 +76,11 @@ mock: ### run mockgen
 .PHONY: mock
 
 migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations 'migrate_name'
+	migrate create -ext sql -dir /internal/app/migrations 'migrate_name'
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(DB_URL)?sslmode=disable' up
+	migrate -path /internal/app/migrations -database '$(DB_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 bin-deps:
