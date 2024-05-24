@@ -20,7 +20,7 @@ import (
 
 var ErrGeneral = errors.New("general error")
 
-type powerTest struct {
+type test struct {
 	name     string
 	manMock  func(*MockManagement)
 	repoMock func(*MockRepository)
@@ -56,7 +56,7 @@ func TestSendPowerAction(t *testing.T) {
 		ReturnValue: 0,
 	}
 
-	tests := []powerTest{
+	tests := []test{
 		{
 			name:   "success",
 			action: 0,
@@ -135,7 +135,7 @@ func TestGetPowerState(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	tests := []powerTest{
+	tests := []test{
 		{
 			name: "success",
 			manMock: func(man *MockManagement) {
@@ -213,7 +213,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	tests := []powerTest{
+	tests := []test{
 		{
 			name: "success",
 			manMock: func(man *MockManagement) {
@@ -312,7 +312,7 @@ func TestSetBootOptions(t *testing.T) {
 
 	powerActionRes := power.PowerActionResponse{ReturnValue: 5}
 
-	tests := []powerTest{
+	tests := []test{
 		{
 			name: "success",
 			manMock: func(man *MockManagement) {
