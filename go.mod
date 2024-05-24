@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/prometheus/client_golang v1.19.1
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
