@@ -119,7 +119,8 @@ func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, 
 
 	events := make([]dto.EventLog, len(eventLogs.RefinedEventData))
 
-	for idx, event := range eventLogs.RefinedEventData {
+	for idx := range eventLogs.RefinedEventData {
+		event := &eventLogs.RefinedEventData[idx]
 		dtoEvent := dto.EventLog{
 			// DeviceAddress:   event.DeviceAddress,
 			// EventSensorType: event.EventSensorType,
