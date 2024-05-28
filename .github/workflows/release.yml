@@ -11,6 +11,9 @@ on:
   push:
     branches: [main, alpha]
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -26,7 +29,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Check out Sample Web UI
-        uses: actions/checkout@master
+        uses: actions/checkout@61b9e3751b92087fd0b06925ba6dd6314e06f089 # master
         with:
           repository: open-amt-cloud-toolkit/sample-web-ui
           ref: enterprise #TODO: pull latest tagged version

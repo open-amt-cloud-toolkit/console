@@ -13,7 +13,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-type test struct {
+type testUsecase struct {
 	name     string
 	guid     string
 	tenantID string
@@ -41,7 +41,7 @@ func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository) {
 func TestGetCount(t *testing.T) {
 	t.Parallel()
 
-	tests := []test{
+	tests := []testUsecase{
 		{
 			name: "empty result",
 			mock: func(repo *MockRepository) {
@@ -105,7 +105,7 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	tests := []test{
+	tests := []testUsecase{
 		{
 			name:     "successful retrieval",
 			top:      10,
@@ -183,7 +183,7 @@ func TestGetByID(t *testing.T) {
 		Tags:     []string{""},
 	}
 
-	tests := []test{
+	tests := []testUsecase{
 		{
 			name:     "successful retrieval",
 			guid:     "device-guid-123",
@@ -235,7 +235,7 @@ func TestGetByID(t *testing.T) {
 func TestDelete(t *testing.T) {
 	t.Parallel()
 
-	tests := []test{
+	tests := []testUsecase{
 		{
 			name:     "successful deletion",
 			guid:     "guid-123",
@@ -293,7 +293,7 @@ func TestUpdate(t *testing.T) {
 		Tags:     []string{""},
 	}
 
-	tests := []test{
+	tests := []testUsecase{
 		{
 			name: "successful update",
 			mock: func(repo *MockRepository) {
@@ -337,7 +337,7 @@ func TestUpdate(t *testing.T) {
 func TestInsert(t *testing.T) {
 	t.Parallel()
 
-	tests := []test{
+	tests := []testUsecase{
 		{
 			name: "successful insertion",
 			mock: func(repo *MockRepository) {

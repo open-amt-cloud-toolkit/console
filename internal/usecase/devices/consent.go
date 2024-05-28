@@ -2,6 +2,7 @@ package devices
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
@@ -50,7 +51,9 @@ func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsen
 
 	uc.device.SetupWsmanClient(*item, false, true)
 
-	response, err := uc.device.SendConsentCode(userConsent.ConsentCode)
+	consentCode, _ := strconv.Atoi(userConsent.ConsentCode)
+
+	response, err := uc.device.SendConsentCode(consentCode)
 	if err != nil {
 		return nil, err
 	}
