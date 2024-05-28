@@ -47,6 +47,10 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	handler.StaticFileFS("/", "./", http.FS(staticFiles)) // Serve static files from "/" route
 	handler.StaticFileFS("/main.js", "./main.js", http.FS(staticFiles))
 	handler.StaticFileFS("/polyfills.js", "./polyfills.js", http.FS(staticFiles))
+	handler.StaticFileFS("/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2", "./flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2", http.FS(staticFiles))
+	handler.StaticFileFS("/KFOlCnqEu92Fr1MmEU9fBBc4.woff2", "./KFOlCnqEu92Fr1MmEU9fBBc4.woff2", http.FS(staticFiles))
+	handler.StaticFileFS("/KFOlCnqEu92Fr1MmSU5fBBc4.woff2", "./KFOlCnqEu92Fr1MmSU5fBBc4.woff2", http.FS(staticFiles))
+	handler.StaticFileFS("/KFOmCnqEu92Fr1Mu4mxK.woff2", "./KFOmCnqEu92Fr1Mu4mxK.woff2", http.FS(staticFiles))
 	handler.StaticFileFS("/runtime.js", "./runtime.js", http.FS(staticFiles))
 	handler.StaticFileFS("/styles.css", "./styles.css", http.FS(staticFiles))
 	handler.StaticFileFS("/vendor.js", "./vendor.js", http.FS(staticFiles))

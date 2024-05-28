@@ -9,7 +9,7 @@ name: Semantic-Release CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, alpha]
 
 permissions:
   contents: read
@@ -59,29 +59,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ROSIE_TOKEN }}
 
-    # - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-    #   if: ${{ steps.version.outputs.next != 'none' }}
-    #   with:
-    #     repository: open-amt-cloud-toolkit/e2e-testing
-    #     ref: docker-release
-    #     clean: true
-    #     token: ${{ secrets.ROSIE_TOKEN }}
-
-    # - name: Create docker-release @ ${{ steps.version.outputs.next }}
-    #   if: ${{ steps.version.outputs.next != 'none' }}
-    #   env:
-    #     RELEASE_YAML: release/sample-web-ui.yml
-    #     NEXT_VERSION: ${{ steps.version.outputs.next }}
-    #   run: |
-    #     echo "Releasing ${{ github.repository }}@$NEXT_VERSION"
-    #     if [ "$NEXT_VERSION" != "" ]; then
-    #       CURRENT_VERSION=$(sed -nre 's/(.*):v[0-9]*(([0-9]+\\.)*[0-9]+).*/v\\2/p' $RELEASE_YAML)
-    #       sed -i "s/$CURRENT_VERSION/$NEXT_VERSION/g" $RELEASE_YAML
-    #       echo "========================="
-    #       git config --local user.email "github-actions[bot]@users.noreply.github.com"
-    #       git config --local user.name "github-actions[bot]"
-    #       git status
-    #       git add .
-    #       git commit -m "release(sample-web-ui): automated release of $NEXT_VERSION @ ${GITHUB_SHA::7}"
-    #       git push origin docker-release
-    #     fi
