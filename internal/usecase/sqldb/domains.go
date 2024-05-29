@@ -144,7 +144,7 @@ func (r *DomainRepo) GetByName(_ context.Context, domainName, tenantID string) (
 			"tenant_id",
 		).
 		From("domains").
-		Where("name = ? AND tenant_id = ?", domainName, tenantID).
+		Where("LOWER(name) = LOWER(?) AND tenant_id = ?", domainName, tenantID).
 		ToSql()
 	if err != nil {
 		return nil, ErrDomainDatabase.Wrap("GetByName", "r.Builder: ", err)
