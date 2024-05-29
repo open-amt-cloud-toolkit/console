@@ -2,6 +2,7 @@ package app
 
 import (
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
 	"log"
@@ -13,8 +14,10 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // postgres driver
 	dbdbdb "github.com/golang-migrate/migrate/v4/database/sqlite"
+	"github.com/golang-migrate/migrate/v4/source"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // for file source
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
+	_ "modernc.org/sqlite" // sqlite3 driver
 )
 
 const (
@@ -22,6 +25,9 @@ const (
 	_defaultTimeout      = time.Second
 	_directoryPermission = 0o755
 )
+
+//go:embed all:migrations
+var content embed.FS
 
 var errMigrate = errors.New("migrate error")
 
@@ -35,14 +41,19 @@ func Init() error {
 		log.Printf("migrate: environment variable not declared: DB_URL -- using embedded database")
 	}
 
+	migrationsSource, err := iofs.New(content, "migrations")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if strings.HasPrefix(databaseURL, "postgres://") {
-		err := setupHostedDB(databaseURL)
+		err := setupHostedDB(migrationsSource, databaseURL)
 		if err != nil {
 			return err
 		}
 	} else {
 		// make sure the directory exists
-		err := setupLocalDB()
+		err := setupLocalDB(migrationsSource)
 		if err != nil {
 			return err
 		}
@@ -51,7 +62,7 @@ func Init() error {
 	return nil
 }
 
-func setupLocalDB() error {
+func setupLocalDB(migrationsSource source.Driver) error {
 	dirname, err := os.UserConfigDir()
 	if err != nil {
 		return err
@@ -67,7 +78,7 @@ func setupLocalDB() error {
 
 	log.Printf("DB path : %s\n", filepath.Join(consoleDir, "console.db"))
 
-	db, err := sql.Open("sqlite3", filepath.Join(consoleDir, "console.db"))
+	db, err := sql.Open("sqlite", filepath.Join(consoleDir, "console.db"))
 	if err != nil {
 		return err
 	}
@@ -83,7 +94,7 @@ func setupLocalDB() error {
 		return err
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "ql", driver)
+	m, err := migrate.NewWithInstance("iofs", migrationsSource, "console", driver)
 	if err != nil {
 		return err
 	}
@@ -100,7 +111,7 @@ func setupLocalDB() error {
 	return nil
 }
 
-func setupHostedDB(databaseURL string) error {
+func setupHostedDB(migrationsSource source.Driver, databaseURL string) error {
 	databaseURL += "?sslmode=disable"
 
 	var (
@@ -110,7 +121,7 @@ func setupHostedDB(databaseURL string) error {
 	)
 
 	for attempts > 0 {
-		m, err = migrate.New("file://migrations", databaseURL)
+		m, err = migrate.NewWithSourceInstance("iofs", migrationsSource, databaseURL)
 		if err == nil {
 			break
 		}
