@@ -30,7 +30,7 @@ swag-v1: ### swag init
 
 run: ### run app
 	go mod tidy && go mod download && \
-	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=1 go run ./cmd/app
+	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=0 go run ./cmd/app
 .PHONY: run
 
 docker-rm-volume: ### remove docker volume
@@ -76,11 +76,11 @@ mock: ### run mockgen
 .PHONY: mock
 
 migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations 'migrate_name'
+	migrate create -ext sql -dir /internal/app/migrations 'migrate_name'
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(DB_URL)?sslmode=disable' up
+	migrate -path /internal/app/migrations -database '$(DB_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 bin-deps:
