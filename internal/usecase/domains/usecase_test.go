@@ -401,6 +401,16 @@ func TestUpdate(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "update fails - not found",
+			mock: func(repo *MockRepository) {
+				repo.EXPECT().
+					Update(context.Background(), domain).
+					Return(false, nil)
+			},
+			res: (*dto.Domain)(nil),
+			err: domains.ErrNotFound,
+		},
+		{
 			name: "update fails - database error",
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
