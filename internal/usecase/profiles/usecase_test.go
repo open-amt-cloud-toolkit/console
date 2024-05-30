@@ -341,6 +341,16 @@ func TestUpdate(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "update fails - not found",
+			mock: func(repo *MockRepository, _ *MockProfileWiFiConfigsFeature) {
+				repo.EXPECT().
+					Update(context.Background(), profile).
+					Return(false, profiles.ErrNotFound)
+			},
+			res: (*dto.Profile)(nil),
+			err: profiles.ErrDatabase,
+		},
+		{
 			name: "update fails - database error",
 			mock: func(repo *MockRepository, _ *MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().

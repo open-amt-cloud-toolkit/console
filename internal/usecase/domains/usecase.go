@@ -103,9 +103,13 @@ func (uc *UseCase) Delete(ctx context.Context, domainName, tenantID string) erro
 func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	}
+
+	if !updated {
+		return nil, ErrNotFound
 	}
 
 	updateDomain, err := uc.repo.GetByName(ctx, d.ProfileName, d.TenantID)
