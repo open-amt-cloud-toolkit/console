@@ -3,6 +3,8 @@ name: "Semantic Pull Request"
 on:
   pull_request:
     types: ['opened', 'edited', 'reopened', 'synchronize']
+permissions:
+  contents: read
 jobs:
   main:
     name: Validate PR and Commits
