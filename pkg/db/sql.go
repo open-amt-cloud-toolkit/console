@@ -10,17 +10,15 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib" // pgx driver
-	_ "modernc.org/sqlite"             // sqlite3 driver
+	"modernc.org/sqlite"               // sqlite3 driver
+	sqliteLib "modernc.org/sqlite/lib"
 )
 
 const (
 	_defaultMaxPoolSize  = 1
 	_defaultConnAttempts = 10
 	_defaultConnTimeout  = time.Second
-
-	UniqueViolation = "23505"
 )
 
 // SQL -.
@@ -101,9 +99,9 @@ func (p *SQL) Close() {
 }
 
 func CheckNotUnique(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		if pgErr.Code == UniqueViolation {
+	var sqlErr *sqlite.Error
+	if errors.As(err, &sqlErr) {
+		if sqlErr.Code() == sqliteLib.SQLITE_CONSTRAINT_UNIQUE {
 			return true
 		}
 	}

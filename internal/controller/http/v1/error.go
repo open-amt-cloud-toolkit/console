@@ -29,10 +29,12 @@ func errorResponse(c *gin.Context, err error) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Error()})
 	case errors.As(err, &nfErr):
 		c.AbortWithStatusJSON(http.StatusNotFound, response{nfErr.Console.FriendlyMessage()})
-	case errors.As(err, &nuErr):
-		c.AbortWithStatusJSON(http.StatusBadRequest, response{nuErr.Console.FriendlyMessage()})
 	case errors.As(err, &dbErr):
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response{dbErr.Console.FriendlyMessage()})
+		if errors.As(dbErr.Console.OriginalError, &nuErr) {
+			c.AbortWithStatusJSON(http.StatusBadRequest, response{nuErr.Console.FriendlyMessage()})
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response{dbErr.Console.FriendlyMessage()})
+		}
 	case errors.As(err, &amtErr):
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response{amtErr.Console.FriendlyMessage()})
 	default:
