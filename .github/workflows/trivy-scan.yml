@@ -34,7 +34,7 @@ jobs:
           vuln-type: "os,library"
           severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@b7cec7526559c32f1616476ff32d17ba4c59b2d6 # v3.25.5
+        uses: github/codeql-action/upload-sarif@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
         if: always()
         with:
           sarif_file: "trivy-results.sarif"
