@@ -123,7 +123,7 @@ func (r *CIRARepo) GetByName(_ context.Context, configName, tenantID string) (*e
 			"proxydetails",
 			"tenant_id").
 		From("ciraconfigs").
-		Where("cira_config_name = ? and tenant_id = ?", configName, tenantID).
+		Where("LOWER(cira_config_name) = LOWER(?) and tenant_id = ?", configName, tenantID).
 		ToSql()
 	if err != nil {
 		return nil, ErrCIRARepoDatabase.Wrap("GetByName", "r.Builder", err)
@@ -164,7 +164,7 @@ func (r *CIRARepo) GetByName(_ context.Context, configName, tenantID string) (*e
 func (r *CIRARepo) Delete(_ context.Context, configName, tenantID string) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Delete("ciraconfigs").
-		Where("cira_config_name = ? AND tenant_id = ?", configName, tenantID).
+		Where("LOWER(cira_config_name) = LOWER(?) AND tenant_id = ?", configName, tenantID).
 		ToSql()
 	if err != nil {
 		return false, ErrCIRARepoDatabase.Wrap("Delete", "r.Builder", err)

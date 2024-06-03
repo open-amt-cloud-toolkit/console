@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/go-playground/validator/v10"
+
 type Profile struct {
 	ProfileName                string               `json:"profileName,omitempty" binding:"required" example:"My Profile"`
 	AMTPassword                string               `json:"amtPassword,omitempty" binding:"required_if=GenerateRandomPassword false,omitempty,len=0|min=8,max=32,containsany=$@$!%*#?&-_~^" example:"my_password"`
@@ -27,4 +29,13 @@ type Profile struct {
 	IEEE8021xProfileName       *string              `json:"ieee8021xProfileName,omitempty" example:"My Profile"`
 	IEEE8021xProfile           *IEEE8021xConfig     `json:"ieee8021xProfile,omitempty"`
 	Version                    string               `json:"version,omitempty" example:"1.0.0"`
+}
+
+var ValidateCIRAOrTLS validator.Func = func(fl validator.FieldLevel) bool {
+	ciraConfigName := fl.Parent().FieldByName("CIRAConfigName").Interface().(*string)
+	tlsMode := fl.Parent().FieldByName("TLSMode").Interface().(int)
+	if ciraConfigName != nil && tlsMode != 0 {
+		return false
+	}
+	return true
 }

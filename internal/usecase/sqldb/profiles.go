@@ -214,7 +214,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 	}
 
 	if len(profiles) == 0 {
-		return nil, ErrProfileDatabase.Wrap("GetByName", "Not Found", err)
+		return nil, nil
 	}
 
 	return profiles[0], nil

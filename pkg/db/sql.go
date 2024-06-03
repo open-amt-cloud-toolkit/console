@@ -101,7 +101,8 @@ func (p *SQL) Close() {
 func CheckNotUnique(err error) bool {
 	var sqlErr *sqlite.Error
 	if errors.As(err, &sqlErr) {
-		if sqlErr.Code() == sqliteLib.SQLITE_CONSTRAINT_UNIQUE {
+		if sqlErr.Code() == sqliteLib.SQLITE_CONSTRAINT_UNIQUE ||
+			sqlErr.Code() == sqliteLib.SQLITE_CONSTRAINT_PRIMARYKEY {
 			return true
 		}
 	}

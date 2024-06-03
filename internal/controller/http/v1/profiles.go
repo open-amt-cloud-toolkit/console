@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
@@ -17,6 +19,10 @@ type profileRoutes struct {
 
 func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Interface) {
 	r := &profileRoutes{t, l}
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("ciraortls", dto.ValidateCIRAOrTLS)
+	}
 
 	h := handler.Group("/profiles")
 	{
