@@ -89,11 +89,16 @@ func (r *ProfileWiFiConfigsRepo) DeleteByProfileName(_ context.Context, profileN
 
 // Insert -.
 func (r *ProfileWiFiConfigsRepo) Insert(_ context.Context, p *entity.ProfileWiFiConfigs) (string, error) {
-	sqlQuery, args, err := r.Builder.
+	insertBuilder := r.Builder.
 		Insert("profiles_wirelessconfigs").
 		Columns("wireless_profile_name", "profile_name", "priority", "tenant_id").
-		Values(p.WirelessProfileName, p.ProfileName, p.Priority, p.TenantID).
-		ToSql()
+		Values(p.WirelessProfileName, p.ProfileName, p.Priority, p.TenantID)
+
+	if !r.IsEmbedded {
+		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
+	}
+
+	sqlQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return "", ErrProfileWiFiConfigsDatabase.Wrap("Insert", "r.Builder", err)
 	}

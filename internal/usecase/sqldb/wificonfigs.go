@@ -260,11 +260,16 @@ func (r *WirelessRepo) Insert(_ context.Context, p *entity.WirelessConfig) (stri
 		}
 	}
 
-	sqlQuery, args, err := r.Builder.
+	insertBuilder := r.Builder.
 		Insert("wirelessconfigs").
 		Columns("wireless_profile_name", "authentication_method", "encryption_method", "ssid", "psk_value", "psk_passphrase", "link_policy", "creation_date", "tenant_id", "ieee8021x_profile_name").
-		Values(p.ProfileName, p.AuthenticationMethod, p.EncryptionMethod, p.SSID, p.PSKValue, p.PSKPassphrase, p.LinkPolicy, date, p.TenantID, ieeeProfileName).
-		ToSql()
+		Values(p.ProfileName, p.AuthenticationMethod, p.EncryptionMethod, p.SSID, p.PSKValue, p.PSKPassphrase, p.LinkPolicy, date, p.TenantID, ieeeProfileName)
+
+	if !r.IsEmbedded {
+		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
+	}
+
+	sqlQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return "", ErrWiFiDatabase.Wrap("Insert", "r.Builder", err)
 	}
