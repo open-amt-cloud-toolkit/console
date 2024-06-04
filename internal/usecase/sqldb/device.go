@@ -327,11 +327,16 @@ func (r *DeviceRepo) Update(_ context.Context, d *entity.Device) (bool, error) {
 
 // Insert -.
 func (r *DeviceRepo) Insert(_ context.Context, d *entity.Device) (string, error) {
-	sqlQuery, args, err := r.Builder.
+	insertBuilder := r.Builder.
 		Insert("devices").
 		Columns("guid", "hostname", "tags", "mpsinstance", "connectionstatus", "mpsusername", "tenantid", "friendlyname", "dnssuffix", "deviceinfo", "username", "password", "usetls", "allowselfsigned").
-		Values(d.GUID, d.Hostname, d.Tags, d.MPSInstance, d.ConnectionStatus, d.MPSUsername, d.TenantID, d.FriendlyName, d.DNSSuffix, d.DeviceInfo, d.Username, d.Password, d.UseTLS, d.AllowSelfSigned).
-		ToSql()
+		Values(d.GUID, d.Hostname, d.Tags, d.MPSInstance, d.ConnectionStatus, d.MPSUsername, d.TenantID, d.FriendlyName, d.DNSSuffix, d.DeviceInfo, d.Username, d.Password, d.UseTLS, d.AllowSelfSigned)
+
+	if !r.IsEmbedded {
+		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
+	}
+
+	sqlQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return "", ErrDeviceDatabase.Wrap("Insert", "r.Builder", err)
 	}

@@ -217,11 +217,16 @@ func (r *CIRARepo) Update(_ context.Context, p *entity.CIRAConfig) (bool, error)
 
 // Insert -.
 func (r *CIRARepo) Insert(_ context.Context, p *entity.CIRAConfig) (string, error) {
-	sqlQuery, args, err := r.Builder.
+	insertBuilder := r.Builder.
 		Insert("ciraconfigs").
 		Columns("cira_config_name", "mps_server_address", "mps_port", "user_name", "password", "common_name", "server_address_format", "auth_method", "mps_root_certificate", "proxydetails", "tenant_id").
-		Values(p.ConfigName, p.MPSAddress, p.MPSPort, p.Username, p.Password, p.CommonName, p.ServerAddressFormat, p.AuthMethod, p.MPSRootCertificate, p.ProxyDetails, p.TenantID).
-		ToSql()
+		Values(p.ConfigName, p.MPSAddress, p.MPSPort, p.Username, p.Password, p.CommonName, p.ServerAddressFormat, p.AuthMethod, p.MPSRootCertificate, p.ProxyDetails, p.TenantID)
+
+	if !r.IsEmbedded {
+		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
+	}
+
+	sqlQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return "", ErrCIRARepoDatabase.Wrap("Insert", "r.Builder", err)
 	}

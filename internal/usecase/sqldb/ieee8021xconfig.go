@@ -224,11 +224,16 @@ func (r *IEEE8021xRepo) Update(_ context.Context, p *entity.IEEE8021xConfig) (bo
 
 // Insert -.
 func (r *IEEE8021xRepo) Insert(_ context.Context, p *entity.IEEE8021xConfig) (string, error) {
-	sqlQuery, args, err := r.Builder.
+	insertBuilder := r.Builder.
 		Insert("ieee8021xconfigs").
 		Columns("profile_name", "auth_protocol", "pxe_timeout", "wired_interface", "tenant_id").
-		Values(p.ProfileName, p.AuthenticationProtocol, p.PXETimeout, p.WiredInterface, p.TenantID).
-		ToSql()
+		Values(p.ProfileName, p.AuthenticationProtocol, p.PXETimeout, p.WiredInterface, p.TenantID)
+
+	if !r.IsEmbedded {
+		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
+	}
+
+	sqlQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return "", ErrIEEE8021xDatabase.Wrap("Insert", "r.Builder: ", err)
 	}
