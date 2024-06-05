@@ -18,6 +18,8 @@ type ciraConfigRoutes struct {
 func newCIRAConfigRoutes(handler *gin.RouterGroup, t ciraconfigs.Feature, l logger.Interface) {
 	r := &ciraConfigRoutes{t, l}
 
+	dto.SetupCustomCIRAValidators()
+
 	h := handler.Group("/ciraconfigs")
 	{
 		h.GET("", r.get)

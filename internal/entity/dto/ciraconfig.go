@@ -1,8 +1,13 @@
 package dto
 
+import (
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+)
+
 type CIRAConfig struct {
 	ConfigName          string `json:"configName" example:"My CIRA Config"`
-	MPSAddress          string `json:"mpsServerAddress" binding:"required,ipv4|ipv6|url" example:"https://example.com"`
+	MPSAddress          string `json:"mpsServerAddress" binding:"required,matchFormat" example:"https://example.com"`
 	MPSPort             int    `json:"mpsPort" binding:"required,gt=1024,lt=49151" example:"4433"`
 	Username            string `json:"username" binding:"required,alphanum" example:"my_username"`
 	Password            string `json:"password,omitempty" example:"my_password"`
@@ -14,4 +19,26 @@ type CIRAConfig struct {
 	TenantID            string `json:"tenantId" example:"abc123"`
 	RegeneratePassword  bool   `json:"regeneratePassword,omitempty" example:"true"`
 	Version             string `json:"version,omitempty" example:"1.0.0"`
+}
+
+func SetupCustomCIRAValidators() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("matchFormat", AddressFormatValidator)
+	}
+}
+
+func AddressFormatValidator(fl validator.FieldLevel) bool {
+	serverConfig := fl.Parent().Interface().(CIRAConfig)
+	address := serverConfig.MPSAddress
+
+	switch serverConfig.ServerAddressFormat {
+	case 3:
+		return validator.New().Var(address, "ipv4") == nil
+	case 4:
+		return validator.New().Var(address, "ipv6") == nil
+	case 201:
+		return validator.New().Var(address, "url") == nil
+	default:
+		return false
+	}
 }
