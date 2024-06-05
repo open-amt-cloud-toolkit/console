@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,6 +19,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrGeneral = errors.New("general error")
 
 func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engine) {
 	t.Helper()
@@ -193,6 +196,28 @@ func TestGetNetworkSettings(t *testing.T) {
 			},
 			expectedCode: http.StatusOK,
 			response:     map[string]interface{}{"": ""},
+		},
+		{
+			name:   "getCertificates - successful retrieval",
+			url:    "/api/v1/amt/certificates/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
+					Return(map[string]interface{}{"": ""}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     map[string]interface{}{"": ""},
+		},
+		{
+			name:   "getCertificates - failed retrieval",
+			url:    "/api/v1/amt/certificates/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
+					Return(nil, ErrGeneral)
+			},
+			expectedCode: http.StatusInternalServerError,
+			response:     nil,
 		},
 	}
 

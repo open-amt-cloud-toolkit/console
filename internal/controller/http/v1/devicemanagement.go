@@ -46,6 +46,7 @@ func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 		h.POST("userConsentCode/:guid", r.sendConsentCode)
 
 		h.GET("networkSettings/:guid", r.getNetworkSettings)
+		h.GET("certificates/:guid", r.getCertificates)
 	}
 }
 
@@ -356,4 +357,17 @@ func (r *deviceManagementRoutes) getNetworkSettings(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, network)
+}
+
+func (r *deviceManagementRoutes) getCertificates(c *gin.Context) {
+	guid := c.Param("guid")
+
+	certs, err := r.d.GetCertificates(c.Request.Context(), guid)
+	if err != nil {
+		errorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, certs)
 }

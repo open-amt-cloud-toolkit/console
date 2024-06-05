@@ -22,6 +22,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
 type (
@@ -49,6 +50,7 @@ type (
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
 		GetNetworkSettings() (interface{}, error)
+		GetCertificates() (wsmanAPI.Certificates, error)
 		GetCredentialRelationships() (credential.Items, error)
 		GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
 	}
@@ -99,5 +101,6 @@ type (
 		GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
 		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
+		GetCertificates(c context.Context, guid string) (interface{}, error)
 	}
 )
