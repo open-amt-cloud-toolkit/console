@@ -95,6 +95,8 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.CIRAConfig) (*dto.CIRAConf
 	updatedCiraConfig, err := uc.repo.GetByName(ctx, d.ConfigName, d.TenantID)
 	if err != nil {
 		return nil, err
+	} else if updatedCiraConfig == nil {
+		return nil, ErrNotFound
 	}
 
 	d2 := uc.entityToDTO(updatedCiraConfig)

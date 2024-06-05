@@ -104,9 +104,11 @@ func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) err
 func (uc *UseCase) Update(ctx context.Context, d *dto.WirelessConfig) (*dto.WirelessConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	} else if !updated {
+		return nil, ErrNotFound
 	}
 
 	updatedConfig, err := uc.repo.GetByName(ctx, d1.ProfileName, d.TenantID)

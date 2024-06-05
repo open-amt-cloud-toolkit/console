@@ -19,7 +19,7 @@ type IEEE8021xRepo struct {
 
 var (
 	ErrIEEE8021xDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
-	ErrIEEE8021xNotUnique = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
+	ErrIEEE8021xNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
 )
 
 // New -.
