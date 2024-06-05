@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
@@ -27,6 +28,8 @@ type Usecases struct {
 
 // New -.
 func NewUseCases(database *db.SQL, log logger.Interface) *Usecases {
+	dto.SetupCustomValidators() // CRAIG - Is this the right spot for this?
+
 	pwc := profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(database, log), log)
 	ieee := ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(database, log), log)
 

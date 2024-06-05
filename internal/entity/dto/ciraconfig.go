@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -19,12 +18,6 @@ type CIRAConfig struct {
 	TenantID            string `json:"tenantId" example:"abc123"`
 	RegeneratePassword  bool   `json:"regeneratePassword,omitempty" example:"true"`
 	Version             string `json:"version,omitempty" example:"1.0.0"`
-}
-
-func SetupCustomCIRAValidators() {
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("matchFormat", AddressFormatValidator)
-	}
 }
 
 func AddressFormatValidator(fl validator.FieldLevel) bool {
