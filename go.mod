@@ -19,6 +19,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	go.uber.org/mock v0.4.0
+	gopkg.in/yaml.v2 v2.4.0
 	modernc.org/sqlite v1.29.10
 )
 

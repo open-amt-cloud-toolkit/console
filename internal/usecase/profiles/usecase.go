@@ -11,6 +11,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
+	"gopkg.in/yaml.v2"
 )
 
 // UseCase -.
@@ -87,6 +88,22 @@ func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) 
 	}
 
 	return d2, nil
+}
+
+// Export - will call GetByName and return the profile with the associated wifi configs in YAML format to be downloaded.
+func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (string, error) {
+	data, err := uc.GetByName(ctx, profileName, tenantID)
+	if err != nil {
+		return "", err
+	}
+
+	yamlData, err := yaml.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+
+	return string(yamlData), nil
+
 }
 
 func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) error {

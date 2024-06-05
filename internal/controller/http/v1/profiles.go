@@ -25,6 +25,7 @@ func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Int
 		h.POST("", r.insert)
 		h.PATCH("", r.update)
 		h.DELETE(":name", r.delete)
+		h.GET("export/:name", r.export)
 	}
 }
 
@@ -98,6 +99,33 @@ func (r *profileRoutes) getByName(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, item)
+}
+
+// @Summary     Export Profile
+// @Description Export profile by name
+// @ID          export-profile
+// @Tags              profiles
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} Profile
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/profiles/export/:name [get]
+
+func (r *profileRoutes) export(c *gin.Context) {
+	name := c.Param("name")
+
+	item, err := r.t.Export(c.Request.Context(), name, "")
+	if err != nil {
+		r.l.Error(err, "http - v1 - export")
+		errorResponse(c, err)
+
+		return
+	}
+	c.Header("Content-Disposition", "attachment; filename="+name+".yaml")
+	c.Header("Content-Type", "application/x-yaml")
+	// Write the YAML data to the response body
+	c.Data(http.StatusOK, "application/x-yaml", []byte(item))
+
 }
 
 // @Summary     Add Profile
