@@ -7,8 +7,11 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidationDomains = dto.NotValidError{Console: consoleerrors.CreateConsoleError("DomainsAPI")}
 
 type domainRoutes struct {
 	t domains.Feature
@@ -45,7 +48,8 @@ type DomainCountResponse struct {
 func (r *domainRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDomains.Wrap("get", "ShouldBindQuery", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -111,7 +115,8 @@ func (r *domainRoutes) getByName(c *gin.Context) {
 func (r *domainRoutes) insert(c *gin.Context) {
 	var domain dto.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDomains.Wrap("insert", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -139,7 +144,8 @@ func (r *domainRoutes) insert(c *gin.Context) {
 func (r *domainRoutes) update(c *gin.Context) {
 	var domain dto.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDomains.Wrap("update", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}

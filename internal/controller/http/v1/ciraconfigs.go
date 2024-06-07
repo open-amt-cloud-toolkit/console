@@ -7,8 +7,11 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidationCIRAConfig = dto.NotValidError{Console: consoleerrors.CreateConsoleError("CIRAConfigsAPI")}
 
 type ciraConfigRoutes struct {
 	cira ciraconfigs.Feature
@@ -36,8 +39,8 @@ type CIRAConfigCountResponse struct {
 func (r *ciraConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		r.l.Error(err, "http - CIRA configs - v1 - getCount")
-		errorResponse(c, err)
+		validationErr := ErrValidationCIRAConfig.Wrap("get", "ShouldBindQuery", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -87,8 +90,8 @@ func (r *ciraConfigRoutes) getByName(c *gin.Context) {
 func (r *ciraConfigRoutes) insert(c *gin.Context) {
 	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		r.l.Error(err, "http - CIRA configs - v1 - insert")
-		errorResponse(c, err)
+		validationErr := ErrValidationCIRAConfig.Wrap("insert", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -108,7 +111,8 @@ func (r *ciraConfigRoutes) update(c *gin.Context) {
 	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - update")
-		errorResponse(c, err)
+		validationErr := ErrValidationCIRAConfig.Wrap("update", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}

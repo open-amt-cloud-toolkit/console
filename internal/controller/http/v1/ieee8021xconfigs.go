@@ -7,8 +7,11 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidation8021XConfig = dto.NotValidError{Console: consoleerrors.CreateConsoleError("8021XConfigsAPI")}
 
 type ieee8021xConfigRoutes struct {
 	t ieee8021xconfigs.Feature
@@ -36,7 +39,8 @@ type IEEE8021xConfigCountResponse struct {
 func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidation8021XConfig.Wrap("get", "ShouldBindQuery", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -84,7 +88,8 @@ func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidation8021XConfig.Wrap("insert", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -103,7 +108,8 @@ func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidation8021XConfig.Wrap("update", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}

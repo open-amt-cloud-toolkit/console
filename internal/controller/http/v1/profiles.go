@@ -9,8 +9,11 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidationProfile = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
 
 type profileRoutes struct {
 	t profiles.Feature
@@ -51,7 +54,8 @@ type ProfileCountResponse struct {
 func (r *profileRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationProfile.Wrap("get", "ShouldBindQuery", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -119,7 +123,8 @@ func (r *profileRoutes) getByName(c *gin.Context) {
 func (r *profileRoutes) insert(c *gin.Context) {
 	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationProfile.Wrap("insert", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -148,7 +153,8 @@ func (r *profileRoutes) insert(c *gin.Context) {
 func (r *profileRoutes) update(c *gin.Context) {
 	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationProfile.Wrap("update", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}

@@ -7,8 +7,11 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidationWifiConfig = dto.NotValidError{Console: consoleerrors.CreateConsoleError("WifiConfigsAPI")}
 
 type WirelessConfigRoutes struct {
 	t wificonfigs.Feature
@@ -31,7 +34,8 @@ func newWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l 
 func (r *WirelessConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationWifiConfig.Wrap("get", "ShouldBindQuery", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -79,7 +83,8 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationWifiConfig.Wrap("insert", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
@@ -99,7 +104,8 @@ func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 func (r *WirelessConfigRoutes) update(c *gin.Context) {
 	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationWifiConfig.Wrap("update", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}

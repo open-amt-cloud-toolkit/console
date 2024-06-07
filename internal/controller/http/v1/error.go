@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 )
@@ -17,7 +17,7 @@ type response struct {
 
 func errorResponse(c *gin.Context, err error) {
 	var (
-		valErr validator.ValidationErrors
+		valErr dto.NotValidError
 		nfErr  sqldb.NotFoundError
 		nuErr  sqldb.NotUniqueError
 		dbErr  sqldb.DatabaseError
@@ -26,7 +26,7 @@ func errorResponse(c *gin.Context, err error) {
 
 	switch {
 	case errors.As(err, &valErr):
-		c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, response{valErr.Console.FriendlyMessage()})
 	case errors.As(err, &nfErr):
 		c.AbortWithStatusJSON(http.StatusNotFound, response{nfErr.Console.FriendlyMessage()})
 	case errors.As(err, &dbErr):
