@@ -27,7 +27,7 @@ func (e InternalError) FriendlyMessage() string {
 	return e.Message
 }
 
-func (e *InternalError) Wrap(call, function string, err error) error {
+func (e *InternalError) Wrap(function, call string, err error) error {
 	e.Call = call
 	e.Function = function
 	e.OriginalError = err
