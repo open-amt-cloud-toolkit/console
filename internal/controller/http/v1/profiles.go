@@ -25,6 +25,7 @@ func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Int
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("ciraortls", dto.ValidateCIRAOrTLS)
+		v.RegisterValidation("genpasswordwone", dto.ValidateAMTPassOrGenRan)
 	}
 
 	h := handler.Group("/profiles")

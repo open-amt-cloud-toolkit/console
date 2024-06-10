@@ -1,13 +1,15 @@
 package dto
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+)
 
 type Profile struct {
 	ProfileName                string               `json:"profileName,omitempty" binding:"required" example:"My Profile"`
 	AMTPassword                string               `json:"amtPassword,omitempty" binding:"required_if=GenerateRandomPassword false,omitempty,len=0|min=8,max=32,containsany=$@$!%*#?&-_~^" example:"my_password"`
 	CreationDate               string               `json:"creationDate,omitempty" example:"2021-07-01T00:00:00Z"`
 	CreatedBy                  string               `json:"created_by,omitempty" example:"admin"`
-	GenerateRandomPassword     bool                 `json:"generateRandomPassword" example:"true"`
+	GenerateRandomPassword     bool                 `json:"generateRandomPassword" binding:"omitempty,genpasswordwone" example:"true"`
 	CIRAConfigName             *string              `json:"ciraConfigName,omitempty" example:"My CIRA Config"`
 	Activation                 string               `json:"activation" binding:"required,oneof=ccmactivate acmactivate" example:"activate"`
 	MEBXPassword               string               `json:"mebxPassword,omitempty" binding:"required_if=Activation acmactivate|required_if=GenerateRandomMEBxPassword false,omitempty,len=0|min=8,max=32,containsany=$@$!%*#?&-_~^" example:"my_password"`
@@ -19,7 +21,7 @@ type Profile struct {
 	LocalWiFiSyncEnabled       bool                 `json:"localWifiSyncEnabled" example:"true"`
 	WiFiConfigs                []ProfileWiFiConfigs `json:"wifiConfigs,omitempty"`
 	TenantID                   string               `json:"tenantId" example:"abc123"`
-	TLSMode                    int                  `json:"tlsMode,omitempty" binding:"omitempty,min=1,max=4" example:"1"`
+	TLSMode                    int                  `json:"tlsMode,omitempty" binding:"omitempty,min=1,max=4,ciraortls" example:"1"`
 	TLSCerts                   *TLSCerts            `json:"tlsCerts,omitempty"`
 	TLSSigningAuthority        string               `json:"tlsSigningAuthority,omitempty" binding:"omitempty,oneof=SelfSigned MicrosoftCA" example:"SelfSigned"`
 	UserConsent                string               `json:"userConsent,omitempty" binding:"omitempty,oneof=None KVM All" example:"All"`
@@ -38,4 +40,9 @@ var ValidateCIRAOrTLS validator.Func = func(fl validator.FieldLevel) bool {
 		return false
 	}
 	return true
+}
+
+var ValidateAMTPassOrGenRan validator.Func = func(fl validator.FieldLevel) bool {
+	amtPass := fl.Parent().FieldByName("AMTPassword").String()
+	return amtPass == ""
 }
