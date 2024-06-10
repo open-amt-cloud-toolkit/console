@@ -19,7 +19,7 @@ type Profile struct {
 	DHCPEnabled                bool                 `json:"dhcpEnabled" example:"true"`
 	IPSyncEnabled              bool                 `json:"ipSyncEnabled" example:"true"`
 	LocalWiFiSyncEnabled       bool                 `json:"localWifiSyncEnabled" example:"true"`
-	WiFiConfigs                []ProfileWiFiConfigs `json:"wifiConfigs,omitempty"`
+	WiFiConfigs                []ProfileWiFiConfigs `json:"wifiConfigs,omitempty" binding:"excluded_if=DHCPEnabled false"`
 	TenantID                   string               `json:"tenantId" example:"abc123"`
 	TLSMode                    int                  `json:"tlsMode,omitempty" binding:"omitempty,min=1,max=4,ciraortls" example:"1"`
 	TLSCerts                   *TLSCerts            `json:"tlsCerts,omitempty"`
