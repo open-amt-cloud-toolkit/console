@@ -148,6 +148,11 @@ func (r *domainRoutes) update(c *gin.Context) {
 		errorResponse(c, validationErr)
 
 		return
+	} else if err = dto.CheckVersion(domain.Version); err != nil {
+		validationErr := ErrValidationDomains.Wrap("update", "CheckVersion", err)
+		errorResponse(c, validationErr)
+
+		return
 	}
 
 	updatedDomain, err := r.t.Update(c.Request.Context(), &domain)

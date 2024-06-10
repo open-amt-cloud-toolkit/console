@@ -16,5 +16,5 @@ type WirelessConfig struct {
 	TenantID               string           `json:"tenantId" example:"abc123"`
 	IEEE8021xProfileName   *string          `json:"ieee8021xProfileName,omitempty" example:"My Profile"`
 	IEEE8021xProfileObject *IEEE8021xConfig `json:"ieee8021xProfileObject,omitempty"`
-	Version                string           `json:"version"`
+	Version                string           `json:"version,omitempty"`
 }

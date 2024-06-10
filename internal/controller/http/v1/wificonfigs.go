@@ -108,6 +108,11 @@ func (r *WirelessConfigRoutes) update(c *gin.Context) {
 		errorResponse(c, validationErr)
 
 		return
+	} else if err = dto.CheckVersion(config.Version); err != nil {
+		validationErr := ErrValidationWifiConfig.Wrap("update", "CheckVersion", err)
+		errorResponse(c, validationErr)
+
+		return
 	}
 
 	updatedWirelessConfig, err := r.t.Update(c.Request.Context(), &config)
