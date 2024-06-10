@@ -219,11 +219,16 @@ func (r *DomainRepo) Update(_ context.Context, d *entity.Domain) (bool, error) {
 
 // Insert -.
 func (r *DomainRepo) Insert(_ context.Context, d *entity.Domain) (string, error) {
-	sqlQuery, args, err := r.Builder.
+	insertBuilder := r.Builder.
 		Insert("domains").
 		Columns("name", "domain_suffix", "provisioning_cert", "provisioning_cert_storage_format", "provisioning_cert_key", "tenant_id").
-		Values(d.ProfileName, d.DomainSuffix, d.ProvisioningCert, d.ProvisioningCertStorageFormat, d.ProvisioningCertPassword, d.TenantID).
-		ToSql()
+		Values(d.ProfileName, d.DomainSuffix, d.ProvisioningCert, d.ProvisioningCertStorageFormat, d.ProvisioningCertPassword, d.TenantID)
+
+	if !r.IsEmbedded {
+		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
+	}
+
+	sqlQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return "", ErrDomainDatabase.Wrap("Insert", "r.Builder: ", err)
 	}
