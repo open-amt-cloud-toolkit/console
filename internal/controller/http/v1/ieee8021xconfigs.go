@@ -112,6 +112,11 @@ func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 		errorResponse(c, validationErr)
 
 		return
+	} else if err = dto.CheckVersion(config.Version); err != nil {
+		validationErr := ErrValidation8021XConfig.Wrap("update", "CheckVersion", err)
+		errorResponse(c, validationErr)
+
+		return
 	}
 
 	updatedConfig, err := r.t.Update(c.Request.Context(), &config)

@@ -115,6 +115,11 @@ func (r *ciraConfigRoutes) update(c *gin.Context) {
 		errorResponse(c, validationErr)
 
 		return
+	} else if err = dto.CheckVersion(config.Version); err != nil {
+		validationErr := ErrValidationWifiConfig.Wrap("update", "CheckVersion", err)
+		errorResponse(c, validationErr)
+
+		return
 	}
 
 	updatedConfig, err := r.cira.Update(c.Request.Context(), &config)

@@ -158,6 +158,11 @@ func (r *profileRoutes) update(c *gin.Context) {
 		errorResponse(c, validationErr)
 
 		return
+	} else if err = dto.CheckVersion(profile.Version); err != nil {
+		validationErr := ErrValidationProfile.Wrap("update", "CheckVersion", err)
+		errorResponse(c, validationErr)
+
+		return
 	}
 
 	updatedProfile, err := r.t.Update(c.Request.Context(), &profile)
