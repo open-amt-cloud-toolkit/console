@@ -19,12 +19,12 @@ type Profile struct {
 	DHCPEnabled                bool                 `json:"dhcpEnabled" example:"true"`
 	IPSyncEnabled              bool                 `json:"ipSyncEnabled" example:"true"`
 	LocalWiFiSyncEnabled       bool                 `json:"localWifiSyncEnabled" example:"true"`
-	WiFiConfigs                []ProfileWiFiConfigs `json:"wifiConfigs,omitempty" binding:"excluded_if=DHCPEnabled false"`
+	WiFiConfigs                []ProfileWiFiConfigs `json:"wifiConfigs,omitempty" binding:"excluded_if=DHCPEnabled false,dive"`
 	TenantID                   string               `json:"tenantId" example:"abc123"`
 	TLSMode                    int                  `json:"tlsMode,omitempty" binding:"omitempty,min=1,max=4,ciraortls" example:"1"`
 	TLSCerts                   *TLSCerts            `json:"tlsCerts,omitempty"`
 	TLSSigningAuthority        string               `json:"tlsSigningAuthority,omitempty" binding:"omitempty,oneof=SelfSigned MicrosoftCA" example:"SelfSigned"`
-	UserConsent                string               `json:"userConsent,omitempty" binding:"omitempty,oneof=None KVM All" example:"All"`
+	UserConsent                string               `json:"userConsent,omitempty" binding:"omitempty,oneof=None KVM All" default:"All" example:"All"`
 	IDEREnabled                bool                 `json:"iderEnabled" example:"true"`
 	KVMEnabled                 bool                 `json:"kvmEnabled" example:"true"`
 	SOLEnabled                 bool                 `json:"solEnabled" example:"true"`

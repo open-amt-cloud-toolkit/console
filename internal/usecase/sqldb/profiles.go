@@ -66,10 +66,8 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 		Select(
 			"p.profile_name",
 			"activation",
-			"amt_password",
 			"generate_random_password",
 			"cira_config_name",
-			"mebx_password",
 			"generate_random_mebx_password",
 			"tags",
 			"dhcp_enabled",
@@ -93,10 +91,8 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 		LeftJoin("ieee8021xconfigs e ON p.ieee8021x_profile_name = e.profile_name AND p.tenant_id = e.tenant_id").
 		Where("p.tenant_id = ?", tenantID).
 		GroupBy("p.activation",
-			"amt_password",
 			"generate_random_password",
 			"cira_config_name",
-			"mebx_password",
 			"generate_random_mebx_password",
 			"tags",
 			"dhcp_enabled",
@@ -134,8 +130,8 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 	for rows.Next() {
 		p := entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
-			&p.CIRAConfigName, &p.MEBXPassword,
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword,
+			&p.CIRAConfigName,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
 			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
@@ -156,10 +152,8 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 		Select(
 			"p.profile_name",
 			"activation",
-			"amt_password",
 			"generate_random_password",
 			"cira_config_name",
-			"mebx_password",
 			"generate_random_mebx_password",
 			"tags",
 			"dhcp_enabled",
@@ -201,8 +195,8 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 	for rows.Next() {
 		p := &entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
-			&p.CIRAConfigName, &p.MEBXPassword,
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword,
+			&p.CIRAConfigName,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
 			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
