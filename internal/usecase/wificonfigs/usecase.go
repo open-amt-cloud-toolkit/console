@@ -2,6 +2,7 @@ package wificonfigs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profilewificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -17,14 +19,16 @@ import (
 // UseCase -.
 type UseCase struct {
 	repo Repository
+	wifiConfigRepo profilewificonfigs.Feature
 	ieee ieee8021xconfigs.Feature
 	log  logger.Interface
 }
 
 // New -.
-func New(r Repository, ieee ieee8021xconfigs.Feature, log logger.Interface) *UseCase {
+func New(r Repository, w profilewificonfigs.Feature,ieee ieee8021xconfigs.Feature, log logger.Interface) *UseCase {
 	return &UseCase{
 		repo: r,
+		wifiConfigRepo: w,
 		ieee: ieee,
 		log:  log,
 	}
@@ -89,6 +93,15 @@ func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) 
 }
 
 func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) error {
+	isWirelessConfigAssociated, err := uc.wifiConfigRepo.CheckProfileWiFiConfigsExists(ctx, profileName, tenantID)
+	if err != nil {
+		return ErrDatabase.Wrap("CheckProfileWiFiConfigsExists", "uc.wifiConfigRepo.CheckProfileWiFiConfigsExists", err)
+	}
+
+	if isWirelessConfigAssociated {
+		return ErrDatabase.Wrap("Delete", "uc.repo.Delete", errors.New("error: wireless config associated with profile"))
+	}
+
 	isSuccessful, err := uc.repo.Delete(ctx, profileName, tenantID)
 	if err != nil {
 		return ErrDatabase.Wrap("Delete", "uc.repo.Delete", err)

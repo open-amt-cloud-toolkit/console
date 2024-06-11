@@ -41,6 +41,21 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// CheckProfileWiFiConfigsExists mocks base method.
+func (m *MockRepository) CheckProfileWiFiConfigsExists(ctx context.Context, profileName, tenantID string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckProfileWiFiConfigsExists", ctx, profileName, tenantID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckProfileWiFiConfigsExists indicates an expected call of CheckProfileWiFiConfigsExists.
+func (mr *MockRepositoryMockRecorder) CheckProfileWiFiConfigsExists(ctx, profileName, tenantID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckProfileWiFiConfigsExists", reflect.TypeOf((*MockRepository)(nil).CheckProfileWiFiConfigsExists), ctx, profileName, tenantID)
+}
+
 // DeleteByProfileName mocks base method.
 func (m *MockRepository) DeleteByProfileName(ctx context.Context, profileName, tenantID string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -107,6 +122,21 @@ func NewMockFeature(ctrl *gomock.Controller) *MockFeature {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockFeature) EXPECT() *MockFeatureMockRecorder {
 	return m.recorder
+}
+
+// CheckProfileWiFiConfigsExists mocks base method.
+func (m *MockFeature) CheckProfileWiFiConfigsExists(ctx context.Context, profileName, tenantID string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckProfileWiFiConfigsExists", ctx, profileName, tenantID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckProfileWiFiConfigsExists indicates an expected call of CheckProfileWiFiConfigsExists.
+func (mr *MockFeatureMockRecorder) CheckProfileWiFiConfigsExists(ctx, profileName, tenantID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckProfileWiFiConfigsExists", reflect.TypeOf((*MockFeature)(nil).CheckProfileWiFiConfigsExists), ctx, profileName, tenantID)
 }
 
 // DeleteByProfileName mocks base method.

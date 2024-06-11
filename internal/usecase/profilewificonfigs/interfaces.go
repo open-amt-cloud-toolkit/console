@@ -12,11 +12,13 @@ type (
 		GetByProfileName(ctx context.Context, profileName, tenantID string) ([]entity.ProfileWiFiConfigs, error)
 		DeleteByProfileName(ctx context.Context, profileName, tenantID string) (bool, error)
 		Insert(ctx context.Context, p *entity.ProfileWiFiConfigs) (string, error)
+		CheckProfileWiFiConfigsExists(ctx context.Context, profileName, tenantID string) (bool, error)
 	}
 
 	Feature interface {
 		GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dto.ProfileWiFiConfigs, error)
 		DeleteByProfileName(ctx context.Context, profileName, tenantID string) error
 		Insert(ctx context.Context, p *dto.ProfileWiFiConfigs) error
+		CheckProfileWiFiConfigsExists(ctx context.Context, profileName, tenantID string) (bool, error)
 	}
 )

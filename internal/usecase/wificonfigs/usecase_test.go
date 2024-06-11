@@ -62,8 +62,9 @@ func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *MockRepository) {
 
 	repo := NewMockRepository(mockCtl)
 	log := logger.New("error")
+	profilewificonfigs := NewMockProfileWiFiConfigsFeature(mockCtl)
 	ieeeMock := MockIEEE8021x{}
-	useCase := wificonfigs.New(repo, ieeeMock, log)
+	useCase := wificonfigs.New(repo, profilewificonfigs, ieeeMock, log)
 
 	return useCase, repo
 }

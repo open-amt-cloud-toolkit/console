@@ -2,6 +2,8 @@ package sqldb
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -25,6 +27,31 @@ var (
 
 func NewProfileWiFiConfigsRepo(database *db.SQL, log logger.Interface) *ProfileWiFiConfigsRepo {
 	return &ProfileWiFiConfigsRepo{database, log}
+}
+
+// CheckWifiProfileExits -.
+func (r *ProfileWiFiConfigsRepo) CheckProfileWiFiConfigsExists(_ context.Context, wifiProfileName, tenantID string) (bool, error) {
+	sqlQuery, _, err := r.Builder.
+		Select("COUNT(*) OVER() AS total_count").
+		From("profiles_wirelessconfigs").
+		Where("wireless_profile_name = ? AND tenant_id = ?", wifiProfileName, tenantID).
+		ToSql()
+	if err != nil {
+		return false, ErrWiFiDatabase.Wrap("CheckProfileWiFiConfigs", "r.Builder", err)
+	}
+
+	var count int
+
+	err = r.Pool.QueryRow(sqlQuery, wifiProfileName, tenantID).Scan(&count)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+
+		return false, ErrWiFiDatabase.Wrap("CheckProfileWiFiConfigs", "r.Pool.QueryRow", err)
+	}
+
+	return true, nil
 }
 
 // Get by profile name -.

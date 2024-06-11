@@ -28,6 +28,15 @@ func New(r Repository, log logger.Interface) *UseCase {
 	}
 }
 
+func (uc *UseCase) CheckProfileWiFiConfigsExists(ctx context.Context, profileName string, tenantID string) (bool, error) {
+	data, err := uc.repo.CheckProfileWiFiConfigsExists(ctx, profileName, tenantID)
+	if err != nil {
+		return false, ErrDatabase.Wrap("Count", "uc.repo.GetCount", err)
+	}
+
+	return data, nil
+}
+
 func (uc *UseCase) GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dto.ProfileWiFiConfigs, error) {
 	data, err := uc.repo.GetByProfileName(ctx, profileName, tenantID)
 	if err != nil {

@@ -39,7 +39,7 @@ func NewUseCases(database *db.SQL, log logger.Interface) *Usecases {
 		Profiles:           profiles.New(sqldb.NewProfileRepo(database, log), pwc, ieee, log),
 		IEEE8021xProfiles:  ieee,
 		CIRAConfigs:        ciraconfigs.New(sqldb.NewCIRARepo(database, log), log),
-		WirelessProfiles:   wificonfigs.New(sqldb.NewWirelessRepo(database, log), ieee, log),
+		WirelessProfiles:   wificonfigs.New(sqldb.NewWirelessRepo(database, log), pwc, ieee, log),
 		ProfileWiFiConfigs: pwc,
 	}
 }
