@@ -303,11 +303,16 @@ func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, erro
 		}
 	}
 
-	sqlQuery, args, err := r.Builder.
+	insertBuilder := r.Builder.
 		Insert("profiles").
 		Columns("profile_name", "activation", "amt_password", "generate_random_password", "cira_config_name", "mebx_password", "generate_random_mebx_password", "tags", "dhcp_enabled", "tls_mode", "user_consent", "ider_enabled", "kvm_enabled", "sol_enabled", "tls_signing_authority", "ieee8021x_profile_name", "ip_sync_enabled", "local_wifi_sync_enabled", "tenant_id").
-		Values(p.ProfileName, p.Activation, p.AMTPassword, p.GenerateRandomPassword, ciraConfigName, p.MEBXPassword, p.GenerateRandomMEBxPassword, p.Tags, p.DHCPEnabled, p.TLSMode, p.UserConsent, p.IDEREnabled, p.KVMEnabled, p.SOLEnabled, p.TLSSigningAuthority, ieee8021xProfileName, p.IPSyncEnabled, p.LocalWiFiSyncEnabled, p.TenantID).
-		ToSql()
+		Values(p.ProfileName, p.Activation, p.AMTPassword, p.GenerateRandomPassword, ciraConfigName, p.MEBXPassword, p.GenerateRandomMEBxPassword, p.Tags, p.DHCPEnabled, p.TLSMode, p.UserConsent, p.IDEREnabled, p.KVMEnabled, p.SOLEnabled, p.TLSSigningAuthority, ieee8021xProfileName, p.IPSyncEnabled, p.LocalWiFiSyncEnabled, p.TenantID)
+
+	if !r.IsEmbedded {
+		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
+	}
+
+	sqlQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return "", ErrProfileDatabase.Wrap("Insert", "r.Builder", err)
 	}

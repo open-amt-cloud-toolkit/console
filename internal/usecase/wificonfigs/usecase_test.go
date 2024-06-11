@@ -401,6 +401,16 @@ func TestUpdate(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "update fails - not found",
+			mock: func(repo *MockRepository, _ ...interface{}) {
+				repo.EXPECT().
+					Update(context.Background(), wirelessConfig).
+					Return(false, wificonfigs.ErrNotFound)
+			},
+			res: (*dto.WirelessConfig)(nil),
+			err: wificonfigs.ErrDatabase,
+		},
+		{
 			name: "update fails - database error",
 			mock: func(repo *MockRepository, _ ...interface{}) {
 				repo.EXPECT().

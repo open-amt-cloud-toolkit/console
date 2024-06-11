@@ -112,9 +112,13 @@ func (uc *UseCase) Delete(ctx context.Context, guid, tenantID string) error {
 func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	}
+
+	if !updated {
+		return nil, ErrNotFound
 	}
 
 	updateDevice, err := uc.repo.GetByID(ctx, d1.GUID, d1.TenantID)

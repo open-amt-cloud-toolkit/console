@@ -87,9 +87,13 @@ func (uc *UseCase) Delete(ctx context.Context, configName, tenantID string) erro
 func (uc *UseCase) Update(ctx context.Context, d *dto.CIRAConfig) (*dto.CIRAConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	}
+
+	if !updated {
+		return nil, ErrNotFound
 	}
 
 	updatedCiraConfig, err := uc.repo.GetByName(ctx, d.ConfigName, d.TenantID)

@@ -124,6 +124,10 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.WirelessConfig) (*dto.Wire
 		return nil, ErrNotFound
 	}
 
+	if !updated {
+		return nil, ErrNotFound
+	}
+
 	updatedConfig, err := uc.repo.GetByName(ctx, d1.ProfileName, d.TenantID)
 	if err != nil {
 		return nil, err

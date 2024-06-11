@@ -9,7 +9,7 @@ name: Semantic-Release CI
 
 on:
   push:
-    branches: [main, alpha]
+    branches: [alpha]
 
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
         with:
           egress-policy: audit
 
@@ -29,7 +29,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Check out Sample Web UI
-        uses: actions/checkout@61b9e3751b92087fd0b06925ba6dd6314e06f089 # master
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # master
         with:
           repository: open-amt-cloud-toolkit/sample-web-ui
           ref: enterprise #TODO: pull latest tagged version
