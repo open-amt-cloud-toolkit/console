@@ -1,0 +1,133 @@
+name: CI
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+permissions:
+  contents: read # for actions/checkout to fetch code
+
+jobs: 
+  formatting:
+    name: runner / formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - name: Format
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+      - name: Run go vet
+        run: go vet ./...
+
+  golangci-lint:
+    name: runner / golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@00311c26a97213f93f2fd3a3524d66762e956ae0 # v2.6.1
+        with:
+          fail_on_error: true
+          golangci_lint_flags: "--config=.github/.golangci.yml ./..."
+
+  yamllint:
+    name: runner / yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - uses: reviewdog/action-yamllint@bc37f456f657881f4a007caa6e243cef03ec8a84 # v1.15.0
+        with:
+          fail_on_error: true
+          reporter: github-pr-review
+          yamllint_flags: '-d "{extends: default, rules: {truthy: disable}}" .'
+
+  dotenv-linter:
+    name: runner / dotenv-linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - uses: dotenv-linter/action-dotenv-linter@d92c8e455691d7a4d4e1d830081b0a39e4c34b88 # v2.21.0
+        with:
+          reporter: github-pr-review
+
+  check-dependencies:
+    name: runner / check-dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7
+      - name: WriteGoList
+        run: go list -json -m all > go.list
+      - name: Nancy
+        uses: sonatype-nexus-community/nancy-github-action@395e2fb168f674f96502e5652103d112899ea369 # main
+        continue-on-error: true
+      - name: "Dependency Review"
+        uses: actions/dependency-review-action@72eb03d02c7872a771aacd928f3123ac62ad6d3a # v4.3.3
+
+  tests:
+    name: runner / build and tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.21.x, 1.22.x]
+        os: [windows-2019, windows-2022, ubuntu-22.04, ubuntu-20.04]
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: build go
+        run: go build ./cmd/app/main.go
+      - name: Install Test Converter and run tests
+        run: |
+          export GOPATH="$HOME/go/"
+          export PATH=$PATH:$GOPATH/bin
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          go test -covermode=atomic -coverprofile=coverage.out -race -v ./... > test_output.txt 2>&1 || true
+          cat test_output.txt
+          cat test_output.txt | go-junit-report -set-exit-code > junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml
+          if grep -q "FAIL" test_output.txt; then exit 1; fi
+      - name: Upload Coverage Results
+        uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17 # v4.4.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: GitHub Upload Release Artifacts
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: JUnit Results ${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}
+          path: junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml
+      # - name: Integration tests
+      #   run: "docker-compose up \
+      #     --build \
+      #     --abort-on-container-exit \
+      #     --exit-code-from integration"

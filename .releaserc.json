@@ -1,0 +1,48 @@
+{
+  "branches": [
+    {
+      "name": "main"
+    },
+    {
+      "name": "alpha",
+      "prerelease": "alpha"
+    }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "console_linux_x64.tar.gz",
+            "label": "Linux x64 Console Executable"
+          },
+          {
+            "path": "console_windows_x64.zip",
+            "label": "Windows x64 Console Executable"
+          },
+          {
+            "path": "console_mac_x64.tar.gz",
+            "label": "Mac x64 Console Executable"
+          },
+          {
+            "path": "console_mac_arm64.tar.gz",
+            "label": "Mac arm64 Console Executable"
+          }
+        ]
+      }
+    ],
+    "@semantic-release/github",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "./build.sh ${nextRelease.version} ",
+        "publishCmd": "docker push vprodemo.azurecr.io/console:v${nextRelease.version}",
+        "verifyReleaseCmd": "echo v${nextRelease.version} > .nextVersion"
+      }
+    ]
+  ]
+}
