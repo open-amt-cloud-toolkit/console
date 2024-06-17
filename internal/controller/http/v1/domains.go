@@ -15,7 +15,7 @@ type domainRoutes struct {
 	l logger.Interface
 }
 
-func newDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Interface) {
+func NewDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Interface) {
 	r := &domainRoutes{t, l}
 
 	h := handler.Group("/domains")

@@ -1,5 +1,5 @@
 // Package v1 implements routing paths. Each services in own file.
-package v1
+package http
 
 import (
 	"embed"
@@ -13,14 +13,14 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/open-amt-cloud-toolkit/console/config"
+	"github.com/open-amt-cloud-toolkit/console/internal/controller/http/redfish"
+	v1 "github.com/open-amt-cloud-toolkit/console/internal/controller/http/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 //go:embed all:ui
 var content embed.FS
-
-var Config *config.Config
 
 // NewRouter -.
 // Swagger spec:
@@ -34,7 +34,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
-	Config = cfg
 	// Static files
 	// Serve static assets (js, css, images, etc.)
 	// Create subdirectory view of the embedded file system
@@ -68,22 +67,27 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	handler.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// version info
-	handler.GET("/version", LatestReleaseHandler)
+	vr := v1.NewVersionRoute(cfg)
+	handler.GET("/version", vr.LatestReleaseHandler)
 
 	// Routers
 	h2 := handler.Group("/api/v1")
 	{
-		newDeviceRoutes(h2, t.Devices, l)
-		newAmtRoutes(h2, t.Devices, l)
+		v1.NewDeviceRoutes(h2, t.Devices, l)
+		v1.NewAmtRoutes(h2, t.Devices, l)
 	}
 
 	h := handler.Group("/api/v1/admin")
 	{
-		newDomainRoutes(h, t.Domains, l)
-		newCIRAConfigRoutes(h, t.CIRAConfigs, l)
-		newProfileRoutes(h, t.Profiles, l)
-		newWirelessConfigRoutes(h, t.WirelessProfiles, l)
-		newIEEE8021xConfigRoutes(h, t.IEEE8021xProfiles, l)
+		v1.NewDomainRoutes(h, t.Domains, l)
+		v1.NewCIRAConfigRoutes(h, t.CIRAConfigs, l)
+		v1.NewProfileRoutes(h, t.Profiles, l)
+		v1.NewWirelessConfigRoutes(h, t.WirelessProfiles, l)
+		v1.NewIEEE8021xConfigRoutes(h, t.IEEE8021xProfiles, l)
+	}
+	h3 := handler.Group("/redfish/v1")
+	{
+		redfish.NewRedfishRoutes(h3, t.Devices, l)
 	}
 
 	// Catch-all route to serve index.html for any route not matched above to be handled by Angular

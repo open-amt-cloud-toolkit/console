@@ -30,7 +30,7 @@ func devicesTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engine) {
 	engine := gin.New()
 	handler := engine.Group("/api/v1")
 
-	newDeviceRoutes(handler, device, log)
+	NewDeviceRoutes(handler, device, log)
 
 	return device, engine
 }

@@ -15,7 +15,7 @@ type profileRoutes struct {
 	l logger.Interface
 }
 
-func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Interface) {
+func NewProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Interface) {
 	r := &profileRoutes{t, l}
 
 	h := handler.Group("/profiles")

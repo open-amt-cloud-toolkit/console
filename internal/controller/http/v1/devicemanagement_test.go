@@ -31,7 +31,7 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 	engine := gin.New()
 	handler := engine.Group("/api/v1")
 
-	newAmtRoutes(handler, deviceManagement, log)
+	NewAmtRoutes(handler, deviceManagement, log)
 
 	return deviceManagement, engine
 }

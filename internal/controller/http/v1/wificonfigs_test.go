@@ -29,7 +29,7 @@ func wifiTest(t *testing.T) (*MockWiFiConfigsFeature, *gin.Engine) {
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
 
-	newWirelessConfigRoutes(handler, wificonfig, log)
+	NewWirelessConfigRoutes(handler, wificonfig, log)
 
 	return wificonfig, engine
 }

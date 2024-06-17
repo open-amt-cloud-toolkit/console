@@ -16,7 +16,7 @@ type deviceManagementRoutes struct {
 	l logger.Interface
 }
 
-func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interface) {
+func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interface) {
 	r := &deviceManagementRoutes{d, l}
 
 	h := handler.Group("/amt")

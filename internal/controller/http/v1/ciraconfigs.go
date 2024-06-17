@@ -15,7 +15,7 @@ type ciraConfigRoutes struct {
 	l    logger.Interface
 }
 
-func newCIRAConfigRoutes(handler *gin.RouterGroup, t ciraconfigs.Feature, l logger.Interface) {
+func NewCIRAConfigRoutes(handler *gin.RouterGroup, t ciraconfigs.Feature, l logger.Interface) {
 	r := &ciraConfigRoutes{t, l}
 
 	h := handler.Group("/ciraconfigs")

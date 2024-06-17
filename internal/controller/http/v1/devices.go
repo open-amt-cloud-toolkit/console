@@ -15,7 +15,7 @@ type deviceRoutes struct {
 	l logger.Interface
 }
 
-func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
+func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
 
 	h := handler.Group("/devices")

@@ -15,7 +15,7 @@ type ieee8021xConfigRoutes struct {
 	l logger.Interface
 }
 
-func newIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Feature, l logger.Interface) {
+func NewIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Feature, l logger.Interface) {
 	r := &ieee8021xConfigRoutes{t, l}
 
 	h := handler.Group("/ieee8021xconfigs")

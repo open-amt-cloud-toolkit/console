@@ -15,7 +15,7 @@ type WirelessConfigRoutes struct {
 	l logger.Interface
 }
 
-func newWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l logger.Interface) {
+func NewWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l logger.Interface) {
 	r := &WirelessConfigRoutes{t, l}
 
 	h := handler.Group("/wirelessconfigs")

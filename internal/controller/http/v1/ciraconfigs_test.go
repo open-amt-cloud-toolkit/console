@@ -29,7 +29,7 @@ func ciraconfigsTest(t *testing.T) (*MockCIRAConfigsFeature, *gin.Engine) {
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
 
-	newCIRAConfigRoutes(handler, ciraconfig, log)
+	NewCIRAConfigRoutes(handler, ciraconfig, log)
 
 	return ciraconfig, engine
 }

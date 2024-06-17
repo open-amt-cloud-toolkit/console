@@ -34,7 +34,7 @@ func domainsTest(t *testing.T) (*MockDomainsFeature, *gin.Engine) {
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
 
-	newDomainRoutes(handler, domain, log)
+	NewDomainRoutes(handler, domain, log)
 
 	return domain, engine
 }
