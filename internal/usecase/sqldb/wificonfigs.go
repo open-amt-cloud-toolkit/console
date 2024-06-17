@@ -287,6 +287,9 @@ func (r *WirelessRepo) Insert(_ context.Context, p *entity.WirelessConfig) (stri
 		if db.CheckNotUnique(err) {
 			return "", ErrWiFiNotUnique.Wrap(err.Error())
 		}
+		if db.CheckForeignKeyViolation(err) {
+			return "", ErrWiFiIEEEForeignKeyViolation.Wrap(err.Error())
+		}
 
 		return "", ErrWiFiDatabase.Wrap("Insert", "r.Pool.QueryRow", err)
 	}

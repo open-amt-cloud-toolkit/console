@@ -19,8 +19,9 @@ type ProfileRepo struct {
 }
 
 var (
-	ErrProfileDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
-	ErrProfileNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
+	ErrProfileDatabase            = DatabaseError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
+	ErrProfileNotUnique           = NotUniqueError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
+	ErrProfileForeignKeyViolation = ForeignKeyViolationError{Console: consoleerrors.CreateConsoleError("ProfileRepo")}
 )
 
 // New -.
@@ -288,7 +289,6 @@ func (r *ProfileRepo) Update(_ context.Context, p *entity.Profile) (bool, error)
 
 func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, error) {
 	ciraConfigName := p.CIRAConfigName
-
 	ieee8021xProfileName := p.IEEE8021xProfileName
 
 	if ciraConfigName != nil {
@@ -328,6 +328,9 @@ func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, erro
 	if err != nil {
 		if db.CheckNotUnique(err) {
 			return "", ErrProfileWiFiConfigsNotUnique.Wrap(err.Error())
+		}
+		if db.CheckForeignKeyViolation(err) {
+			return "", ErrProfileForeignKeyViolation.Wrap(err.Error())
 		}
 
 		return "", ErrProfileDatabase.Wrap("Insert", "r.Pool.QueryRow", err)

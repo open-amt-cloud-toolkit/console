@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
@@ -19,7 +18,6 @@ func errorResponse(c *gin.Context, err error) {
 	var (
 		valErr dto.NotValidError
 		nfErr  sqldb.NotFoundError
-		//nuErr  sqldb.NotUniqueError
 		dbErr  sqldb.DatabaseError
 		amtErr devices.AMTError
 	)
@@ -37,7 +35,6 @@ func errorResponse(c *gin.Context, err error) {
 		case sqldb.NotUniqueError:
 			message := dbErr.Console.OriginalError.(sqldb.NotUniqueError).Console.FriendlyMessage()
 			c.AbortWithStatusJSON(http.StatusBadRequest, response{message})
-
 		default:
 			c.AbortWithStatusJSON(http.StatusInternalServerError, response{dbErr.Console.FriendlyMessage()})
 		}

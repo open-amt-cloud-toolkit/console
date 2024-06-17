@@ -12,6 +12,5 @@ func (e ForeignKeyViolationError) Error() string {
 
 func (e ForeignKeyViolationError) Wrap(details string) error {
 	e.Console.Message = "foreign key violation: " + details
-
 	return e
 }
