@@ -190,7 +190,7 @@ func TestGetByID(t *testing.T) {
 			tenantID: "tenant-id-456",
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), "device-guid-123", "tenant-id-456").
+					GetByID(context.Background(), "device-guid-123", "tenant-id-456").
 					Return(device, nil)
 			},
 			res: deviceDTO,
@@ -202,7 +202,7 @@ func TestGetByID(t *testing.T) {
 			tenantID: "tenant-id-456",
 			mock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), "device-guid-unknown", "tenant-id-456").
+					GetByID(context.Background(), "device-guid-unknown", "tenant-id-456").
 					Return(nil, nil)
 			},
 			res: nil,
@@ -301,7 +301,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), device).
 					Return(true, nil)
 				repo.EXPECT().
-					GetByID(gomock.Any(), "device-guid-123", "tenant-id-456").
+					GetByID(context.Background(), "device-guid-123", "tenant-id-456").
 					Return(device, nil)
 			},
 			res: deviceDTO,
@@ -360,7 +360,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), device).
 					Return("unique-device-id", nil)
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "tenant-id-456").
+					GetByID(context.Background(), device.GUID, "tenant-id-456").
 					Return(device, nil)
 			},
 			res: nil, // little bit different in that the expectation is handled in the loop

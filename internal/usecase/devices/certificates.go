@@ -148,7 +148,7 @@ func processCertificates(contextItems []credential.CredentialContext, response w
 
 func (uc *UseCase) GetCertificates(c context.Context, guid string) (interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
+	if err != nil {
 		return nil, err
 	}
 
