@@ -118,7 +118,7 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	if !updated {
-		return nil, ErrNotFound
+		return nil, ErrNotFound.Wrap("Update", "uc.repo.Update", nil)
 	}
 
 	updateDevice, err := uc.repo.GetByID(ctx, d1.GUID, d1.TenantID)
@@ -127,6 +127,9 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	d2 := uc.entityToDTO(updateDevice)
+
+	// invalidate connection cache
+	uc.device.DestroyWsmanClient(*d2)
 
 	return d2, nil
 }

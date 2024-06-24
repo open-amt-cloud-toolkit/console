@@ -188,7 +188,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 		StartTime: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 
-		Interval: "1",
+		Interval: 1,
 
 		DeleteOnCompletion: true,
 	}
@@ -271,7 +271,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 			res: amtAlarmClock.AddAlarmOutput{},
 
-			err: ErrGeneral,
+			err: devices.ErrAMT,
 		},
 	}
 

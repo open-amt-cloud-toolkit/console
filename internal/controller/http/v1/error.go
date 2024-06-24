@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -34,7 +35,11 @@ func errorResponse(c *gin.Context, err error) {
 	case errors.As(err, &dbErr):
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response{dbErr.Console.FriendlyMessage()})
 	case errors.As(err, &amtErr):
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response{amtErr.Console.FriendlyMessage()})
+		if strings.Contains(amtErr.Console.Error(), "400 Bad Request") {
+			c.AbortWithStatusJSON(http.StatusBadRequest, response{amtErr.Console.FriendlyMessage()})
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response{amtErr.Console.FriendlyMessage()})
+		}
 	default:
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response{"general error"})
 	}

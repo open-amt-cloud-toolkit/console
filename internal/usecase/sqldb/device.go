@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -220,13 +221,29 @@ func (r *DeviceRepo) GetByTags(_ context.Context, tags []string, method string, 
 			"dnssuffix",
 			"deviceinfo").
 		From("devices")
+
+	var params []interface{}
+
 	if method == "AND" {
-		builder = builder.Where("tags @> ? and tenantId = ?", tags, tenantID)
+		// All tags must be present (simulating an 'AND' operation)
+		for _, tag := range tags {
+			builder = builder.Where("(',' || tags || ',') LIKE ? AND tenantId = ?", "%,"+tag+",%", tenantID)
+			params = append(params, "%,"+tag+",%", tenantID)
+		}
 	} else {
-		builder = builder.Where("tags && ? and tenantId = ?", tags, tenantID)
+		// Any tag is present (simulating an 'OR' operation)
+		var conditions []string
+		for _, tag := range tags {
+			conditions = append(conditions, "(',' || tags || ',') LIKE ?")
+			params = append(params, "%,"+tag+",%")
+		}
+
+		tagsCondition := strings.Join(conditions, " OR ")
+
+		builder = builder.Where("("+tagsCondition+") AND tenantId = ?", append(params, tenantID)...)
 	}
 
-	sqlQuery, _, err := builder.OrderBy("guid").
+	sqlQuery, args, err := builder.OrderBy("guid").
 		Limit(uint64(limit)).
 		Offset(uint64(offset)).
 		ToSql()
@@ -234,7 +251,7 @@ func (r *DeviceRepo) GetByTags(_ context.Context, tags []string, method string, 
 		return []entity.Device{}, ErrDeviceDatabase.Wrap("GetByTags", "r.Builder: ", err)
 	}
 
-	rows, err := r.Pool.Query(sqlQuery, tags, tenantID)
+	rows, err := r.Pool.Query(sqlQuery, args...)
 	if err != nil {
 		return []entity.Device{}, ErrDeviceDatabase.Wrap("GetByTags", "r.Pool.Query", err)
 	}

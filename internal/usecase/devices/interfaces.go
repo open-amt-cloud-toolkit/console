@@ -28,6 +28,7 @@ import (
 type (
 	Management interface {
 		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool)
+		DestroyWsmanClient(device dto.Device)
 		GetAMTVersion() ([]software.SoftwareIdentity, error)
 		GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error)
 		GetFeatures() (interface{}, error)
