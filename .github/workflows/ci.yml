@@ -50,7 +50,7 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: reviewdog/action-yamllint@bc37f456f657881f4a007caa6e243cef03ec8a84 # v1.15.0
+      - uses: reviewdog/action-yamllint@508148c0d959b166798f9792d1b29dddcac37348 # v1.16.0
         with:
           fail_on_error: true
           reporter: github-pr-review
