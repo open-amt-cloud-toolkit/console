@@ -104,7 +104,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			requestBody: dto.AlarmClockOccurrence{
 				ElementName:        "elementName",
 				StartTime:          aGoodTime,
-				Interval:           "1",
+				Interval:           1,
 				DeleteOnCompletion: true,
 				InstanceID:         "1",
 			},

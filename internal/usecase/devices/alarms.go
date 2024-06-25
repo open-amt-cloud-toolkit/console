@@ -2,7 +2,6 @@ package devices
 
 import (
 	"context"
-	"strconv"
 
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
@@ -40,14 +39,9 @@ func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm 
 
 	uc.device.SetupWsmanClient(*item, false, true)
 
-	interval, err := strconv.Atoi(alarm.Interval)
+	alarmReference, err := uc.device.CreateAlarmOccurrences(alarm.InstanceID, alarm.StartTime, alarm.Interval, alarm.DeleteOnCompletion)
 	if err != nil {
-		return amtAlarmClock.AddAlarmOutput{}, err
-	}
-
-	alarmReference, err := uc.device.CreateAlarmOccurrences(alarm.InstanceID, alarm.StartTime, interval, alarm.DeleteOnCompletion)
-	if err != nil {
-		return amtAlarmClock.AddAlarmOutput{}, err
+		return amtAlarmClock.AddAlarmOutput{}, ErrAMT.Wrap("CreateAlarmOccurrences", "uc.device.CreateAlarmOccurrences", err)
 	}
 
 	return alarmReference, nil

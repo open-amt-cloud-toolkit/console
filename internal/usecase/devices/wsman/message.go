@@ -65,6 +65,13 @@ func NewGoWSMANMessages() *GoWSMANMessages {
 	return &GoWSMANMessages{}
 }
 
+func (g *GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
+	if entry, ok := connections[device.GUID]; ok {
+		entry.timer.Stop()
+		removeConnection(device.GUID)
+	}
+}
+
 func (g *GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,

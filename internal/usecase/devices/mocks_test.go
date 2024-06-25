@@ -118,6 +118,18 @@ func (mr *MockManagementMockRecorder) DeleteAlarmOccurrences(instanceID any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAlarmOccurrences", reflect.TypeOf((*MockManagement)(nil).DeleteAlarmOccurrences), instanceID)
 }
 
+// DestroyWsmanClient mocks base method.
+func (m *MockManagement) DestroyWsmanClient(device dto.Device) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DestroyWsmanClient", device)
+}
+
+// DestroyWsmanClient indicates an expected call of DestroyWsmanClient.
+func (mr *MockManagementMockRecorder) DestroyWsmanClient(device any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyWsmanClient", reflect.TypeOf((*MockManagement)(nil).DestroyWsmanClient), device)
+}
+
 // GetAMTVersion mocks base method.
 func (m *MockManagement) GetAMTVersion() ([]software.SoftwareIdentity, error) {
 	m.ctrl.T.Helper()
