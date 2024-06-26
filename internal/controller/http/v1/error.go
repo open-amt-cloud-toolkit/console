@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 )
 
@@ -18,16 +19,22 @@ type response struct {
 
 func errorResponse(c *gin.Context, err error) {
 	var (
-		valErr validator.ValidationErrors
-		nfErr  sqldb.NotFoundError
-		nuErr  sqldb.NotUniqueError
-		dbErr  sqldb.DatabaseError
-		amtErr devices.AMTError
+		valErr          validator.ValidationErrors
+		nfErr           sqldb.NotFoundError
+		nuErr           sqldb.NotUniqueError
+		dbErr           sqldb.DatabaseError
+		amtErr          devices.AMTError
+		certExpErr      domains.CertExpirationError
+		certPasswordErr domains.CertPasswordError
 	)
 
 	switch {
 	case errors.As(err, &valErr):
 		c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Error()})
+	case errors.As(err, &certExpErr):
+		c.AbortWithStatusJSON(http.StatusBadRequest, response{certExpErr.Console.FriendlyMessage()})
+	case errors.As(err, &certPasswordErr):
+		c.AbortWithStatusJSON(http.StatusBadRequest, response{certPasswordErr.Console.FriendlyMessage()})
 	case errors.As(err, &nfErr):
 		c.AbortWithStatusJSON(http.StatusNotFound, response{nfErr.Console.FriendlyMessage()})
 	case errors.As(err, &nuErr):
