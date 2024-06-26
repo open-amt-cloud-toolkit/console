@@ -60,7 +60,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -78,7 +78,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -104,7 +104,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -174,7 +174,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -192,7 +192,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -218,7 +218,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -280,7 +280,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -298,7 +298,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -324,7 +324,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 

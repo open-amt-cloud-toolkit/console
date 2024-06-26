@@ -65,6 +65,13 @@ func NewGoWSMANMessages() *GoWSMANMessages {
 	return &GoWSMANMessages{}
 }
 
+func (g *GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
+	if entry, ok := connections[device.GUID]; ok {
+		entry.timer.Stop()
+		removeConnection(device.GUID)
+	}
+}
+
 func (g *GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
@@ -906,4 +913,62 @@ func (g *GoWSMANMessages) GetNetworkSettings() (interface{}, error) {
 	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 
 	return networkResults, nil
+}
+
+type Certificates struct {
+	ConcreteDependencyResponse   concrete.PullResponse
+	PublicKeyCertificateResponse publickey.RefinedPullResponse
+	PublicPrivateKeyPairResponse publicprivate.RefinedPullResponse
+	CIMCredentialContextResponse credential.PullResponse
+}
+
+func (g *GoWSMANMessages) GetCertificates() (Certificates, error) {
+	concreteDepEnumResp, err := g.wsmanMessages.CIM.ConcreteDependency.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	concreteDepResponse, err := g.wsmanMessages.CIM.ConcreteDependency.Pull(concreteDepEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubKeyCertEnumResp, err := g.wsmanMessages.AMT.PublicKeyCertificate.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubKeyCertResponse, err := g.wsmanMessages.AMT.PublicKeyCertificate.Pull(pubKeyCertEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubPrivKeyPairEnumResp, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubPrivKeyPairResponse, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Pull(pubPrivKeyPairEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	cimCredContextEnumResp, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	cimCredContextResponse, err := g.wsmanMessages.CIM.CredentialContext.Pull(cimCredContextEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	certificates := Certificates{
+		ConcreteDependencyResponse:   concreteDepResponse.Body.PullResponse,
+		PublicKeyCertificateResponse: pubKeyCertResponse.Body.RefinedPullResponse,
+		PublicPrivateKeyPairResponse: pubPrivKeyPairResponse.Body.RefinedPullResponse,
+		CIMCredentialContextResponse: cimCredContextResponse.Body.PullResponse,
+	}
+
+	return certificates, nil
 }

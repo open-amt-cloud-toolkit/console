@@ -48,7 +48,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 			res: gomock.Any(),
@@ -59,7 +59,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			action: 0,
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
@@ -78,7 +78,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 			res: nil,
