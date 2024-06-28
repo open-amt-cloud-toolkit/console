@@ -84,6 +84,22 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 	return hwInfo, nil
 }
 
+func (uc *UseCase) GetDiskInfo(c context.Context, guid string) (interface{}, error) {
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
+		return nil, err
+	}
+
+	uc.device.SetupWsmanClient(*item, false, true)
+
+	diskInfo, err := uc.device.GetDiskInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	return diskInfo, nil
+}
+
 func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dto.AuditLog, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {

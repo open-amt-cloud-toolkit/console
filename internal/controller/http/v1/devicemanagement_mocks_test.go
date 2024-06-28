@@ -235,6 +235,21 @@ func (mr *MockManagementMockRecorder) GetCredentialRelationships() *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCredentialRelationships", reflect.TypeOf((*MockManagement)(nil).GetCredentialRelationships))
 }
 
+// GetDiskInfo mocks base method.
+func (m *MockManagement) GetDiskInfo() (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo")
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockManagementMockRecorder) GetDiskInfo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockManagement)(nil).GetDiskInfo))
+}
+
 // GetEventLog mocks base method.
 func (m *MockManagement) GetEventLog() (messagelog.GetRecordsResponse, error) {
 	m.ctrl.T.Helper()
@@ -878,6 +893,21 @@ func (m *MockDeviceManagementFeature) GetCount(arg0 context.Context, arg1 string
 func (mr *MockDeviceManagementFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetCount), arg0, arg1)
+}
+
+// GetDiskInfo mocks base method.
+func (m *MockDeviceManagementFeature) GetDiskInfo(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockDeviceManagementFeatureMockRecorder) GetDiskInfo(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetDiskInfo), c, guid)
 }
 
 // GetDistinctTags mocks base method.

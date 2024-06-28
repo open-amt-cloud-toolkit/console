@@ -31,6 +31,7 @@ func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 		h.DELETE("alarmOccurrences/:guid", r.deleteAlarmOccurrences)
 
 		h.GET("hardwareInfo/:guid", r.getHardwareInfo)
+		h.GET("diskInfo/:guid", r.getDiskInfo)
 		h.GET("power/state/:guid", r.getPowerState)
 		h.POST("power/action/:guid", r.powerAction)
 		h.POST("power/bootOptions/:guid", r.setBootOptions)
@@ -172,6 +173,20 @@ func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, hwInfo)
+}
+
+func (r *deviceManagementRoutes) getDiskInfo(c *gin.Context) {
+	guid := c.Param("guid")
+
+	diskInfo, err := r.d.GetDiskInfo(c.Request.Context(), guid)
+	if err != nil {
+		r.l.Error(err, "http - v1 - getHardwareInfo")
+		errorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, diskInfo)
 }
 
 func (r *deviceManagementRoutes) getPowerState(c *gin.Context) {

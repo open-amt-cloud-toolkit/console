@@ -54,6 +54,7 @@ type (
 		GetCertificates() (wsmanAPI.Certificates, error)
 		GetCredentialRelationships() (credential.Items, error)
 		GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
+		GetDiskInfo() (interface{}, error)
 	}
 	Redirection interface {
 		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages
@@ -103,5 +104,6 @@ type (
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
 		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
 		GetCertificates(c context.Context, guid string) (interface{}, error)
+		GetDiskInfo(c context.Context, guid string) (interface{}, error)
 	}
 )

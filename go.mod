@@ -2,7 +2,7 @@ module github.com/open-amt-cloud-toolkit/console
 
 go 1.20
 
-//replace github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 => ../go-wsman-messages
+replace github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 => ../go-wsman-messages
 
 require (
 	github.com/Masterminds/squirrel v1.5.4

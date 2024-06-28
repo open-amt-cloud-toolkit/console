@@ -369,6 +369,36 @@ func (g *GoWSMANMessages) hardwarePulls() (PullHWResults, error) {
 
 	var err error
 
+	spEnumerateResult, err := g.wsmanMessages.CIM.SystemPackaging.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.SPPullResult, err = g.wsmanMessages.CIM.SystemPackaging.Pull(spEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	maEnumerateResult, err := g.wsmanMessages.CIM.MediaAccessDevice.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.MediaAccessPullResult, err = g.wsmanMessages.CIM.MediaAccessDevice.Pull(maEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	ppEnumerateResult, err := g.wsmanMessages.CIM.PhysicalPackage.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.PPPullResult, err = g.wsmanMessages.CIM.PhysicalPackage.Pull(ppEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
 	pmEnumerateResult, err := g.wsmanMessages.CIM.PhysicalMemory.Enumerate()
 	if err != nil {
 		return results, err
@@ -407,6 +437,37 @@ func (g *GoWSMANMessages) GetHardwareInfo() (interface{}, error) {
 	}
 
 	return createMapInterfaceForHWInfo(hwResults)
+}
+
+func createMapInterfaceForDiskInfo(diskResults DiskResults) (interface{}, error) {
+	return map[string]interface{}{
+		"CIM_MediaAccessDevice": map[string]interface{}{
+			"responses": []interface{}{diskResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
+		},
+	}, nil
+}
+
+type DiskResults struct {
+	MediaAccessPullResult mediaaccess.Response
+}
+
+func (g *GoWSMANMessages) GetDiskInfo() (interface{}, error) {
+	
+	pmEnumerateResult, err := g.wsmanMessages.CIM.MediaAccessDevice.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	mediaAccessPullResult, err := g.wsmanMessages.CIM.MediaAccessDevice.Pull(pmEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+
+	diskResults := DiskResults{
+		MediaAccessPullResult: mediaAccessPullResult,
+	}
+
+	return createMapInterfaceForDiskInfo(diskResults)
 }
 
 type GetHWResults struct {
