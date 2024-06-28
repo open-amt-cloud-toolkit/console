@@ -5,7 +5,7 @@
 # Console
 
 
-> Disclaimer: Production viable releases are tagged and listed under 'Releases'.  All other check-ins and pre-releases should be considered 'in-development' and should not be used in production
+> Disclaimer: Production viable releases are tagged and listed under 'Releases'. Console is under development. **The current available tags for download are Alpha version code and should not be used in production.** For these Alpha tags, certain features may not function yet, visual look and feel may change, or bugs/errors may occur. Follow along our [Feature Backlog for future releases and feature updates](https://github.com/orgs/open-amt-cloud-toolkit/projects/10).
 
 ## Overview
 
@@ -20,8 +20,6 @@ Console is an application that provides a 1:1, direct connection for AMT devices
 ## Quick start 
 
 ### For Users
-
-> Disclaimer: Console is currently under development. The current available tags for download are Alpha version code. This could mean that certain features may not function yet, visual look and feel may change, or bugs/errors may occur. It is not recommended for use in Production deployments. Follow along our [Feature Backlog for future releases and feature updates](https://github.com/orgs/open-amt-cloud-toolkit/projects/10).
 
 1. Find the latest release of Console under [Github Releases](https://github.com/open-amt-cloud-toolkit/console/releases/latest).
 
