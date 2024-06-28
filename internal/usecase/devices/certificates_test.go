@@ -13,6 +13,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -57,8 +58,8 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: devices.SecuritySettings{
-				ProfileAssociation: []devices.ProfileAssociation(nil),
+			res: dto.SecuritySettings{
+				ProfileAssociation: []dto.ProfileAssociation(nil),
 				Certificates: publickey.RefinedPullResponse{
 					KeyManagementItems:        []publickey.RefinedKeyManagementResponse(nil),
 					PublicKeyCertificateItems: []publickey.RefinedPublicKeyCertificateResponse(nil),
@@ -154,8 +155,8 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: devices.SecuritySettings{
-				ProfileAssociation: []devices.ProfileAssociation{
+			res: dto.SecuritySettings{
+				ProfileAssociation: []dto.ProfileAssociation{
 					{
 						Type:              "TLS",
 						ProfileID:         "TLSProtocolEndpoint Instances Collection",
@@ -182,7 +183,7 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: nil,
+			res: dto.SecuritySettings{},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -201,7 +202,7 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: nil,
+			res: dto.SecuritySettings{},
 			err: ErrGeneral,
 		},
 	}

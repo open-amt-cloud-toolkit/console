@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
@@ -19,21 +20,7 @@ const (
 	TypeWired    string = "Wired"
 )
 
-type SecuritySettings struct {
-	ProfileAssociation []ProfileAssociation `json:"ProfileAssociation"`
-	Certificates       interface{}          `json:"Certificates"`
-	Keys               interface{}          `json:"PublicKeys"`
-}
-
-type ProfileAssociation struct {
-	Type              string      `json:"Type"`
-	ProfileID         string      `json:"ProfileID"`
-	RootCertificate   interface{} `json:"RootCertificate,omitempty"`
-	ClientCertificate interface{} `json:"ClientCertificate,omitempty"`
-	Key               interface{} `json:"PublicKey,omitempty"`
-}
-
-func processConcreteDependencies(certificateHandle string, profileAssociation *ProfileAssociation, dependancyItems []concrete.ConcreteDependency, keyPairItems []publicprivate.RefinedPublicPrivateKeyPair) {
+func processConcreteDependencies(certificateHandle string, profileAssociation *dto.ProfileAssociation, dependancyItems []concrete.ConcreteDependency, keyPairItems []publicprivate.RefinedPublicPrivateKeyPair) {
 	for x := range dependancyItems {
 		if dependancyItems[x].Antecedent.ReferenceParameters.SelectorSet.Selectors[0].Text != certificateHandle {
 			continue
@@ -51,7 +38,7 @@ func processConcreteDependencies(certificateHandle string, profileAssociation *P
 	}
 }
 
-func buildCertificateAssociations(profileAssociation ProfileAssociation, securitySettings *SecuritySettings) {
+func buildCertificateAssociations(profileAssociation dto.ProfileAssociation, securitySettings *dto.SecuritySettings) {
 	var publicKeyHandle string
 
 	// If a client cert, update the associated public key w/ the cert's handle
@@ -85,7 +72,7 @@ func buildCertificateAssociations(profileAssociation ProfileAssociation, securit
 	}
 }
 
-func buildProfileAssociations(certificateHandle string, profileAssociation *ProfileAssociation, response wsman.Certificates, securitySettings *SecuritySettings) {
+func buildProfileAssociations(certificateHandle string, profileAssociation *dto.ProfileAssociation, response wsman.Certificates, securitySettings *dto.SecuritySettings) {
 	isNewProfileAssociation := true
 
 	for idx := range response.PublicKeyCertificateResponse.PublicKeyCertificateItems {
@@ -133,9 +120,9 @@ func buildProfileAssociations(certificateHandle string, profileAssociation *Prof
 	}
 }
 
-func processCertificates(contextItems []credential.CredentialContext, response wsman.Certificates, profileType string, securitySettings *SecuritySettings) {
+func processCertificates(contextItems []credential.CredentialContext, response wsman.Certificates, profileType string, securitySettings *dto.SecuritySettings) {
 	for idx := range contextItems {
-		var profileAssociation ProfileAssociation
+		var profileAssociation dto.ProfileAssociation
 
 		profileAssociation.Type = profileType
 		profileAssociation.ProfileID = strings.TrimPrefix(contextItems[idx].ElementProvidingContext.ReferenceParameters.SelectorSet.Selectors[0].Text, "Intel(r) AMT:IEEE 802.1x Settings ")
@@ -146,20 +133,20 @@ func processCertificates(contextItems []credential.CredentialContext, response w
 	}
 }
 
-func (uc *UseCase) GetCertificates(c context.Context, guid string) (interface{}, error) {
+func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.SecuritySettings{}, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
 
 	response, err := uc.device.GetCertificates()
 	if err != nil {
-		return nil, err
+		return dto.SecuritySettings{}, err
 	}
 
-	securitySettings := SecuritySettings{
+	securitySettings := dto.SecuritySettings{
 		Certificates: response.PublicKeyCertificateResponse,
 		Keys:         response.PublicPrivateKeyPairResponse,
 	}

@@ -86,8 +86,8 @@ type (
 		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
 		GetFeatures(ctx context.Context, guid string) (interface{}, error)
 		SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error)
-		GetAlarmOccurrences(ctx context.Context, guid string) ([]alarmclock.AlarmClockOccurrence, error)
-		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (amtAlarmClock.AddAlarmOutput, error)
+		GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)
+		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error)
 		DeleteAlarmOccurrences(ctx context.Context, guid, instanceID string) error
 		GetHardwareInfo(ctx context.Context, guid string) (interface{}, error)
 		GetPowerState(ctx context.Context, guid string) (map[string]interface{}, error)
@@ -102,6 +102,6 @@ type (
 		GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
 		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
-		GetCertificates(c context.Context, guid string) (interface{}, error)
+		GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error)
 	}
 )
