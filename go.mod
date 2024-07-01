@@ -20,6 +20,7 @@ require (
 	github.com/swaggo/swag v1.16.3
 	go.uber.org/mock v0.4.0
 	modernc.org/sqlite v1.29.10
+	software.sslmate.com/src/go-pkcs12 v0.4.0
 )
 
 require (
