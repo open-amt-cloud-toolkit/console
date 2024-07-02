@@ -5,19 +5,29 @@
 # Console
 
 
-> Disclaimer: Production viable releases are tagged and listed under 'Releases'.  All other check-ins and pre-releases should be considered 'in-development' and should not be used in production
+> Disclaimer: Production viable releases are tagged and listed under 'Releases'. Console is under development. **The current available tags for download are Alpha version code and should not be used in production.** For these Alpha tags, certain features may not function yet, visual look and feel may change, or bugs/errors may occur. Follow along our [Feature Backlog for future releases and feature updates](https://github.com/orgs/open-amt-cloud-toolkit/projects/10).
 
 ## Overview
 
-This is an application that packages the UI, RPS, and MPS into a single executable for use in an enterprise environment.
+Console is an application that provides a 1:1, direct connection for AMT devices for use in an enterprise environment. Users can add activated AMT devices to access device information and device management functionality such as power control, remote keyboard-video-mouse (KVM) control, and more.
+
+<!-- <br><br> -->
+
+<!-- **For detailed documentation** about Getting Started or other features of the Open AMT Cloud Toolkit, see the [docs](https://open-amt-cloud-toolkit.github.io/docs). -->
+
+<br>
 
 ## Quick start 
 
-### For users
+### For Users
 
-If you're looking for the latest release of console visit [Github Releases](https://github.com/open-amt-cloud-toolkit/console/releases/latest) and download the appropriate binary assets for your OS and Architecture: https://github.com/open-amt-cloud-toolkit/console/releases/latest. This is the quickest way to get up and running for non-developers.
+1. Find the latest release of Console under [Github Releases](https://github.com/open-amt-cloud-toolkit/console/releases/latest).
 
-## For Developers
+2. Download the appropriate binary assets for your OS and Architecture under the *Assets* dropdown section.
+
+3. Run Console.
+
+### For Developers
 
 Local development (in Linux or WSL):
 
@@ -50,3 +60,16 @@ Ensure that the environment file has cloud set to `false` and that the URLs for 
 - Ensure code is gci'd with `gci.exe write --skip-generated -s standard -s default .`
 - Ensure all unit tests pass with `go test ./...`
 - Ensure code has been linted with `docker run --rm -v ${pwd}:/app -w /app golangci/golangci-lint:latest golangci-lint run -v`
+
+
+## Additional Resources
+
+- For detailed documentation and Getting Started, [visit the docs site](https://open-amt-cloud-toolkit.github.io/docs).
+
+<!-- - Looking to contribute? [Find more information here about contribution guidelines and practices](.\CONTRIBUTING.md). -->
+
+- Find a bug? Or have ideas for new features? [Open a new Issue](https://github.com/open-amt-cloud-toolkit/console/issues).
+
+- Need additional support or want to get the latest news and events about Open AMT? Connect with the team directly through Discord.
+
+    [![Discord Banner 1](https://discordapp.com/api/guilds/1063200098680582154/widget.png?style=banner2)](https://discord.gg/DKHeUNEWVH)
