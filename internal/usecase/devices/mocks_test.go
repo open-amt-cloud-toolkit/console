@@ -18,13 +18,16 @@ import (
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
 	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
-	wsman "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
+	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
+	wsman0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
 	boot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	setupandconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	boot0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
+	concrete "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
+	credential "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	service "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	software "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
@@ -115,6 +118,18 @@ func (mr *MockManagementMockRecorder) DeleteAlarmOccurrences(instanceID any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAlarmOccurrences", reflect.TypeOf((*MockManagement)(nil).DeleteAlarmOccurrences), instanceID)
 }
 
+// DestroyWsmanClient mocks base method.
+func (m *MockManagement) DestroyWsmanClient(device dto.Device) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DestroyWsmanClient", device)
+}
+
+// DestroyWsmanClient indicates an expected call of DestroyWsmanClient.
+func (mr *MockManagementMockRecorder) DestroyWsmanClient(device any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyWsmanClient", reflect.TypeOf((*MockManagement)(nil).DestroyWsmanClient), device)
+}
+
 // GetAMTVersion mocks base method.
 func (m *MockManagement) GetAMTVersion() ([]software.SoftwareIdentity, error) {
 	m.ctrl.T.Helper()
@@ -173,6 +188,51 @@ func (m *MockManagement) GetBootData() (boot.BootCapabilitiesResponse, error) {
 func (mr *MockManagementMockRecorder) GetBootData() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBootData", reflect.TypeOf((*MockManagement)(nil).GetBootData))
+}
+
+// GetCertificates mocks base method.
+func (m *MockManagement) GetCertificates() (wsman.Certificates, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCertificates")
+	ret0, _ := ret[0].(wsman.Certificates)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCertificates indicates an expected call of GetCertificates.
+func (mr *MockManagementMockRecorder) GetCertificates() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificates", reflect.TypeOf((*MockManagement)(nil).GetCertificates))
+}
+
+// GetConcreteDependencies mocks base method.
+func (m *MockManagement) GetConcreteDependencies() ([]concrete.ConcreteDependency, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConcreteDependencies")
+	ret0, _ := ret[0].([]concrete.ConcreteDependency)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConcreteDependencies indicates an expected call of GetConcreteDependencies.
+func (mr *MockManagementMockRecorder) GetConcreteDependencies() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcreteDependencies", reflect.TypeOf((*MockManagement)(nil).GetConcreteDependencies))
+}
+
+// GetCredentialRelationships mocks base method.
+func (m *MockManagement) GetCredentialRelationships() (credential.Items, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCredentialRelationships")
+	ret0, _ := ret[0].(credential.Items)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCredentialRelationships indicates an expected call of GetCredentialRelationships.
+func (mr *MockManagementMockRecorder) GetCredentialRelationships() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCredentialRelationships", reflect.TypeOf((*MockManagement)(nil).GetCredentialRelationships))
 }
 
 // GetEventLog mocks base method.
@@ -386,7 +446,7 @@ func (mr *MockManagementMockRecorder) SetFeatures(arg0 any) *gomock.Call {
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockManagement) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) {
+func (m *MockManagement) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
 }
@@ -478,10 +538,10 @@ func (mr *MockRedirectionMockRecorder) RedirectSend(ctx, deviceConnection, messa
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockRedirection) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages {
+func (m *MockRedirection) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman0.Messages {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
-	ret0, _ := ret[0].(wsman.Messages)
+	ret0, _ := ret[0].(wsman0.Messages)
 	return ret0
 }
 
@@ -790,6 +850,21 @@ func (mr *MockFeatureMockRecorder) GetByTags(ctx, tags, method, limit, offset, t
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByTags", reflect.TypeOf((*MockFeature)(nil).GetByTags), ctx, tags, method, limit, offset, tenantID)
 }
 
+// GetCertificates mocks base method.
+func (m *MockFeature) GetCertificates(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCertificates", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCertificates indicates an expected call of GetCertificates.
+func (mr *MockFeatureMockRecorder) GetCertificates(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificates", reflect.TypeOf((*MockFeature)(nil).GetCertificates), c, guid)
+}
+
 // GetCount mocks base method.
 func (m *MockFeature) GetCount(arg0 context.Context, arg1 string) (int, error) {
 	m.ctrl.T.Helper()
@@ -821,10 +896,10 @@ func (mr *MockFeatureMockRecorder) GetDistinctTags(ctx, tenantID any) *gomock.Ca
 }
 
 // GetEventLog mocks base method.
-func (m *MockFeature) GetEventLog(ctx context.Context, guid string) (messagelog.GetRecordsResponse, error) {
+func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEventLog", ctx, guid)
-	ret0, _ := ret[0].(messagelog.GetRecordsResponse)
+	ret0, _ := ret[0].([]dto.EventLog)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

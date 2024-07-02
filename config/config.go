@@ -10,12 +10,14 @@ type (
 		App  `yaml:"app"`
 		HTTP `yaml:"http"`
 		Log  `yaml:"logger"`
-		PG   `yaml:"postgres"`
+		DB   `yaml:"postgres"`
 	}
 
 	// App -.
 	App struct {
-		Name string `env-required:"false" yaml:"name" env:"APP_NAME"`
+		Name    string `env-required:"false" yaml:"name" env:"APP_NAME"`
+		Repo    string `env-required:"false" yaml:"repo" env:"APP_REPO"`
+		Version string `env-required:"false"`
 	}
 
 	// HTTP -.
@@ -30,10 +32,10 @@ type (
 		Level string `env-required:"false" yaml:"log_level"   env:"LOG_LEVEL"`
 	}
 
-	// PG -.
-	PG struct {
-		PoolMax int    `env-required:"false" yaml:"pool_max" env:"PG_POOL_MAX"`
-		URL     string `env-required:"true"                  env:"PG_URL"`
+	// DB -.
+	DB struct {
+		PoolMax int    `env-required:"false" yaml:"pool_max" env:"DB_POOL_MAX"`
+		URL     string `env:"DB_URL"`
 	}
 )
 
@@ -42,7 +44,9 @@ func NewConfig() (*Config, error) {
 	// set defaults
 	cfg := &Config{
 		App: App{
-			Name: "console",
+			Name:    "console",
+			Repo:    "open-amt-cloud-toolkit/console",
+			Version: "DEVELOPMENT",
 		},
 		HTTP: HTTP{
 			Port:           "8181",
@@ -52,7 +56,7 @@ func NewConfig() (*Config, error) {
 		Log: Log{
 			Level: "info",
 		},
-		PG: PG{
+		DB: DB{
 			PoolMax: 2,
 		},
 	}

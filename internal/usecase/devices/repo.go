@@ -8,13 +8,14 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
 var (
 	ErrDomainsUseCase = consoleerrors.CreateConsoleError("DevicesUseCase")
-	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
-	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
+	ErrDatabase       = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
+	ErrNotFound       = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
 )
 
 // History - getting translate history from store.
@@ -50,7 +51,7 @@ func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*dto.Dev
 		return nil, ErrDatabase.Wrap("GetByID", "uc.repo.GetByID", err)
 	}
 
-	if data == nil {
+	if data == nil || data.GUID == "" {
 		return nil, ErrNotFound
 	}
 
@@ -111,9 +112,13 @@ func (uc *UseCase) Delete(ctx context.Context, guid, tenantID string) error {
 func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	}
+
+	if !updated {
+		return nil, ErrNotFound.Wrap("Update", "uc.repo.Update", nil)
 	}
 
 	updateDevice, err := uc.repo.GetByID(ctx, d1.GUID, d1.TenantID)
@@ -122,6 +127,9 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	d2 := uc.entityToDTO(updateDevice)
+
+	// invalidate connection cache
+	uc.device.DestroyWsmanClient(*d2)
 
 	return d2, nil
 }

@@ -2,9 +2,15 @@ package domains
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/base64"
+	"time"
+
+	"software.sslmate.com/src/go-pkcs12"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -25,8 +31,10 @@ func New(r Repository, log logger.Interface) *UseCase {
 
 var (
 	ErrDomainsUseCase = consoleerrors.CreateConsoleError("DomainsUseCase")
-	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
-	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("DomainsUseCase")}
+	ErrDatabase       = sqldb.DatabaseError{Console: ErrDomainsUseCase}
+	ErrNotFound       = sqldb.NotFoundError{Console: ErrDomainsUseCase}
+	ErrCertPassword   = CertPasswordError{Console: ErrDomainsUseCase}
+	ErrCertExpiration = CertExpirationError{Console: ErrDomainsUseCase}
 )
 
 // History - getting translate history from store.
@@ -102,9 +110,13 @@ func (uc *UseCase) Delete(ctx context.Context, domainName, tenantID string) erro
 func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	}
+
+	if !updated {
+		return nil, ErrNotFound
 	}
 
 	updateDomain, err := uc.repo.GetByName(ctx, d.ProfileName, d.TenantID)
@@ -120,7 +132,14 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Insert(ctx, d1)
+	cert, err := DecryptAndCheckCertExpiration(*d)
+	if err != nil {
+		return nil, err
+	}
+
+	d1.ExpirationDate = cert.NotAfter.Format(time.RFC3339)
+
+	_, err = uc.repo.Insert(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Insert", "uc.repo.Insert", err)
 	}
@@ -133,6 +152,43 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 	d2 := uc.entityToDTO(newDomain)
 
 	return d2, nil
+}
+
+func DecryptAndCheckCertExpiration(domain dto.Domain) (*x509.Certificate, error) {
+	// Decode the base64 encoded PFX certificate
+	pfxData, err := base64.StdEncoding.DecodeString(domain.ProvisioningCert)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert the PFX data to PEM blocks
+	//nolint:staticcheck // AMT certs don't work with pkcs12.Decode (the suggested replacement)
+	pemBlocks, err := pkcs12.ToPEM(pfxData, domain.ProvisioningCertPassword)
+	if err != nil {
+		return nil, ErrCertPassword.Wrap("DecryptAndCheckCertExpiration", "pkcs12.ToPEM", err)
+	}
+
+	var x509Cert *x509.Certificate
+
+	for _, block := range pemBlocks {
+		if block.Type == "CERTIFICATE" {
+			cert, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return nil, err
+			}
+
+			x509Cert = cert
+
+			break
+		}
+	}
+
+	// Check the expiration date of the certificate
+	if x509Cert.NotAfter.Before(time.Now()) {
+		return nil, ErrCertExpiration.Wrap("DecryptAndCheckCertExpiration", "x509Cert.NotAfter.Before", nil)
+	}
+
+	return x509Cert, nil
 }
 
 // convert dto.Domain to entity.Domain.
@@ -152,12 +208,25 @@ func (uc *UseCase) dtoToEntity(d *dto.Domain) *entity.Domain {
 
 // convert entity.Domain to dto.Domain.
 func (uc *UseCase) entityToDTO(d *entity.Domain) *dto.Domain {
+	// parse expiration date
+	var expirationDate time.Time
+
+	var err error
+
+	if d.ExpirationDate != "" {
+		expirationDate, err = time.Parse(time.RFC3339, d.ExpirationDate)
+		if err != nil {
+			uc.log.Warn("failed to parse expiration date")
+		}
+	}
+
 	d1 := &dto.Domain{
 		ProfileName:                   d.ProfileName,
 		DomainSuffix:                  d.DomainSuffix,
 		ProvisioningCert:              d.ProvisioningCert,
 		ProvisioningCertPassword:      d.ProvisioningCertPassword,
 		ProvisioningCertStorageFormat: d.ProvisioningCertStorageFormat,
+		ExpirationDate:                expirationDate,
 		TenantID:                      d.TenantID,
 		Version:                       d.Version,
 	}

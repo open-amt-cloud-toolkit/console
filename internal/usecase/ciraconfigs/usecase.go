@@ -5,6 +5,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -17,8 +18,8 @@ type UseCase struct {
 
 var (
 	ErrDomainsUseCase = consoleerrors.CreateConsoleError("CIRAConfigsUseCase")
-	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
-	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
+	ErrDatabase       = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
+	ErrNotFound       = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
 )
 
 // New -.
@@ -86,9 +87,13 @@ func (uc *UseCase) Delete(ctx context.Context, configName, tenantID string) erro
 func (uc *UseCase) Update(ctx context.Context, d *dto.CIRAConfig) (*dto.CIRAConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	}
+
+	if !updated {
+		return nil, ErrNotFound
 	}
 
 	updatedCiraConfig, err := uc.repo.GetByName(ctx, d.ConfigName, d.TenantID)

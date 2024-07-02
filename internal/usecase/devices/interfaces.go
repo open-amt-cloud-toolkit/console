@@ -12,6 +12,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
@@ -20,11 +22,13 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
 type (
 	Management interface {
-		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool)
+		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool)
+		DestroyWsmanClient(device dto.Device)
 		GetAMTVersion() ([]software.SoftwareIdentity, error)
 		GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error)
 		GetFeatures() (interface{}, error)
@@ -47,9 +51,12 @@ type (
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
 		GetNetworkSettings() (interface{}, error)
+		GetCertificates() (wsmanAPI.Certificates, error)
+		GetCredentialRelationships() (credential.Items, error)
+		GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
 	}
 	Redirection interface {
-		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages
+		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages
 		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectClose(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)
@@ -92,8 +99,9 @@ type (
 		SendPowerAction(ctx context.Context, guid string, action int) (power.PowerActionResponse, error)
 		SetBootOptions(ctx context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error)
 		GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error)
-		GetEventLog(ctx context.Context, guid string) (messagelog.GetRecordsResponse, error)
+		GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
 		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
+		GetCertificates(c context.Context, guid string) (interface{}, error)
 	}
 )

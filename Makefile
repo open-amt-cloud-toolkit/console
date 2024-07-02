@@ -1,4 +1,4 @@
-include .env.example
+include .env
 export
 
 LOCAL_BIN:=$(CURDIR)/bin
@@ -30,7 +30,7 @@ swag-v1: ### swag init
 
 run: ### run app
 	go mod tidy && go mod download && \
-	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=0 go run -tags migrate ./cmd/app
+	DISABLE_SWAGGER_HTTP_HANDLER='' GIN_MODE=debug CGO_ENABLED=0 go run ./cmd/app
 .PHONY: run
 
 docker-rm-volume: ### remove docker volume
@@ -59,20 +59,28 @@ integration-test: ### run integration-test
 
 mock: ### run mockgen
 	mockgen -source ./internal/usecase/ciraconfigs/interfaces.go -package ciraconfigs_test > ./internal/usecase/ciraconfigs/mocks_test.go
+	mockgen -source ./internal/usecase/ciraconfigs/interfaces.go -package v1 -mock_names Repository=MockCIRAConfigsRepository,Feature=MockCIRAConfigsFeature > ./internal/controller/http/v1/ciraconfigs_mocks_test.go
 	mockgen -source ./internal/usecase/devices/interfaces.go -package devices_test > ./internal/usecase/devices/mocks_test.go
+	mockgen -source ./internal/usecase/devices/interfaces.go -package v1 -mock_names Repository=MockDeviceManagementRepository,Feature=MockDeviceManagementFeature > ./internal/controller/http/v1/devicemanagement_mocks_test.go
 	mockgen -source ./internal/usecase/domains/interfaces.go -package domains_test > ./internal/usecase/domains/mocks_test.go
+	mockgen -source ./internal/usecase/domains/interfaces.go -package v1 -mock_names Repository=MockDomainsRepository,Feature=MockDomainsFeature > ./internal/controller/http/v1/domains_mocks_test.go
 	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package ieee8021xconfigs_test > ./internal/usecase/ieee8021xconfigs/mocks_test.go
+	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package v1 -mock_names Repository=MockIEEE8021xConfigsRepository,Feature=MockIEEE8021xConfigsFeature > ./internal/controller/http/v1/ieee8021xconfigs_mocks_test.go
+	mockgen -source ./internal/usecase/profiles/interfaces.go -package v1 -mock_names Repository=MockProfilesRepository,Feature=MockProfilesFeature > ./internal/controller/http/v1/profiles_mocks_test.go
 	mockgen -source ./internal/usecase/profiles/interfaces.go -package profiles_test > ./internal/usecase/profiles/mocks_test.go
+	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package profiles_test -mock_names Repository=MockProfileWiFiConfigsRepository,Feature=MockProfileWiFiConfigsFeature > ./internal/usecase/profiles/profileswificonfigs_mocks_test.go
+	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package profiles_test -mock_names Repository=MockIEEERepository,Feature=MockIEEEFeature > ./internal/usecase/profiles/ieee_mocks_test.go
 	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package wificonfigs_test > ./internal/usecase/wificonfigs/mocks_test.go
-
+	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package v1 -mock_names Repository=MockWiFiConfigsRepository,Feature=MockWiFiConfigsFeature > ./internal/controller/http/v1/wificonfigs_mocks_test.go
+	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package profilewificonfigs_test > ./internal/usecase/profilewificonfigs/mocks_test.go
 .PHONY: mock
 
 migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations 'migrate_name'
+	migrate create -ext sql -dir /internal/app/migrations 'migrate_name'
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+	migrate -path /internal/app/migrations -database '$(DB_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 bin-deps:

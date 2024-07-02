@@ -10,11 +10,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
-
-var errTest = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("Test Error")}
 
 type test struct {
 	name        string
@@ -27,6 +24,35 @@ type test struct {
 	res         interface{}
 	err         error
 }
+type MockIEEE8021x struct{}
+
+func (m MockIEEE8021x) CheckProfileExists(_ context.Context, _, _ string) (bool, error) {
+	return false, nil
+}
+
+func (m MockIEEE8021x) GetCount(_ context.Context, _ string) (int, error) {
+	return 0, nil
+}
+
+func (m MockIEEE8021x) Get(_ context.Context, _, _ int, _ string) ([]dto.IEEE8021xConfig, error) {
+	return []dto.IEEE8021xConfig{}, nil
+}
+
+func (m MockIEEE8021x) GetByName(_ context.Context, _, _ string) (*dto.IEEE8021xConfig, error) {
+	return &dto.IEEE8021xConfig{}, nil
+}
+
+func (m MockIEEE8021x) Delete(_ context.Context, _, _ string) error {
+	return nil
+}
+
+func (m MockIEEE8021x) Update(_ context.Context, _ *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+	return &dto.IEEE8021xConfig{}, nil
+}
+
+func (m MockIEEE8021x) Insert(_ context.Context, _ *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+	return &dto.IEEE8021xConfig{}, nil
+}
 
 func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *MockRepository) {
 	t.Helper()
@@ -36,7 +62,8 @@ func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *MockRepository) {
 
 	repo := NewMockRepository(mockCtl)
 	log := logger.New("error")
-	useCase := wificonfigs.New(repo, log)
+	ieeeMock := MockIEEE8021x{}
+	useCase := wificonfigs.New(repo, ieeeMock, log)
 
 	return useCase, repo
 }
@@ -60,7 +87,7 @@ func TestCheckProfileExists(t *testing.T) {
 			profileName: "nonexistent-wirelessconfig",
 			tenantID:    "tenant-id-456",
 			mock: func(repo *MockRepository, args ...interface{}) {
-				repo.EXPECT().CheckProfileExists(context.Background(), args[0], args[1]).Return(false, errTest)
+				repo.EXPECT().CheckProfileExists(context.Background(), args[0], args[1]).Return(false, wificonfigs.ErrDatabase)
 			},
 			res: false,
 			err: wificonfigs.ErrDatabase,
@@ -126,10 +153,16 @@ func TestGetCount(t *testing.T) {
 func TestGet(t *testing.T) {
 	t.Parallel()
 
+	linkPolicy := "1,2"
+	ieeeProfileName := "test-8021x"
 	testWifiConfigsEntity := []entity.WirelessConfig{
 		{
-			ProfileName: "test-wirelessconfig-1",
-			TenantID:    "tenant-id-456",
+			ProfileName:            "test-wirelessconfig-1",
+			TenantID:               "tenant-id-456",
+			LinkPolicy:             &linkPolicy,
+			IEEE8021xProfileName:   &ieeeProfileName,
+			AuthenticationProtocol: &[]int{0}[0],
+			WiredInterface:         &[]bool{false}[0],
 		},
 		{
 			ProfileName: "test-wirelessconfig-2",
@@ -139,9 +172,14 @@ func TestGet(t *testing.T) {
 
 	testWifiConfigDTOs := []dto.WirelessConfig{
 		{
-			ProfileName: "test-wirelessconfig-1",
-			TenantID:    "tenant-id-456",
-			LinkPolicy:  []int{},
+			ProfileName:          "test-wirelessconfig-1",
+			TenantID:             "tenant-id-456",
+			LinkPolicy:           []int{1, 2},
+			IEEE8021xProfileName: &ieeeProfileName,
+			IEEE8021xProfileObject: &dto.IEEE8021xConfig{
+				AuthenticationProtocol: 0,
+				WiredInterface:         false,
+			},
 		},
 		{
 			ProfileName: "test-wirelessconfig-2",
@@ -172,10 +210,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository, args ...interface{}) {
 				repo.EXPECT().
 					Get(context.Background(), args[0], args[1], args[2]).
-					Return(nil, errTest)
+					Return(nil, wificonfigs.ErrDatabase)
 			},
 			res: []dto.WirelessConfig(nil),
-			err: errTest,
+			err: wificonfigs.ErrDatabase,
 		},
 		{
 			name:     "zero results",
@@ -362,11 +400,21 @@ func TestUpdate(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "update fails - not found",
+			mock: func(repo *MockRepository, _ ...interface{}) {
+				repo.EXPECT().
+					Update(context.Background(), wirelessConfig).
+					Return(false, wificonfigs.ErrNotFound)
+			},
+			res: (*dto.WirelessConfig)(nil),
+			err: wificonfigs.ErrDatabase,
+		},
+		{
 			name: "update fails - database error",
 			mock: func(repo *MockRepository, _ ...interface{}) {
 				repo.EXPECT().
 					Update(context.Background(), wirelessConfig).
-					Return(false, errTest)
+					Return(false, wificonfigs.ErrDatabase)
 			},
 			res: (*dto.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,
@@ -426,7 +474,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *MockRepository, _ ...interface{}) {
 				repo.EXPECT().
 					Insert(context.Background(), wirelessConfig).
-					Return("", errTest)
+					Return("", wificonfigs.ErrDatabase)
 			},
 			res: (*dto.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,

@@ -1,5 +1,5 @@
 package dto
 
 type UserConsent struct {
-	ConsentCode int `json:"consentCode" binding:"required" example:"123456"`
+	ConsentCode string `json:"consentCode" binding:"required" example:"123456"`
 }

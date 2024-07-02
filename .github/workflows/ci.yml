@@ -11,8 +11,13 @@ jobs:
     name: runner / formatting
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
       - name: Check out code into the Go module directory
-        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - name: Format
         run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
       - name: Run go vet
@@ -22,10 +27,15 @@ jobs:
     name: runner / golangci-lint
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
       - name: Check out code into the Go module directory
-        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
+        uses: reviewdog/action-golangci-lint@7708105983c614f7a2725e2172908b7709d1c3e4 # v2.6.2
         with:
           fail_on_error: true
           golangci_lint_flags: "--config=.github/.golangci.yml ./..."
@@ -34,8 +44,13 @@ jobs:
     name: runner / yamllint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
-      - uses: reviewdog/action-yamllint@v1
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: reviewdog/action-yamllint@508148c0d959b166798f9792d1b29dddcac37348 # v1.16.0
         with:
           fail_on_error: true
           reporter: github-pr-review
@@ -45,8 +60,13 @@ jobs:
     name: runner / dotenv-linter
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
-      - uses: dotenv-linter/action-dotenv-linter@v2
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: dotenv-linter/action-dotenv-linter@5c7d44c1ddb097d3ae75f6fbb53caf521b23405c # v2.22.0
         with:
           reporter: github-pr-review
 
@@ -54,15 +74,20 @@ jobs:
     name: runner / check-dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7
       - name: WriteGoList
         run: go list -json -m all > go.list
       - name: Nancy
-        uses: sonatype-nexus-community/nancy-github-action@main
+        uses: sonatype-nexus-community/nancy-github-action@395e2fb168f674f96502e5652103d112899ea369 # main
         continue-on-error: true
       - name: "Dependency Review"
-        uses: actions/dependency-review-action@0c155c5e8556a497adf53f2c18edabf945ed8e70 # v4.3.2
+        uses: actions/dependency-review-action@72eb03d02c7872a771aacd928f3123ac62ad6d3a # v4.3.3
 
   tests:
     name: runner / build and tests
@@ -72,7 +97,12 @@ jobs:
         go-version: [1.21.x, 1.22.x]
         os: [windows-2019, windows-2022, ubuntu-22.04, ubuntu-20.04]
     steps:
-      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7
         with:
           go-version: ${{ matrix.go-version }}
@@ -88,7 +118,7 @@ jobs:
           cat test_output.txt | go-junit-report -set-exit-code > junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml
           if grep -q "FAIL" test_output.txt; then exit 1; fi
       - name: Upload Coverage Results
-        uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be # v4.3.1
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: GitHub Upload Release Artifacts

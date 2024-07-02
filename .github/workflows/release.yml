@@ -9,7 +9,10 @@ name: Semantic-Release CI
 
 on:
   push:
-    branches: [notyet]
+    branches: [alpha]
+
+permissions:
+  contents: read
 
 jobs:
   release:
@@ -17,16 +20,16 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
         with:
           egress-policy: audit
 
       - name: Checkout Console
-        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           persist-credentials: false
       - name: Check out Sample Web UI
-        uses: actions/checkout@master
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # master
         with:
           repository: open-amt-cloud-toolkit/sample-web-ui
           ref: enterprise #TODO: pull latest tagged version
@@ -38,7 +41,7 @@ jobs:
       - name: move files
         run: mv ./temp/ui/* ./internal/controller/http/v1/ui
       - name: Docker Login
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3.2.0
         with:
           registry: vprodemo.azurecr.io
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -56,29 +59,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ROSIE_TOKEN }}
 
-    # - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
-    #   if: ${{ steps.version.outputs.next != 'none' }}
-    #   with:
-    #     repository: open-amt-cloud-toolkit/e2e-testing
-    #     ref: docker-release
-    #     clean: true
-    #     token: ${{ secrets.ROSIE_TOKEN }}
-
-    # - name: Create docker-release @ ${{ steps.version.outputs.next }}
-    #   if: ${{ steps.version.outputs.next != 'none' }}
-    #   env:
-    #     RELEASE_YAML: release/sample-web-ui.yml
-    #     NEXT_VERSION: ${{ steps.version.outputs.next }}
-    #   run: |
-    #     echo "Releasing ${{ github.repository }}@$NEXT_VERSION"
-    #     if [ "$NEXT_VERSION" != "" ]; then
-    #       CURRENT_VERSION=$(sed -nre 's/(.*):v[0-9]*(([0-9]+\\.)*[0-9]+).*/v\\2/p' $RELEASE_YAML)
-    #       sed -i "s/$CURRENT_VERSION/$NEXT_VERSION/g" $RELEASE_YAML
-    #       echo "========================="
-    #       git config --local user.email "github-actions[bot]@users.noreply.github.com"
-    #       git config --local user.name "github-actions[bot]"
-    #       git status
-    #       git add .
-    #       git commit -m "release(sample-web-ui): automated release of $NEXT_VERSION @ ${GITHUB_SHA::7}"
-    #       git push origin docker-release
-    #     fi

@@ -2,19 +2,17 @@ package devices
 
 import (
 	"context"
-	"strconv"
 
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 )
 
 func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]alarmclock.AlarmClockOccurrence, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -32,29 +30,26 @@ func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]alarmc
 }
 
 func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm dto.AlarmClockOccurrence) (amtAlarmClock.AddAlarmOutput, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return amtAlarmClock.AddAlarmOutput{}, nil
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
+		return amtAlarmClock.AddAlarmOutput{}, err
 	}
+
+	alarm.InstanceID = alarm.ElementName
 
 	uc.device.SetupWsmanClient(*item, false, true)
 
-	interval, err := strconv.Atoi(alarm.Interval)
+	alarmReference, err := uc.device.CreateAlarmOccurrences(alarm.InstanceID, alarm.StartTime, alarm.Interval, alarm.DeleteOnCompletion)
 	if err != nil {
-		return amtAlarmClock.AddAlarmOutput{}, err
-	}
-
-	alarmReference, err := uc.device.CreateAlarmOccurrences(alarm.InstanceID, alarm.StartTime, interval, alarm.DeleteOnCompletion)
-	if err != nil {
-		return amtAlarmClock.AddAlarmOutput{}, err
+		return amtAlarmClock.AddAlarmOutput{}, ErrAMT.Wrap("CreateAlarmOccurrences", "uc.device.CreateAlarmOccurrences", err)
 	}
 
 	return alarmReference, nil
 }
 
 func (uc *UseCase) DeleteAlarmOccurrences(c context.Context, guid, instanceID string) error {
-	item, err := uc.repo.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
 		return err
 	}
 

@@ -11,13 +11,12 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 )
 
 func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (power.PowerActionResponse, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return power.PowerActionResponse{}, utils.ErrNotFound
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
+		return power.PowerActionResponse{}, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -31,9 +30,9 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 }
 
 func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -49,13 +48,9 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 }
 
 func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return nil, nil
-	}
-
-	if item.GUID == "" {
-		return nil, nil
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -72,7 +67,7 @@ func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[str
 
 	amtversion, err := parseVersion(version)
 	if err != nil {
-		return nil, utils.ErrParseVersion
+		return nil, err
 	}
 
 	response := determinePowerCapabilities(amtversion, capabilities)
@@ -121,8 +116,8 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 }
 
 func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
-	item, err := uc.repo.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
 
@@ -152,16 +147,19 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 
 	// boot on ider
 	// boot on floppy
-	determineIDERBootDevice(bootSetting, newData)
+	determineIDERBootDevice(bootSetting, &newData)
 	// force boot mode
 	_, err = uc.device.SetBootConfigRole(1)
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
 
-	err = uc.changeBootOrder(bootSetting, err)
-	if err != nil {
-		return power.PowerActionResponse{}, err
+	bootSource := getBootSource(bootSetting)
+	if bootSource != "" {
+		_, err = uc.device.ChangeBootOrder(bootSource)
+		if err != nil {
+			return power.PowerActionResponse{}, err
+		}
 	}
 
 	_, err = uc.device.SetBootData(newData)
@@ -181,7 +179,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 	return powerActionResult, nil
 }
 
-func determineIDERBootDevice(bootSetting dto.BootSetting, newData boot.BootSettingDataRequest) {
+func determineIDERBootDevice(bootSetting dto.BootSetting, newData *boot.BootSettingDataRequest) {
 	if bootSetting.Action == 202 || bootSetting.Action == 203 {
 		newData.IDERBootDevice = 1
 	} else {
@@ -191,14 +189,14 @@ func determineIDERBootDevice(bootSetting dto.BootSetting, newData boot.BootSetti
 
 // "Intel(r) AMT: Force PXE Boot".
 // "Intel(r) AMT: Force CD/DVD Boot".
-func (uc *UseCase) changeBootOrder(bootSetting dto.BootSetting, err error) error {
+func getBootSource(bootSetting dto.BootSetting) string {
 	if bootSetting.Action == 400 || bootSetting.Action == 401 {
-		_, err = uc.device.ChangeBootOrder(string(cimBoot.PXE))
+		return string(cimBoot.PXE)
 	} else if bootSetting.Action == 202 || bootSetting.Action == 203 {
-		_, err = uc.device.ChangeBootOrder(string(cimBoot.CD))
+		return string(cimBoot.CD)
 	}
 
-	return err
+	return ""
 }
 
 func determineBootAction(bootSetting *dto.BootSetting) {

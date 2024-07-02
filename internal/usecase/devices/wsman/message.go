@@ -2,6 +2,7 @@ package wsman
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
@@ -42,11 +43,19 @@ import (
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
 
-var connections map[string]wsman.Messages = make(map[string]wsman.Messages)
+var (
+	connections   = make(map[string]*ConnectionEntry)
+	connectionsMu sync.Mutex
+	expireAfter   = 5 * time.Minute // Set the expiration duration as needed
+)
+
+type ConnectionEntry struct {
+	wsmanMessages wsman.Messages
+	timer         *time.Timer
+}
 
 type GoWSMANMessages struct {
 	wsmanMessages wsman.Messages
@@ -56,7 +65,14 @@ func NewGoWSMANMessages() *GoWSMANMessages {
 	return &GoWSMANMessages{}
 }
 
-func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) {
+func (g *GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
+	if entry, ok := connections[device.GUID]; ok {
+		entry.timer.Stop()
+		removeConnection(device.GUID)
+	}
+}
+
+func (g *GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
@@ -68,12 +84,33 @@ func (g *GoWSMANMessages) SetupWsmanClient(device entity.Device, isRedirection, 
 		IsRedirection:     isRedirection,
 	}
 
-	if _, ok := connections[device.GUID]; ok {
-		g.wsmanMessages = connections[device.GUID]
+	connectionsMu.Lock()
+	defer connectionsMu.Unlock()
+
+	if entry, ok := connections[device.GUID]; ok {
+		entry.timer.Stop() // Stop the previous timer
+		entry.timer = time.AfterFunc(expireAfter, func() {
+			removeConnection(device.GUID)
+		})
+		g.wsmanMessages = entry.wsmanMessages
 	} else {
-		connections[device.GUID] = wsman.NewMessages(clientParams)
-		g.wsmanMessages = connections[device.GUID]
+		wsmanMsgs := wsman.NewMessages(clientParams)
+		timer := time.AfterFunc(expireAfter, func() {
+			removeConnection(device.GUID)
+		})
+		connections[device.GUID] = &ConnectionEntry{
+			wsmanMessages: wsmanMsgs,
+			timer:         timer,
+		}
+		g.wsmanMessages = wsmanMsgs
 	}
+}
+
+func removeConnection(guid string) {
+	connectionsMu.Lock()
+	defer connectionsMu.Unlock()
+
+	delete(connections, guid)
 }
 
 func (g *GoWSMANMessages) GetAMTVersion() ([]software.SoftwareIdentity, error) {
@@ -196,9 +233,9 @@ func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, erro
 }
 
 func configureKVM(features dto.Features, listenerEnabled int, g *GoWSMANMessages) (int, error) {
-	kvmRequestedState := kvm.RedirectionSAP_Disable
+	kvmRequestedState := kvm.RedirectionSAPDisable
 	if features.EnableKVM {
-		kvmRequestedState = kvm.RedirectionSAP_Enable
+		kvmRequestedState = kvm.RedirectionSAPEnable
 		listenerEnabled = 1
 	}
 
@@ -331,36 +368,6 @@ func (g *GoWSMANMessages) hardwarePulls() (PullHWResults, error) {
 	results := PullHWResults{}
 
 	var err error
-
-	spEnumerateResult, err := g.wsmanMessages.CIM.SystemPackaging.Enumerate()
-	if err != nil {
-		return results, err
-	}
-
-	results.SPPullResult, err = g.wsmanMessages.CIM.SystemPackaging.Pull(spEnumerateResult.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return results, err
-	}
-
-	ppEnumerateResult, err := g.wsmanMessages.CIM.PhysicalPackage.Enumerate()
-	if err != nil {
-		return results, err
-	}
-
-	results.PPPullResult, err = g.wsmanMessages.CIM.PhysicalPackage.Pull(ppEnumerateResult.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return results, err
-	}
-
-	mediaAccessEnumerateResult, err := g.wsmanMessages.CIM.MediaAccessDevice.Enumerate()
-	if err != nil {
-		return results, err
-	}
-
-	results.MediaAccessPullResult, err = g.wsmanMessages.CIM.MediaAccessDevice.Pull(mediaAccessEnumerateResult.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return results, err
-	}
 
 	pmEnumerateResult, err := g.wsmanMessages.CIM.PhysicalMemory.Enumerate()
 	if err != nil {
@@ -675,15 +682,15 @@ func (g *GoWSMANMessages) DeletePublicCert(instanceID string) error {
 	return err
 }
 
-func (g *GoWSMANMessages) GetCredentialRelationships() ([]credential.CredentialContext, error) {
+func (g *GoWSMANMessages) GetCredentialRelationships() (credential.Items, error) {
 	response, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
 	if err != nil {
-		return nil, err
+		return credential.Items{}, err
 	}
 
 	response, err = g.wsmanMessages.CIM.CredentialContext.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
-		return nil, err
+		return credential.Items{}, err
 	}
 
 	return response.Body.PullResponse.Items, nil
@@ -906,4 +913,62 @@ func (g *GoWSMANMessages) GetNetworkSettings() (interface{}, error) {
 	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 
 	return networkResults, nil
+}
+
+type Certificates struct {
+	ConcreteDependencyResponse   concrete.PullResponse
+	PublicKeyCertificateResponse publickey.RefinedPullResponse
+	PublicPrivateKeyPairResponse publicprivate.RefinedPullResponse
+	CIMCredentialContextResponse credential.PullResponse
+}
+
+func (g *GoWSMANMessages) GetCertificates() (Certificates, error) {
+	concreteDepEnumResp, err := g.wsmanMessages.CIM.ConcreteDependency.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	concreteDepResponse, err := g.wsmanMessages.CIM.ConcreteDependency.Pull(concreteDepEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubKeyCertEnumResp, err := g.wsmanMessages.AMT.PublicKeyCertificate.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubKeyCertResponse, err := g.wsmanMessages.AMT.PublicKeyCertificate.Pull(pubKeyCertEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubPrivKeyPairEnumResp, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	pubPrivKeyPairResponse, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Pull(pubPrivKeyPairEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	cimCredContextEnumResp, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	cimCredContextResponse, err := g.wsmanMessages.CIM.CredentialContext.Pull(cimCredContextEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return Certificates{}, err
+	}
+
+	certificates := Certificates{
+		ConcreteDependencyResponse:   concreteDepResponse.Body.PullResponse,
+		PublicKeyCertificateResponse: pubKeyCertResponse.Body.RefinedPullResponse,
+		PublicPrivateKeyPairResponse: pubPrivKeyPairResponse.Body.RefinedPullResponse,
+		CIMCredentialContextResponse: cimCredContextResponse.Body.PullResponse,
+	}
+
+	return certificates, nil
 }

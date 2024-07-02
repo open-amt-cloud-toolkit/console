@@ -1,9 +1,9 @@
 # IDE
 .idea
 .vscode
-
 # Config
 .env
+.DS_store
 
 # Binaries for programs and plugins
 *.exe
@@ -12,6 +12,9 @@
 *.so
 *.dylib
 bin/
+*.db
+*.db-journal
+
 
 # Test binary, built with `go test -c`
 *.test

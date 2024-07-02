@@ -1,8 +1,9 @@
-version: "3.9"
 services:
   postgres:
     container_name: postgres
     image: postgres
+    networks:
+      - openamtnetwork1
     volumes:
       - pg-data:/var/lib/postgresql/data
     environment:
@@ -15,15 +16,27 @@ services:
     build: .
     container_name: app
     image: app
+    networks:
+      - openamtnetwork1
     env_file:
       - .env
     environment:
-      PG_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
+      GIN_MODE: "debug"
+      DB_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
     ports:
-      - 8080:8080
-      - 8081:8081
+      - 8181:8181
     depends_on:
       - postgres
-
+  # integration:
+  #   build:
+  #     context: .
+  #     dockerfile: integration-test/Dockerfile
+  #   container_name: integration
+  #   image: integration
+  #   depends_on:
+  #     - app
 volumes:
   pg-data:
+networks:
+  openamtnetwork1:
+    driver: "bridge"

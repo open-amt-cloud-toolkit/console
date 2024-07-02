@@ -1,11 +1,5 @@
 package entity
 
-type ProfileWifiConfigs struct {
-	Priority    int
-	ProfileName string
-	TenantID    string
-}
-
 type WirelessConfig struct {
 	ProfileName          string
 	AuthenticationMethod int
@@ -17,4 +11,8 @@ type WirelessConfig struct {
 	TenantID             string
 	IEEE8021xProfileName *string
 	Version              string
+	//	columns to populate from join query IEEE8021xProfileName
+	AuthenticationProtocol *int
+	PXETimeout             *int
+	WiredInterface         *bool
 }

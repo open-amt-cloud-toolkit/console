@@ -8,6 +8,8 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -15,22 +17,24 @@ import (
 // UseCase -.
 type UseCase struct {
 	repo Repository
+	ieee ieee8021xconfigs.Feature
 	log  logger.Interface
 }
 
 // New -.
-func New(r Repository, log logger.Interface) *UseCase {
+func New(r Repository, ieee ieee8021xconfigs.Feature, log logger.Interface) *UseCase {
 	return &UseCase{
 		repo: r,
+		ieee: ieee,
 		log:  log,
 	}
 }
 
 var (
-	ErrCountNotUnique = consoleerrors.NotUniqueError{Console: consoleerrors.CreateConsoleError("WifiConfigs")}
+	ErrCountNotUnique = sqldb.NotUniqueError{Console: consoleerrors.CreateConsoleError("WifiConfigs")}
 	ErrDomainsUseCase = consoleerrors.CreateConsoleError("WificonfigsUseCase")
-	ErrDatabase       = consoleerrors.DatabaseError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
-	ErrNotFound       = consoleerrors.NotFoundError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
+	ErrDatabase       = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
+	ErrNotFound       = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("WificonfigsUseCase")}
 )
 
 // History - getting translate history from store.
@@ -100,9 +104,13 @@ func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) err
 func (uc *UseCase) Update(ctx context.Context, d *dto.WirelessConfig) (*dto.WirelessConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
-	_, err := uc.repo.Update(ctx, d1)
+	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
+	}
+
+	if !updated {
+		return nil, ErrNotFound
 	}
 
 	updatedConfig, err := uc.repo.GetByName(ctx, d1.ProfileName, d.TenantID)
@@ -159,10 +167,11 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 	// convert comma separated string to []int
 	linkPolicyInt := []int{}
 
-	if d.LinkPolicy != nil {
+	if d.LinkPolicy != nil && *d.LinkPolicy != "" {
 		linkPolicy := strings.Split(*d.LinkPolicy, ",")
+
 		// convert []string to []int
-		intLinkPolicy := make([]int, len(linkPolicy))
+		linkPolicyInt = make([]int, len(linkPolicy))
 
 		for i, v := range linkPolicy {
 			val, err := strconv.Atoi(v)
@@ -171,7 +180,7 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 				uc.log.Error("error converting string to int")
 			}
 
-			intLinkPolicy[i] = val
+			linkPolicyInt[i] = val
 		}
 	}
 
@@ -186,6 +195,15 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 		TenantID:             d.TenantID,
 		IEEE8021xProfileName: d.IEEE8021xProfileName,
 		Version:              d.Version,
+	}
+
+	if d.IEEE8021xProfileName != nil && *d.IEEE8021xProfileName != "" {
+		val := &dto.IEEE8021xConfig{
+			AuthenticationProtocol: *d.AuthenticationProtocol,
+			PXETimeout:             d.PXETimeout,
+			WiredInterface:         *d.WiredInterface,
+		}
+		d1.IEEE8021xProfileObject = val
 	}
 
 	return d1

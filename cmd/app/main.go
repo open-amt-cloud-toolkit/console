@@ -17,6 +17,11 @@ func main() {
 		log.Fatalf("Config error: %s", err)
 	}
 
+	err = app.Init()
+	if err != nil {
+		log.Fatalf("App init error: %s", err)
+	}
+
 	if os.Getenv("GIN_MODE") != "debug" {
 		go func() {
 			browserError := openBrowser("http://localhost:" + cfg.HTTP.Port)
