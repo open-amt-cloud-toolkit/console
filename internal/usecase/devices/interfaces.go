@@ -142,6 +142,7 @@ type (
 		GetCertificates() (wsmanAPI.Certificates, error)
 		GetCredentialRelationships() (credential.Items, error)
 		GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
+		GetDiskInfo() (interface{}, error)
 	}
 	Redirection interface {
 		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman.Messages
@@ -195,5 +196,6 @@ type (
 		GetExplorerSupportedCalls() []string
 		ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dto.Explorer, error)
 		GetCertificates(c context.Context, guid string) (interface{}, error)
+		GetDiskInfo(c context.Context, guid string) (interface{}, error)
 	}
 )
