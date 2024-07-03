@@ -26,9 +26,11 @@ func initConsentTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepo
 
 	management := NewMockManagement(mockCtl)
 
+	amt := NewMockAMTExplorer(mockCtl)
+
 	log := logger.New("error")
 
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
 
 	return u, management, repo
 }
@@ -275,7 +277,7 @@ func TestSendConsentCode(t *testing.T) {
 
 				man.EXPECT().
 					SendConsentCode(123456).
-					Return(gomock.Any(), nil)
+					Return(optin.SendOptInCode_OUTPUT{}, nil)
 			},
 
 			repoMock: func(repo *MockRepository) {
@@ -284,7 +286,7 @@ func TestSendConsentCode(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: gomock.Any(),
+			res: optin.SendOptInCode_OUTPUT{},
 
 			err: nil,
 		},
@@ -319,7 +321,7 @@ func TestSendConsentCode(t *testing.T) {
 
 				man.EXPECT().
 					SendConsentCode(123456).
-					Return(nil, ErrGeneral)
+					Return(optin.SendOptInCode_OUTPUT{}, ErrGeneral)
 			},
 
 			repoMock: func(repo *MockRepository) {
