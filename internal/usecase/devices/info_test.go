@@ -29,9 +29,11 @@ func initInfoTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockReposit
 
 	management := NewMockManagement(mockCtl)
 
+	amt := NewMockAMTExplorer(mockCtl)
+
 	log := logger.New("error")
 
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
 
 	return u, management, repo
 }

@@ -33,3 +33,8 @@ type DeviceInfo struct {
 	IPAddress   string    `json:"ipAddress"`
 	LastUpdated time.Time `json:"lastUpdated"`
 }
+
+type Explorer struct {
+	XMLInput  string `json:"xmlInput"`
+	XMLOutput string `json:"xmlOutput"`
+}

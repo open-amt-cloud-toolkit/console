@@ -27,9 +27,11 @@ func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepos
 
 	management := NewMockManagement(mockCtl)
 
+	amt := NewMockAMTExplorer(mockCtl)
+
 	log := logger.New("error")
 
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
 
 	return u, management, repo
 }
@@ -104,7 +106,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 
 				man.EXPECT().
 					GetAlarmOccurrences().
-					Return(nil, ErrGeneral)
+					Return([]alarmclock.AlarmClockOccurrence{}, ErrGeneral)
 			},
 
 			repoMock: func(repo *MockRepository) {

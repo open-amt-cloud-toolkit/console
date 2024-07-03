@@ -21,3 +21,8 @@ type Device struct {
 	UseTLS           bool
 	AllowSelfSigned  bool
 }
+
+type Explorer struct {
+	XMLInput  string
+	XMLOutput string
+}
