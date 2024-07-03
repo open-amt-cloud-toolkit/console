@@ -32,8 +32,9 @@ func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository, *MockManageme
 
 	repo := NewMockRepository(mockCtl)
 	management := NewMockManagement(mockCtl)
+	amt := NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
 
 	return u, repo, management
 }
@@ -273,7 +274,7 @@ func TestDelete(t *testing.T) {
 
 			if tc.err != nil {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.err.Error())
+				require.Equal(t, err.Error(), tc.err.Error())
 			} else {
 				require.NoError(t, err)
 			}
@@ -292,7 +293,7 @@ func TestUpdate(t *testing.T) {
 	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
-		Tags:     []string{""},
+		Tags:     []string{},
 	}
 
 	tests := []testUsecase{

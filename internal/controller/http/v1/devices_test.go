@@ -100,7 +100,7 @@ func TestDevicesRoutes(t *testing.T) {
 				device.EXPECT().GetByID(context.Background(), "123e4567-e89b-12d3-a456-426614174000", "").Return(nil, devices.ErrDatabase)
 			},
 			response:     devices.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "get all devices - failed",
@@ -110,7 +110,7 @@ func TestDevicesRoutes(t *testing.T) {
 				device.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, devices.ErrDatabase)
 			},
 			response:     devices.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert device",
@@ -168,7 +168,7 @@ func TestDevicesRoutes(t *testing.T) {
 			},
 			response:     devices.ErrDatabase,
 			requestBody:  requestDevice,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "delete device",
@@ -188,7 +188,7 @@ func TestDevicesRoutes(t *testing.T) {
 				device.EXPECT().Delete(context.Background(), "profile", "").Return(devices.ErrDatabase)
 			},
 			response:     devices.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "update device",
@@ -246,7 +246,7 @@ func TestDevicesRoutes(t *testing.T) {
 			},
 			response:     devices.ErrDatabase,
 			requestBody:  requestDevice,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "tags of a device",
@@ -266,7 +266,7 @@ func TestDevicesRoutes(t *testing.T) {
 				device.EXPECT().GetDistinctTags(context.Background(), "").Return(nil, devices.ErrDatabase)
 			},
 			response:     devices.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "get devices stats",

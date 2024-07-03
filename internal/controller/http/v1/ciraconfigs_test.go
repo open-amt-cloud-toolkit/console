@@ -86,7 +86,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 				ciraconfig.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, ciraconfigs.ErrDatabase)
 			},
 			response:     ciraconfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "get ciraconfig by name",
@@ -108,7 +108,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 				ciraconfig.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, ciraconfigs.ErrDatabase)
 			},
 			response:     ciraconfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert ciraconfig",
@@ -160,7 +160,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			},
 			response:     ciraconfigs.ErrDatabase,
 			requestBody:  requestCIRAConfig,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert ciraconfig validation - failed",
@@ -201,7 +201,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 				ciraconfig.EXPECT().Delete(context.Background(), "profile", "").Return(ciraconfigs.ErrDatabase)
 			},
 			response:     ciraconfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "update ciraconfig",
@@ -253,7 +253,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			},
 			response:     ciraconfigs.ErrDatabase,
 			requestBody:  requestCIRAConfig,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 	}
 

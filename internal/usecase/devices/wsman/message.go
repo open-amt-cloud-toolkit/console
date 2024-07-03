@@ -10,14 +10,22 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/authorization"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/environmentdetection"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/general"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ieee8021x"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/kerberos"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/managementpresence"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/mps"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/publickey"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/publicprivate"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/redirection"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/remoteaccess"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/timesynchronization"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/userinitiatedconnection"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/wifiportconfiguration"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
@@ -40,6 +48,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	ipsAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
@@ -913,6 +922,689 @@ func (g *GoWSMANMessages) GetNetworkSettings() (interface{}, error) {
 	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 
 	return networkResults, nil
+}
+
+// AMT Explorer Functions.
+func (g *GoWSMANMessages) GetAMT8021xCredentialContext() (ieee8021x.Response, error) {
+	enum, err := g.wsmanMessages.AMT.IEEE8021xCredentialContext.Enumerate()
+	if err != nil {
+		return ieee8021x.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.IEEE8021xCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return ieee8021x.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMT8021xProfile() (ieee8021x.Response, error) {
+	enum, err := g.wsmanMessages.AMT.IEEE8021xProfile.Enumerate()
+	if err != nil {
+		return ieee8021x.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.IEEE8021xProfile.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return ieee8021x.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTAlarmClockService() (amtAlarmClock.Response, error) {
+	enum, err := g.wsmanMessages.AMT.AlarmClockService.Enumerate()
+	if err != nil {
+		return amtAlarmClock.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.AlarmClockService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return amtAlarmClock.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTAuditLog() (auditlog.Response, error) {
+	readrecords, err := g.wsmanMessages.AMT.AuditLog.ReadRecords(1)
+	if err != nil {
+		return auditlog.Response{}, err
+	}
+
+	return readrecords, nil
+}
+
+func (g *GoWSMANMessages) GetAMTAuthorizationService() (authorization.Response, error) {
+	enum, err := g.wsmanMessages.AMT.AuthorizationService.Enumerate()
+	if err != nil {
+		return authorization.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.AuthorizationService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return authorization.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTBootCapabilities() (boot.Response, error) {
+	enum, err := g.wsmanMessages.AMT.BootCapabilities.Enumerate()
+	if err != nil {
+		return boot.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.BootCapabilities.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return boot.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTBootSettingData() (boot.Response, error) {
+	enum, err := g.wsmanMessages.AMT.BootSettingData.Enumerate()
+	if err != nil {
+		return boot.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.BootSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return boot.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTEnvironmentDetectionSettingData() (environmentdetection.Response, error) {
+	enum, err := g.wsmanMessages.AMT.EnvironmentDetectionSettingData.Enumerate()
+	if err != nil {
+		return environmentdetection.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.EnvironmentDetectionSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return environmentdetection.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTEthernetPortSettings() (ethernetport.Response, error) {
+	enum, err := g.wsmanMessages.AMT.EthernetPortSettings.Enumerate()
+	if err != nil {
+		return ethernetport.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.EthernetPortSettings.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return ethernetport.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTGeneralSettings() (general.Response, error) {
+	get, err := g.wsmanMessages.AMT.GeneralSettings.Get()
+	if err != nil {
+		return general.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTKerberosSettingData() (kerberos.Response, error) {
+	enum, err := g.wsmanMessages.AMT.KerberosSettingData.Enumerate()
+	if err != nil {
+		return kerberos.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.KerberosSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return kerberos.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTManagementPresenceRemoteSAP() (managementpresence.Response, error) {
+	enum, err := g.wsmanMessages.AMT.ManagementPresenceRemoteSAP.Enumerate()
+	if err != nil {
+		return managementpresence.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.ManagementPresenceRemoteSAP.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return managementpresence.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTMessageLog() (messagelog.Response, error) {
+	get, err := g.wsmanMessages.AMT.MessageLog.GetRecords(1)
+	if err != nil {
+		return messagelog.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTMPSUsernamePassword() (mps.Response, error) {
+	enum, err := g.wsmanMessages.AMT.MPSUsernamePassword.Enumerate()
+	if err != nil {
+		return mps.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.MPSUsernamePassword.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return mps.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTPublicKeyCertificate() (publickey.Response, error) {
+	enum, err := g.wsmanMessages.AMT.PublicKeyCertificate.Enumerate()
+	if err != nil {
+		return publickey.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.PublicKeyCertificate.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return publickey.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTPublicKeyManagementService() (publickey.Response, error) {
+	get, err := g.wsmanMessages.AMT.PublicKeyManagementService.Get()
+	if err != nil {
+		return publickey.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTPublicPrivateKeyPair() (publicprivate.Response, error) {
+	enum, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
+	if err != nil {
+		return publicprivate.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return publicprivate.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTRedirectionService() (redirection.Response, error) {
+	get, err := g.wsmanMessages.AMT.RedirectionService.Get()
+	if err != nil {
+		return redirection.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTRemoteAccessPolicyAppliesToMPS() (remoteaccess.Response, error) {
+	enum, err := g.wsmanMessages.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
+	if err != nil {
+		return remoteaccess.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.RemoteAccessPolicyAppliesToMPS.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return remoteaccess.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTRemoteAccessPolicyRule() (remoteaccess.Response, error) {
+	enum, err := g.wsmanMessages.AMT.RemoteAccessPolicyRule.Enumerate()
+	if err != nil {
+		return remoteaccess.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.RemoteAccessPolicyRule.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return remoteaccess.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTRemoteAccessService() (remoteaccess.Response, error) {
+	get, err := g.wsmanMessages.AMT.RemoteAccessService.Get()
+	if err != nil {
+		return remoteaccess.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTSetupAndConfigurationService() (setupandconfiguration.Response, error) {
+	get, err := g.wsmanMessages.AMT.SetupAndConfigurationService.Get()
+	if err != nil {
+		return setupandconfiguration.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTTimeSynchronizationService() (timesynchronization.Response, error) {
+	get, err := g.wsmanMessages.AMT.TimeSynchronizationService.Get()
+	if err != nil {
+		return timesynchronization.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTTLSCredentialContext() (tls.Response, error) {
+	enum, err := g.wsmanMessages.AMT.TLSCredentialContext.Enumerate()
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.TLSCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTTLSProtocolEndpointCollection() (tls.Response, error) {
+	enum, err := g.wsmanMessages.AMT.TLSProtocolEndpointCollection.Enumerate()
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.TLSProtocolEndpointCollection.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTTLSSettingData() (tls.Response, error) {
+	enum, err := g.wsmanMessages.AMT.TLSSettingData.Enumerate()
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.TLSSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetAMTUserInitiatedConnectionService() (userinitiatedconnection.Response, error) {
+	get, err := g.wsmanMessages.AMT.UserInitiatedConnectionService.Get()
+	if err != nil {
+		return userinitiatedconnection.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetAMTWiFiPortConifgurationService() (wifiportconfiguration.Response, error) {
+	enum, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Enumerate()
+	if err != nil {
+		return wifiportconfiguration.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return wifiportconfiguration.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMBIOSElement() (bios.Response, error) {
+	enum, err := g.wsmanMessages.CIM.BIOSElement.Enumerate()
+	if err != nil {
+		return bios.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.BIOSElement.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return bios.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMBootConfigSetting() (cimBoot.Response, error) {
+	enum, err := g.wsmanMessages.CIM.BootConfigSetting.Enumerate()
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.BootConfigSetting.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMBootService() (cimBoot.Response, error) {
+	enum, err := g.wsmanMessages.CIM.BootService.Enumerate()
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.BootService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMBootSourceSetting() (cimBoot.Response, error) {
+	enum, err := g.wsmanMessages.CIM.BootSourceSetting.Enumerate()
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.BootSourceSetting.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMCard() (card.Response, error) {
+	enum, err := g.wsmanMessages.CIM.Card.Enumerate()
+	if err != nil {
+		return card.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.Card.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return card.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMChassis() (chassis.Response, error) {
+	enum, err := g.wsmanMessages.CIM.Chassis.Enumerate()
+	if err != nil {
+		return chassis.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.Chassis.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return chassis.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMChip() (chip.Response, error) {
+	enum, err := g.wsmanMessages.CIM.Chip.Enumerate()
+	if err != nil {
+		return chip.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.Chip.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return chip.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMComputerSystemPackage() (computer.Response, error) {
+	enum, err := g.wsmanMessages.CIM.ComputerSystemPackage.Enumerate()
+	if err != nil {
+		return computer.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.ComputerSystemPackage.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return computer.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMConcreteDependency() (concrete.Response, error) {
+	enum, err := g.wsmanMessages.CIM.ConcreteDependency.Enumerate()
+	if err != nil {
+		return concrete.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.ConcreteDependency.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return concrete.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMCredentialContext() (credential.Response, error) {
+	enum, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+	if err != nil {
+		return credential.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.CredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return credential.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMKVMRedirectionSAP() (kvm.Response, error) {
+	enum, err := g.wsmanMessages.CIM.KVMRedirectionSAP.Enumerate()
+	if err != nil {
+		return kvm.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.KVMRedirectionSAP.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return kvm.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMMediaAccessDevice() (mediaaccess.Response, error) {
+	enum, err := g.wsmanMessages.CIM.MediaAccessDevice.Enumerate()
+	if err != nil {
+		return mediaaccess.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.MediaAccessDevice.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return mediaaccess.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMPhysicalMemory() (physical.Response, error) {
+	enum, err := g.wsmanMessages.CIM.PhysicalMemory.Enumerate()
+	if err != nil {
+		return physical.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.PhysicalMemory.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return physical.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMPhysicalPackage() (physical.Response, error) {
+	enum, err := g.wsmanMessages.CIM.PhysicalPackage.Enumerate()
+	if err != nil {
+		return physical.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.PhysicalPackage.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return physical.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMPowerManagementService() (power.Response, error) {
+	get, err := g.wsmanMessages.CIM.PowerManagementService.Get()
+	if err != nil {
+		return power.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetCIMProcessor() (processor.Response, error) {
+	enum, err := g.wsmanMessages.CIM.Processor.Enumerate()
+	if err != nil {
+		return processor.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.Processor.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return processor.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMServiceAvailableToElement() (service.Response, error) {
+	enum, err := g.wsmanMessages.CIM.ServiceAvailableToElement.Enumerate()
+	if err != nil {
+		return service.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.ServiceAvailableToElement.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return service.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMSoftwareIdentity() (software.Response, error) {
+	enum, err := g.wsmanMessages.CIM.SoftwareIdentity.Enumerate()
+	if err != nil {
+		return software.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.SoftwareIdentity.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return software.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMSystemPackaging() (system.Response, error) {
+	enum, err := g.wsmanMessages.CIM.SystemPackaging.Enumerate()
+	if err != nil {
+		return system.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.SystemPackaging.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return system.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMWiFiEndpointSettings() (wifi.Response, error) {
+	enum, err := g.wsmanMessages.CIM.WiFiEndpointSettings.Enumerate()
+	if err != nil {
+		return wifi.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.WiFiEndpointSettings.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return wifi.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetCIMWiFiPort() (wifi.Response, error) {
+	enum, err := g.wsmanMessages.CIM.WiFiPort.Enumerate()
+	if err != nil {
+		return wifi.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.CIM.WiFiPort.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return wifi.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetIPS8021xCredentialContext() (ipsIEEE8021x.Response, error) {
+	enum, err := g.wsmanMessages.IPS.IEEE8021xCredentialContext.Enumerate()
+	if err != nil {
+		return ipsIEEE8021x.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.IPS.IEEE8021xCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return ipsIEEE8021x.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetIPSAlarmClockOccurrence() (ipsAlarmClock.Response, error) {
+	enum, err := g.wsmanMessages.IPS.AlarmClockOccurrence.Enumerate()
+	if err != nil {
+		return ipsAlarmClock.Response{}, err
+	}
+
+	pull, err := g.wsmanMessages.IPS.AlarmClockOccurrence.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return ipsAlarmClock.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *GoWSMANMessages) GetIPSHostBasedSetupService() (hostbasedsetup.Response, error) {
+	get, err := g.wsmanMessages.IPS.HostBasedSetupService.Get()
+	if err != nil {
+		return hostbasedsetup.Response{}, err
+	}
+
+	return get, nil
+}
+
+func (g *GoWSMANMessages) GetIPSOptInService() (optin.Response, error) {
+	get, err := g.wsmanMessages.IPS.OptInService.Get()
+	if err != nil {
+		return optin.Response{}, err
+	}
+
+	return get, nil
 }
 
 type Certificates struct {

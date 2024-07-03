@@ -22,19 +22,909 @@ import (
 	wsman0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
+	authorization "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/authorization"
 	boot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
+	environmentdetection "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/environmentdetection"
+	ethernetport "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
+	general "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/general"
+	ieee8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ieee8021x"
+	kerberos "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/kerberos"
+	managementpresence "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/managementpresence"
 	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
+	mps "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/mps"
+	publickey "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/publickey"
+	publicprivate "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/publicprivate"
+	redirection "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/redirection"
+	remoteaccess "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/remoteaccess"
 	setupandconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+	timesynchronization "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/timesynchronization"
+	tls "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
+	userinitiatedconnection "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/userinitiatedconnection"
+	wifiportconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/wifiportconfiguration"
+	bios "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	boot0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
+	card "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
+	chassis "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chassis"
+	chip "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chip"
+	computer "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/computer"
 	concrete "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	credential "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
+	ieee8021x0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ieee8021x"
+	kvm "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
+	mediaaccess "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
+	physical "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
+	processor "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
 	service "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	software "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
+	system "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/system"
+	wifi "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
 	alarmclock0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
+	hostbasedsetup "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
+	ieee8021x1 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	optin "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 	gomock "go.uber.org/mock/gomock"
 )
+
+// MockAMTExplorer is a mock of AMTExplorer interface.
+type MockAMTExplorer struct {
+	ctrl     *gomock.Controller
+	recorder *MockAMTExplorerMockRecorder
+}
+
+// MockAMTExplorerMockRecorder is the mock recorder for MockAMTExplorer.
+type MockAMTExplorerMockRecorder struct {
+	mock *MockAMTExplorer
+}
+
+// NewMockAMTExplorer creates a new mock instance.
+func NewMockAMTExplorer(ctrl *gomock.Controller) *MockAMTExplorer {
+	mock := &MockAMTExplorer{ctrl: ctrl}
+	mock.recorder = &MockAMTExplorerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAMTExplorer) EXPECT() *MockAMTExplorerMockRecorder {
+	return m.recorder
+}
+
+// GetAMT8021xCredentialContext mocks base method.
+func (m *MockAMTExplorer) GetAMT8021xCredentialContext() (ieee8021x.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMT8021xCredentialContext")
+	ret0, _ := ret[0].(ieee8021x.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMT8021xCredentialContext indicates an expected call of GetAMT8021xCredentialContext.
+func (mr *MockAMTExplorerMockRecorder) GetAMT8021xCredentialContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMT8021xCredentialContext", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMT8021xCredentialContext))
+}
+
+// GetAMT8021xProfile mocks base method.
+func (m *MockAMTExplorer) GetAMT8021xProfile() (ieee8021x.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMT8021xProfile")
+	ret0, _ := ret[0].(ieee8021x.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMT8021xProfile indicates an expected call of GetAMT8021xProfile.
+func (mr *MockAMTExplorerMockRecorder) GetAMT8021xProfile() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMT8021xProfile", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMT8021xProfile))
+}
+
+// GetAMTAlarmClockService mocks base method.
+func (m *MockAMTExplorer) GetAMTAlarmClockService() (alarmclock.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTAlarmClockService")
+	ret0, _ := ret[0].(alarmclock.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTAlarmClockService indicates an expected call of GetAMTAlarmClockService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTAlarmClockService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTAlarmClockService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTAlarmClockService))
+}
+
+// GetAMTAuditLog mocks base method.
+func (m *MockAMTExplorer) GetAMTAuditLog() (auditlog.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTAuditLog")
+	ret0, _ := ret[0].(auditlog.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTAuditLog indicates an expected call of GetAMTAuditLog.
+func (mr *MockAMTExplorerMockRecorder) GetAMTAuditLog() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTAuditLog", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTAuditLog))
+}
+
+// GetAMTAuthorizationService mocks base method.
+func (m *MockAMTExplorer) GetAMTAuthorizationService() (authorization.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTAuthorizationService")
+	ret0, _ := ret[0].(authorization.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTAuthorizationService indicates an expected call of GetAMTAuthorizationService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTAuthorizationService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTAuthorizationService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTAuthorizationService))
+}
+
+// GetAMTBootCapabilities mocks base method.
+func (m *MockAMTExplorer) GetAMTBootCapabilities() (boot.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTBootCapabilities")
+	ret0, _ := ret[0].(boot.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTBootCapabilities indicates an expected call of GetAMTBootCapabilities.
+func (mr *MockAMTExplorerMockRecorder) GetAMTBootCapabilities() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTBootCapabilities", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTBootCapabilities))
+}
+
+// GetAMTBootSettingData mocks base method.
+func (m *MockAMTExplorer) GetAMTBootSettingData() (boot.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTBootSettingData")
+	ret0, _ := ret[0].(boot.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTBootSettingData indicates an expected call of GetAMTBootSettingData.
+func (mr *MockAMTExplorerMockRecorder) GetAMTBootSettingData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTBootSettingData", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTBootSettingData))
+}
+
+// GetAMTEnvironmentDetectionSettingData mocks base method.
+func (m *MockAMTExplorer) GetAMTEnvironmentDetectionSettingData() (environmentdetection.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTEnvironmentDetectionSettingData")
+	ret0, _ := ret[0].(environmentdetection.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTEnvironmentDetectionSettingData indicates an expected call of GetAMTEnvironmentDetectionSettingData.
+func (mr *MockAMTExplorerMockRecorder) GetAMTEnvironmentDetectionSettingData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTEnvironmentDetectionSettingData", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTEnvironmentDetectionSettingData))
+}
+
+// GetAMTEthernetPortSettings mocks base method.
+func (m *MockAMTExplorer) GetAMTEthernetPortSettings() (ethernetport.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTEthernetPortSettings")
+	ret0, _ := ret[0].(ethernetport.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTEthernetPortSettings indicates an expected call of GetAMTEthernetPortSettings.
+func (mr *MockAMTExplorerMockRecorder) GetAMTEthernetPortSettings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTEthernetPortSettings", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTEthernetPortSettings))
+}
+
+// GetAMTGeneralSettings mocks base method.
+func (m *MockAMTExplorer) GetAMTGeneralSettings() (general.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTGeneralSettings")
+	ret0, _ := ret[0].(general.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTGeneralSettings indicates an expected call of GetAMTGeneralSettings.
+func (mr *MockAMTExplorerMockRecorder) GetAMTGeneralSettings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTGeneralSettings", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTGeneralSettings))
+}
+
+// GetAMTKerberosSettingData mocks base method.
+func (m *MockAMTExplorer) GetAMTKerberosSettingData() (kerberos.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTKerberosSettingData")
+	ret0, _ := ret[0].(kerberos.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTKerberosSettingData indicates an expected call of GetAMTKerberosSettingData.
+func (mr *MockAMTExplorerMockRecorder) GetAMTKerberosSettingData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTKerberosSettingData", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTKerberosSettingData))
+}
+
+// GetAMTMPSUsernamePassword mocks base method.
+func (m *MockAMTExplorer) GetAMTMPSUsernamePassword() (mps.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTMPSUsernamePassword")
+	ret0, _ := ret[0].(mps.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTMPSUsernamePassword indicates an expected call of GetAMTMPSUsernamePassword.
+func (mr *MockAMTExplorerMockRecorder) GetAMTMPSUsernamePassword() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTMPSUsernamePassword", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTMPSUsernamePassword))
+}
+
+// GetAMTManagementPresenceRemoteSAP mocks base method.
+func (m *MockAMTExplorer) GetAMTManagementPresenceRemoteSAP() (managementpresence.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTManagementPresenceRemoteSAP")
+	ret0, _ := ret[0].(managementpresence.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTManagementPresenceRemoteSAP indicates an expected call of GetAMTManagementPresenceRemoteSAP.
+func (mr *MockAMTExplorerMockRecorder) GetAMTManagementPresenceRemoteSAP() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTManagementPresenceRemoteSAP", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTManagementPresenceRemoteSAP))
+}
+
+// GetAMTMessageLog mocks base method.
+func (m *MockAMTExplorer) GetAMTMessageLog() (messagelog.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTMessageLog")
+	ret0, _ := ret[0].(messagelog.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTMessageLog indicates an expected call of GetAMTMessageLog.
+func (mr *MockAMTExplorerMockRecorder) GetAMTMessageLog() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTMessageLog", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTMessageLog))
+}
+
+// GetAMTPublicKeyCertificate mocks base method.
+func (m *MockAMTExplorer) GetAMTPublicKeyCertificate() (publickey.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTPublicKeyCertificate")
+	ret0, _ := ret[0].(publickey.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTPublicKeyCertificate indicates an expected call of GetAMTPublicKeyCertificate.
+func (mr *MockAMTExplorerMockRecorder) GetAMTPublicKeyCertificate() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTPublicKeyCertificate", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTPublicKeyCertificate))
+}
+
+// GetAMTPublicKeyManagementService mocks base method.
+func (m *MockAMTExplorer) GetAMTPublicKeyManagementService() (publickey.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTPublicKeyManagementService")
+	ret0, _ := ret[0].(publickey.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTPublicKeyManagementService indicates an expected call of GetAMTPublicKeyManagementService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTPublicKeyManagementService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTPublicKeyManagementService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTPublicKeyManagementService))
+}
+
+// GetAMTPublicPrivateKeyPair mocks base method.
+func (m *MockAMTExplorer) GetAMTPublicPrivateKeyPair() (publicprivate.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTPublicPrivateKeyPair")
+	ret0, _ := ret[0].(publicprivate.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTPublicPrivateKeyPair indicates an expected call of GetAMTPublicPrivateKeyPair.
+func (mr *MockAMTExplorerMockRecorder) GetAMTPublicPrivateKeyPair() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTPublicPrivateKeyPair", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTPublicPrivateKeyPair))
+}
+
+// GetAMTRedirectionService mocks base method.
+func (m *MockAMTExplorer) GetAMTRedirectionService() (redirection.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTRedirectionService")
+	ret0, _ := ret[0].(redirection.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTRedirectionService indicates an expected call of GetAMTRedirectionService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTRedirectionService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTRedirectionService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTRedirectionService))
+}
+
+// GetAMTRemoteAccessPolicyAppliesToMPS mocks base method.
+func (m *MockAMTExplorer) GetAMTRemoteAccessPolicyAppliesToMPS() (remoteaccess.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTRemoteAccessPolicyAppliesToMPS")
+	ret0, _ := ret[0].(remoteaccess.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTRemoteAccessPolicyAppliesToMPS indicates an expected call of GetAMTRemoteAccessPolicyAppliesToMPS.
+func (mr *MockAMTExplorerMockRecorder) GetAMTRemoteAccessPolicyAppliesToMPS() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTRemoteAccessPolicyAppliesToMPS", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTRemoteAccessPolicyAppliesToMPS))
+}
+
+// GetAMTRemoteAccessPolicyRule mocks base method.
+func (m *MockAMTExplorer) GetAMTRemoteAccessPolicyRule() (remoteaccess.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTRemoteAccessPolicyRule")
+	ret0, _ := ret[0].(remoteaccess.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTRemoteAccessPolicyRule indicates an expected call of GetAMTRemoteAccessPolicyRule.
+func (mr *MockAMTExplorerMockRecorder) GetAMTRemoteAccessPolicyRule() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTRemoteAccessPolicyRule", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTRemoteAccessPolicyRule))
+}
+
+// GetAMTRemoteAccessService mocks base method.
+func (m *MockAMTExplorer) GetAMTRemoteAccessService() (remoteaccess.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTRemoteAccessService")
+	ret0, _ := ret[0].(remoteaccess.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTRemoteAccessService indicates an expected call of GetAMTRemoteAccessService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTRemoteAccessService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTRemoteAccessService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTRemoteAccessService))
+}
+
+// GetAMTSetupAndConfigurationService mocks base method.
+func (m *MockAMTExplorer) GetAMTSetupAndConfigurationService() (setupandconfiguration.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTSetupAndConfigurationService")
+	ret0, _ := ret[0].(setupandconfiguration.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTSetupAndConfigurationService indicates an expected call of GetAMTSetupAndConfigurationService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTSetupAndConfigurationService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTSetupAndConfigurationService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTSetupAndConfigurationService))
+}
+
+// GetAMTTLSCredentialContext mocks base method.
+func (m *MockAMTExplorer) GetAMTTLSCredentialContext() (tls.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTTLSCredentialContext")
+	ret0, _ := ret[0].(tls.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTTLSCredentialContext indicates an expected call of GetAMTTLSCredentialContext.
+func (mr *MockAMTExplorerMockRecorder) GetAMTTLSCredentialContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTTLSCredentialContext", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTTLSCredentialContext))
+}
+
+// GetAMTTLSProtocolEndpointCollection mocks base method.
+func (m *MockAMTExplorer) GetAMTTLSProtocolEndpointCollection() (tls.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTTLSProtocolEndpointCollection")
+	ret0, _ := ret[0].(tls.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTTLSProtocolEndpointCollection indicates an expected call of GetAMTTLSProtocolEndpointCollection.
+func (mr *MockAMTExplorerMockRecorder) GetAMTTLSProtocolEndpointCollection() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTTLSProtocolEndpointCollection", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTTLSProtocolEndpointCollection))
+}
+
+// GetAMTTLSSettingData mocks base method.
+func (m *MockAMTExplorer) GetAMTTLSSettingData() (tls.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTTLSSettingData")
+	ret0, _ := ret[0].(tls.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTTLSSettingData indicates an expected call of GetAMTTLSSettingData.
+func (mr *MockAMTExplorerMockRecorder) GetAMTTLSSettingData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTTLSSettingData", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTTLSSettingData))
+}
+
+// GetAMTTimeSynchronizationService mocks base method.
+func (m *MockAMTExplorer) GetAMTTimeSynchronizationService() (timesynchronization.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTTimeSynchronizationService")
+	ret0, _ := ret[0].(timesynchronization.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTTimeSynchronizationService indicates an expected call of GetAMTTimeSynchronizationService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTTimeSynchronizationService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTTimeSynchronizationService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTTimeSynchronizationService))
+}
+
+// GetAMTUserInitiatedConnectionService mocks base method.
+func (m *MockAMTExplorer) GetAMTUserInitiatedConnectionService() (userinitiatedconnection.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTUserInitiatedConnectionService")
+	ret0, _ := ret[0].(userinitiatedconnection.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTUserInitiatedConnectionService indicates an expected call of GetAMTUserInitiatedConnectionService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTUserInitiatedConnectionService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTUserInitiatedConnectionService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTUserInitiatedConnectionService))
+}
+
+// GetAMTWiFiPortConifgurationService mocks base method.
+func (m *MockAMTExplorer) GetAMTWiFiPortConifgurationService() (wifiportconfiguration.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTWiFiPortConifgurationService")
+	ret0, _ := ret[0].(wifiportconfiguration.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTWiFiPortConifgurationService indicates an expected call of GetAMTWiFiPortConifgurationService.
+func (mr *MockAMTExplorerMockRecorder) GetAMTWiFiPortConifgurationService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTWiFiPortConifgurationService", reflect.TypeOf((*MockAMTExplorer)(nil).GetAMTWiFiPortConifgurationService))
+}
+
+// GetCIMBIOSElement mocks base method.
+func (m *MockAMTExplorer) GetCIMBIOSElement() (bios.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMBIOSElement")
+	ret0, _ := ret[0].(bios.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMBIOSElement indicates an expected call of GetCIMBIOSElement.
+func (mr *MockAMTExplorerMockRecorder) GetCIMBIOSElement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMBIOSElement", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMBIOSElement))
+}
+
+// GetCIMBootConfigSetting mocks base method.
+func (m *MockAMTExplorer) GetCIMBootConfigSetting() (boot0.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMBootConfigSetting")
+	ret0, _ := ret[0].(boot0.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMBootConfigSetting indicates an expected call of GetCIMBootConfigSetting.
+func (mr *MockAMTExplorerMockRecorder) GetCIMBootConfigSetting() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMBootConfigSetting", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMBootConfigSetting))
+}
+
+// GetCIMBootService mocks base method.
+func (m *MockAMTExplorer) GetCIMBootService() (boot0.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMBootService")
+	ret0, _ := ret[0].(boot0.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMBootService indicates an expected call of GetCIMBootService.
+func (mr *MockAMTExplorerMockRecorder) GetCIMBootService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMBootService", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMBootService))
+}
+
+// GetCIMBootSourceSetting mocks base method.
+func (m *MockAMTExplorer) GetCIMBootSourceSetting() (boot0.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMBootSourceSetting")
+	ret0, _ := ret[0].(boot0.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMBootSourceSetting indicates an expected call of GetCIMBootSourceSetting.
+func (mr *MockAMTExplorerMockRecorder) GetCIMBootSourceSetting() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMBootSourceSetting", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMBootSourceSetting))
+}
+
+// GetCIMCard mocks base method.
+func (m *MockAMTExplorer) GetCIMCard() (card.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMCard")
+	ret0, _ := ret[0].(card.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMCard indicates an expected call of GetCIMCard.
+func (mr *MockAMTExplorerMockRecorder) GetCIMCard() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMCard", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMCard))
+}
+
+// GetCIMChassis mocks base method.
+func (m *MockAMTExplorer) GetCIMChassis() (chassis.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMChassis")
+	ret0, _ := ret[0].(chassis.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMChassis indicates an expected call of GetCIMChassis.
+func (mr *MockAMTExplorerMockRecorder) GetCIMChassis() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMChassis", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMChassis))
+}
+
+// GetCIMChip mocks base method.
+func (m *MockAMTExplorer) GetCIMChip() (chip.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMChip")
+	ret0, _ := ret[0].(chip.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMChip indicates an expected call of GetCIMChip.
+func (mr *MockAMTExplorerMockRecorder) GetCIMChip() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMChip", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMChip))
+}
+
+// GetCIMComputerSystemPackage mocks base method.
+func (m *MockAMTExplorer) GetCIMComputerSystemPackage() (computer.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMComputerSystemPackage")
+	ret0, _ := ret[0].(computer.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMComputerSystemPackage indicates an expected call of GetCIMComputerSystemPackage.
+func (mr *MockAMTExplorerMockRecorder) GetCIMComputerSystemPackage() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMComputerSystemPackage", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMComputerSystemPackage))
+}
+
+// GetCIMConcreteDependency mocks base method.
+func (m *MockAMTExplorer) GetCIMConcreteDependency() (concrete.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMConcreteDependency")
+	ret0, _ := ret[0].(concrete.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMConcreteDependency indicates an expected call of GetCIMConcreteDependency.
+func (mr *MockAMTExplorerMockRecorder) GetCIMConcreteDependency() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMConcreteDependency", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMConcreteDependency))
+}
+
+// GetCIMCredentialContext mocks base method.
+func (m *MockAMTExplorer) GetCIMCredentialContext() (credential.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMCredentialContext")
+	ret0, _ := ret[0].(credential.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMCredentialContext indicates an expected call of GetCIMCredentialContext.
+func (mr *MockAMTExplorerMockRecorder) GetCIMCredentialContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMCredentialContext", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMCredentialContext))
+}
+
+// GetCIMIEEE8021xSettings mocks base method.
+func (m *MockAMTExplorer) GetCIMIEEE8021xSettings() (ieee8021x0.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMIEEE8021xSettings")
+	ret0, _ := ret[0].(ieee8021x0.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMIEEE8021xSettings indicates an expected call of GetCIMIEEE8021xSettings.
+func (mr *MockAMTExplorerMockRecorder) GetCIMIEEE8021xSettings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMIEEE8021xSettings", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMIEEE8021xSettings))
+}
+
+// GetCIMKVMRedirectionSAP mocks base method.
+func (m *MockAMTExplorer) GetCIMKVMRedirectionSAP() (kvm.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMKVMRedirectionSAP")
+	ret0, _ := ret[0].(kvm.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMKVMRedirectionSAP indicates an expected call of GetCIMKVMRedirectionSAP.
+func (mr *MockAMTExplorerMockRecorder) GetCIMKVMRedirectionSAP() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMKVMRedirectionSAP", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMKVMRedirectionSAP))
+}
+
+// GetCIMMediaAccessDevice mocks base method.
+func (m *MockAMTExplorer) GetCIMMediaAccessDevice() (mediaaccess.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMMediaAccessDevice")
+	ret0, _ := ret[0].(mediaaccess.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMMediaAccessDevice indicates an expected call of GetCIMMediaAccessDevice.
+func (mr *MockAMTExplorerMockRecorder) GetCIMMediaAccessDevice() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMMediaAccessDevice", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMMediaAccessDevice))
+}
+
+// GetCIMPhysicalMemory mocks base method.
+func (m *MockAMTExplorer) GetCIMPhysicalMemory() (physical.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMPhysicalMemory")
+	ret0, _ := ret[0].(physical.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMPhysicalMemory indicates an expected call of GetCIMPhysicalMemory.
+func (mr *MockAMTExplorerMockRecorder) GetCIMPhysicalMemory() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMPhysicalMemory", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMPhysicalMemory))
+}
+
+// GetCIMPhysicalPackage mocks base method.
+func (m *MockAMTExplorer) GetCIMPhysicalPackage() (physical.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMPhysicalPackage")
+	ret0, _ := ret[0].(physical.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMPhysicalPackage indicates an expected call of GetCIMPhysicalPackage.
+func (mr *MockAMTExplorerMockRecorder) GetCIMPhysicalPackage() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMPhysicalPackage", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMPhysicalPackage))
+}
+
+// GetCIMPowerManagementService mocks base method.
+func (m *MockAMTExplorer) GetCIMPowerManagementService() (power.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMPowerManagementService")
+	ret0, _ := ret[0].(power.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMPowerManagementService indicates an expected call of GetCIMPowerManagementService.
+func (mr *MockAMTExplorerMockRecorder) GetCIMPowerManagementService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMPowerManagementService", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMPowerManagementService))
+}
+
+// GetCIMProcessor mocks base method.
+func (m *MockAMTExplorer) GetCIMProcessor() (processor.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMProcessor")
+	ret0, _ := ret[0].(processor.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMProcessor indicates an expected call of GetCIMProcessor.
+func (mr *MockAMTExplorerMockRecorder) GetCIMProcessor() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMProcessor", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMProcessor))
+}
+
+// GetCIMServiceAvailableToElement mocks base method.
+func (m *MockAMTExplorer) GetCIMServiceAvailableToElement() (service.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMServiceAvailableToElement")
+	ret0, _ := ret[0].(service.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMServiceAvailableToElement indicates an expected call of GetCIMServiceAvailableToElement.
+func (mr *MockAMTExplorerMockRecorder) GetCIMServiceAvailableToElement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMServiceAvailableToElement", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMServiceAvailableToElement))
+}
+
+// GetCIMSoftwareIdentity mocks base method.
+func (m *MockAMTExplorer) GetCIMSoftwareIdentity() (software.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMSoftwareIdentity")
+	ret0, _ := ret[0].(software.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMSoftwareIdentity indicates an expected call of GetCIMSoftwareIdentity.
+func (mr *MockAMTExplorerMockRecorder) GetCIMSoftwareIdentity() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMSoftwareIdentity", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMSoftwareIdentity))
+}
+
+// GetCIMSystemPackaging mocks base method.
+func (m *MockAMTExplorer) GetCIMSystemPackaging() (system.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMSystemPackaging")
+	ret0, _ := ret[0].(system.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMSystemPackaging indicates an expected call of GetCIMSystemPackaging.
+func (mr *MockAMTExplorerMockRecorder) GetCIMSystemPackaging() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMSystemPackaging", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMSystemPackaging))
+}
+
+// GetCIMWiFiEndpointSettings mocks base method.
+func (m *MockAMTExplorer) GetCIMWiFiEndpointSettings() (wifi.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMWiFiEndpointSettings")
+	ret0, _ := ret[0].(wifi.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMWiFiEndpointSettings indicates an expected call of GetCIMWiFiEndpointSettings.
+func (mr *MockAMTExplorerMockRecorder) GetCIMWiFiEndpointSettings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMWiFiEndpointSettings", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMWiFiEndpointSettings))
+}
+
+// GetCIMWiFiPort mocks base method.
+func (m *MockAMTExplorer) GetCIMWiFiPort() (wifi.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIMWiFiPort")
+	ret0, _ := ret[0].(wifi.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIMWiFiPort indicates an expected call of GetCIMWiFiPort.
+func (mr *MockAMTExplorerMockRecorder) GetCIMWiFiPort() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIMWiFiPort", reflect.TypeOf((*MockAMTExplorer)(nil).GetCIMWiFiPort))
+}
+
+// GetIPS8021xCredentialContext mocks base method.
+func (m *MockAMTExplorer) GetIPS8021xCredentialContext() (ieee8021x1.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIPS8021xCredentialContext")
+	ret0, _ := ret[0].(ieee8021x1.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIPS8021xCredentialContext indicates an expected call of GetIPS8021xCredentialContext.
+func (mr *MockAMTExplorerMockRecorder) GetIPS8021xCredentialContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIPS8021xCredentialContext", reflect.TypeOf((*MockAMTExplorer)(nil).GetIPS8021xCredentialContext))
+}
+
+// GetIPSAlarmClockOccurrence mocks base method.
+func (m *MockAMTExplorer) GetIPSAlarmClockOccurrence() (alarmclock0.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIPSAlarmClockOccurrence")
+	ret0, _ := ret[0].(alarmclock0.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIPSAlarmClockOccurrence indicates an expected call of GetIPSAlarmClockOccurrence.
+func (mr *MockAMTExplorerMockRecorder) GetIPSAlarmClockOccurrence() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIPSAlarmClockOccurrence", reflect.TypeOf((*MockAMTExplorer)(nil).GetIPSAlarmClockOccurrence))
+}
+
+// GetIPSHostBasedSetupService mocks base method.
+func (m *MockAMTExplorer) GetIPSHostBasedSetupService() (hostbasedsetup.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIPSHostBasedSetupService")
+	ret0, _ := ret[0].(hostbasedsetup.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIPSHostBasedSetupService indicates an expected call of GetIPSHostBasedSetupService.
+func (mr *MockAMTExplorerMockRecorder) GetIPSHostBasedSetupService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIPSHostBasedSetupService", reflect.TypeOf((*MockAMTExplorer)(nil).GetIPSHostBasedSetupService))
+}
+
+// GetIPSIEEE8021xSettings mocks base method.
+func (m *MockAMTExplorer) GetIPSIEEE8021xSettings() (ieee8021x1.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIPSIEEE8021xSettings")
+	ret0, _ := ret[0].(ieee8021x1.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIPSIEEE8021xSettings indicates an expected call of GetIPSIEEE8021xSettings.
+func (mr *MockAMTExplorerMockRecorder) GetIPSIEEE8021xSettings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIPSIEEE8021xSettings", reflect.TypeOf((*MockAMTExplorer)(nil).GetIPSIEEE8021xSettings))
+}
+
+// GetIPSOptInService mocks base method.
+func (m *MockAMTExplorer) GetIPSOptInService() (optin.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIPSOptInService")
+	ret0, _ := ret[0].(optin.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIPSOptInService indicates an expected call of GetIPSOptInService.
+func (mr *MockAMTExplorerMockRecorder) GetIPSOptInService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIPSOptInService", reflect.TypeOf((*MockAMTExplorer)(nil).GetIPSOptInService))
+}
+
+// SetupWsmanClient mocks base method.
+func (m *MockAMTExplorer) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
+}
+
+// SetupWsmanClient indicates an expected call of SetupWsmanClient.
+func (mr *MockAMTExplorerMockRecorder) SetupWsmanClient(device, isRedirection, logAMTMessages any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockAMTExplorer)(nil).SetupWsmanClient), device, isRedirection, logAMTMessages)
+}
 
 // MockManagement is a mock of Management interface.
 type MockManagement struct {
@@ -446,15 +1336,15 @@ func (mr *MockManagementMockRecorder) SetFeatures(arg0 any) *gomock.Call {
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockManagement) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
+func (m *MockManagement) SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
+	m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logMessages)
 }
 
 // SetupWsmanClient indicates an expected call of SetupWsmanClient.
-func (mr *MockManagementMockRecorder) SetupWsmanClient(device, isRedirection, logAMTMessages any) *gomock.Call {
+func (mr *MockManagementMockRecorder) SetupWsmanClient(device, isRedirection, logMessages any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockManagement)(nil).SetupWsmanClient), device, isRedirection, logAMTMessages)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockManagement)(nil).SetupWsmanClient), device, isRedirection, logMessages)
 }
 
 // MockRedirection is a mock of Redirection interface.
@@ -538,17 +1428,17 @@ func (mr *MockRedirectionMockRecorder) RedirectSend(ctx, deviceConnection, messa
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockRedirection) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman0.Messages {
+func (m *MockRedirection) SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman0.Messages {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
+	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logMessages)
 	ret0, _ := ret[0].(wsman0.Messages)
 	return ret0
 }
 
 // SetupWsmanClient indicates an expected call of SetupWsmanClient.
-func (mr *MockRedirectionMockRecorder) SetupWsmanClient(device, isRedirection, logAMTMessages any) *gomock.Call {
+func (mr *MockRedirectionMockRecorder) SetupWsmanClient(device, isRedirection, logMessages any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockRedirection)(nil).SetupWsmanClient), device, isRedirection, logAMTMessages)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockRedirection)(nil).SetupWsmanClient), device, isRedirection, logMessages)
 }
 
 // MockRepository is a mock of Repository interface.
@@ -602,6 +1492,21 @@ func (m *MockRepository) Get(ctx context.Context, top, skip int, tenantID string
 func (mr *MockRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), ctx, top, skip, tenantID)
+}
+
+// GetByColumn mocks base method.
+func (m *MockRepository) GetByColumn(ctx context.Context, columnName, queryValue, tenantId string) ([]entity.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantId)
+	ret0, _ := ret[0].([]entity.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByColumn indicates an expected call of GetByColumn.
+func (mr *MockRepositoryMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockRepository)(nil).GetByColumn), ctx, columnName, queryValue, tenantId)
 }
 
 // GetByID mocks base method.
@@ -775,6 +1680,21 @@ func (mr *MockFeatureMockRecorder) DeleteAlarmOccurrences(ctx, guid, instanceID 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAlarmOccurrences", reflect.TypeOf((*MockFeature)(nil).DeleteAlarmOccurrences), ctx, guid, instanceID)
 }
 
+// ExecuteCall mocks base method.
+func (m *MockFeature) ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dto.Explorer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteCall", ctx, guid, call, tenantID)
+	ret0, _ := ret[0].(*dto.Explorer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteCall indicates an expected call of ExecuteCall.
+func (mr *MockFeatureMockRecorder) ExecuteCall(ctx, guid, call, tenantID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteCall", reflect.TypeOf((*MockFeature)(nil).ExecuteCall), ctx, guid, call, tenantID)
+}
+
 // Get mocks base method.
 func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
@@ -818,6 +1738,21 @@ func (m *MockFeature) GetAuditLog(ctx context.Context, startIndex int, guid stri
 func (mr *MockFeatureMockRecorder) GetAuditLog(ctx, startIndex, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuditLog", reflect.TypeOf((*MockFeature)(nil).GetAuditLog), ctx, startIndex, guid)
+}
+
+// GetByColumn mocks base method.
+func (m *MockFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantId string) ([]dto.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantId)
+	ret0, _ := ret[0].([]dto.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByColumn indicates an expected call of GetByColumn.
+func (mr *MockFeatureMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockFeature)(nil).GetByColumn), ctx, columnName, queryValue, tenantId)
 }
 
 // GetByID mocks base method.
@@ -908,6 +1843,20 @@ func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]dto.Event
 func (mr *MockFeatureMockRecorder) GetEventLog(ctx, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventLog", reflect.TypeOf((*MockFeature)(nil).GetEventLog), ctx, guid)
+}
+
+// GetExplorerSupportedCalls mocks base method.
+func (m *MockFeature) GetExplorerSupportedCalls() []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExplorerSupportedCalls")
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetExplorerSupportedCalls indicates an expected call of GetExplorerSupportedCalls.
+func (mr *MockFeatureMockRecorder) GetExplorerSupportedCalls() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExplorerSupportedCalls", reflect.TypeOf((*MockFeature)(nil).GetExplorerSupportedCalls))
 }
 
 // GetFeatures mocks base method.

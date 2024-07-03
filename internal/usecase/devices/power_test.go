@@ -9,6 +9,7 @@ import (
 	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
@@ -38,8 +39,9 @@ func initPowerTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockReposi
 
 	repo := NewMockRepository(mockCtl)
 	management := NewMockManagement(mockCtl)
+	amt := NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
 
 	return u, management, repo
 }
@@ -222,7 +224,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					Return()
 				man.EXPECT().
 					GetAMTVersion().
-					Return(nil, nil)
+					Return([]software.SoftwareIdentity{}, nil)
 				man.EXPECT().
 					GetPowerCapabilities().
 					Return(boot.BootCapabilitiesResponse{}, nil)

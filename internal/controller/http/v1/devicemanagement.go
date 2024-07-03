@@ -46,6 +46,9 @@ func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 		h.POST("userConsentCode/:guid", r.sendConsentCode)
 
 		h.GET("networkSettings/:guid", r.getNetworkSettings)
+
+		h.GET("explorer", r.getCallList)
+		h.GET("explorer/:guid/:call", r.executeCall)
 		h.GET("certificates/:guid", r.getCertificates)
 	}
 }
@@ -357,6 +360,45 @@ func (r *deviceManagementRoutes) getNetworkSettings(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, network)
+}
+
+// @Summary     Get Call List
+// @Description Get a list of supported WSMAN calls
+// @ID          getCallList
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} DeviceCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/devices [get]
+func (r *deviceManagementRoutes) getCallList(c *gin.Context) {
+	items := r.d.GetExplorerSupportedCalls()
+
+	c.JSON(http.StatusOK, items)
+}
+
+// @Summary     Execute Call
+// @Description Execute a call
+// @ID          executeCall
+// @Tags  	    amt
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} DeviceCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/devices [get]
+func (r *deviceManagementRoutes) executeCall(c *gin.Context) {
+	guid := c.Param("guid")
+	call := c.Param("call")
+
+	result, err := r.d.ExecuteCall(c.Request.Context(), guid, call, "")
+	if err != nil {
+		r.l.Error(err, "http - explorer - v1 - executeCall")
+		errorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func (r *deviceManagementRoutes) getCertificates(c *gin.Context) {

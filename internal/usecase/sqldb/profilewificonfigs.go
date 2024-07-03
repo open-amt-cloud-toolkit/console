@@ -17,8 +17,9 @@ type ProfileWiFiConfigsRepo struct {
 }
 
 var (
-	ErrProfileWiFiConfigsDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("ProfileWiFiConfigsRepo")}
-	ErrProfileWiFiConfigsNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("ProfileWiFiConfigsRepo")}
+	ErrProfileWiFiConfigsDatabase            = DatabaseError{Console: consoleerrors.CreateConsoleError("ProfileWiFiConfigsRepo")}
+	ErrProfileWiFiConfigsNotUnique           = NotUniqueError{Console: consoleerrors.CreateConsoleError("ProfileWiFiConfigsRepo")}
+	ErrProfileWiFiConfigsForeignKeyViolation = ForeignKeyViolationError{Console: consoleerrors.CreateConsoleError("ProfileWiFiConfigsRepo")}
 )
 
 // New -.
@@ -33,6 +34,7 @@ func (r *ProfileWiFiConfigsRepo) GetByProfileName(_ context.Context, profileName
 		Select("wireless_profile_name", "profile_name", "priority", "tenant_id").
 		From("profiles_wirelessconfigs").
 		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
+		OrderBy("priority").
 		ToSql()
 	if err != nil {
 		return nil, ErrProfileWiFiConfigsDatabase.Wrap("GetByProfileName", "r.Builder", err)
@@ -114,6 +116,10 @@ func (r *ProfileWiFiConfigsRepo) Insert(_ context.Context, p *entity.ProfileWiFi
 	if err != nil {
 		if db.CheckNotUnique(err) {
 			return "", ErrProfileWiFiConfigsNotUnique.Wrap(err.Error())
+		}
+
+		if db.CheckForeignKeyViolation(err) {
+			return "", ErrProfileWiFiConfigsForeignKeyViolation.Wrap(err.Error())
 		}
 
 		return "", ErrProfileWiFiConfigsDatabase.Wrap("Insert", "r.Pool.QueryRow", err)
