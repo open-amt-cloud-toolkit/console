@@ -29,13 +29,17 @@ type SQL struct {
 	connAttempts int
 	connTimeout  time.Duration
 
-	Builder    squirrel.StatementBuilderType
-	Pool       *sql.DB
-	IsEmbedded bool
+	Builder           squirrel.StatementBuilderType
+	Pool              *sql.DB
+	IsEmbedded        bool
+	enableForeignKeys bool
 }
 
+// OpenFunc is a type for functions that open a database connection.
+type OpenFunc func(driverName, dataSourceName string) (*sql.DB, error)
+
 // New -.
-func New(url string, opts ...Option) (*SQL, error) {
+func New(url string, dbOpen OpenFunc, opts ...Option) (*SQL, error) {
 	db := &SQL{
 		maxPoolSize:  _defaultMaxPoolSize,
 		connAttempts: _defaultConnAttempts,
@@ -52,21 +56,32 @@ func New(url string, opts ...Option) (*SQL, error) {
 	var err error
 
 	if strings.HasPrefix(url, "postgres://") {
-		err = setupHostedDB(db, url)
+		err = setupHostedDB(db, url, dbOpen)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		err = setupEmbeddedDB(db)
-		if err != nil {
-			return nil, err
-		}
+
+		return db, nil
+	}
+
+	err = setupEmbeddedDB(db, dbOpen)
+	if err != nil {
+		return nil, err
+	}
+
+	if !db.enableForeignKeys {
+		return db, err
+	}
+
+	err = enableForeignKeys(db.Pool)
+	if err != nil {
+		return nil, err
 	}
 
 	return db, nil
 }
 
-func setupEmbeddedDB(db *SQL) error {
+func setupEmbeddedDB(db *SQL, dbOpen OpenFunc) error {
 	db.IsEmbedded = true
 
 	dirname, err := os.UserConfigDir()
@@ -76,14 +91,18 @@ func setupEmbeddedDB(db *SQL) error {
 
 	dbPath := filepath.Join(dirname, "device-management-toolkit", "console.db")
 
-	db.Pool, err = sql.Open("sqlite", dbPath)
+	db.Pool, err = dbOpen("sqlite", dbPath)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Pool.Exec("PRAGMA foreign_keys = ON")
+	return nil
+}
+
+func enableForeignKeys(db *sql.DB) error {
+	_, err := db.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {
-		db.Pool.Close()
+		db.Close()
 
 		return err
 	}
@@ -91,10 +110,10 @@ func setupEmbeddedDB(db *SQL) error {
 	return nil
 }
 
-func setupHostedDB(db *SQL, url string) error {
+func setupHostedDB(db *SQL, url string, dbOpen OpenFunc) error {
 	var err error
 
-	db.Pool, err = sql.Open("pgx", url)
+	db.Pool, err = dbOpen("pgx", url)
 	if err != nil {
 		return err
 	}

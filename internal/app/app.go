@@ -2,6 +2,7 @@
 package app
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"os/signal"
@@ -27,7 +28,7 @@ func Run(cfg *config.Config) {
 	cfg.App.Version = Version
 	log.Info("app - Run - version: " + cfg.App.Version)
 	// Repository
-	database, err := db.New(cfg.DB.URL, db.MaxPoolSize(cfg.DB.PoolMax))
+	database, err := db.New(cfg.DB.URL, sql.Open, db.MaxPoolSize(cfg.DB.PoolMax), db.EnableForeignKeys(true))
 	if err != nil {
 		log.Fatal(fmt.Errorf("app - Run - db.New: %w", err))
 	}
