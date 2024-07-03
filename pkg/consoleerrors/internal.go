@@ -33,7 +33,7 @@ func (e *InternalError) Wrap(call, function string, err error) error {
 	e.OriginalError = err
 
 	if err != nil {
-		e.InnerTrace = err.Error()
+		e.InnerTrace = "" // err.Error()
 	}
 
 	return e

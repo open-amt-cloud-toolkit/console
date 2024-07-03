@@ -26,8 +26,9 @@ func initCertificateTest(t *testing.T) (*devices.UseCase, *MockManagement, *Mock
 
 	repo := NewMockRepository(mockCtl)
 	management := NewMockManagement(mockCtl)
+	amtExplorer := NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amtExplorer, log)
 
 	return u, management, repo
 }

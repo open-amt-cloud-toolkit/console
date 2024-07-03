@@ -37,6 +37,7 @@ const (
 type UseCase struct {
 	repo             Repository
 	device           Management
+	amt              AMTExplorer
 	redirection      Redirection
 	redirConnections map[string]*DeviceConnection
 	log              logger.Interface
@@ -45,10 +46,11 @@ type UseCase struct {
 var ErrAMT = AMTError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
 
 // New -.
-func New(r Repository, d Management, redirection Redirection, log logger.Interface) *UseCase {
+func New(r Repository, d Management, redirection Redirection, amt AMTExplorer, log logger.Interface) *UseCase {
 	return &UseCase{
 		repo:             r,
 		device:           d,
+		amt:              amt,
 		redirection:      redirection,
 		redirConnections: make(map[string]*DeviceConnection),
 		log:              log,
