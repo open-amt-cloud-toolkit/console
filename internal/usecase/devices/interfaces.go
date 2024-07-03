@@ -71,6 +71,7 @@ type (
 		Delete(ctx context.Context, guid, tenantID string) (bool, error)
 		Update(ctx context.Context, d *entity.Device) (bool, error)
 		Insert(ctx context.Context, d *entity.Device) (string, error)
+		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error)
 	}
 	Feature interface {
 		// Repository/Database Calls
@@ -82,6 +83,7 @@ type (
 		Delete(ctx context.Context, guid, tenantID string) error
 		Update(ctx context.Context, d *dto.Device) (*dto.Device, error)
 		Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
+		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
 		// Management Calls
 		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
 		GetFeatures(ctx context.Context, guid string) (interface{}, error)

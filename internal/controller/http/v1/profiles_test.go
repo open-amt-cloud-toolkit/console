@@ -68,7 +68,7 @@ var profileTest = dto.Profile{
 	SOLEnabled:                 false,
 	IEEE8021xProfileName:       nil,
 	IEEE8021xProfile:           nil,
-	Version:                    "",
+	Version:                    "1.0",
 }
 
 func TestProfileRoutes(t *testing.T) {
@@ -108,7 +108,7 @@ func TestProfileRoutes(t *testing.T) {
 				domain.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "get profile by name",
@@ -130,7 +130,7 @@ func TestProfileRoutes(t *testing.T) {
 				profile.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert profile",
@@ -152,7 +152,7 @@ func TestProfileRoutes(t *testing.T) {
 			},
 			response:     profiles.ErrDatabase,
 			requestBody:  profileTest,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "delete profile",
@@ -172,7 +172,7 @@ func TestProfileRoutes(t *testing.T) {
 				profile.EXPECT().Delete(context.Background(), "profile", "").Return(profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "update profile",
@@ -194,7 +194,7 @@ func TestProfileRoutes(t *testing.T) {
 			},
 			response:     profiles.ErrDatabase,
 			requestBody:  profileTest,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 	}
 

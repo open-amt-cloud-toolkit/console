@@ -29,14 +29,15 @@ type Usecases struct {
 func NewUseCases(database *db.SQL, log logger.Interface) *Usecases {
 	pwc := profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(database, log), log)
 	ieee := ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(database, log), log)
+	wificonfig := wificonfigs.New(sqldb.NewWirelessRepo(database, log), ieee, log)
 
 	return &Usecases{
 		Domains:            domains.New(sqldb.NewDomainRepo(database, log), log),
 		Devices:            devices.New(sqldb.NewDeviceRepo(database, log), wsman.NewGoWSMANMessages(), devices.NewRedirector(), log),
-		Profiles:           profiles.New(sqldb.NewProfileRepo(database, log), pwc, ieee, log),
+		Profiles:           profiles.New(sqldb.NewProfileRepo(database, log), wificonfig, pwc, ieee, log),
 		IEEE8021xProfiles:  ieee,
 		CIRAConfigs:        ciraconfigs.New(sqldb.NewCIRARepo(database, log), log),
-		WirelessProfiles:   wificonfigs.New(sqldb.NewWirelessRepo(database, log), ieee, log),
+		WirelessProfiles:   wificonfig,
 		ProfileWiFiConfigs: pwc,
 	}
 }

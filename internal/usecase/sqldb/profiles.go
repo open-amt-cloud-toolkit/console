@@ -65,28 +65,26 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 	sqlQuery, _, err := r.Builder.
 		Select(
 			"p.profile_name",
-			"activation",
-			"amt_password",
-			"generate_random_password",
-			"cira_config_name",
-			"mebx_password",
-			"generate_random_mebx_password",
-			"tags",
-			"dhcp_enabled",
+			"p.activation",
+			"p.generate_random_password",
+			"p.cira_config_name",
+			"p.generate_random_mebx_password",
+			"p.tags",
+			"p.dhcp_enabled",
 			"p.tenant_id",
-			"tls_mode",
-			"user_consent",
-			"ider_enabled",
-			"kvm_enabled",
-			"sol_enabled",
-			"tls_signing_authority",
-			"ip_sync_enabled",
-			"local_wifi_sync_enabled",
-			"ieee8021x_profile_name",
+			"p.tls_mode",
+			"p.user_consent",
+			"p.ider_enabled",
+			"p.kvm_enabled",
+			"p.sol_enabled",
+			"p.tls_signing_authority",
+			"p.ip_sync_enabled",
+			"p.local_wifi_sync_enabled",
+			"p.ieee8021x_profile_name",
 			// ieee8021xconfigs table
-			"auth_Protocol",
-			"pxe_timeout",
-			"wired_interface",
+			"e.auth_Protocol",
+			"e.pxe_timeout",
+			"e.wired_interface",
 		).
 		From("profiles p").
 		LeftJoin("profiles_wirelessconfigs pw ON pw.profile_name = p.profile_name AND pw.tenant_id = p.tenant_id").
@@ -95,27 +93,24 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 		GroupBy(
 			"p.profile_name",
 			"p.activation",
-			"amt_password",
-			"generate_random_password",
-			"cira_config_name",
-			"mebx_password",
-			"generate_random_mebx_password",
-			"tags",
-			"dhcp_enabled",
+			"p.generate_random_password",
+			"p.cira_config_name",
+			"p.generate_random_mebx_password",
+			"p.tags",
+			"p.dhcp_enabled",
 			"p.tenant_id",
-			"tls_mode",
-			"user_consent",
-			"ider_enabled",
-			"kvm_enabled",
-			"sol_enabled",
-			"tls_signing_authority",
-			"ip_sync_enabled",
-			"local_wifi_sync_enabled",
-			"ieee8021x_profile_name",
-			"auth_Protocol",
-			"pxe_timeout",
-			"wired_interface",
-		).
+			"p.tls_mode",
+			"p.user_consent",
+			"p.ider_enabled",
+			"p.kvm_enabled",
+			"p.sol_enabled",
+			"p.tls_signing_authority",
+			"p.ip_sync_enabled",
+			"p.local_wifi_sync_enabled",
+			"p.ieee8021x_profile_name",
+			"e.auth_Protocol",
+			"e.pxe_timeout",
+			"e.wired_interface").
 		OrderBy("p.profile_name").
 		Limit(uint64(top)).
 		Offset(uint64(skip)).
@@ -140,8 +135,8 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 	for rows.Next() {
 		p := entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
-			&p.CIRAConfigName, &p.MEBXPassword,
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword,
+			&p.CIRAConfigName,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
 			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
@@ -162,10 +157,8 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 		Select(
 			"p.profile_name",
 			"activation",
-			"amt_password",
 			"generate_random_password",
 			"cira_config_name",
-			"mebx_password",
 			"generate_random_mebx_password",
 			"tags",
 			"dhcp_enabled",
@@ -207,8 +200,8 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 	for rows.Next() {
 		p := &entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.Activation, &p.AMTPassword, &p.GenerateRandomPassword,
-			&p.CIRAConfigName, &p.MEBXPassword,
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword,
+			&p.CIRAConfigName,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
 			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
@@ -220,7 +213,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 	}
 
 	if len(profiles) == 0 {
-		return nil, ErrProfileDatabase.Wrap("GetByName", "Not Found", err)
+		return nil, nil
 	}
 
 	return profiles[0], nil
@@ -334,7 +327,7 @@ func (r *ProfileRepo) Insert(_ context.Context, p *entity.Profile) (string, erro
 
 	if err != nil {
 		if db.CheckNotUnique(err) {
-			return "", ErrProfileNotUnique
+			return "", ErrProfileNotUnique.Wrap(err.Error())
 		}
 
 		return "", ErrProfileDatabase.Wrap("Insert", "r.Pool.QueryRow", err)

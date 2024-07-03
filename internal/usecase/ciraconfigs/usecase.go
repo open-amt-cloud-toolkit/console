@@ -17,9 +17,9 @@ type UseCase struct {
 }
 
 var (
-	ErrDomainsUseCase = consoleerrors.CreateConsoleError("CIRAConfigsUseCase")
-	ErrDatabase       = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
-	ErrNotFound       = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
+	ErrCIRAConfigsUseCase = consoleerrors.CreateConsoleError("CIRAConfigsUseCase")
+	ErrDatabase           = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
+	ErrNotFound           = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("CIRAConfigsUseCase")}
 )
 
 // New -.

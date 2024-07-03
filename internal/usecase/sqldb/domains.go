@@ -147,7 +147,7 @@ func (r *DomainRepo) GetByName(_ context.Context, domainName, tenantID string) (
 			"tenant_id",
 		).
 		From("domains").
-		Where("name = ? AND tenant_id = ?", domainName, tenantID).
+		Where("LOWER(name) = LOWER(?) AND tenant_id = ?", domainName, tenantID).
 		ToSql()
 	if err != nil {
 		return nil, ErrDomainDatabase.Wrap("GetByName", "r.Builder: ", err)
@@ -173,7 +173,7 @@ func (r *DomainRepo) GetByName(_ context.Context, domainName, tenantID string) (
 func (r *DomainRepo) Delete(_ context.Context, domainName, tenantID string) (bool, error) {
 	sqlQuery, args, err := r.Builder.
 		Delete("domains").
-		Where("name = ? AND tenant_id = ?", domainName, tenantID).
+		Where("LOWER(name) = LOWER(?) AND tenant_id = ?", domainName, tenantID).
 		ToSql()
 	if err != nil {
 		return false, ErrDomainDatabase.Wrap("Delete", "r.Builder: ", err)
@@ -210,6 +210,10 @@ func (r *DomainRepo) Update(_ context.Context, d *entity.Domain) (bool, error) {
 
 	res, err := r.Pool.Exec(sqlQuery, args...)
 	if err != nil {
+		if db.CheckNotUnique(err) {
+			return false, ErrProfileNotUnique.Wrap(err.Error())
+		}
+
 		return false, ErrDomainDatabase.Wrap("Update", "r.Pool.Exec", err)
 	}
 
@@ -247,7 +251,7 @@ func (r *DomainRepo) Insert(_ context.Context, d *entity.Domain) (string, error)
 
 	if err != nil {
 		if db.CheckNotUnique(err) {
-			return "", ErrProfileNotUnique
+			return "", ErrProfileNotUnique.Wrap(err.Error())
 		}
 
 		return "", ErrDomainDatabase.Wrap("Insert", "r.Pool.QueryRow", err)

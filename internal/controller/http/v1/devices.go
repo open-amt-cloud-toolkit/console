@@ -7,6 +7,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -14,6 +15,8 @@ type deviceRoutes struct {
 	t devices.Feature
 	l logger.Interface
 }
+
+var ErrValidationDevices = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
 
 func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
@@ -84,27 +87,32 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 	}
 
 	tags := c.Query("tags")
+	hostname := c.Query("hostname")
+	friendlyName := c.Query("friendlyName")
 
 	var items []dto.Device
 
 	var err error
 
-	if tags != "" {
-		items, err = dr.t.GetByTags(c.Request.Context(), tags, c.Query("method"), odata.Top, odata.Skip, "")
-		if err != nil {
-			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, err)
+	switch {
+	case hostname != "":
+		items, err = dr.getByColumnOrTags(c, "HostName", hostname, odata.Top, odata.Skip, "")
 
-			return
-		}
-	} else {
+	case friendlyName != "":
+		items, err = dr.getByColumnOrTags(c, "FriendlyName", friendlyName, odata.Top, odata.Skip, "")
+
+	case tags != "":
+		items, err = dr.getByColumnOrTags(c, "Tags", tags, odata.Top, odata.Skip, "")
+
+	default:
 		items, err = dr.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
-		if err != nil {
-			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, err)
+	}
 
-			return
-		}
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - get")
+		errorResponse(c, err)
+
+		return
 	}
 
 	if odata.Count {
@@ -125,6 +133,25 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, items)
 	}
+}
+
+func (dr *deviceRoutes) getByColumnOrTags(c *gin.Context, column, value string, limit, skip int, tenantID string) ([]dto.Device, error) {
+	var items []dto.Device
+
+	var err error
+
+	ctx := c.Request.Context()
+	if column == "Tags" {
+		items, err = dr.t.GetByTags(ctx, value, c.Query("method"), limit, skip, tenantID)
+	} else {
+		items, err = dr.t.GetByColumn(ctx, column, value, "")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 // @Summary     Get Device by ID
@@ -169,7 +196,8 @@ func (dr *deviceRoutes) getByID(c *gin.Context) {
 func (dr *deviceRoutes) insert(c *gin.Context) {
 	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDevices.Wrap("insert", "ShouldBindJSON", err)
+		errorResponse(c, validationErr)
 
 		return
 	}
