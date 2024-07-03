@@ -12,7 +12,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -92,10 +91,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetAlarmOccurrences(context.Background(), "valid-guid").
-					Return([]alarmclock.AlarmClockOccurrence{}, nil)
+					Return([]dto.AlarmClockOccurrence{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     []alarmclock.AlarmClockOccurrence{},
+			response:     []dto.AlarmClockOccurrence{},
 		},
 		{
 			name:   "deleteAlarmOccurrences - successful deletion",
@@ -203,10 +202,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"": ""}, nil)
+					Return(dto.SecuritySettings{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"": ""},
+			response:     dto.SecuritySettings{},
 		},
 		{
 			name:   "getCertificates - failed retrieval",
@@ -214,10 +213,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
-					Return(nil, ErrGeneral)
+					Return(dto.SecuritySettings{}, ErrGeneral)
 			},
 			expectedCode: http.StatusInternalServerError,
-			response:     nil,
+			response:     dto.SecuritySettings{},
 		},
 	}
 

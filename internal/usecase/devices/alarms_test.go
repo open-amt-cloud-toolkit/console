@@ -73,7 +73,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: []alarmclock.AlarmClockOccurrence{},
+			res: []dto.AlarmClockOccurrence{},
 
 			err: nil,
 		},
@@ -89,7 +89,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			res: []alarmclock.AlarmClockOccurrence(nil),
+			res: []dto.AlarmClockOccurrence(nil),
 
 			err: devices.ErrDatabase,
 		},
@@ -115,7 +115,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: []alarmclock.AlarmClockOccurrence(nil),
+			res: []dto.AlarmClockOccurrence(nil),
 
 			err: ErrGeneral,
 		},
@@ -141,7 +141,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: []alarmclock.AlarmClockOccurrence{},
+			res: []dto.AlarmClockOccurrence{},
 
 			err: nil,
 		},
@@ -204,7 +204,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 		repoMock func(repo *MockRepository)
 
-		res amtAlarmClock.AddAlarmOutput
+		res dto.AddAlarmOutput
 
 		err error
 	}{
@@ -229,7 +229,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: amtAlarmClock.AddAlarmOutput{},
+			res: dto.AddAlarmOutput{},
 
 			err: nil,
 		},
@@ -245,7 +245,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			res: amtAlarmClock.AddAlarmOutput{},
+			res: dto.AddAlarmOutput{},
 
 			err: devices.ErrDatabase,
 		},
@@ -271,7 +271,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: amtAlarmClock.AddAlarmOutput{},
+			res: dto.AddAlarmOutput{},
 
 			err: devices.ErrAMT,
 		},
