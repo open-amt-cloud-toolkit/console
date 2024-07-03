@@ -1,4 +1,3 @@
-// Package postgres implements postgres connection.
 package db
 
 import (
@@ -12,7 +11,8 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib" // pgx driver
-	_ "modernc.org/sqlite"             // sqlite3 driver
+	"modernc.org/sqlite"               // sqlite driver
+	sqlite3 "modernc.org/sqlite/lib"
 )
 
 const (
@@ -74,8 +74,17 @@ func setupEmbeddedDB(db *SQL) error {
 		return err
 	}
 
-	db.Pool, err = sql.Open("sqlite", filepath.Join(dirname, "device-management-toolkit", "console.db"))
+	dbPath := filepath.Join(dirname, "device-management-toolkit", "console.db")
+
+	db.Pool, err = sql.Open("sqlite", dbPath)
 	if err != nil {
+		return err
+	}
+
+	_, err = db.Pool.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		db.Pool.Close()
+
 		return err
 	}
 
@@ -106,6 +115,29 @@ func CheckNotUnique(err error) bool {
 		if pgErr.Code == UniqueViolation {
 			return true
 		}
+	}
+
+	var sqlErr *sqlite.Error
+	if errors.As(err, &sqlErr) {
+		if sqlErr.Code() == sqlite3.SQLITE_CONSTRAINT_UNIQUE || sqlErr.Code() == sqlite3.SQLITE_CONSTRAINT_PRIMARYKEY {
+			return true
+		}
+	}
+
+	return false
+}
+
+func CheckForeignKeyViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == "23503" {
+			return true
+		}
+	}
+
+	// SQLite constraint error check
+	if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
+		return true
 	}
 
 	return false

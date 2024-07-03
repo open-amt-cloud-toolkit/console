@@ -45,6 +45,23 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	return d1, nil
 }
 
+func (uc *UseCase) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error) {
+	data, err := uc.repo.GetByColumn(ctx, columnName, queryValue, tenantID)
+	if err != nil {
+		return nil, ErrDatabase.Wrap("GetByColumn", "uc.repo.GetByColumn", err)
+	}
+
+	// iterate over the data and convert each entity to dto
+	d1 := make([]dto.Device, len(data))
+
+	for i := range data {
+		tmpEntity := data[i] // create a new variable to avoid memory aliasing
+		d1[i] = *uc.entityToDTO(&tmpEntity)
+	}
+
+	return d1, nil
+}
+
 func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
 	data, err := uc.repo.GetByID(ctx, guid, tenantID)
 	if err != nil {
@@ -127,6 +144,9 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	d2 := uc.entityToDTO(updateDevice)
+	if updateDevice.Tags == "" {
+		d2.Tags = []string{}
+	}
 
 	// invalidate connection cache
 	uc.device.DestroyWsmanClient(*d2)
@@ -152,6 +172,9 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	d2 := uc.entityToDTO(newDevice)
+	if newDevice.Tags == "" {
+		d2.Tags = []string{}
+	}
 
 	return d2, nil
 }

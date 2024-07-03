@@ -274,7 +274,7 @@ func TestDelete(t *testing.T) {
 
 			if tc.err != nil {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.err.Error())
+				require.Equal(t, err.Error(), tc.err.Error())
 			} else {
 				require.NoError(t, err)
 			}
@@ -293,7 +293,7 @@ func TestUpdate(t *testing.T) {
 	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
-		Tags:     []string{""},
+		Tags:     []string{},
 	}
 
 	tests := []testUsecase{

@@ -1494,6 +1494,21 @@ func (mr *MockRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), ctx, top, skip, tenantID)
 }
 
+// GetByColumn mocks base method.
+func (m *MockRepository) GetByColumn(ctx context.Context, columnName, queryValue, tenantId string) ([]entity.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantId)
+	ret0, _ := ret[0].([]entity.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByColumn indicates an expected call of GetByColumn.
+func (mr *MockRepositoryMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockRepository)(nil).GetByColumn), ctx, columnName, queryValue, tenantId)
+}
+
 // GetByID mocks base method.
 func (m *MockRepository) GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error) {
 	m.ctrl.T.Helper()
@@ -1723,6 +1738,21 @@ func (m *MockFeature) GetAuditLog(ctx context.Context, startIndex int, guid stri
 func (mr *MockFeatureMockRecorder) GetAuditLog(ctx, startIndex, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuditLog", reflect.TypeOf((*MockFeature)(nil).GetAuditLog), ctx, startIndex, guid)
+}
+
+// GetByColumn mocks base method.
+func (m *MockFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantId string) ([]dto.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantId)
+	ret0, _ := ret[0].([]dto.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByColumn indicates an expected call of GetByColumn.
+func (mr *MockFeatureMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockFeature)(nil).GetByColumn), ctx, columnName, queryValue, tenantId)
 }
 
 // GetByID mocks base method.
