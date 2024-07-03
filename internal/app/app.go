@@ -12,6 +12,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/config"
 	v1 "github.com/open-amt-cloud-toolkit/console/internal/controller/http/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/controller/tcp/cira"
 	wsv1 "github.com/open-amt-cloud-toolkit/console/internal/controller/ws/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
@@ -50,6 +51,12 @@ func Run(cfg *config.Config) {
 	handler.Use(cors.New(defaultConfig))
 	v1.NewRouter(handler, log, *usecases, cfg)
 	wsv1.RegisterRoutes(handler, log, usecases.Devices)
+
+	ciraServer, err := cira.NewServer("config/cert.pem", "config/key.pem")
+	if err != nil {
+		log.Fatal("CIRA Server failed: %v", err)
+	}
+
 	httpServer := httpserver.New(handler, httpserver.Port("", cfg.HTTP.Port))
 
 	// Waiting signal
@@ -61,11 +68,17 @@ func Run(cfg *config.Config) {
 		log.Info("app - Run - signal: " + s.String())
 	case err = <-httpServer.Notify():
 		log.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+	case ciraErr := <-ciraServer.Notify():
+		log.Error(fmt.Errorf("app - Run - ciraServer.Notify: %w", ciraErr))
 	}
 
 	// Shutdown
 	err = httpServer.Shutdown()
 	if err != nil {
 		log.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+	}
+	err = ciraServer.Shutdown()
+	if err != nil {
+		log.Error(fmt.Errorf("app - Run - ciraServer.Shutdown: %w", err))
 	}
 }
