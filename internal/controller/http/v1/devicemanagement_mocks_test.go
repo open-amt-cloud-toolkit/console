@@ -1638,10 +1638,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) CancelUserConsent(ctx, guid a
 }
 
 // CreateAlarmOccurrences mocks base method.
-func (m *MockDeviceManagementFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (alarmclock.AddAlarmOutput, error) {
+func (m *MockDeviceManagementFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAlarmOccurrences", ctx, guid, alarm)
-	ret0, _ := ret[0].(alarmclock.AddAlarmOutput)
+	ret0, _ := ret[0].(dto.AddAlarmOutput)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1711,10 +1711,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) Get(ctx, top, skip, tenantID 
 }
 
 // GetAlarmOccurrences mocks base method.
-func (m *MockDeviceManagementFeature) GetAlarmOccurrences(ctx context.Context, guid string) ([]alarmclock0.AlarmClockOccurrence, error) {
+func (m *MockDeviceManagementFeature) GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAlarmOccurrences", ctx, guid)
-	ret0, _ := ret[0].([]alarmclock0.AlarmClockOccurrence)
+	ret0, _ := ret[0].([]dto.AlarmClockOccurrence)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1786,10 +1786,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetByTags(ctx, tags, method, 
 }
 
 // GetCertificates mocks base method.
-func (m *MockDeviceManagementFeature) GetCertificates(c context.Context, guid string) (any, error) {
+func (m *MockDeviceManagementFeature) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCertificates", c, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.SecuritySettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

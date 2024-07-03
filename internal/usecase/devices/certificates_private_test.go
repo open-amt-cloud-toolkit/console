@@ -11,12 +11,13 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
 	"github.com/stretchr/testify/require"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
 type certificateTest struct {
 	name string
-	res  SecuritySettings
+	res  dto.SecuritySettings
 	err  error
 
 	profileType string
@@ -665,7 +666,7 @@ var getResponse wsman.Certificates = wsman.Certificates{
 func TestProcessCertificates(t *testing.T) {
 	t.Parallel()
 
-	securitySettings := SecuritySettings{
+	securitySettings := dto.SecuritySettings{
 		Certificates: getResponse.PublicKeyCertificateResponse,
 		Keys:         getResponse.PublicPrivateKeyPairResponse,
 	}
@@ -673,8 +674,8 @@ func TestProcessCertificates(t *testing.T) {
 	tests := []certificateTest{
 		{
 			name: "success",
-			res: SecuritySettings{
-				ProfileAssociation: []ProfileAssociation{
+			res: dto.SecuritySettings{
+				ProfileAssociation: []dto.ProfileAssociation{
 					{
 						Type:      "Wireless",
 						ProfileID: "TestWifi8021xTLS",
