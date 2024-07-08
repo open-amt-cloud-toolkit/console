@@ -50,7 +50,7 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: reviewdog/action-yamllint@508148c0d959b166798f9792d1b29dddcac37348 # v1.16.0
+      - uses: reviewdog/action-yamllint@c23c5d4cd45b5cc16fa3e6e34073068b228cabeb # v1.17.0
         with:
           fail_on_error: true
           reporter: github-pr-review
@@ -125,7 +125,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: GitHub Upload Release Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: JUnit Results ${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}
           path: junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml
