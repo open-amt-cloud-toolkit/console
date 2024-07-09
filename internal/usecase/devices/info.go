@@ -36,17 +36,17 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interf
 	return response, nil
 }
 
-func (uc *UseCase) GetFeatures(c context.Context, guid string) (interface{}, error) {
+func (uc *UseCase) GetFeatures(c context.Context, guid string) (dto.Features, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.Features{}, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
 
 	features, err := uc.device.GetFeatures()
 	if err != nil {
-		return nil, err
+		return dto.Features{}, err
 	}
 
 	return features, nil

@@ -1141,10 +1141,10 @@ func (mr *MockManagementMockRecorder) GetEventLog() *gomock.Call {
 }
 
 // GetFeatures mocks base method.
-func (m *MockManagement) GetFeatures() (any, error) {
+func (m *MockManagement) GetFeatures() (dto.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures")
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1495,18 +1495,18 @@ func (mr *MockDeviceManagementRepositoryMockRecorder) Get(ctx, top, skip, tenant
 }
 
 // GetByColumn mocks base method.
-func (m *MockDeviceManagementRepository) GetByColumn(ctx context.Context, columnName, queryValue, tenantId string) ([]entity.Device, error) {
+func (m *MockDeviceManagementRepository) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantId)
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantID)
 	ret0, _ := ret[0].([]entity.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetByColumn indicates an expected call of GetByColumn.
-func (mr *MockDeviceManagementRepositoryMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantId any) *gomock.Call {
+func (mr *MockDeviceManagementRepositoryMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockDeviceManagementRepository)(nil).GetByColumn), ctx, columnName, queryValue, tenantId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockDeviceManagementRepository)(nil).GetByColumn), ctx, columnName, queryValue, tenantID)
 }
 
 // GetByID mocks base method.
@@ -1741,18 +1741,18 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetAuditLog(ctx, startIndex, 
 }
 
 // GetByColumn mocks base method.
-func (m *MockDeviceManagementFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantId string) ([]dto.Device, error) {
+func (m *MockDeviceManagementFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantId)
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantID)
 	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetByColumn indicates an expected call of GetByColumn.
-func (mr *MockDeviceManagementFeatureMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantId any) *gomock.Call {
+func (mr *MockDeviceManagementFeatureMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetByColumn), ctx, columnName, queryValue, tenantId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetByColumn), ctx, columnName, queryValue, tenantID)
 }
 
 // GetByID mocks base method.
@@ -1860,10 +1860,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetExplorerSupportedCalls() *
 }
 
 // GetFeatures mocks base method.
-func (m *MockDeviceManagementFeature) GetFeatures(ctx context.Context, guid string) (any, error) {
+func (m *MockDeviceManagementFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures", ctx, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

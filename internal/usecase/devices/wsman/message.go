@@ -156,30 +156,32 @@ var UserConsentOptions = map[int]string{
 	4294967295: "all",
 }
 
-func (g *GoWSMANMessages) GetFeatures() (interface{}, error) {
+func (g *GoWSMANMessages) GetFeatures() (dto.Features, error) {
 	redirectionResult, err := g.wsmanMessages.AMT.RedirectionService.Get()
 	if err != nil {
-		return nil, err
+		return dto.Features{}, err
 	}
 
 	optServiceResult, err := g.wsmanMessages.IPS.OptInService.Get()
 	if err != nil {
-		return nil, err
+		return dto.Features{}, err
 	}
 
 	kvmResult, err := g.wsmanMessages.CIM.KVMRedirectionSAP.Get()
 	if err != nil {
-		return nil, err
+		return dto.Features{}, err
 	}
 
-	return map[string]interface{}{
-		"redirection": redirectionResult.Body.GetAndPutResponse.ListenerEnabled,
-		"KVM":         kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.Enabled) || kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.EnabledButOffline),
-		"SOL":         (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
-		"IDER":        (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Other) != 0,
-		"optInState":  optServiceResult.Body.GetAndPutResponse.OptInState,
-		"userConsent": UserConsentOptions[int(optServiceResult.Body.GetAndPutResponse.OptInRequired)],
-	}, nil
+	settingsResults := dto.Features{
+		UserConsent: UserConsentOptions[int(optServiceResult.Body.GetAndPutResponse.OptInRequired)],
+		EnableSOL:   (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
+		EnableIDER:  (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
+		EnableKVM:   kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.Enabled) || kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.EnabledButOffline),
+		Redirection: redirectionResult.Body.GetAndPutResponse.ListenerEnabled,
+		OptInState:  optServiceResult.Body.GetAndPutResponse.OptInState,
+	}
+
+	return settingsResults, nil
 }
 
 func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, error) {

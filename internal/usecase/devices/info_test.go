@@ -236,7 +236,7 @@ func TestGetFeatures(t *testing.T) {
 
 				man.EXPECT().
 					GetFeatures().
-					Return(gomock.Any(), nil)
+					Return(dto.Features{}, nil)
 			},
 
 			repoMock: func(repo *MockRepository) {
@@ -245,7 +245,7 @@ func TestGetFeatures(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: gomock.Any(),
+			res: dto.Features{},
 
 			err: nil,
 		},
@@ -263,7 +263,7 @@ func TestGetFeatures(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			res: nil,
+			res: dto.Features{},
 
 			err: devices.ErrDatabase,
 		},
@@ -280,7 +280,7 @@ func TestGetFeatures(t *testing.T) {
 
 				man.EXPECT().
 					GetFeatures().
-					Return(nil, ErrGeneral)
+					Return(dto.Features{}, ErrGeneral)
 			},
 
 			repoMock: func(repo *MockRepository) {
@@ -289,7 +289,7 @@ func TestGetFeatures(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: nil,
+			res: dto.Features{},
 
 			err: ErrGeneral,
 		},

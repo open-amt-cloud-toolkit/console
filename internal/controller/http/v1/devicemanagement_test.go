@@ -40,7 +40,7 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 
 var aGoodTime = time.Unix(int64(1073007983), 0)
 
-func TestGetNetworkSettings(t *testing.T) {
+func TestDeviceManagement(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -69,10 +69,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"features": []string{"feature1", "feature2"}}, nil)
+					Return(dto.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"features": []string{"feature1", "feature2"}},
+			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "redirection": false, "optInState": 0, "userConsent": ""},
 		},
 		{
 			name:        "setFeatures - successful setting",

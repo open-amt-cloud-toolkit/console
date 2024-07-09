@@ -119,7 +119,7 @@ type (
 		DestroyWsmanClient(device dto.Device)
 		GetAMTVersion() ([]software.SoftwareIdentity, error)
 		GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error)
-		GetFeatures() (interface{}, error)
+		GetFeatures() (dto.Features, error)
 		SetFeatures(dto.Features) (dto.Features, error)
 		GetAlarmOccurrences() ([]ipsAlarmClock.AlarmClockOccurrence, error)
 		CreateAlarmOccurrences(name string, startTime time.Time, interval int, deleteOnCompletion bool) (alarmclock.AddAlarmOutput, error)
@@ -174,7 +174,7 @@ type (
 		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
 		// Management Calls
 		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
-		GetFeatures(ctx context.Context, guid string) (interface{}, error)
+		GetFeatures(ctx context.Context, guid string) (dto.Features, error)
 		SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error)
 		GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)
 		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error)
