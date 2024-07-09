@@ -27,6 +27,7 @@ type usecaseTest struct {
 
 func TestUsecases(t *testing.T) {
 	t.Parallel()
+
 	tests := []usecaseTest{
 		{
 			name: "NewUseCases initializes correctly",
