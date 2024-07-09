@@ -1,4 +1,4 @@
-package v1
+package v2
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 	deviceManagement := NewMockDeviceManagementFeature(mockCtl)
 
 	engine := gin.New()
-	handler := engine.Group("/api/v1")
+	handler := engine.Group("/api/v2")
 
 	NewAmtRoutes(handler, deviceManagement, log)
 
@@ -54,7 +54,7 @@ func TestGetNetworkSettings(t *testing.T) {
 	}{
 		{
 			name:   "getVersion - successful retrieval",
-			url:    "/api/v1/amt/version/valid-guid",
+			url:    "/api/v2/amt/version/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetVersion(context.Background(), "valid-guid").
@@ -65,7 +65,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getFeatures - successful retrieval",
-			url:    "/api/v1/amt/features/valid-guid",
+			url:    "/api/v2/amt/features/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
@@ -76,7 +76,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:        "setFeatures - successful setting",
-			url:         "/api/v1/amt/features/valid-guid",
+			url:         "/api/v2/amt/features/valid-guid",
 			method:      http.MethodPost,
 			requestBody: dto.Features{},
 			mock: func(m *MockDeviceManagementFeature) {
@@ -87,7 +87,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getAlarmOccurrences - successful retrieval",
-			url:    "/api/v1/amt/alarmOccurrences/valid-guid",
+			url:    "/api/v2/amt/alarmOccurrences/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetAlarmOccurrences(context.Background(), "valid-guid").
@@ -98,7 +98,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "deleteAlarmOccurrences - successful deletion",
-			url:    "/api/v1/amt/alarmOccurrences/valid-guid",
+			url:    "/api/v2/amt/alarmOccurrences/valid-guid",
 			method: http.MethodDelete,
 			requestBody: dto.AlarmClockOccurrence{
 				ElementName:        "elementName",
@@ -114,7 +114,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getHardwareInfo - successful retrieval",
-			url:    "/api/v1/amt/hardwareInfo/valid-guid",
+			url:    "/api/v2/amt/hardwareInfo/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetHardwareInfo(context.Background(), "valid-guid").
@@ -125,7 +125,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getPowerState - successful retrieval",
-			url:    "/api/v1/amt/power/state/valid-guid",
+			url:    "/api/v2/amt/power/state/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetPowerState(context.Background(), "valid-guid").
@@ -136,7 +136,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "powerAction - successful action",
-			url:    "/api/v1/amt/power/action/valid-guid",
+			url:    "/api/v2/amt/power/action/valid-guid",
 			method: http.MethodPost,
 			requestBody: dto.PowerAction{
 				Action: 4,
@@ -150,7 +150,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getAuditLog - successful retrieval",
-			url:    "/api/v1/amt/log/audit/valid-guid?startIndex=0",
+			url:    "/api/v2/amt/log/audit/valid-guid?startIndex=0",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetAuditLog(context.Background(), 0, "valid-guid").
@@ -161,7 +161,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getEventLog - successful retrieval",
-			url:    "/api/v1/amt/log/event/valid-guid",
+			url:    "/api/v2/amt/log/event/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetEventLog(context.Background(), "valid-guid").
@@ -172,7 +172,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "setBootOptions - successful setting",
-			url:    "/api/v1/amt/power/bootOptions/valid-guid",
+			url:    "/api/v2/amt/power/bootOptions/valid-guid",
 			method: http.MethodPost,
 			requestBody: dto.BootSetting{
 				Action: 109,
@@ -187,7 +187,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "successful retrieval",
-			url:    "/api/v1/amt/networkSettings/valid-guid",
+			url:    "/api/v2/amt/networkSettings/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetNetworkSettings(context.Background(), "valid-guid").
@@ -198,7 +198,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getCertificates - successful retrieval",
-			url:    "/api/v1/amt/certificates/valid-guid",
+			url:    "/api/v2/amt/certificates/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
@@ -209,7 +209,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		},
 		{
 			name:   "getCertificates - failed retrieval",
-			url:    "/api/v1/amt/certificates/valid-guid",
+			url:    "/api/v2/amt/certificates/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").

@@ -18,7 +18,7 @@ type deviceRoutes struct {
 
 var ErrValidationDevices = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
 
-func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
+func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
 
 	h := handler.Group("/devices")
@@ -57,7 +57,7 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 	count, err := dr.t.GetCount(c.Request.Context(), "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - getCount")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -81,7 +81,7 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 func (dr *deviceRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -110,7 +110,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - get")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -119,7 +119,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 		count, err := dr.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, err)
+			ErrorResponse(c, err)
 
 			return
 		}
@@ -166,7 +166,7 @@ func (dr *deviceRoutes) getByColumnOrTags(c *gin.Context, column, value string, 
 func (dr *deviceRoutes) getByID(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -176,7 +176,7 @@ func (dr *deviceRoutes) getByID(c *gin.Context) {
 	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - get")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -197,7 +197,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
 		validationErr := ErrValidationDevices.Wrap("insert", "ShouldBindJSON", err)
-		errorResponse(c, validationErr)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -205,7 +205,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 	newDevice, err := dr.t.Insert(c.Request.Context(), &device)
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - insert")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -225,7 +225,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 func (dr *deviceRoutes) update(c *gin.Context) {
 	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -233,7 +233,7 @@ func (dr *deviceRoutes) update(c *gin.Context) {
 	updatedDevice, err := dr.t.Update(c.Request.Context(), &device)
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -256,7 +256,7 @@ func (dr *deviceRoutes) delete(c *gin.Context) {
 	err := dr.t.Delete(c.Request.Context(), guid, "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - delete")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -286,7 +286,7 @@ func (dr *deviceRoutes) getTags(c *gin.Context) {
 	tags, err := dr.t.GetDistinctTags(c.Request.Context(), "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - tags")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}

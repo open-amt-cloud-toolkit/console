@@ -18,7 +18,7 @@ type response struct {
 	Error string `json:"error" example:"message"`
 }
 
-func errorResponse(c *gin.Context, err error) {
+func ErrorResponse(c *gin.Context, err error) {
 	var (
 		validatorErr    validator.ValidationErrors
 		nfErr           sqldb.NotFoundError

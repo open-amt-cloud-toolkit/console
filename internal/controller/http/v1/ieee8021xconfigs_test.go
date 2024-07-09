@@ -29,7 +29,7 @@ func ieee8021xconfigsTest(t *testing.T) (*MockIEEE8021xConfigsFeature, *gin.Engi
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
 
-	newIEEE8021xConfigRoutes(handler, mockIEEE8021xConfigs, log)
+	NewIEEE8021xConfigRoutes(handler, mockIEEE8021xConfigs, log)
 
 	return mockIEEE8021xConfigs, engine
 }
