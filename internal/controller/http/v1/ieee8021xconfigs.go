@@ -20,7 +20,7 @@ type ieee8021xConfigRoutes struct {
 	l logger.Interface
 }
 
-func newIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Feature, l logger.Interface) {
+func NewIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Feature, l logger.Interface) {
 	r := &ieee8021xConfigRoutes{t, l}
 
 	if binding.Validator != nil {
@@ -51,7 +51,7 @@ func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
 		validationErr := ErrValidation8021xConfig.Wrap("get", "ShouldBindQuery", err)
-		errorResponse(c, validationErr)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -59,7 +59,7 @@ func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - getCount")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -68,7 +68,7 @@ func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 		count, err := r.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - IEEE8021x configs - v1 - getCount")
-			errorResponse(c, err)
+			ErrorResponse(c, err)
 		}
 
 		countResponse := IEEE8021xConfigCountResponse{
@@ -88,7 +88,7 @@ func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 	config, err := r.t.GetByName(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - getByName")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -100,7 +100,7 @@ func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		validationErr := ErrValidation8021xConfig.Wrap("insert", "ShouldBindJSON", err)
-		errorResponse(c, validationErr)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -108,7 +108,7 @@ func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 	newConfig, err := r.t.Insert(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - insert")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -120,7 +120,7 @@ func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		validationErr := ErrValidation8021xConfig.Wrap("update", "ShouldBindJSON", err)
-		errorResponse(c, validationErr)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -128,7 +128,7 @@ func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 	updatedConfig, err := r.t.Update(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -142,7 +142,7 @@ func (r *ieee8021xConfigRoutes) delete(c *gin.Context) {
 	err := r.t.Delete(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - IEEE8021x configs - v1 - delete")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
