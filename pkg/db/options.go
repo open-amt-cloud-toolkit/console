@@ -25,3 +25,10 @@ func ConnTimeout(timeout time.Duration) Option {
 		c.connTimeout = timeout
 	}
 }
+
+// ConnTimeout -.
+func EnableForeignKeys(value bool) Option {
+	return func(c *SQL) {
+		c.enableForeignKeys = value
+	}
+}

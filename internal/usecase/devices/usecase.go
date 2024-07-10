@@ -5,6 +5,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -36,16 +37,20 @@ const (
 type UseCase struct {
 	repo             Repository
 	device           Management
+	amt              AMTExplorer
 	redirection      Redirection
 	redirConnections map[string]*DeviceConnection
 	log              logger.Interface
 }
 
+var ErrAMT = AMTError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
+
 // New -.
-func New(r Repository, d Management, redirection Redirection, log logger.Interface) *UseCase {
+func New(r Repository, d Management, redirection Redirection, amt AMTExplorer, log logger.Interface) *UseCase {
 	return &UseCase{
 		repo:             r,
 		device:           d,
+		amt:              amt,
 		redirection:      redirection,
 		redirConnections: make(map[string]*DeviceConnection),
 		log:              log,

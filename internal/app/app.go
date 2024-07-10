@@ -2,6 +2,7 @@
 package app
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"os/signal"
@@ -11,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/open-amt-cloud-toolkit/console/config"
-	v1 "github.com/open-amt-cloud-toolkit/console/internal/controller/http/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/controller/http"
 	wsv1 "github.com/open-amt-cloud-toolkit/console/internal/controller/ws/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
@@ -27,7 +28,7 @@ func Run(cfg *config.Config) {
 	cfg.App.Version = Version
 	log.Info("app - Run - version: " + cfg.App.Version)
 	// Repository
-	database, err := db.New(cfg.DB.URL, db.MaxPoolSize(cfg.DB.PoolMax))
+	database, err := db.New(cfg.DB.URL, sql.Open, db.MaxPoolSize(cfg.DB.PoolMax), db.EnableForeignKeys(true))
 	if err != nil {
 		log.Fatal(fmt.Errorf("app - Run - db.New: %w", err))
 	}
@@ -48,7 +49,7 @@ func Run(cfg *config.Config) {
 	defaultConfig.AllowHeaders = cfg.HTTP.AllowedHeaders
 
 	handler.Use(cors.New(defaultConfig))
-	v1.NewRouter(handler, log, *usecases, cfg)
+	http.NewRouter(handler, log, *usecases, cfg)
 	wsv1.RegisterRoutes(handler, log, usecases.Devices)
 	httpServer := httpserver.New(handler, httpserver.Port("", cfg.HTTP.Port))
 

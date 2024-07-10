@@ -20,8 +20,9 @@ func initNetworkTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepo
 
 	repo := NewMockRepository(mockCtl)
 	management := NewMockManagement(mockCtl)
+	amt := NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
 
 	return u, management, repo
 }
@@ -48,7 +49,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 			res: gomock.Any(),
@@ -59,7 +60,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			action: 0,
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
@@ -78,7 +79,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 			res: nil,

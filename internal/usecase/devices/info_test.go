@@ -29,9 +29,11 @@ func initInfoTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockReposit
 
 	management := NewMockManagement(mockCtl)
 
+	amt := NewMockAMTExplorer(mockCtl)
+
 	log := logger.New("error")
 
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
 
 	return u, management, repo
 }
@@ -107,7 +109,7 @@ func TestGetVersion(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -125,7 +127,7 @@ func TestGetVersion(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -151,7 +153,7 @@ func TestGetVersion(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -181,7 +183,7 @@ func TestGetVersion(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -234,16 +236,16 @@ func TestGetFeatures(t *testing.T) {
 
 				man.EXPECT().
 					GetFeatures().
-					Return(gomock.Any(), nil)
+					Return(dto.Features{}, nil)
 			},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
-			res: gomock.Any(),
+			res: dto.Features{},
 
 			err: nil,
 		},
@@ -257,11 +259,11 @@ func TestGetFeatures(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
-			res: nil,
+			res: dto.Features{},
 
 			err: devices.ErrDatabase,
 		},
@@ -278,16 +280,16 @@ func TestGetFeatures(t *testing.T) {
 
 				man.EXPECT().
 					GetFeatures().
-					Return(nil, ErrGeneral)
+					Return(dto.Features{}, ErrGeneral)
 			},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
-			res: nil,
+			res: dto.Features{},
 
 			err: ErrGeneral,
 		},
@@ -351,7 +353,7 @@ func TestSetFeatures(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -369,7 +371,7 @@ func TestSetFeatures(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -395,7 +397,7 @@ func TestSetFeatures(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -453,7 +455,7 @@ func TestGetHardwareInfo(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -471,7 +473,7 @@ func TestGetHardwareInfo(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -497,7 +499,7 @@ func TestGetHardwareInfo(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -555,7 +557,7 @@ func TestGetAuditLog(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -573,7 +575,7 @@ func TestGetAuditLog(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -599,7 +601,7 @@ func TestGetAuditLog(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -657,7 +659,7 @@ func TestGetEventLog(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -675,7 +677,7 @@ func TestGetEventLog(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -701,7 +703,7 @@ func TestGetEventLog(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -759,7 +761,7 @@ func TestGetGeneralSettings(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 
@@ -777,7 +779,7 @@ func TestGetGeneralSettings(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 
@@ -803,7 +805,7 @@ func TestGetGeneralSettings(t *testing.T) {
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), device.GUID, "").
+					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 

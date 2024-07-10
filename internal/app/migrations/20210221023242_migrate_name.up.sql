@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS domains(
   provisioning_cert TEXT,
   provisioning_cert_storage_format TEXT,
   provisioning_cert_key TEXT,
+  expiration_date TEXT,
   creation_date TEXT, -- TIMESTAMP as TEXT
   created_by TEXT,
   tenant_id TEXT NOT NULL,

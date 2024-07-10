@@ -19,8 +19,9 @@ type WirelessRepo struct {
 }
 
 var (
-	ErrWiFiDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
-	ErrWiFiNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiDatabase                = DatabaseError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiNotUnique               = NotUniqueError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiIEEEForeignKeyViolation = ForeignKeyViolationError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
 )
 
 // New -.
@@ -33,7 +34,7 @@ func (r *WirelessRepo) CheckProfileExists(_ context.Context, profileName, tenant
 	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("wirelessconfigs").
-		Where("wireless_profile_name and tenant_id = ?", profileName, tenantID).
+		Where("wireless_profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return false, ErrWiFiDatabase.Wrap("CheckProfileExists", "r.Builder", err)
@@ -41,7 +42,7 @@ func (r *WirelessRepo) CheckProfileExists(_ context.Context, profileName, tenant
 
 	var count int
 
-	err = r.Pool.QueryRow(sqlQuery, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(sqlQuery, profileName, tenantID).Scan(&count)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -207,6 +208,11 @@ func (r *WirelessRepo) Delete(_ context.Context, profileName, tenantID string) (
 
 	res, err := r.Pool.Exec(sqlQuery, args...)
 	if err != nil {
+		// Check for PostgreSQL and SQLite foreign key violation errors
+		if db.CheckForeignKeyViolation(err) {
+			return false, ErrProfileWiFiConfigsForeignKeyViolation.Wrap(err.Error())
+		}
+
 		return false, ErrWiFiDatabase.Wrap("Delete", "r.Pool.Exec", err)
 	}
 
@@ -285,6 +291,10 @@ func (r *WirelessRepo) Insert(_ context.Context, p *entity.WirelessConfig) (stri
 	if err != nil {
 		if db.CheckNotUnique(err) {
 			return "", ErrWiFiNotUnique.Wrap(err.Error())
+		}
+
+		if db.CheckForeignKeyViolation(err) {
+			return "", ErrWiFiIEEEForeignKeyViolation.Wrap(err.Error())
 		}
 
 		return "", ErrWiFiDatabase.Wrap("Insert", "r.Pool.QueryRow", err)

@@ -16,7 +16,7 @@ type deviceManagementRoutes struct {
 	l logger.Interface
 }
 
-func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interface) {
+func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interface) {
 	r := &deviceManagementRoutes{d, l}
 
 	h := handler.Group("/amt")
@@ -46,6 +46,10 @@ func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 		h.POST("userConsentCode/:guid", r.sendConsentCode)
 
 		h.GET("networkSettings/:guid", r.getNetworkSettings)
+
+		h.GET("explorer", r.getCallList)
+		h.GET("explorer/:guid/:call", r.executeCall)
+		h.GET("certificates/:guid", r.getCertificates)
 	}
 }
 
@@ -55,7 +59,7 @@ func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 	version, err := r.d.GetVersion(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - GetVersion")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -69,12 +73,21 @@ func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 	features, err := r.d.GetFeatures(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getFeatures")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, features)
+	v1Features := map[string]interface{}{
+		"redirection": features.Redirection,
+		"KVM":         features.EnableKVM,
+		"SOL":         features.EnableSOL,
+		"IDER":        features.EnableIDER,
+		"optInState":  features.OptInState,
+		"userConsent": features.UserConsent,
+	}
+
+	c.JSON(http.StatusOK, v1Features)
 }
 
 func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
@@ -83,7 +96,7 @@ func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
 	var features dto.Features
 
 	if err := c.ShouldBindJSON(&features); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -91,7 +104,7 @@ func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
 	features, err := r.d.SetFeatures(c.Request.Context(), guid, features)
 	if err != nil {
 		r.l.Error(err, "http - v1 - setFeatures")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -105,7 +118,7 @@ func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
 	alarms, err := r.d.GetAlarmOccurrences(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getFeatures")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -118,7 +131,7 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 
 	alarm := &dto.AlarmClockOccurrence{}
 	if err := c.ShouldBindJSON(alarm); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -126,7 +139,7 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 	alarmReference, err := r.d.CreateAlarmOccurrences(c.Request.Context(), guid, *alarm)
 	if err != nil {
 		r.l.Error(err, "http - v1 - createAlarmOccurrences")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -139,7 +152,7 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 
 	alarm := dto.DeleteAlarmOccurrenceRequest{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -151,7 +164,7 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 	err := r.d.DeleteAlarmOccurrences(c.Request.Context(), guid, *alarm.InstanceID)
 	if err != nil {
 		r.l.Error(err, "http - v1 - deleteAlarmOccurrences")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -165,7 +178,7 @@ func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 	hwInfo, err := r.d.GetHardwareInfo(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getHardwareInfo")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -179,7 +192,7 @@ func (r *deviceManagementRoutes) getPowerState(c *gin.Context) {
 	state, err := r.d.GetPowerState(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getPowerState")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -193,7 +206,7 @@ func (r *deviceManagementRoutes) getPowerCapabilities(c *gin.Context) {
 	power, err := r.d.GetPowerCapabilities(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getPowerCapabilities")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -207,7 +220,7 @@ func (r *deviceManagementRoutes) getGeneralSettings(c *gin.Context) {
 	generalSettings, err := r.d.GetGeneralSettings(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getGeneralSettings")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -221,7 +234,7 @@ func (r *deviceManagementRoutes) cancelUserConsentCode(c *gin.Context) {
 	result, err := r.d.CancelUserConsent(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - cancelUserConsentCode")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -235,7 +248,7 @@ func (r *deviceManagementRoutes) getUserConsentCode(c *gin.Context) {
 	response, err := r.d.GetUserConsentCode(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getUserConsentCode")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -248,7 +261,7 @@ func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 
 	var userConsent dto.UserConsent
 	if err := c.ShouldBindJSON(&userConsent); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -256,7 +269,7 @@ func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 	response, err := r.d.SendConsentCode(c.Request.Context(), userConsent, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - sendConsentCode")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -269,7 +282,7 @@ func (r *deviceManagementRoutes) powerAction(c *gin.Context) {
 
 	var powerAction dto.PowerAction
 	if err := c.ShouldBindJSON(&powerAction); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -277,7 +290,7 @@ func (r *deviceManagementRoutes) powerAction(c *gin.Context) {
 	response, err := r.d.SendPowerAction(c.Request.Context(), guid, powerAction.Action)
 	if err != nil {
 		r.l.Error(err, "http - v1 - powerAction")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -293,7 +306,7 @@ func (r *deviceManagementRoutes) getAuditLog(c *gin.Context) {
 	startIdx, err := strconv.Atoi(startIndex)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getAuditLog")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -301,7 +314,7 @@ func (r *deviceManagementRoutes) getAuditLog(c *gin.Context) {
 	auditLogs, err := r.d.GetAuditLog(c.Request.Context(), startIdx, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getAuditLog")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -315,7 +328,7 @@ func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 	eventLogs, err := r.d.GetEventLog(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getEventLog")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -328,7 +341,7 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 
 	var bootSetting dto.BootSetting
 	if err := c.ShouldBindJSON(&bootSetting); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -336,7 +349,7 @@ func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 	features, err := r.d.SetBootOptions(c.Request.Context(), guid, bootSetting)
 	if err != nil {
 		r.l.Error(err, "http - v1 - setBootOptions")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -350,10 +363,62 @@ func (r *deviceManagementRoutes) getNetworkSettings(c *gin.Context) {
 	network, err := r.d.GetNetworkSettings(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getNetworkSettings")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
 
 	c.JSON(http.StatusOK, network)
+}
+
+// @Summary     Get Call List
+// @Description Get a list of supported WSMAN calls
+// @ID          getCallList
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} DeviceCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/devices [get]
+func (r *deviceManagementRoutes) getCallList(c *gin.Context) {
+	items := r.d.GetExplorerSupportedCalls()
+
+	c.JSON(http.StatusOK, items)
+}
+
+// @Summary     Execute Call
+// @Description Execute a call
+// @ID          executeCall
+// @Tags  	    amt
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} DeviceCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/devices [get]
+func (r *deviceManagementRoutes) executeCall(c *gin.Context) {
+	guid := c.Param("guid")
+	call := c.Param("call")
+
+	result, err := r.d.ExecuteCall(c.Request.Context(), guid, call, "")
+	if err != nil {
+		r.l.Error(err, "http - explorer - v1 - executeCall")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func (r *deviceManagementRoutes) getCertificates(c *gin.Context) {
+	guid := c.Param("guid")
+
+	certs, err := r.d.GetCertificates(c.Request.Context(), guid)
+	if err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, certs)
 }

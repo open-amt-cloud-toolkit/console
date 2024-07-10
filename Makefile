@@ -68,9 +68,11 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package v1 -mock_names Repository=MockIEEE8021xConfigsRepository,Feature=MockIEEE8021xConfigsFeature > ./internal/controller/http/v1/ieee8021xconfigs_mocks_test.go
 	mockgen -source ./internal/usecase/profiles/interfaces.go -package v1 -mock_names Repository=MockProfilesRepository,Feature=MockProfilesFeature > ./internal/controller/http/v1/profiles_mocks_test.go
 	mockgen -source ./internal/usecase/profiles/interfaces.go -package profiles_test > ./internal/usecase/profiles/mocks_test.go
+	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package profiles_test -mock_names Repository=MockwificonfigsRepository,Feature=MockwificonfigsFeature > ./internal/usecase/profiles/wificonfigs_mocks_test.go
 	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package profiles_test -mock_names Repository=MockProfileWiFiConfigsRepository,Feature=MockProfileWiFiConfigsFeature > ./internal/usecase/profiles/profileswificonfigs_mocks_test.go
 	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package profiles_test -mock_names Repository=MockIEEERepository,Feature=MockIEEEFeature > ./internal/usecase/profiles/ieee_mocks_test.go
 	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package wificonfigs_test > ./internal/usecase/wificonfigs/mocks_test.go
+	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package wificonfigs_test -mock_names Repository=MockProfileWiFiConfigsRepository,Feature=MockProfileWiFiConfigsFeature > ./internal/usecase/wificonfigs/profileswificonfigs_mocks_test.go
 	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package v1 -mock_names Repository=MockWiFiConfigsRepository,Feature=MockWiFiConfigsFeature > ./internal/controller/http/v1/wificonfigs_mocks_test.go
 	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package profilewificonfigs_test > ./internal/usecase/profilewificonfigs/mocks_test.go
 .PHONY: mock

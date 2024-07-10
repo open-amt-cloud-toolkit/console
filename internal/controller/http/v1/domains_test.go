@@ -20,6 +20,7 @@ import (
 //nolint:gochecknoinits // required to avoid issues when running tests in parallel
 func init() {
 	gin.SetMode(gin.TestMode)
+	gin.DisableBindValidation()
 }
 
 func domainsTest(t *testing.T) (*MockDomainsFeature, *gin.Engine) {
@@ -34,7 +35,7 @@ func domainsTest(t *testing.T) (*MockDomainsFeature, *gin.Engine) {
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
 
-	newDomainRoutes(handler, domain, log)
+	NewDomainRoutes(handler, domain, log)
 
 	return domain, engine
 }
@@ -91,7 +92,7 @@ func TestDomainRoutes(t *testing.T) {
 				domain.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, domains.ErrDatabase)
 			},
 			response:     domains.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "get domain by name",
@@ -113,7 +114,7 @@ func TestDomainRoutes(t *testing.T) {
 				domain.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, domains.ErrDatabase)
 			},
 			response:     domains.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert domain",
@@ -137,7 +138,7 @@ func TestDomainRoutes(t *testing.T) {
 			},
 			response:     domains.ErrDatabase,
 			requestBody:  requestDomain,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert domain validation - failed",
@@ -169,7 +170,7 @@ func TestDomainRoutes(t *testing.T) {
 				domain.EXPECT().Delete(context.Background(), "profile", "").Return(domains.ErrDatabase)
 			},
 			response:     domains.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "update domain",
@@ -193,7 +194,7 @@ func TestDomainRoutes(t *testing.T) {
 			},
 			response:     domains.ErrDatabase,
 			requestBody:  requestDomain,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 	}
 

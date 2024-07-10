@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,13 +12,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrGeneral = errors.New("general error")
 
 func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engine) {
 	t.Helper()
@@ -31,14 +33,14 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 	engine := gin.New()
 	handler := engine.Group("/api/v1")
 
-	newAmtRoutes(handler, deviceManagement, log)
+	NewAmtRoutes(handler, deviceManagement, log)
 
 	return deviceManagement, engine
 }
 
 var aGoodTime = time.Unix(int64(1073007983), 0)
 
-func TestGetNetworkSettings(t *testing.T) {
+func TestDeviceManagement(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -67,10 +69,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"features": []string{"feature1", "feature2"}}, nil)
+					Return(dto.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"features": []string{"feature1", "feature2"}},
+			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "redirection": false, "optInState": 0, "userConsent": ""},
 		},
 		{
 			name:        "setFeatures - successful setting",
@@ -89,10 +91,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetAlarmOccurrences(context.Background(), "valid-guid").
-					Return([]alarmclock.AlarmClockOccurrence{}, nil)
+					Return([]dto.AlarmClockOccurrence{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     []alarmclock.AlarmClockOccurrence{},
+			response:     []dto.AlarmClockOccurrence{},
 		},
 		{
 			name:   "deleteAlarmOccurrences - successful deletion",
@@ -101,7 +103,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			requestBody: dto.AlarmClockOccurrence{
 				ElementName:        "elementName",
 				StartTime:          aGoodTime,
-				Interval:           "1",
+				Interval:           1,
 				DeleteOnCompletion: true,
 				InstanceID:         "1",
 			},
@@ -193,6 +195,28 @@ func TestGetNetworkSettings(t *testing.T) {
 			},
 			expectedCode: http.StatusOK,
 			response:     map[string]interface{}{"": ""},
+		},
+		{
+			name:   "getCertificates - successful retrieval",
+			url:    "/api/v1/amt/certificates/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
+					Return(dto.SecuritySettings{}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     dto.SecuritySettings{},
+		},
+		{
+			name:   "getCertificates - failed retrieval",
+			url:    "/api/v1/amt/certificates/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
+					Return(dto.SecuritySettings{}, ErrGeneral)
+			},
+			expectedCode: http.StatusInternalServerError,
+			response:     dto.SecuritySettings{},
 		},
 	}
 

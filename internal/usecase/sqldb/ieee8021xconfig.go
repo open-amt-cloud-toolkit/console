@@ -19,7 +19,7 @@ type IEEE8021xRepo struct {
 
 var (
 	ErrIEEE8021xDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
-	ErrIEEE8021xNotUnique = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
+	ErrIEEE8021xNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
 )
 
 // New -.
@@ -248,7 +248,7 @@ func (r *IEEE8021xRepo) Insert(_ context.Context, p *entity.IEEE8021xConfig) (st
 
 	if err != nil {
 		if db.CheckNotUnique(err) {
-			return "", ErrIEEE8021xNotUnique
+			return "", ErrIEEE8021xNotUnique.Wrap(err.Error())
 		}
 
 		return "", ErrIEEE8021xDatabase.Wrap("Insert", "r.Pool.QueryRow", err)
