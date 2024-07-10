@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # master
         with:
           repository: open-amt-cloud-toolkit/sample-web-ui
-          ref: $(git describe --tags $(git rev-list --tags --max-count=1))
+          ref: main
           path: ./temp
       - run: npm ci
         working-directory: ./temp
