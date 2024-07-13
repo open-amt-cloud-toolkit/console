@@ -62,6 +62,7 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/ciraconfigs/interfaces.go -package v1 -mock_names Repository=MockCIRAConfigsRepository,Feature=MockCIRAConfigsFeature > ./internal/controller/http/v1/ciraconfigs_mocks_test.go
 	mockgen -source ./internal/usecase/devices/interfaces.go -package devices_test > ./internal/usecase/devices/mocks_test.go
 	mockgen -source ./internal/usecase/devices/interfaces.go -package v1 -mock_names Repository=MockDeviceManagementRepository,Feature=MockDeviceManagementFeature > ./internal/controller/http/v1/devicemanagement_mocks_test.go
+	mockgen -source ./internal/usecase/devices/interfaces.go -package v2 -mock_names Repository=MockDeviceManagementRepository,Feature=MockDeviceManagementFeature > ./internal/controller/http/v2/devicemanagement_mocks_test.go
 	mockgen -source ./internal/usecase/domains/interfaces.go -package domains_test > ./internal/usecase/domains/mocks_test.go
 	mockgen -source ./internal/usecase/domains/interfaces.go -package v1 -mock_names Repository=MockDomainsRepository,Feature=MockDomainsFeature > ./internal/controller/http/v1/domains_mocks_test.go
 	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package ieee8021xconfigs_test > ./internal/usecase/ieee8021xconfigs/mocks_test.go

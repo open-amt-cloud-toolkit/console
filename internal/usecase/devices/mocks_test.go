@@ -1965,10 +1965,10 @@ func (mr *MockFeatureMockRecorder) GetUserConsentCode(ctx, guid any) *gomock.Cal
 }
 
 // GetVersion mocks base method.
-func (m *MockFeature) GetVersion(ctx context.Context, guid string) (map[string]any, error) {
+func (m *MockFeature) GetVersion(ctx context.Context, guid string) (dto.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
-	ret0, _ := ret[0].(map[string]any)
+	ret0, _ := ret[0].(dto.Version)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

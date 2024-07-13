@@ -113,7 +113,7 @@ func TestGetVersion(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: map[string]interface{}{"AMT_SetupAndConfigurationService": map[string]interface{}{"response": setupandconfiguration.SetupAndConfigurationServiceResponse{XMLName: xml.Name{Space: "", Local: "AMT_SetupAndConfigurationService"}, RequestedState: 1, EnabledState: 1, ElementName: "SampleElementName", SystemCreationClassName: "SampleSystemCreationClassName", SystemName: "SampleSystemName", CreationClassName: "SampleCreationClassName", Name: "SampleName", ProvisioningMode: 1, ProvisioningState: 1, ZeroTouchConfigurationEnabled: true, ProvisioningServerOTP: "SampleProvisioningServerOTP", ConfigurationServerFQDN: "SampleConfigurationServerFQDN", PasswordModel: 1, DhcpDNSSuffix: "SampleDhcpDNSSuffix", TrustedDNSSuffix: "SampleTrustedDNSSuffix"}}, "CIM_SoftwareIdentity": map[string]interface{}{"responses": []software.SoftwareIdentity{}}},
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity{}, AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 1, EnabledState: 1, ElementName: "SampleElementName", SystemCreationClassName: "SampleSystemCreationClassName", SystemName: "SampleSystemName", CreationClassName: "SampleCreationClassName", Name: "SampleName", ProvisioningMode: 1, ProvisioningState: 1, ZeroTouchConfigurationEnabled: true, ProvisioningServerOTP: "SampleProvisioningServerOTP", ConfigurationServerFQDN: "SampleConfigurationServerFQDN", PasswordModel: 1, DhcpDNSSuffix: "SampleDhcpDNSSuffix", TrustedDNSSuffix: "SampleTrustedDNSSuffix"}},
 
 			err: nil,
 		},
@@ -131,7 +131,7 @@ func TestGetVersion(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			res: map[string]interface{}(nil),
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
 
 			err: devices.ErrDatabase,
 		},
@@ -157,7 +157,7 @@ func TestGetVersion(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: map[string]interface{}(nil),
+			res: dto.Version{},
 
 			err: ErrGeneral,
 		},
@@ -187,7 +187,7 @@ func TestGetVersion(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: map[string]interface{}(nil),
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
 
 			err: ErrGeneral,
 		},

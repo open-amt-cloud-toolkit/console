@@ -6,7 +6,7 @@
 //	mockgen -source ./internal/usecase/devices/interfaces.go -package v2 -mock_names Repository=MockDeviceManagementRepository,Feature=MockDeviceManagementFeature
 //
 
-// Package v1 is a generated GoMock package.
+// Package v2 is a generated GoMock package.
 package v2
 
 import (
@@ -1965,10 +1965,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetUserConsentCode(ctx, guid 
 }
 
 // GetVersion mocks base method.
-func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (map[string]any, error) {
+func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (dto.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
-	ret0, _ := ret[0].(map[string]any)
+	ret0, _ := ret[0].(dto.Version)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

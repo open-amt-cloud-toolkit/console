@@ -49,6 +49,17 @@ func TestGetFeatures(t *testing.T) {
 		response     interface{}
 	}{
 		{
+			name:   "getVersion - successful retrieval",
+			url:    "/api/v2/amt/version/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetVersion(context.Background(), "valid-guid").
+					Return(dto.Version{}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     dto.Version{},
+		},
+		{
 			name:   "getFeatures - successful retrieval",
 			url:    "/api/v2/amt/features/valid-guid",
 			method: http.MethodGet,
