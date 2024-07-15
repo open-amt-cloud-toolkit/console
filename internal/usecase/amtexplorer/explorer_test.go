@@ -1,4 +1,4 @@
-package devices_test
+package amtexplorer_test
 
 import (
 	"context"
@@ -57,7 +57,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/amtexplorer"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -84,19 +84,19 @@ func initSupportedCallList(m *MockAMTExplorer) []string {
 	return methods
 }
 
-func initExplorerTest(t *testing.T) (*devices.UseCase, *MockRepository, *MockAMTExplorer, dto.Explorer) {
+func initExplorerTest(t *testing.T) (*amtexplorer.UseCase, *MockRepository, *MockWSMAN, *MockAMTExplorer, dto.Explorer) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
-	management := NewMockManagement(mockCtl)
+	wsmanMock := NewMockWSMAN(mockCtl)
 	amt := NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
+	u := amtexplorer.New(repo, wsmanMock, log)
 
-	return u, repo, amt, executeResponse
+	return u, repo, wsmanMock, amt, executeResponse
 }
 
 func formatXML(xml string) string {
@@ -109,7 +109,7 @@ type explorerTest struct {
 	name               string
 	call               string
 	repoMock           func(*MockRepository)
-	amtMock            func(*MockAMTExplorer)
+	amtMock            func(*MockAMTExplorer, *MockWSMAN)
 	SupportedClassList []string
 	res                any
 	err                error
@@ -130,7 +130,7 @@ func TestGetExplorerSupportedCalls(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			uc, _, amt, _ := initExplorerTest(t)
+			uc, _, _, amt, _ := initExplorerTest(t)
 
 			tc.SupportedClassList = initSupportedCallList(amt)
 
@@ -158,13 +158,13 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(nil, ErrExplorerGeneral)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(context.Background(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(context.Background(), true).
+					Return(amt)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrDatabase,
+			err: amtexplorer.ErrDatabase,
 		},
 		{
 			name: "ExecuteCall Unsupported Explorer Command",
@@ -174,13 +174,13 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerUseCase,
 		},
 		{
 			name: "getAMT8021xCredentialContextSuccess",
@@ -190,10 +190,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+
 				amt.EXPECT().
 					GetAMT8021xCredentialContext().
 					Return(ieee8021x.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
@@ -209,16 +210,17 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+
 				amt.EXPECT().
 					GetAMT8021xCredentialContext().
 					Return(ieee8021x.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMT8021xProfileSuccess",
@@ -228,10 +230,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+
 				amt.EXPECT().
 					GetAMT8021xProfile().
 					Return(ieee8021x.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
@@ -247,16 +250,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
 				amt.EXPECT().
 					GetAMT8021xProfile().
 					Return(ieee8021x.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTAlarmClockServiceSuccess",
@@ -266,10 +269,10 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
 				amt.EXPECT().
 					GetAMTAlarmClockService().
 					Return(alarmclock.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
@@ -288,16 +291,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer) {
-				amt.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
 				amt.EXPECT().
 					GetAMTAlarmClockService().
 					Return(alarmclock.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTAuditLogSuccess",
@@ -307,11 +310,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTAuditLog().
 					Return(auditlog.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -329,16 +332,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTAuditLog().
 					Return(auditlog.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTAuthorizationServiceSuccess",
@@ -348,11 +351,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTAuthorizationService().
 					Return(authorization.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -370,16 +373,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTAuthorizationService().
 					Return(authorization.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTBootCapabilitiesSuccess",
@@ -389,11 +392,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTBootCapabilities().
 					Return(boot.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -408,16 +411,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTBootCapabilities().
 					Return(boot.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTBootSettingDataSuccess",
@@ -427,11 +430,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTBootSettingData().
 					Return(boot.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -446,16 +449,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTBootSettingData().
 					Return(boot.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTEnvironmentDetectionSettingDataSuccess",
@@ -465,11 +468,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTEnvironmentDetectionSettingData().
 					Return(environmentdetection.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -484,16 +487,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTEnvironmentDetectionSettingData().
 					Return(environmentdetection.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTEthernetPortSettingsSuccess",
@@ -503,11 +506,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTEthernetPortSettings().
 					Return(ethernetport.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -522,16 +525,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTEthernetPortSettings().
 					Return(ethernetport.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTGeneralSettingsSuccess",
@@ -541,11 +544,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTGeneralSettings().
 					Return(general.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -560,16 +563,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTGeneralSettings().
 					Return(general.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTKerberosSettingDataSuccess",
@@ -579,11 +582,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTKerberosSettingData().
 					Return(kerberos.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -598,16 +601,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTKerberosSettingData().
 					Return(kerberos.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTManagementPresenceRemoteSAPSuccess",
@@ -617,11 +620,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTManagementPresenceRemoteSAP().
 					Return(managementpresence.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -636,16 +639,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTManagementPresenceRemoteSAP().
 					Return(managementpresence.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTMessageLogSuccess",
@@ -655,11 +658,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTMessageLog().
 					Return(messagelog.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -674,16 +677,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTMessageLog().
 					Return(messagelog.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTMPSUsernamePasswordSuccess",
@@ -693,11 +696,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTMPSUsernamePassword().
 					Return(mps.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -712,16 +715,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTMPSUsernamePassword().
 					Return(mps.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTPublicKeyCertificateSuccess",
@@ -731,11 +734,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTPublicKeyCertificate().
 					Return(publickey.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -750,16 +753,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTPublicKeyCertificate().
 					Return(publickey.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTPublicKeyManagementServiceSuccess",
@@ -769,11 +772,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTPublicKeyManagementService().
 					Return(publickey.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -788,16 +791,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTPublicKeyManagementService().
 					Return(publickey.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTPublicPrivateKeyPairSuccess",
@@ -807,11 +810,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTPublicPrivateKeyPair().
 					Return(publicprivate.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -826,16 +829,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTPublicPrivateKeyPair().
 					Return(publicprivate.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTRedirectionServiceSuccess",
@@ -845,11 +848,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRedirectionService().
 					Return(redirection.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -864,16 +867,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRedirectionService().
 					Return(redirection.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTRemoteAccessPolicyAppliesToMPSSuccess",
@@ -883,11 +886,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRemoteAccessPolicyAppliesToMPS().
 					Return(remoteaccess.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -902,16 +905,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRemoteAccessPolicyAppliesToMPS().
 					Return(remoteaccess.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTRemoteAccessPolicyRuleSuccess",
@@ -921,11 +924,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRemoteAccessPolicyRule().
 					Return(remoteaccess.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -940,16 +943,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRemoteAccessPolicyRule().
 					Return(remoteaccess.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTRemoteAccessServiceSuccess",
@@ -959,11 +962,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRemoteAccessService().
 					Return(remoteaccess.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -978,16 +981,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTRemoteAccessService().
 					Return(remoteaccess.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTSetupAndConfigurationServiceSuccess",
@@ -997,11 +1000,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTSetupAndConfigurationService().
 					Return(setupandconfiguration.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1016,16 +1019,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTSetupAndConfigurationService().
 					Return(setupandconfiguration.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTTimeSynchronizationServiceSuccess",
@@ -1035,11 +1038,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTimeSynchronizationService().
 					Return(timesynchronization.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1054,16 +1057,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTimeSynchronizationService().
 					Return(timesynchronization.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTTLSCredentialContextSuccess",
@@ -1073,11 +1076,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTLSCredentialContext().
 					Return(tls.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1092,16 +1095,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTLSCredentialContext().
 					Return(tls.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTTLSProtocolEndpointCollectionSuccess",
@@ -1111,11 +1114,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTLSProtocolEndpointCollection().
 					Return(tls.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1130,16 +1133,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTLSProtocolEndpointCollection().
 					Return(tls.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTTLSSettingDataSuccess",
@@ -1149,11 +1152,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTLSSettingData().
 					Return(tls.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1168,16 +1171,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTTLSSettingData().
 					Return(tls.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getAMTUserInitiatedConnectionServiceSuccess",
@@ -1187,11 +1190,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTUserInitiatedConnectionService().
 					Return(userinitiatedconnection.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1206,54 +1209,55 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetAMTUserInitiatedConnectionService().
 					Return(userinitiatedconnection.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
-			name: "getAMTWiFiPortConifgurationServiceSuccess",
-			call: "AMTWiFiPortConifgurationService",
+			name: "GetAMTWiFiPortConfigurationServiceSuccess",
+			call: "AMTWiFiPortConfigurationService",
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
-					GetAMTWiFiPortConifgurationService().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+
+				amt.EXPECT().
+					GetAMTWiFiPortConfigurationService().
 					Return(wifiportconfiguration.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
 			res: executeResponse,
 			err: nil,
 		},
 		{
-			name: "getAMTWiFiPortConifgurationServiceError",
-			call: "AMTWiFiPortConifgurationService",
+			name: "GetAMTWiFiPortConfigurationServiceError",
+			call: "AMTWiFiPortConfigurationService",
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
-					GetAMTWiFiPortConifgurationService().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
+					GetAMTWiFiPortConfigurationService().
 					Return(wifiportconfiguration.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMBIOSElementSuccess",
@@ -1263,11 +1267,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBIOSElement().
 					Return(bios.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1282,16 +1286,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBIOSElement().
 					Return(bios.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMBootConfigSettingSuccess",
@@ -1301,11 +1305,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBootConfigSetting().
 					Return(cimboot.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1320,16 +1324,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBootConfigSetting().
 					Return(cimboot.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMBootServiceSuccess",
@@ -1339,11 +1343,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBootService().
 					Return(cimboot.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1358,16 +1362,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBootService().
 					Return(cimboot.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMBootSourceSettingSuccess",
@@ -1377,11 +1381,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBootSourceSetting().
 					Return(cimboot.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1396,16 +1400,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMBootSourceSetting().
 					Return(cimboot.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMCardSuccess",
@@ -1415,11 +1419,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMCard().
 					Return(card.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1434,16 +1438,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMCard().
 					Return(card.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMChassisSuccess",
@@ -1453,11 +1457,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMChassis().
 					Return(chassis.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1472,16 +1476,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMChassis().
 					Return(chassis.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMChipSuccess",
@@ -1491,11 +1495,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMChip().
 					Return(chip.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1510,16 +1514,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMChip().
 					Return(chip.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMComputerSystemPackageSuccess",
@@ -1529,11 +1533,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMComputerSystemPackage().
 					Return(computer.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1548,16 +1552,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMComputerSystemPackage().
 					Return(computer.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMConcreteDependencySuccess",
@@ -1567,11 +1571,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMConcreteDependency().
 					Return(concrete.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1586,16 +1590,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMConcreteDependency().
 					Return(concrete.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMCredentialContextSuccess",
@@ -1605,11 +1609,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMCredentialContext().
 					Return(credential.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1624,16 +1628,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMCredentialContext().
 					Return(credential.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMIEEE8021xSettingsSuccess",
@@ -1643,11 +1647,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMIEEE8021xSettings().
 					Return(cimieee8021x.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1662,16 +1666,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMIEEE8021xSettings().
 					Return(cimieee8021x.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMKVMRedirectionSAPSuccess",
@@ -1681,11 +1685,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMKVMRedirectionSAP().
 					Return(kvm.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1700,16 +1704,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMKVMRedirectionSAP().
 					Return(kvm.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMMediaAccessDeviceSuccess",
@@ -1719,11 +1723,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMMediaAccessDevice().
 					Return(mediaaccess.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1738,16 +1742,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMMediaAccessDevice().
 					Return(mediaaccess.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMPhysicalMemorySuccess",
@@ -1757,11 +1761,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMPhysicalMemory().
 					Return(physical.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1776,16 +1780,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMPhysicalMemory().
 					Return(physical.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMPhysicalPackageSuccess",
@@ -1795,11 +1799,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMPhysicalPackage().
 					Return(physical.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1814,16 +1818,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMPhysicalPackage().
 					Return(physical.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMPowerManagementServiceSuccess",
@@ -1833,11 +1837,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMPowerManagementService().
 					Return(power.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1852,16 +1856,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMPowerManagementService().
 					Return(power.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMProcessorSuccess",
@@ -1871,11 +1875,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMProcessor().
 					Return(processor.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1890,16 +1894,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMProcessor().
 					Return(processor.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMServiceAvailableToElementSuccess",
@@ -1909,11 +1913,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMServiceAvailableToElement().
 					Return(service.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1928,16 +1932,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMServiceAvailableToElement().
 					Return(service.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMSoftwareIdentitySuccess",
@@ -1947,11 +1951,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMSoftwareIdentity().
 					Return(software.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -1966,16 +1970,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMSoftwareIdentity().
 					Return(software.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMSystemPackagingSuccess",
@@ -1985,11 +1989,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMSystemPackaging().
 					Return(system.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2004,16 +2008,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMSystemPackaging().
 					Return(system.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMWiFiEndpointSettingsSuccess",
@@ -2023,11 +2027,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMWiFiEndpointSettings().
 					Return(wifi.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2042,16 +2046,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMWiFiEndpointSettings().
 					Return(wifi.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getCIMWiFiPortSuccess",
@@ -2061,11 +2065,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMWiFiPort().
 					Return(wifi.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2080,16 +2084,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetCIMWiFiPort().
 					Return(wifi.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getIPS8021xCredentialContextSuccess",
@@ -2099,11 +2103,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPS8021xCredentialContext().
 					Return(ipsieee8021x.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2118,16 +2122,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPS8021xCredentialContext().
 					Return(ipsieee8021x.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getIPSAlarmClockOccurrenceSuccess",
@@ -2137,11 +2141,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSAlarmClockOccurrence().
 					Return(ipsalarmclock.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2156,16 +2160,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSAlarmClockOccurrence().
 					Return(ipsalarmclock.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getIPSHostBasedSetupServiceSuccess",
@@ -2175,11 +2179,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSHostBasedSetupService().
 					Return(hostbasedsetup.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2194,16 +2198,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSHostBasedSetupService().
 					Return(hostbasedsetup.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getIPSIEEE8021xSettingsSuccess",
@@ -2213,11 +2217,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSIEEE8021xSettings().
 					Return(ipsieee8021x.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2232,16 +2236,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSIEEE8021xSettings().
 					Return(ipsieee8021x.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
 			name: "getIPSOptInServiceSuccess",
@@ -2251,11 +2255,11 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSOptInService().
 					Return(optin.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
@@ -2270,16 +2274,16 @@ func TestExecuteCall(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(man *MockAMTExplorer) {
+			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
 				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), true).
+					Return(amt)
+				amt.EXPECT().
 					GetIPSOptInService().
 					Return(optin.Response{}, ErrExplorerGeneral)
 			},
 			res: &dto.Explorer{},
-			err: devices.ErrExplorerUseCase,
+			err: amtexplorer.ErrExplorerAMT,
 		},
 	}
 
@@ -2288,9 +2292,9 @@ func TestExecuteCall(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			uc, repo, amt, executeResponse := initExplorerTest(t)
+			uc, repo, wsmanMock, amt, executeResponse := initExplorerTest(t)
 
-			tc.amtMock(amt)
+			tc.amtMock(amt, wsmanMock)
 			tc.repoMock(repo)
 
 			res, err := uc.ExecuteCall(context.Background(), device.GUID, tc.call, device.TenantID)

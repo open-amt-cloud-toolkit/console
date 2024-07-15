@@ -10,9 +10,9 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (interface
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	response, err := uc.device.GetNetworkSettings()
+	response, err := device.GetNetworkSettings()
 	if err != nil {
 		return nil, err
 	}

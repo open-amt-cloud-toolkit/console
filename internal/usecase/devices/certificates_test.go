@@ -19,19 +19,19 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initCertificateTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initCertificateTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
+	wsmanMock := NewMockWSMAN(mockCtl)
 	management := NewMockManagement(mockCtl)
-	amtExplorer := NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), amtExplorer, log)
+	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
 
-	return u, management, repo
+	return u, wsmanMock, management, repo
 }
 
 func TestGetCertificates(t *testing.T) {
@@ -46,11 +46,11 @@ func TestGetCertificates(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetCertificates().
 					Return(wsman.Certificates{}, nil)
 			},
@@ -74,11 +74,11 @@ func TestGetCertificates(t *testing.T) {
 		{
 			name:   "success with CIMCredentialContext",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetCertificates().
 					Return(wsman.Certificates{
 						CIMCredentialContextResponse: credential.PullResponse{
@@ -190,11 +190,11 @@ func TestGetCertificates(t *testing.T) {
 		{
 			name:   "GetCertificates fails",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetCertificates().
 					Return(wsman.Certificates{}, ErrGeneral)
 			},
@@ -213,10 +213,10 @@ func TestGetCertificates(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initCertificateTest(t)
+			useCase, wsmanMock, management, repo := initCertificateTest(t)
 
 			if tc.manMock != nil {
-				tc.manMock(management)
+				tc.manMock(wsmanMock, management)
 			}
 
 			tc.repoMock(repo)
