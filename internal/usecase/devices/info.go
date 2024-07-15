@@ -12,14 +12,14 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interf
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	version, err := uc.device.GetAMTVersion()
+	version, err := device.GetAMTVersion()
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := uc.device.GetSetupAndConfiguration()
+	data, err := device.GetSetupAndConfiguration()
 	if err != nil {
 		return nil, err
 	}
@@ -42,9 +42,9 @@ func (uc *UseCase) GetFeatures(c context.Context, guid string) (dto.Features, er
 		return dto.Features{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	features, err := uc.device.GetFeatures()
+	features, err := device.GetFeatures()
 	if err != nil {
 		return dto.Features{}, err
 	}
@@ -58,9 +58,9 @@ func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Feat
 		return features, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	features, err = uc.device.SetFeatures(features)
+	features, err = device.SetFeatures(features)
 	if err != nil {
 		return features, err
 	}
@@ -74,9 +74,9 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	hwInfo, err := uc.device.GetHardwareInfo()
+	hwInfo, err := device.GetHardwareInfo()
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +90,9 @@ func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (
 		return dto.AuditLog{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	response, err := uc.device.GetAuditLog(startIndex)
+	response, err := device.GetAuditLog(startIndex)
 	if err != nil {
 		return dto.AuditLog{}, err
 	}
@@ -110,9 +110,9 @@ func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, 
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	eventLogs, err := uc.device.GetEventLog()
+	eventLogs, err := device.GetEventLog()
 	if err != nil {
 		return nil, err
 	}
@@ -150,9 +150,9 @@ func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	generalSettings, err := uc.device.GetGeneralSettings()
+	generalSettings, err := device.GetGeneralSettings()
 	if err != nil {
 		return nil, err
 	}

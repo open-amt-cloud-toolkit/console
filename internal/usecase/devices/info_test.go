@@ -18,7 +18,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initInfoTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initInfoTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -27,15 +27,14 @@ func initInfoTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockReposit
 
 	repo := NewMockRepository(mockCtl)
 
+	wsmanMock := NewMockWSMAN(mockCtl)
 	management := NewMockManagement(mockCtl)
-
-	amt := NewMockAMTExplorer(mockCtl)
 
 	log := logger.New("error")
 
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
+	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
 
-	return u, management, repo
+	return u, wsmanMock, management, repo
 }
 
 func TestGetVersion(t *testing.T) {
@@ -93,16 +92,15 @@ func TestGetVersion(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetAMTVersion().
 					Return(softwares, nil)
 
-				man.EXPECT().
+				man2.EXPECT().
 					GetSetupAndConfiguration().
 					Return(responses, nil)
 			},
@@ -123,7 +121,7 @@ func TestGetVersion(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -141,12 +139,11 @@ func TestGetVersion(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetAMTVersion().
 					Return(softwares, ErrGeneral)
 			},
@@ -167,16 +164,15 @@ func TestGetVersion(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetAMTVersion().
 					Return(softwares, nil)
 
-				man.EXPECT().
+				man2.EXPECT().
 					GetSetupAndConfiguration().
 					Return(responses, ErrGeneral)
 			},
@@ -199,9 +195,9 @@ func TestGetVersion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initInfoTest(t)
+			useCase, wsmanMock, management, repo := initInfoTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -229,12 +225,11 @@ func TestGetFeatures(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetFeatures().
 					Return(dto.Features{}, nil)
 			},
@@ -255,7 +250,7 @@ func TestGetFeatures(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -273,12 +268,11 @@ func TestGetFeatures(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetFeatures().
 					Return(dto.Features{}, ErrGeneral)
 			},
@@ -301,9 +295,9 @@ func TestGetFeatures(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initInfoTest(t)
+			useCase, wsmanMock, management, repo := initInfoTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -341,12 +335,11 @@ func TestSetFeatures(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					SetFeatures(featureSet).
 					Return(featureSet, nil)
 			},
@@ -367,7 +360,7 @@ func TestSetFeatures(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -385,12 +378,11 @@ func TestSetFeatures(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					SetFeatures(featureSet).
 					Return(featureSet, ErrGeneral)
 			},
@@ -413,9 +405,9 @@ func TestSetFeatures(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initInfoTest(t)
+			useCase, wsmanMock, management, repo := initInfoTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -443,12 +435,11 @@ func TestGetHardwareInfo(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetHardwareInfo().
 					Return(gomock.Any(), nil)
 			},
@@ -469,7 +460,7 @@ func TestGetHardwareInfo(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -487,12 +478,11 @@ func TestGetHardwareInfo(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetHardwareInfo().
 					Return(nil, ErrGeneral)
 			},
@@ -515,9 +505,9 @@ func TestGetHardwareInfo(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initInfoTest(t)
+			useCase, wsmanMock, management, repo := initInfoTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -545,12 +535,11 @@ func TestGetAuditLog(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetAuditLog(1).
 					Return(auditlog.Response{}, nil)
 			},
@@ -571,7 +560,7 @@ func TestGetAuditLog(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -589,12 +578,11 @@ func TestGetAuditLog(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetAuditLog(1).
 					Return(auditlog.Response{}, ErrGeneral)
 			},
@@ -617,9 +605,9 @@ func TestGetAuditLog(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initInfoTest(t)
+			useCase, wsmanMock, management, repo := initInfoTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -647,12 +635,11 @@ func TestGetEventLog(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetEventLog().
 					Return(messagelog.GetRecordsResponse{}, nil)
 			},
@@ -673,7 +660,7 @@ func TestGetEventLog(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -691,12 +678,11 @@ func TestGetEventLog(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetEventLog().
 					Return(messagelog.GetRecordsResponse{}, ErrGeneral)
 			},
@@ -719,9 +705,9 @@ func TestGetEventLog(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initInfoTest(t)
+			useCase, wsmanMock, management, repo := initInfoTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -749,12 +735,11 @@ func TestGetGeneralSettings(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetGeneralSettings().
 					Return(gomock.Any(), nil)
 			},
@@ -775,7 +760,7 @@ func TestGetGeneralSettings(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -793,12 +778,11 @@ func TestGetGeneralSettings(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetGeneralSettings().
 					Return(nil, ErrGeneral)
 			},
@@ -821,9 +805,9 @@ func TestGetGeneralSettings(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initInfoTest(t)
+			useCase, wsmanMock, management, repo := initInfoTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 

@@ -12,19 +12,19 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initNetworkTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initNetworkTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
+	wsmanMock := NewMockWSMAN(mockCtl)
 	management := NewMockManagement(mockCtl)
-	amt := NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
+	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
 
-	return u, management, repo
+	return u, wsmanMock, management, repo
 }
 
 func TestGetNetworkSettings(t *testing.T) {
@@ -39,11 +39,11 @@ func TestGetNetworkSettings(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetNetworkSettings().
 					Return(gomock.Any(), nil)
 			},
@@ -69,11 +69,11 @@ func TestGetNetworkSettings(t *testing.T) {
 		{
 			name:   "GetNetworkSettings fails",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetNetworkSettings().
 					Return(nil, ErrGeneral)
 			},
@@ -92,10 +92,10 @@ func TestGetNetworkSettings(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initNetworkTest(t)
+			useCase, wsmanMock, management, repo := initNetworkTest(t)
 
 			if tc.manMock != nil {
-				tc.manMock(management)
+				tc.manMock(wsmanMock, management)
 			}
 
 			tc.repoMock(repo)
