@@ -80,13 +80,13 @@ func (r *domainRoutes) get(c *gin.Context) {
 	}
 }
 
-// @Summary     Show Domains
+// @Summary     Show Domain
 // @Description Show domain by name
-// @ID          domains
+// @ID          getDomain
 // @Tags  	    domains
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} DomainCountResponse
+// @Success     200 {object} dto.Domain
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/domains/:name [get]
 func (r *domainRoutes) getByName(c *gin.Context) {
@@ -105,11 +105,11 @@ func (r *domainRoutes) getByName(c *gin.Context) {
 
 // @Summary     Add Domain
 // @Description Add Domain
-// @ID          domains
+// @ID          addDomain
 // @Tags  	    domains
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} DomainResponse
+// @Success     200 {object} dto.Domain
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/domains [post]
 func (r *domainRoutes) insert(c *gin.Context) {
@@ -138,9 +138,9 @@ func (r *domainRoutes) insert(c *gin.Context) {
 // @Tags  	    domains
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} DomainResponse
+// @Success     200 {object} dto.Domain
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/Domains [patch]
+// @Router      /api/v1/admin/domains [patch]
 func (r *domainRoutes) update(c *gin.Context) {
 	var domain dto.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
@@ -167,7 +167,7 @@ func (r *domainRoutes) update(c *gin.Context) {
 // @Tags  	    domains
 // @Accept      json
 // @Produce     json
-// @Success     204 {object} noContent
+// @Success     204 {object} nil
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/domains [delete]
 func (r *domainRoutes) delete(c *gin.Context) {

@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/admin/devices": {
+        "/api/v1/admin/ciraconfigs": {
             "get": {
-                "description": "Show all devices",
+                "description": "Show all CIRA Configuration profiles",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,21 +25,132 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "devices"
+                    "ciraconfig"
                 ],
-                "summary": "Show Devices",
-                "operationId": "devices",
+                "summary": "CIRA Configurations",
+                "operationId": "getCiraConfigs",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.DeviceCountResponse"
+                            "$ref": "#/definitions/internal_controller_http_v1.CIRAConfigCountResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/v1.response"
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add CIRA Configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ciraconfig"
+                ],
+                "summary": "Add CIRA Configuration",
+                "operationId": "addCiraConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Edit CIRA Configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ciraconfig"
+                ],
+                "summary": "Edit CIRA Configuration",
+                "operationId": "updateCiraConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/ciraconfigs/:ciraConfigName": {
+            "get": {
+                "description": "Show a CIRA Configuration profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ciraconfig"
+                ],
+                "summary": "CIRA Configuration",
+                "operationId": "getCiraConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a CIRA Configuration profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ciraconfig"
+                ],
+                "summary": "Remove CIRA Configuration",
+                "operationId": "removeCiraConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
                         }
                     }
                 }
@@ -63,13 +174,268 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.DomainCountResponse"
+                            "$ref": "#/definitions/internal_controller_http_v1.DomainCountResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/v1.response"
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add Domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Add Domain",
+                "operationId": "addDomain",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a Domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Remove Domains",
+                "operationId": "deleteDomain",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Edit a Domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Edit Domain",
+                "operationId": "updateDomain",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/domains/:name": {
+            "get": {
+                "description": "Show domain by name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domains"
+                ],
+                "summary": "Show Domain",
+                "operationId": "getDomain",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/ieee8021xconfigs/": {
+            "get": {
+                "description": "Retrieves all of the IEEE802.1x configuration profiles from the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ieee802.1x"
+                ],
+                "summary": "Get All IEEE802.1x Configs",
+                "operationId": "get8021xConfigs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new IEEE802.1x configuration profile.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ieee802.1x"
+                ],
+                "summary": "Create an IEEE802.1x Config",
+                "operationId": "add8021xConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Edits an existing IEEE802.1x configuration profile.\n\nThe profileName can not be changed.\n\nVersion must be provided to ensure the correct profile is edited.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ieee802.1x"
+                ],
+                "summary": "Edit a IEEE802.1x Config",
+                "operationId": "edit8021xConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/ieee8021xconfigs/:profileName": {
+            "get": {
+                "description": "Retrieves the specific IEEE802.1x configuration profile from the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ieee802.1x"
+                ],
+                "summary": "Get a IEEE802.1x Config",
+                "operationId": "get8021xConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Removes the specific IEEE802.1x configuration profile from the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ieee802.1x"
+                ],
+                "summary": "Remove a IEEE802.1x Config",
+                "operationId": "delete8021xConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
                         }
                     }
                 }
@@ -88,18 +454,1024 @@ const docTemplate = `{
                     "profiles"
                 ],
                 "summary": "Show Profiles",
-                "operationId": "profiles",
+                "operationId": "getProfiles",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.ProfileCountResponse"
+                            "$ref": "#/definitions/internal_controller_http_v1.ProfileCountResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/v1.response"
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add Profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "summary": "Add Profile",
+                "operationId": "addProfile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a Profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "summary": "Remove Profile",
+                "operationId": "deleteProfile",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Edit a Profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "summary": "Edit Profile",
+                "operationId": "updateProfile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/profiles/:name": {
+            "get": {
+                "description": "Show profile by name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "summary": "Show Profile",
+                "operationId": "getProfile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/wireless/": {
+            "get": {
+                "description": "Retrieves all of the Wireless configuration profiles from the database. Will not return the password field to protect the privacy of this asset.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wireless"
+                ],
+                "summary": "Get All Wireless Configs",
+                "operationId": "getWifiConfigs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfigCountResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new Wireless configuration profile. The PSK passphrase is stored in a secrets manager and is only used during configuration to set the Wi-Fi credentials in the AMT device.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wireless"
+                ],
+                "summary": "Create a Wireless Config",
+                "operationId": "addWifiConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Edits an existing Wireless configuration profile.\n\nThe profileName can not be changed.\n\nVersion must be provided to ensure the correct profile is edited.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wireless"
+                ],
+                "summary": "Edit a Wireless Config",
+                "operationId": "editWifiConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/wireless/:profileName": {
+            "get": {
+                "description": "Retrieves the specific Wireless configuration profile from the database. Will not return the password field to protect the privacy of this asset.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wireless"
+                ],
+                "summary": "Get a Wireless Config",
+                "operationId": "getWifiConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Removes the specific Wireless configuration profile from the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wireless"
+                ],
+                "summary": "Remove a Wireless Config",
+                "operationId": "deleteWifiConfig",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/alarmOccurrences/:guid": {
+            "get": {
+                "description": "Retrieves all of the current Alarm Clock occurences for the device",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Alarm Clock Occurences",
+                "operationId": "getAlarm",
+                "responses": {
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new Alarm Clock occurence to wake device for AMT device.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Set new Alarm Clock Occurence",
+                "operationId": "setAlarm",
+                "responses": {
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete named Alarm Clock occurence from the device.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Remove Alarm Clock Occurence",
+                "operationId": "deleteAlarm",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/features/:guid": {
+            "get": {
+                "description": "Retrieves the current Intel® AMT Enable/Disable state for User Consent, Redirection, KVM, SOL, and IDE-R.\n\noptInState refers to the current Opt In State if the device has User Consent enabled. Valid values:\n\n0 (Not Started) - No sessions in progress or user consent requested\n1 (Requested) - Request to AMT device for user consent code successful\n2 (Displayed) - AMT device displaying user consent code for 300 seconds (5 minutes) before timeout by default\n3 (Received) - User consent code was entered correctly, a redirection session can be started. Will expire after 120 seconds (2 minutes) and return to State 0 if no active redirection session (State 4)\n4 (In Session) - Active redirection session in progress",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Intel® AMT Features",
+                "operationId": "getFeatures",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto_v1.Features"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Retrieves the current Intel® AMT Enable/Disable state for User Consent, Redirection, KVM, SOL, and IDE-R.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Set Intel® AMT Features",
+                "operationId": "setFeatures",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Features"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/generalSettings/:guid": {
+            "get": {
+                "description": "Retrieve the Intel® AMT general settings.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get General Settings",
+                "operationId": "getGeneralSettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/hardwareInfo/:guid": {
+            "get": {
+                "description": "Retrieve hardware information such as processor or storage.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Hardware Information",
+                "operationId": "getHardwareInfo",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/log/audit/:guid": {
+            "get": {
+                "description": "Returns Intel® AMT Audit Log data in blocks of 10 records for a specified guid. Reference AMT SDK for definition of property return codes.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Intel® AMT Audit Log",
+                "operationId": "getAuditLog",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.AuditLog"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/log/event/:guid": {
+            "get": {
+                "description": "Return sensor and hardware event data from the Intel® AMT event log. Reference AMT SDK for definition of property return codes.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Intel® AMT Event Log",
+                "operationId": "getEventLog",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.EventLog"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/networkSettings/:guid": {
+            "get": {
+                "description": "Return network settings.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Intel® AMT Network Settings",
+                "operationId": "getNetworkSettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/power/action/:guid": {
+            "post": {
+                "description": "Perform an OOB power actions numbered 1 thru 99.\nExecute a GET /power/capabilities/{guid} call first to get the list of available power actions. See AMT Power States for ALL potential power actions.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Perform OOB Power Action (1 - 99)",
+                "operationId": "sendPowerAction",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/power.PowerActionResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/power/bootoptions/:guid": {
+            "post": {
+                "description": "Perform an OOB power actions numbered 100+.\nExecute a GET /power/capabilities/{guid} call first to get the list of available power actions. See AMT Power States for ALL potential power actions.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Set OOB Power Action (100+)",
+                "operationId": "setBootSettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/power.PowerActionResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/power/capabilities/:guid": {
+            "get": {
+                "description": "View what OOB power actions are available for that device.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Power Capabilities",
+                "operationId": "getPowerCapabilities",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/power/state/:guid": {
+            "get": {
+                "description": "Retrieve current power state of Intel® AMT device, returns a number that maps to a device power state. Possible power state values:\n\n2 = On - corresponding to ACPI state G0 or S0 or D0\n3 = Sleep - Light, corresponding to ACPI state G1, S1/S2, or D1\n4 = Sleep - Deep, corresponding to ACPI state G1, S3, or D2\n6 = Off - Hard, corresponding to ACPI state G3, S5, or D3\n7 = Hibernate (Off - Soft), corresponding to ACPI state S4, where the state of the managed element is preserved and will be recovered upon powering on\n8 = Off - Soft, corresponding to ACPI state G2, S5, or D3\n9 = Power Cycle (Off-Hard), corresponds to the managed element reaching the ACPI state G3 followed by ACPI state S0\n13 = Off - Hard Graceful, equivalent to Off Hard but preceded by a request to the managed element to perform an orderly shutdown",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Power State",
+                "operationId": "getPowerState",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/userConsentCode/:guid": {
+            "get": {
+                "description": "If optInState is 0, it will request for a new user consent code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get User Consent Code",
+                "operationId": "getUserConsentCode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Send the user consent code displayed on the client device.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Send User Consent Code",
+                "operationId": "sendUserConsentCode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/optin.SendOptInCode_OUTPUT"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/userConsentCode/cancel/:guid": {
+            "get": {
+                "description": "Cancel six digit user consent code previously generated on client device",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Cancel User Consent Code",
+                "operationId": "cancelUserConsentCode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/amt/version/:guid": {
+            "get": {
+                "description": "Retrieves hardware version information for Intel® AMT and the current activation state.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Intel® AMT Version",
+                "operationId": "getVersion",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/devices": {
+            "get": {
+                "description": "Show all devices",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Show Devices",
+                "operationId": "getDevices",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.DeviceCountResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add a devices",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Add Devices",
+                "operationId": "insertDevice",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.DeviceCountResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a device",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Remove Devices",
+                "operationId": "deleteDevice",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Edit a devices",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Edit Devices",
+                "operationId": "updateDevice",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Device"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/devices/:guid": {
+            "get": {
+                "description": "Get a device by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Get Device by ID",
+                "operationId": "getDevice",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.DeviceCountResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/devices/stats": {
+            "get": {
+                "description": "Gets number of devices",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Gets Device Count",
+                "operationId": "getStats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.DeviceStatResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/devices/tags": {
+            "get": {
+                "description": "Get Available Distinct Tags in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "devices"
+                ],
+                "summary": "Get Tags",
+                "operationId": "getTags",
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_controller_http_v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/amt/features/:guid": {
+            "get": {
+                "description": "Retrieves the current Intel® AMT Enable/Disable state for User Consent, Redirection, KVM, SOL, and IDE-R.\n\noptInState refers to the current Opt In State if the device has User Consent enabled. Valid values:\n\n0 (Not Started) - No sessions in progress or user consent requested\n1 (Requested) - Request to AMT device for user consent code successful\n2 (Displayed) - AMT device displaying user consent code for 300 seconds (5 minutes) before timeout by default\n3 (Received) - User consent code was entered correctly, a redirection session can be started. Will expire after 120 seconds (2 minutes) and return to State 0 if no active redirection session (State 4)\n4 (In Session) - Active redirection session in progress",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device management"
+                ],
+                "summary": "Get Intel® AMT Features",
+                "operationId": "getFeaturesV2",
+                "responses": {
+                    "200": {
+                        "description": "notpaging",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Features"
+                        }
+                    },
+                    "default": {
+                        "description": "200 application/json",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto_v1.Features"
                         }
                     }
                 }
@@ -107,11 +1479,113 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "entity.CIRAConfig": {
+        "auditlog.AuditLogRecord": {
+            "type": "object",
+            "required": [
+                "AuditApp",
+                "AuditAppId",
+                "Event",
+                "EventId",
+                "Ex",
+                "ExStr",
+                "Initiator",
+                "InitiatorType",
+                "MCLocationType",
+                "NetAddress",
+                "Time"
+            ],
+            "properties": {
+                "AuditApp": {
+                    "type": "string",
+                    "example": "Security Admin"
+                },
+                "AuditAppId": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "Event": {
+                    "type": "string",
+                    "example": "Provisioning Started"
+                },
+                "EventId": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "Ex": {
+                    "type": "string",
+                    "example": ""
+                },
+                "ExStr": {
+                    "type": "string",
+                    "example": "Remote WSAMN"
+                },
+                "Initiator": {
+                    "type": "string",
+                    "example": "Local"
+                },
+                "InitiatorType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "MCLocationType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "NetAddress": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "Time": {
+                    "type": "string",
+                    "example": "2023-04-19T20:38:20.000Z"
+                }
+            }
+        },
+        "encoding_xml.Name": {
             "type": "object",
             "properties": {
-                "authMethod": {
+                "space": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.AuditLog": {
+            "type": "object",
+            "required": [
+                "records",
+                "totalCnt"
+            ],
+            "properties": {
+                "records": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auditlog.AuditLogRecord"
+                    }
+                },
+                "totalCnt": {
                     "type": "integer",
+                    "example": 0
+                }
+            }
+        },
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig": {
+            "type": "object",
+            "required": [
+                "authMethod",
+                "mpsPort",
+                "mpsRootCertificate",
+                "mpsServerAddress",
+                "serverAddressFormat",
+                "username"
+            ],
+            "properties": {
+                "authMethod": {
+                    "description": "1 = Mutal Auth, 2 = Username and Password",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 2
                 },
                 "commonName": {
@@ -124,7 +1598,7 @@ const docTemplate = `{
                 },
                 "mpsPort": {
                     "type": "integer",
-                    "example": 443
+                    "example": 4433
                 },
                 "mpsRootCertificate": {
                     "type": "string",
@@ -147,7 +1621,13 @@ const docTemplate = `{
                     "example": true
                 },
                 "serverAddressFormat": {
+                    "description": "3 = IPV4, 4= IPV6, 201 = FQDN",
                     "type": "integer",
+                    "enum": [
+                        3,
+                        4,
+                        201
+                    ],
                     "example": 201
                 },
                 "tenantId": {
@@ -164,7 +1644,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CertCreationResult": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CertCreationResult": {
             "type": "object",
             "properties": {
                 "cert": {
@@ -197,7 +1677,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.Device": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Device": {
             "type": "object",
             "properties": {
                 "allowSelfSigned": {
@@ -207,7 +1687,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "deviceInfo": {
-                    "$ref": "#/definitions/entity.DeviceInfo"
+                    "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.DeviceInfo"
                 },
                 "dnsSuffix": {
                     "type": "string"
@@ -256,7 +1736,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.DeviceInfo": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.DeviceInfo": {
             "type": "object",
             "properties": {
                 "currentMode": {
@@ -282,12 +1762,23 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.Domain": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain": {
             "type": "object",
+            "required": [
+                "domainSuffix",
+                "profileName",
+                "provisioningCert",
+                "provisioningCertPassword",
+                "provisioningCertStorageFormat"
+            ],
             "properties": {
                 "domainSuffix": {
                     "type": "string",
                     "example": "example.com"
+                },
+                "expirationDate": {
+                    "type": "string",
+                    "example": "2022-01-01T00:00:00Z"
                 },
                 "profileName": {
                     "type": "string",
@@ -299,11 +1790,16 @@ const docTemplate = `{
                 },
                 "provisioningCertPassword": {
                     "type": "string",
+                    "maxLength": 64,
                     "example": "my_password"
                 },
                 "provisioningCertStorageFormat": {
                     "type": "string",
-                    "example": "PKCS12"
+                    "enum": [
+                        "raw",
+                        "string"
+                    ],
+                    "example": "string"
                 },
                 "tenantId": {
                     "type": "string",
@@ -315,48 +1811,110 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.IEEE8021xConfig": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.EventLog": {
             "type": "object",
             "properties": {
-                "activeInS0": {
+                "Desc": {
+                    "type": "string"
+                },
+                "DeviceAddress": {
+                    "type": "integer"
+                },
+                "Entity": {
+                    "type": "string"
+                },
+                "EntityInstance": {
+                    "type": "integer"
+                },
+                "EntityStr": {
+                    "type": "string"
+                },
+                "EventData": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "EventOffset": {
+                    "type": "integer"
+                },
+                "EventSensorType": {
+                    "type": "integer"
+                },
+                "EventSeverity": {
+                    "type": "string"
+                },
+                "EventSourceType": {
+                    "type": "integer"
+                },
+                "EventType": {
+                    "type": "integer"
+                },
+                "SensorNumber": {
+                    "type": "integer"
+                },
+                "Time": {
+                    "type": "string"
+                },
+                "eventTypeDesc": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Features": {
+            "type": "object",
+            "properties": {
+                "enableIDER": {
                     "type": "boolean",
                     "example": true
                 },
+                "enableKVM": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "enableSOL": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "optInState": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "redirection": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "userConsent": {
+                    "type": "string",
+                    "example": "kvm"
+                }
+            }
+        },
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig": {
+            "type": "object",
+            "required": [
+                "profileName",
+                "pxeTimeout"
+            ],
+            "properties": {
                 "authenticationProtocol": {
                     "type": "integer",
                     "example": 1
                 },
-                "domain": {
-                    "type": "string",
-                    "example": "example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "my_password"
-                },
                 "profileName": {
                     "type": "string",
+                    "maxLength": 32,
                     "example": "My Profile"
                 },
                 "pxeTimeout": {
                     "type": "integer",
+                    "maximum": 86400,
+                    "minimum": 0,
                     "example": 60
-                },
-                "roamingIdentity": {
-                    "type": "string",
-                    "example": "my_roaming_identity"
-                },
-                "serverName": {
-                    "type": "string",
-                    "example": "example.com"
                 },
                 "tenantId": {
                     "type": "string",
                     "example": "abc123"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "my_username"
                 },
                 "version": {
                     "type": "string",
@@ -368,15 +1926,24 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.Profile": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile": {
             "type": "object",
+            "required": [
+                "activation",
+                "profileName"
+            ],
             "properties": {
                 "activation": {
                     "type": "string",
+                    "enum": [
+                        "ccmactivate",
+                        "acmactivate"
+                    ],
                     "example": "activate"
                 },
                 "amtPassword": {
                     "type": "string",
+                    "maxLength": 32,
                     "example": "my_password"
                 },
                 "ciraConfigName": {
@@ -384,7 +1951,15 @@ const docTemplate = `{
                     "example": "My CIRA Config"
                 },
                 "ciraConfigObject": {
-                    "$ref": "#/definitions/entity.CIRAConfig"
+                    "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig"
+                },
+                "created_by": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "creationDate": {
+                    "type": "string",
+                    "example": "2021-07-01T00:00:00Z"
                 },
                 "dhcpEnabled": {
                     "type": "boolean",
@@ -402,12 +1977,12 @@ const docTemplate = `{
                     "type": "boolean",
                     "example": true
                 },
+                "ieee8021xProfile": {
+                    "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig"
+                },
                 "ieee8021xProfileName": {
                     "type": "string",
                     "example": "My Profile"
-                },
-                "ieee8021xProfileObject": {
-                    "$ref": "#/definitions/entity.IEEE8021xConfig"
                 },
                 "ipSyncEnabled": {
                     "type": "boolean",
@@ -423,6 +1998,7 @@ const docTemplate = `{
                 },
                 "mebxPassword": {
                     "type": "string",
+                    "maxLength": 32,
                     "example": "my_password"
                 },
                 "profileName": {
@@ -448,18 +2024,25 @@ const docTemplate = `{
                     "example": "abc123"
                 },
                 "tlsCerts": {
-                    "$ref": "#/definitions/entity.TLSCerts"
+                    "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.TLSCerts"
                 },
                 "tlsMode": {
                     "type": "integer",
+                    "maximum": 4,
+                    "minimum": 1,
                     "example": 1
                 },
                 "tlsSigningAuthority": {
                     "type": "string",
+                    "enum": [
+                        "SelfSigned",
+                        "MicrosoftCA"
+                    ],
                     "example": "SelfSigned"
                 },
                 "userConsent": {
                     "type": "string",
+                    "default": "All",
                     "example": "All"
                 },
                 "version": {
@@ -469,21 +2052,27 @@ const docTemplate = `{
                 "wifiConfigs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.ProfileWifiConfigs"
+                        "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.ProfileWiFiConfigs"
                     }
                 }
             }
         },
-        "entity.ProfileWifiConfigs": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.ProfileWiFiConfigs": {
             "type": "object",
             "properties": {
                 "priority": {
                     "type": "integer",
+                    "maximum": 255,
+                    "minimum": 1,
                     "example": 1
                 },
                 "profileName": {
                     "type": "string",
                     "example": "My Profile"
+                },
+                "profileProfileName": {
+                    "type": "string",
+                    "example": "My Wireless Profile"
                 },
                 "tenantId": {
                     "type": "string",
@@ -491,63 +2080,193 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.TLSCerts": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.TLSCerts": {
             "type": "object",
             "properties": {
                 "issuedCertificate": {
-                    "$ref": "#/definitions/entity.CertCreationResult"
+                    "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CertCreationResult"
                 },
                 "rootCertificate": {
-                    "$ref": "#/definitions/entity.CertCreationResult"
+                    "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CertCreationResult"
                 },
                 "version": {
                     "type": "string"
                 }
             }
         },
-        "v1.DeviceCountResponse": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig": {
+            "type": "object",
+            "required": [
+                "authenticationMethod"
+            ],
+            "properties": {
+                "authenticationMethod": {
+                    "type": "integer",
+                    "enum": [
+                        4,
+                        5,
+                        6,
+                        7
+                    ],
+                    "example": 1
+                },
+                "encryptionMethod": {
+                    "type": "integer",
+                    "enum": [
+                        3,
+                        4
+                    ],
+                    "example": 3
+                },
+                "ieee8021xProfileName": {
+                    "type": "string",
+                    "example": "My Profile"
+                },
+                "ieee8021xProfileObject": {
+                    "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig"
+                },
+                "linkPolicy": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "profileName": {
+                    "type": "string",
+                    "example": "My Profile"
+                },
+                "pskPassphrase": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8,
+                    "example": "abc"
+                },
+                "pskValue": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "ssid": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "example": "abc"
+                },
+                "tenantId": {
+                    "type": "string",
+                    "example": "abc123"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfigCountResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Device"
+                        "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig"
                     }
                 },
-                "totalAccount": {
+                "totalCount": {
                     "type": "integer"
                 }
             }
         },
-        "v1.DomainCountResponse": {
+        "github_com_open-amt-cloud-toolkit_console_internal_entity_dto_v1.Features": {
+            "type": "object",
+            "properties": {
+                "IDER": {
+                    "type": "boolean"
+                },
+                "KVM": {
+                    "type": "boolean"
+                },
+                "SOL": {
+                    "type": "boolean"
+                },
+                "optInState": {
+                    "type": "integer"
+                },
+                "redirection": {
+                    "type": "boolean"
+                },
+                "userConsent": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_controller_http_v1.CIRAConfigCountResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Domain"
+                        "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig"
                     }
                 },
-                "totalAccount": {
+                "totalCount": {
                     "type": "integer"
                 }
             }
         },
-        "v1.ProfileCountResponse": {
+        "internal_controller_http_v1.DeviceCountResponse": {
             "type": "object",
             "properties": {
-                "profile": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Profile"
+                        "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Device"
                     }
                 },
-                "totalAccount": {
+                "totalCount": {
                     "type": "integer"
                 }
             }
         },
-        "v1.response": {
+        "internal_controller_http_v1.DeviceStatResponse": {
+            "type": "object",
+            "properties": {
+                "connectedCount": {
+                    "type": "integer"
+                },
+                "disconnectedCount": {
+                    "type": "integer"
+                },
+                "totalCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_controller_http_v1.DomainCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain"
+                    }
+                },
+                "totalCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_controller_http_v1.ProfileCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile"
+                    }
+                },
+                "totalCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_controller_http_v1.response": {
             "type": "object",
             "properties": {
                 "error": {
@@ -555,6 +2274,54 @@ const docTemplate = `{
                     "example": "message"
                 }
             }
+        },
+        "optin.SendOptInCode_OUTPUT": {
+            "type": "object",
+            "properties": {
+                "returnValue": {
+                    "type": "integer"
+                },
+                "xmlname": {
+                    "$ref": "#/definitions/encoding_xml.Name"
+                }
+            }
+        },
+        "power.PowerActionResponse": {
+            "type": "object",
+            "properties": {
+                "returnValue": {
+                    "$ref": "#/definitions/power.ReturnValue"
+                }
+            }
+        },
+        "power.ReturnValue": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                4096,
+                4097,
+                4098,
+                4099
+            ],
+            "x-enum-varnames": [
+                "ReturnValueCompletedWithNoError",
+                "ReturnValueMethodNotSupported",
+                "ReturnValueUnknownError",
+                "ReturnValueCannotCompleteWithinTimeoutPeriod",
+                "ReturnValueFailed",
+                "ReturnValueInvalidParameter",
+                "ReturnValueInUse",
+                "ReturnValueMethodParametersCheckedJobStarted",
+                "ReturnValueInvalidStateTransition",
+                "ReturnValueUseOfTimeoutParameterNotSupported",
+                "ReturnValueBusy"
+            ]
         }
     }
 }`
@@ -562,11 +2329,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "localhost:8181",
 	BasePath:         "/v1",
 	Schemes:          []string{},
-	Title:            "Go Clean Template API",
-	Description:      "Using a translation service as an example",
+	Title:            "Console API for Device Management Toolkit",
+	Description:      "Provides a single pane of glass for managing devices with Intel® Active Management Technology and other device technologies",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

@@ -25,7 +25,7 @@ compose-down: ### Down docker compose
 .PHONY: compose-down
 
 swag-v1: ### swag init
-	swag init -g internal/controller/http/v1/router.go
+	swag init -g internal/controller/http/router.go
 .PHONY: swag-v1
 
 run: ### run app
@@ -88,3 +88,5 @@ migrate-up: ### migration up
 bin-deps:
 	GOBIN=$(LOCAL_BIN) go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest
+  GOBIN=$(LOCAL_BIN) go install github.com/swaggo/swag/cmd/swag@latest
+  
