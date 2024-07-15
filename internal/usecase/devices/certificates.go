@@ -139,9 +139,9 @@ func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.Security
 		return dto.SecuritySettings{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	response, err := uc.device.GetCertificates()
+	response, err := device.GetCertificates()
 	if err != nil {
 		return dto.SecuritySettings{}, err
 	}
