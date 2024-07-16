@@ -59,6 +59,17 @@ func TestGetFeatures(t *testing.T) {
 			expectedCode: http.StatusOK,
 			response:     dto.Features{},
 		},
+		{
+			name:   "getHardwareInfo - successful retrieval",
+			url:    "/api/v2/amt/hardwareInfo/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetVersion(context.Background(), "valid-guid").
+					Return(dto.HardwareInfoResults{}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     dto.HardwareInfoResults{},
+		},
 	}
 
 	for _, tc := range tests {
