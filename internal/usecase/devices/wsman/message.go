@@ -396,15 +396,15 @@ func (g *ConnectionEntry) hardwarePulls() (PullHWResults, error) {
 	return results, nil
 }
 
-func (g *ConnectionEntry) GetHardwareInfo() (interface{}, error) {
+func (g *ConnectionEntry) GetHardwareInfo() (HWResults, error) {
 	getHWResults, err := g.hardwareGets()
 	if err != nil {
-		return nil, err
+		return HWResults{}, err
 	}
 
 	pullHWResults, err := g.hardwarePulls()
 	if err != nil {
-		return nil, err
+		return HWResults{}, err
 	}
 
 	hwResults := HWResults{
@@ -420,8 +420,35 @@ func (g *ConnectionEntry) GetHardwareInfo() (interface{}, error) {
 		ProcessorResult:       getHWResults.ProcessorResult,
 	}
 
-	return createMapInterfaceForHWInfo(hwResults)
+	return hwResults, nil
 }
+
+// func (g *ConnectionEntry) GetHardwareInfo() (interface{}, error) {
+// 	getHWResults, err := g.hardwareGets()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	pullHWResults, err := g.hardwarePulls()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	hwResults := HWResults{
+// 		CSPResult:             getHWResults.CSPResult,
+// 		SPPullResult:          pullHWResults.SPPullResult,
+// 		ChassisResult:         getHWResults.ChassisResult,
+// 		ChipResult:            getHWResults.ChipResult,
+// 		CardResult:            getHWResults.CardResult,
+// 		PhysicalMemoryResult:  pullHWResults.PhysicalMemoryResult,
+// 		MediaAccessPullResult: pullHWResults.MediaAccessPullResult,
+// 		PPPullResult:          pullHWResults.PPPullResult,
+// 		BiosResult:            getHWResults.BiosResult,
+// 		ProcessorResult:       getHWResults.ProcessorResult,
+// 	}
+
+// 	return createMapInterfaceForHWInfo(hwResults)
+// }
 
 type GetHWResults struct {
 	CSPResult       computer.Response
@@ -450,37 +477,37 @@ type HWResults struct {
 	ProcessorResult       processor.Response
 }
 
-func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
-	return map[string]interface{}{
-		"CIM_ComputerSystemPackage": map[string]interface{}{
-			"response":  hwResults.CSPResult.Body.GetResponse,
-			"responses": hwResults.CSPResult.Body.GetResponse,
-		},
-		"CIM_SystemPackaging": map[string]interface{}{
-			"responses": []interface{}{hwResults.SPPullResult.Body.PullResponse.SystemPackageItems},
-		},
-		"CIM_Chassis": map[string]interface{}{
-			"response":  hwResults.ChassisResult.Body.PackageResponse,
-			"responses": []interface{}{},
-		}, "CIM_Chip": map[string]interface{}{
-			"responses": []interface{}{hwResults.ChipResult.Body.PackageResponse},
-		}, "CIM_Card": map[string]interface{}{
-			"response":  hwResults.CardResult.Body.PackageResponse,
-			"responses": []interface{}{},
-		}, "CIM_BIOSElement": map[string]interface{}{
-			"response":  hwResults.BiosResult.Body.GetResponse,
-			"responses": []interface{}{},
-		}, "CIM_Processor": map[string]interface{}{
-			"responses": []interface{}{hwResults.ProcessorResult.Body.PackageResponse},
-		}, "CIM_PhysicalMemory": map[string]interface{}{
-			"responses": hwResults.PhysicalMemoryResult.Body.PullResponse.MemoryItems,
-		}, "CIM_MediaAccessDevice": map[string]interface{}{
-			"responses": []interface{}{hwResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
-		}, "CIM_PhysicalPackage": map[string]interface{}{
-			"responses": []interface{}{hwResults.PPPullResult.Body.PullResponse.PhysicalPackage},
-		},
-	}, nil
-}
+// func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
+// 	return map[string]interface{}{
+// 		"CIM_ComputerSystemPackage": map[string]interface{}{
+// 			"response":  hwResults.CSPResult.Body.GetResponse,
+// 			"responses": hwResults.CSPResult.Body.GetResponse,
+// 		},
+// 		"CIM_SystemPackaging": map[string]interface{}{
+// 			"responses": []interface{}{hwResults.SPPullResult.Body.PullResponse.SystemPackageItems},
+// 		},
+// 		"CIM_Chassis": map[string]interface{}{
+// 			"response":  hwResults.ChassisResult.Body.PackageResponse,
+// 			"responses": []interface{}{},
+// 		}, "CIM_Chip": map[string]interface{}{
+// 			"responses": []interface{}{hwResults.ChipResult.Body.PackageResponse},
+// 		}, "CIM_Card": map[string]interface{}{
+// 			"response":  hwResults.CardResult.Body.PackageResponse,
+// 			"responses": []interface{}{},
+// 		}, "CIM_BIOSElement": map[string]interface{}{
+// 			"response":  hwResults.BiosResult.Body.GetResponse,
+// 			"responses": []interface{}{},
+// 		}, "CIM_Processor": map[string]interface{}{
+// 			"responses": []interface{}{hwResults.ProcessorResult.Body.PackageResponse},
+// 		}, "CIM_PhysicalMemory": map[string]interface{}{
+// 			"responses": hwResults.PhysicalMemoryResult.Body.PullResponse.MemoryItems,
+// 		}, "CIM_MediaAccessDevice": map[string]interface{}{
+// 			"responses": []interface{}{hwResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
+// 		}, "CIM_PhysicalPackage": map[string]interface{}{
+// 			"responses": []interface{}{hwResults.PPPullResult.Body.PullResponse.PhysicalPackage},
+// 		},
+// 	}, nil
+// }
 
 func (g *ConnectionEntry) GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error) {
 	response, err := g.WsmanMessages.CIM.ServiceAvailableToElement.Enumerate()

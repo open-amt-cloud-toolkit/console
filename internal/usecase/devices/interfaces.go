@@ -54,7 +54,7 @@ type (
 		GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)
 		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error)
 		DeleteAlarmOccurrences(ctx context.Context, guid, instanceID string) error
-		GetHardwareInfo(ctx context.Context, guid string) (interface{}, error)
+		GetHardwareInfo(ctx context.Context, guid string) (dto.HardwareInfoResults, error)
 		GetPowerState(ctx context.Context, guid string) (map[string]interface{}, error)
 		GetPowerCapabilities(ctx context.Context, guid string) (map[string]interface{}, error)
 		GetGeneralSettings(ctx context.Context, guid string) (interface{}, error)

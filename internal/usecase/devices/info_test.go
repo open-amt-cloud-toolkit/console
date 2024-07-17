@@ -15,6 +15,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -441,7 +442,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					GetHardwareInfo().
-					Return(gomock.Any(), nil)
+					Return(wsman.HWResults{}, nil)
 			},
 
 			repoMock: func(repo *MockRepository) {
@@ -450,7 +451,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: gomock.Any(),
+			res: dto.HardwareInfoResults{},
 
 			err: nil,
 		},
@@ -468,7 +469,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			res: nil,
+			res: dto.HardwareInfoResults(dto.HardwareInfoResults{ComputerSystemPackage: dto.CIMComputerSystemPackage{PlatformGUID: ""}, SystemPackage: dto.CIMSystemPackage{SystemPackageItems: []dto.SystemPackageItems(nil)}, Chassis: dto.CIMChassis{ChassisItems: []dto.ChassisItems(nil)}, Chip: dto.CIMChip{ChipItems: []dto.ChipItems(nil)}, Card: dto.CIMCard{CardItems: []dto.CardItems(nil)}, BIOSElement: dto.CIMBIOSElement{BiosElementItems: []dto.BiosElement(nil)}, Processor: dto.CIMProcessor{ProcessorItems: []dto.ProcessorItems(nil)}, PhysicalMemory: dto.CIMPhysicalMemory{PhysicalMemoryItems: []dto.PhysicalMemory(nil)}, MediaAccessDevices: dto.CIMMediaAccessDevice{MediaAccessDeviceItems: []dto.MediaAccessDevice(nil)}, PhysicalPackage: dto.CIMPhysicalPackage{MemoryItems: []dto.PhysicalMemory(nil), PhysicalPackage: []dto.CardItems(nil)}}),
 
 			err: devices.ErrDatabase,
 		},
@@ -484,7 +485,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					GetHardwareInfo().
-					Return(nil, ErrGeneral)
+					Return(wsman.HWResults{}, ErrGeneral)
 			},
 
 			repoMock: func(repo *MockRepository) {
@@ -493,7 +494,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: nil,
+			res: dto.HardwareInfoResults{},
 
 			err: ErrGeneral,
 		},
