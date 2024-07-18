@@ -72,6 +72,18 @@ func (mr *MockWSMANMockRecorder) SetupWsmanClient(device, isRedirection, logMess
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockWSMAN)(nil).SetupWsmanClient), device, isRedirection, logMessages)
 }
 
+// Worker mocks base method.
+func (m *MockWSMAN) Worker() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Worker")
+}
+
+// Worker indicates an expected call of Worker.
+func (mr *MockWSMANMockRecorder) Worker() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Worker", reflect.TypeOf((*MockWSMAN)(nil).Worker))
+}
+
 // MockRedirection is a mock of Redirection interface.
 type MockRedirection struct {
 	ctrl     *gomock.Controller

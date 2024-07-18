@@ -46,13 +46,17 @@ var ErrAMT = AMTError{Console: consoleerrors.CreateConsoleError("DevicesUseCase"
 
 // New -.
 func New(r Repository, d WSMAN, redirection Redirection, log logger.Interface) *UseCase {
-	return &UseCase{
+	uc := &UseCase{
 		repo:             r,
 		device:           d,
 		redirection:      redirection,
 		redirConnections: make(map[string]*DeviceConnection),
 		log:              log,
 	}
+	// start up the worker
+	go d.Worker()
+
+	return uc
 }
 
 // convert dto.Device to entity.Device.

@@ -40,7 +40,7 @@ linters-settings:
       - operation
       - return
   govet:
-    check-shadowing: true
+    shadow: true
   misspell:
     locale: US
   nestif:
