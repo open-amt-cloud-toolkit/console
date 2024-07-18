@@ -26,6 +26,8 @@ func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement
 	repo := NewMockRepository(mockCtl)
 
 	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock.EXPECT().Worker().Return().AnyTimes()
+
 	management := NewMockManagement(mockCtl)
 
 	log := logger.New("error")
