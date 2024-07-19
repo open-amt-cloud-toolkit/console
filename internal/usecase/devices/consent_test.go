@@ -25,6 +25,7 @@ func initConsentTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagemen
 	repo := NewMockRepository(mockCtl)
 
 	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
 	management := NewMockManagement(mockCtl)
 

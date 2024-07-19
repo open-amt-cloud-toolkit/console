@@ -55,6 +55,12 @@ func (m *MockClient) Listen() ([]byte, error) {
 	return args.Get(0).([]byte), args.Error(1)
 }
 
+func (m *MockClient) IsAuthenticated() bool {
+	args := m.Called()
+
+	return args.Get(0).(bool)
+}
+
 type wsmanTest struct {
 	name string
 
