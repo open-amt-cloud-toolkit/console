@@ -21,7 +21,7 @@
             "label": "Linux x64 Console Executable"
           },
           {
-            "path": "console_windows_x64.zip",
+            "path": "console_windows_x64.exe",
             "label": "Windows x64 Console Executable"
           },
           {
