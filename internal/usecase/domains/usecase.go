@@ -153,7 +153,6 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 
 	return d2, nil
 }
-
 func DecryptAndCheckCertExpiration(domain dto.Domain) (*x509.Certificate, error) {
 	// Decode the base64 encoded PFX certificate
 	pfxData, err := base64.StdEncoding.DecodeString(domain.ProvisioningCert)
@@ -161,34 +160,18 @@ func DecryptAndCheckCertExpiration(domain dto.Domain) (*x509.Certificate, error)
 		return nil, err
 	}
 
-	// Convert the PFX data to PEM blocks
-	//nolint:staticcheck // AMT certs don't work with pkcs12.Decode (the suggested replacement)
-	pemBlocks, err := pkcs12.ToPEM(pfxData, domain.ProvisioningCertPassword)
-	if err != nil {
-		return nil, ErrCertPassword.Wrap("DecryptAndCheckCertExpiration", "pkcs12.ToPEM", err)
-	}
-
-	var x509Cert *x509.Certificate
-
-	for _, block := range pemBlocks {
-		if block.Type == "CERTIFICATE" {
-			cert, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				return nil, err
-			}
-
-			x509Cert = cert
-
-			break
-		}
+	// Convert the PFX data to x509 cert
+	_, cert, err := pkcs12.Decode(pfxData, domain.ProvisioningCertPassword)
+	if err != nil && cert == nil {
+		return nil, ErrCertPassword.Wrap("DecryptAndCheckCertExpiration", "pkcs12.Decode", err)
 	}
 
 	// Check the expiration date of the certificate
-	if x509Cert.NotAfter.Before(time.Now()) {
+	if cert.NotAfter.Before(time.Now()) {
 		return nil, ErrCertExpiration.Wrap("DecryptAndCheckCertExpiration", "x509Cert.NotAfter.Before", nil)
 	}
 
-	return x509Cert, nil
+	return cert, nil
 }
 
 // convert dto.Domain to entity.Domain.
