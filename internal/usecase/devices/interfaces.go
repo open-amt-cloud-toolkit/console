@@ -16,6 +16,7 @@ type (
 	WSMAN interface {
 		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsmanAPI.Management
 		DestroyWsmanClient(device dto.Device)
+		Worker()
 	}
 
 	Redirection interface {

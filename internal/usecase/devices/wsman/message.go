@@ -56,10 +56,17 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
+const deviceCallBuffer = 100
+
 var (
-	connections   = make(map[string]*ConnectionEntry)
-	connectionsMu sync.Mutex
-	expireAfter   = 5 * time.Minute // Set the expiration duration as needed
+	connections         = make(map[string]*ConnectionEntry)
+	connectionsMu       sync.Mutex
+	waitForAuthTickTime = 1 * time.Second
+	queueTickTime       = 500 * time.Millisecond
+	expireAfter         = 30 * time.Second                    // expire the stored connection after 30 seconds
+	waitForAuth         = 3 * time.Second                     // wait for 3 seconds for the connection to authenticate, prevents multiple api calls trying to auth at the same time
+	requestQueue        = make(chan func(), deviceCallBuffer) // Buffered channel to queue requests
+	shutdownSignal      = make(chan struct{})
 )
 
 type ConnectionEntry struct {
@@ -84,7 +91,30 @@ func (g GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
 	}
 }
 
+func (g GoWSMANMessages) Worker() {
+	for {
+		select {
+		case request := <-requestQueue:
+			request()
+			time.Sleep(queueTickTime)
+		case <-shutdownSignal:
+			return
+		}
+	}
+}
+
 func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) Management {
+	resultChan := make(chan *ConnectionEntry)
+
+	// Queue the request
+	requestQueue <- func() {
+		resultChan <- g.setupWsmanClientInternal(device, isRedirection, logAMTMessages)
+	}
+
+	return <-resultChan
+}
+
+func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
@@ -96,24 +126,55 @@ func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logA
 		IsRedirection:     isRedirection,
 	}
 
-	connectionsMu.Lock()
-	defer connectionsMu.Unlock()
+	timer := time.AfterFunc(expireAfter, func() {
+		removeConnection(device.GUID)
+	})
 
 	if entry, ok := connections[device.GUID]; ok {
-		entry.Timer.Stop() // Stop the previous timer
-		entry.Timer = time.AfterFunc(expireAfter, func() {
-			removeConnection(device.GUID)
-		})
-	} else {
-		wsmanMsgs := wsman.NewMessages(clientParams)
-		timer := time.AfterFunc(expireAfter, func() {
-			removeConnection(device.GUID)
-		})
-		connections[device.GUID] = &ConnectionEntry{
-			WsmanMessages: wsmanMsgs,
-			Timer:         timer,
+		if entry.WsmanMessages.Client.IsAuthenticated() {
+			entry.Timer.Stop() // Stop the previous timer
+			entry.Timer = time.AfterFunc(expireAfter, func() {
+				removeConnection(device.GUID)
+			})
+
+			return connections[device.GUID]
+		}
+
+		ticker := time.NewTicker(waitForAuthTickTime)
+
+		defer ticker.Stop()
+
+		timeout := time.After(waitForAuth)
+
+		for {
+			select {
+			case <-ticker.C:
+				if entry.WsmanMessages.Client.IsAuthenticated() {
+					// Your logic when the function check is successful
+					return connections[device.GUID]
+				}
+			case <-timeout:
+				connectionsMu.Lock()
+				connections[device.GUID] = &ConnectionEntry{
+					WsmanMessages: wsman.NewMessages(clientParams),
+					Timer:         timer,
+				}
+				connectionsMu.Unlock()
+
+				return connections[device.GUID]
+			}
 		}
 	}
+
+	wsmanMsgs := wsman.NewMessages(clientParams)
+
+	connectionsMu.Lock()
+	connections[device.GUID] = &ConnectionEntry{
+		WsmanMessages: wsmanMsgs,
+		Timer:         timer,
+	}
+	connections[device.GUID].WsmanMessages.Client.IsAuthenticated()
+	connectionsMu.Unlock()
 
 	return connections[device.GUID]
 }
@@ -121,7 +182,6 @@ func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logA
 func removeConnection(guid string) {
 	connectionsMu.Lock()
 	defer connectionsMu.Unlock()
-
 	delete(connections, guid)
 }
 

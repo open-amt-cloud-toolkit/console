@@ -31,11 +31,13 @@ func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository, *MockWSMAN) {
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
-	management := NewMockWSMAN(mockCtl)
-	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
-	return u, repo, management
+	log := logger.New("error")
+	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+
+	return u, repo, wsmanMock
 }
 
 func TestGetCount(t *testing.T) {
