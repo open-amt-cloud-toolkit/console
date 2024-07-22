@@ -7,17 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/amtexplorer"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 type deviceManagementRoutes struct {
 	d devices.Feature
+	a amtexplorer.Feature
 	l logger.Interface
 }
 
-func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interface) {
-	r := &deviceManagementRoutes{d, l}
+func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, amt amtexplorer.Feature, l logger.Interface) {
+	r := &deviceManagementRoutes{d, amt, l}
 
 	h := handler.Group("/amt")
 	{
@@ -381,7 +383,7 @@ func (r *deviceManagementRoutes) getNetworkSettings(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/devices [get]
 func (r *deviceManagementRoutes) getCallList(c *gin.Context) {
-	items := r.d.GetExplorerSupportedCalls()
+	items := r.a.GetExplorerSupportedCalls()
 
 	c.JSON(http.StatusOK, items)
 }
@@ -399,7 +401,7 @@ func (r *deviceManagementRoutes) executeCall(c *gin.Context) {
 	guid := c.Param("guid")
 	call := c.Param("call")
 
-	result, err := r.d.ExecuteCall(c.Request.Context(), guid, call, "")
+	result, err := r.a.ExecuteCall(c.Request.Context(), guid, call, "")
 	if err != nil {
 		r.l.Error(err, "http - explorer - v1 - executeCall")
 		ErrorResponse(c, err)

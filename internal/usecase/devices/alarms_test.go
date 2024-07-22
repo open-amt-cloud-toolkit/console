@@ -16,7 +16,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -25,15 +25,16 @@ func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepos
 
 	repo := NewMockRepository(mockCtl)
 
-	management := NewMockManagement(mockCtl)
+	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
-	amt := NewMockAMTExplorer(mockCtl)
+	management := NewMockManagement(mockCtl)
 
 	log := logger.New("error")
 
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), amt, log)
+	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
 
-	return u, management, repo
+	return u, wsmanMock, management, repo
 }
 
 func TestGetAlarmOccurrences(t *testing.T) {
@@ -57,12 +58,11 @@ func TestGetAlarmOccurrences(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, hmm *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
-					Return()
-
-				man.EXPECT().
+					Return(hmm)
+				hmm.EXPECT().
 					GetAlarmOccurrences().
 					Return([]alarmclock.AlarmClockOccurrence{}, nil)
 			},
@@ -99,12 +99,11 @@ func TestGetAlarmOccurrences(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, hmm *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(hmm)
+				hmm.EXPECT().
 					GetAlarmOccurrences().
 					Return([]alarmclock.AlarmClockOccurrence{}, ErrGeneral)
 			},
@@ -125,12 +124,11 @@ func TestGetAlarmOccurrences(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, hmm *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
-					Return()
-
-				man.EXPECT().
+					Return(hmm)
+				hmm.EXPECT().
 					GetAlarmOccurrences().
 					Return(nil, nil)
 			},
@@ -153,10 +151,10 @@ func TestGetAlarmOccurrences(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initAlarmsTest(t)
+			useCase, wsmanMock, management, repo := initAlarmsTest(t)
 
 			if tc.manMock != nil {
-				tc.manMock(management)
+				tc.manMock(wsmanMock, management)
 			}
 
 			tc.repoMock(repo)
@@ -200,7 +198,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 		action int
 
-		manMock func(man *MockManagement)
+		manMock func(man *MockWSMAN, man2 *MockManagement)
 
 		repoMock func(repo *MockRepository)
 
@@ -213,12 +211,11 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					CreateAlarmOccurrences(occ.InstanceID, occ.StartTime, 1, occ.DeleteOnCompletion).
 					Return(amtAlarmClock.AddAlarmOutput{}, nil)
 			},
@@ -255,12 +252,11 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					CreateAlarmOccurrences(occ.InstanceID, occ.StartTime, 1, occ.DeleteOnCompletion).
 					Return(amtAlarmClock.AddAlarmOutput{}, ErrGeneral)
 			},
@@ -283,10 +279,10 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initAlarmsTest(t)
+			useCase, wsmanMock, management, repo := initAlarmsTest(t)
 
 			if tc.manMock != nil {
-				tc.manMock(management)
+				tc.manMock(wsmanMock, management)
 			}
 
 			tc.repoMock(repo)
@@ -319,7 +315,7 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 
 		action int
 
-		manMock func(man *MockManagement)
+		manMock func(man *MockWSMAN, man2 *MockManagement)
 
 		repoMock func(repo *MockRepository)
 
@@ -330,12 +326,11 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					DeleteAlarmOccurrences("").
 					Return(nil)
 			},
@@ -368,12 +363,11 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					DeleteAlarmOccurrences("").
 					Return(ErrGeneral)
 			},
@@ -394,10 +388,10 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initAlarmsTest(t)
+			useCase, wsmanMock, management, repo := initAlarmsTest(t)
 
 			if tc.manMock != nil {
-				tc.manMock(management)
+				tc.manMock(wsmanMock, management)
 			}
 
 			tc.repoMock(repo)

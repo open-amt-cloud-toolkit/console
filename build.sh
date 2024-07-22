@@ -24,6 +24,3 @@ chmod +x console_mac_arm64
 tar cvfpz console_linux_x64.tar.gz console_linux_x64
 tar cvfpz console_mac_x64.tar.gz console_mac_x64
 tar cvfpz console_mac_arm64.tar.gz console_mac_arm64
-
-# Add Windows build to a zip file
-zip console_windows_x64.zip console_windows_x64.exe

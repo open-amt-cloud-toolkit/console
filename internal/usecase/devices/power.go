@@ -19,9 +19,9 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 		return power.PowerActionResponse{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	response, err := uc.device.SendPowerAction(action)
+	response, err := device.SendPowerAction(action)
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
@@ -35,9 +35,9 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	state, err := uc.device.GetPowerState()
+	state, err := device.GetPowerState()
 	if err != nil {
 		return nil, err
 	}
@@ -53,14 +53,14 @@ func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[str
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	version, err := uc.device.GetAMTVersion()
+	version, err := device.GetAMTVersion()
 	if err != nil {
 		return nil, err
 	}
 
-	capabilities, err := uc.device.GetPowerCapabilities()
+	capabilities, err := device.GetPowerCapabilities()
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 		return power.PowerActionResponse{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	newData := boot.BootSettingDataRequest{
 		UseSOL:                 bootSetting.UseSOL,
@@ -149,20 +149,20 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 	// boot on floppy
 	determineIDERBootDevice(bootSetting, &newData)
 	// force boot mode
-	_, err = uc.device.SetBootConfigRole(1)
+	_, err = device.SetBootConfigRole(1)
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
 
 	bootSource := getBootSource(bootSetting)
 	if bootSource != "" {
-		_, err = uc.device.ChangeBootOrder(bootSource)
+		_, err = device.ChangeBootOrder(bootSource)
 		if err != nil {
 			return power.PowerActionResponse{}, err
 		}
 	}
 
-	_, err = uc.device.SetBootData(newData)
+	_, err = device.SetBootData(newData)
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
@@ -171,7 +171,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 	// power on
 	determineBootAction(&bootSetting)
 
-	powerActionResult, err := uc.device.SendPowerAction(bootSetting.Action)
+	powerActionResult, err := device.SendPowerAction(bootSetting.Action)
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}

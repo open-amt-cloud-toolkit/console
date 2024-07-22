@@ -1,4 +1,4 @@
-package devices
+package amtexplorer
 
 import (
 	"context"
@@ -37,14 +37,14 @@ func (uc *UseCase) GetExplorerSupportedCalls() []string {
 }
 
 func (uc *UseCase) ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dto.Explorer, error) {
-	item, err := uc.GetByID(ctx, guid, tenantID)
+	item, err := uc.repo.GetByID(ctx, guid, tenantID)
 	if err != nil {
 		return &dto.Explorer{}, ErrDatabase.Wrap("ExecuteCall", "uc.repo.GetByID", err)
 	}
 
-	uc.amt.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), true)
 	// Get the reflect.Value of the object
-	objValue := reflect.ValueOf(uc.amt)
+	objValue := reflect.ValueOf(device)
 
 	// Get the method by name
 	method := objValue.MethodByName("Get" + call)
