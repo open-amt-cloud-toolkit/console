@@ -66,7 +66,7 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: dotenv-linter/action-dotenv-linter@5c7d44c1ddb097d3ae75f6fbb53caf521b23405c # v2.22.0
+      - uses: dotenv-linter/action-dotenv-linter@9c9a09ba60235ae0b92b2e2ed8f4268ac76d075f # v2.23.0
         with:
           reporter: github-pr-review
 
