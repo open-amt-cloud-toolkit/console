@@ -79,6 +79,8 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package wificonfigs_test -mock_names Repository=MockProfileWiFiConfigsRepository,Feature=MockProfileWiFiConfigsFeature > ./internal/usecase/wificonfigs/profileswificonfigs_mocks_test.go
 	mockgen -source ./internal/usecase/wificonfigs/interfaces.go -package v1 -mock_names Repository=MockWiFiConfigsRepository,Feature=MockWiFiConfigsFeature > ./internal/controller/http/v1/wificonfigs_mocks_test.go
 	mockgen -source ./internal/usecase/profilewificonfigs/interfaces.go -package profilewificonfigs_test > ./internal/usecase/profilewificonfigs/mocks_test.go
+	mockgen -source ./internal/usecase/repository/interfaces.go -package v1 -mock_names Repository=MockRepositoryRepository,WSMAN=MockRepositoryWSMAN > ./internal/controller/http/v1/repository_mocks_test.go
+	mockgen -source ./internal/usecase/repository/interfaces.go -package repository_test > ./internal/usecase/repository/mocks_test.go
 .PHONY: mock
 
 migrate-create:  ### create new migration

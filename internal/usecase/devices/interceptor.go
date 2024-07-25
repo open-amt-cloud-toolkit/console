@@ -34,7 +34,7 @@ type DeviceConnection struct {
 
 func (uc *UseCase) Redirect(c context.Context, conn *websocket.Conn, guid, mode string) error {
 	// grab device info from db
-	device, err := uc.GetByID(c, guid, "")
+	device, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return err
 	}
@@ -45,11 +45,11 @@ func (uc *UseCase) Redirect(c context.Context, conn *websocket.Conn, guid, mode 
 	if _, ok := uc.redirConnections[key]; ok {
 		deviceConnection = uc.redirConnections[key]
 	} else {
-		wsmanConnection := uc.redirection.SetupWsmanClient(*device, true, true)
+		wsmanConnection := uc.redirection.SetupWsmanClient(*uc.entityToDTO(device), true, true)
 		deviceConnection = &DeviceConnection{
 			Conn:          conn,
 			wsmanMessages: wsmanConnection,
-			Device:        *device,
+			Device:        *uc.entityToDTO(device),
 			Direct:        false,
 			Mode:          mode,
 			Challenge: client.AuthChallenge{

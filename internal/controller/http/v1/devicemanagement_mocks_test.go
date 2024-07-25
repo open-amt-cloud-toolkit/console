@@ -14,7 +14,6 @@ import (
 	reflect "reflect"
 
 	websocket "github.com/gorilla/websocket"
-	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
 	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
@@ -178,164 +177,6 @@ func (mr *MockRedirectionMockRecorder) SetupWsmanClient(device, isRedirection, l
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockRedirection)(nil).SetupWsmanClient), device, isRedirection, logMessages)
 }
 
-// MockDeviceManagementRepository is a mock of Repository interface.
-type MockDeviceManagementRepository struct {
-	ctrl     *gomock.Controller
-	recorder *MockDeviceManagementRepositoryMockRecorder
-}
-
-// MockDeviceManagementRepositoryMockRecorder is the mock recorder for MockDeviceManagementRepository.
-type MockDeviceManagementRepositoryMockRecorder struct {
-	mock *MockDeviceManagementRepository
-}
-
-// NewMockDeviceManagementRepository creates a new mock instance.
-func NewMockDeviceManagementRepository(ctrl *gomock.Controller) *MockDeviceManagementRepository {
-	mock := &MockDeviceManagementRepository{ctrl: ctrl}
-	mock.recorder = &MockDeviceManagementRepositoryMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDeviceManagementRepository) EXPECT() *MockDeviceManagementRepositoryMockRecorder {
-	return m.recorder
-}
-
-// Delete mocks base method.
-func (m *MockDeviceManagementRepository) Delete(ctx context.Context, guid, tenantID string) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, guid, tenantID)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Delete indicates an expected call of Delete.
-func (mr *MockDeviceManagementRepositoryMockRecorder) Delete(ctx, guid, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockDeviceManagementRepository)(nil).Delete), ctx, guid, tenantID)
-}
-
-// Get mocks base method.
-func (m *MockDeviceManagementRepository) Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]entity.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Get indicates an expected call of Get.
-func (mr *MockDeviceManagementRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDeviceManagementRepository)(nil).Get), ctx, top, skip, tenantID)
-}
-
-// GetByColumn mocks base method.
-func (m *MockDeviceManagementRepository) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantID)
-	ret0, _ := ret[0].([]entity.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByColumn indicates an expected call of GetByColumn.
-func (mr *MockDeviceManagementRepositoryMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockDeviceManagementRepository)(nil).GetByColumn), ctx, columnName, queryValue, tenantID)
-}
-
-// GetByID mocks base method.
-func (m *MockDeviceManagementRepository) GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(*entity.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByID indicates an expected call of GetByID.
-func (mr *MockDeviceManagementRepositoryMockRecorder) GetByID(ctx, guid, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockDeviceManagementRepository)(nil).GetByID), ctx, guid, tenantID)
-}
-
-// GetByTags mocks base method.
-func (m *MockDeviceManagementRepository) GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByTags", ctx, tags, method, limit, offset, tenantID)
-	ret0, _ := ret[0].([]entity.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByTags indicates an expected call of GetByTags.
-func (mr *MockDeviceManagementRepositoryMockRecorder) GetByTags(ctx, tags, method, limit, offset, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByTags", reflect.TypeOf((*MockDeviceManagementRepository)(nil).GetByTags), ctx, tags, method, limit, offset, tenantID)
-}
-
-// GetCount mocks base method.
-func (m *MockDeviceManagementRepository) GetCount(arg0 context.Context, arg1 string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCount", arg0, arg1)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCount indicates an expected call of GetCount.
-func (mr *MockDeviceManagementRepositoryMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockDeviceManagementRepository)(nil).GetCount), arg0, arg1)
-}
-
-// GetDistinctTags mocks base method.
-func (m *MockDeviceManagementRepository) GetDistinctTags(ctx context.Context, tenantID string) ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDistinctTags", ctx, tenantID)
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetDistinctTags indicates an expected call of GetDistinctTags.
-func (mr *MockDeviceManagementRepositoryMockRecorder) GetDistinctTags(ctx, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDistinctTags", reflect.TypeOf((*MockDeviceManagementRepository)(nil).GetDistinctTags), ctx, tenantID)
-}
-
-// Insert mocks base method.
-func (m *MockDeviceManagementRepository) Insert(ctx context.Context, d *entity.Device) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Insert indicates an expected call of Insert.
-func (mr *MockDeviceManagementRepositoryMockRecorder) Insert(ctx, d any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockDeviceManagementRepository)(nil).Insert), ctx, d)
-}
-
-// Update mocks base method.
-func (m *MockDeviceManagementRepository) Update(ctx context.Context, d *entity.Device) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Update indicates an expected call of Update.
-func (mr *MockDeviceManagementRepositoryMockRecorder) Update(ctx, d any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockDeviceManagementRepository)(nil).Update), ctx, d)
-}
-
 // MockDeviceManagementFeature is a mock of Feature interface.
 type MockDeviceManagementFeature struct {
 	ctrl     *gomock.Controller
@@ -389,20 +230,6 @@ func (mr *MockDeviceManagementFeatureMockRecorder) CreateAlarmOccurrences(ctx, g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAlarmOccurrences", reflect.TypeOf((*MockDeviceManagementFeature)(nil).CreateAlarmOccurrences), ctx, guid, alarm)
 }
 
-// Delete mocks base method.
-func (m *MockDeviceManagementFeature) Delete(ctx context.Context, guid, tenantID string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, guid, tenantID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Delete indicates an expected call of Delete.
-func (mr *MockDeviceManagementFeatureMockRecorder) Delete(ctx, guid, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockDeviceManagementFeature)(nil).Delete), ctx, guid, tenantID)
-}
-
 // DeleteAlarmOccurrences mocks base method.
 func (m *MockDeviceManagementFeature) DeleteAlarmOccurrences(ctx context.Context, guid, instanceID string) error {
 	m.ctrl.T.Helper()
@@ -415,21 +242,6 @@ func (m *MockDeviceManagementFeature) DeleteAlarmOccurrences(ctx context.Context
 func (mr *MockDeviceManagementFeatureMockRecorder) DeleteAlarmOccurrences(ctx, guid, instanceID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAlarmOccurrences", reflect.TypeOf((*MockDeviceManagementFeature)(nil).DeleteAlarmOccurrences), ctx, guid, instanceID)
-}
-
-// Get mocks base method.
-func (m *MockDeviceManagementFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]dto.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Get indicates an expected call of Get.
-func (mr *MockDeviceManagementFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDeviceManagementFeature)(nil).Get), ctx, top, skip, tenantID)
 }
 
 // GetAlarmOccurrences mocks base method.
@@ -462,51 +274,6 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetAuditLog(ctx, startIndex, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuditLog", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetAuditLog), ctx, startIndex, guid)
 }
 
-// GetByColumn mocks base method.
-func (m *MockDeviceManagementFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantID)
-	ret0, _ := ret[0].([]dto.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByColumn indicates an expected call of GetByColumn.
-func (mr *MockDeviceManagementFeatureMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetByColumn), ctx, columnName, queryValue, tenantID)
-}
-
-// GetByID mocks base method.
-func (m *MockDeviceManagementFeature) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(*dto.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByID indicates an expected call of GetByID.
-func (mr *MockDeviceManagementFeatureMockRecorder) GetByID(ctx, guid, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetByID), ctx, guid, tenantID)
-}
-
-// GetByTags mocks base method.
-func (m *MockDeviceManagementFeature) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByTags", ctx, tags, method, limit, offset, tenantID)
-	ret0, _ := ret[0].([]dto.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByTags indicates an expected call of GetByTags.
-func (mr *MockDeviceManagementFeatureMockRecorder) GetByTags(ctx, tags, method, limit, offset, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByTags", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetByTags), ctx, tags, method, limit, offset, tenantID)
-}
-
 // GetCertificates mocks base method.
 func (m *MockDeviceManagementFeature) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
 	m.ctrl.T.Helper()
@@ -520,36 +287,6 @@ func (m *MockDeviceManagementFeature) GetCertificates(c context.Context, guid st
 func (mr *MockDeviceManagementFeatureMockRecorder) GetCertificates(c, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificates", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetCertificates), c, guid)
-}
-
-// GetCount mocks base method.
-func (m *MockDeviceManagementFeature) GetCount(arg0 context.Context, arg1 string) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCount", arg0, arg1)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCount indicates an expected call of GetCount.
-func (mr *MockDeviceManagementFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetCount), arg0, arg1)
-}
-
-// GetDistinctTags mocks base method.
-func (m *MockDeviceManagementFeature) GetDistinctTags(ctx context.Context, tenantID string) ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDistinctTags", ctx, tenantID)
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetDistinctTags indicates an expected call of GetDistinctTags.
-func (mr *MockDeviceManagementFeatureMockRecorder) GetDistinctTags(ctx, tenantID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDistinctTags", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetDistinctTags), ctx, tenantID)
 }
 
 // GetEventLog mocks base method.
@@ -687,21 +424,6 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetVersion(ctx, guid any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetVersion), ctx, guid)
 }
 
-// Insert mocks base method.
-func (m *MockDeviceManagementFeature) Insert(ctx context.Context, d *dto.Device) (*dto.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(*dto.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Insert indicates an expected call of Insert.
-func (mr *MockDeviceManagementFeatureMockRecorder) Insert(ctx, d any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockDeviceManagementFeature)(nil).Insert), ctx, d)
-}
-
 // Redirect mocks base method.
 func (m *MockDeviceManagementFeature) Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error {
 	m.ctrl.T.Helper()
@@ -774,19 +496,4 @@ func (m *MockDeviceManagementFeature) SetFeatures(ctx context.Context, guid stri
 func (mr *MockDeviceManagementFeatureMockRecorder) SetFeatures(ctx, guid, features any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFeatures", reflect.TypeOf((*MockDeviceManagementFeature)(nil).SetFeatures), ctx, guid, features)
-}
-
-// Update mocks base method.
-func (m *MockDeviceManagementFeature) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(*dto.Device)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Update indicates an expected call of Update.
-func (mr *MockDeviceManagementFeatureMockRecorder) Update(ctx, d any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockDeviceManagementFeature)(nil).Update), ctx, d)
 }

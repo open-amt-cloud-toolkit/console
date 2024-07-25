@@ -16,6 +16,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/repository"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -90,7 +91,7 @@ func TestSendPowerAction(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: power.PowerActionResponse{},
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "SendPowerAction fails",
@@ -169,7 +170,7 @@ func TestGetPowerState(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: map[string]interface{}(nil),
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name: "GetPowerState fails",
@@ -259,7 +260,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: map[string]interface{}(nil),
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name: "GetPowerCapabilities fails",
@@ -353,7 +354,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: power.PowerActionResponse{},
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name: "SetBootConfigRole fails",

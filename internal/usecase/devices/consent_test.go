@@ -12,6 +12,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/repository"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -86,7 +87,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			res: nil,
 
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 
 		{
@@ -198,7 +199,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			res: map[string]interface{}(nil),
 
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 
 		{
@@ -302,7 +303,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			res: nil,
 
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 
 		{

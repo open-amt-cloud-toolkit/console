@@ -9,6 +9,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/repository"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -66,7 +67,7 @@ func TestGetNetworkSettings(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetNetworkSettings fails",

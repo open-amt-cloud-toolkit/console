@@ -16,6 +16,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/repository"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -187,7 +188,7 @@ func TestGetCertificates(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: dto.SecuritySettings{},
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetCertificates fails",

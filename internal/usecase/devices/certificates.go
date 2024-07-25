@@ -134,12 +134,12 @@ func processCertificates(contextItems []credential.CredentialContext, response w
 }
 
 func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.SecuritySettings{}, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	response, err := device.GetCertificates()
 	if err != nil {

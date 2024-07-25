@@ -7,12 +7,12 @@ import (
 )
 
 func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	version, err := device.GetAMTVersion()
 	if err != nil {
@@ -37,12 +37,12 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interf
 }
 
 func (uc *UseCase) GetFeatures(c context.Context, guid string) (dto.Features, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.Features{}, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	features, err := device.GetFeatures()
 	if err != nil {
@@ -53,12 +53,12 @@ func (uc *UseCase) GetFeatures(c context.Context, guid string) (dto.Features, er
 }
 
 func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Features) (dto.Features, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return features, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	features, err = device.SetFeatures(features)
 	if err != nil {
@@ -69,12 +69,12 @@ func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Feat
 }
 
 func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	hwInfo, err := device.GetHardwareInfo()
 	if err != nil {
@@ -85,12 +85,12 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 }
 
 func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dto.AuditLog, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.AuditLog{}, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	response, err := device.GetAuditLog(startIndex)
 	if err != nil {
@@ -105,12 +105,12 @@ func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (
 }
 
 func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	eventLogs, err := device.GetEventLog()
 	if err != nil {
@@ -145,12 +145,12 @@ func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, 
 }
 
 func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	generalSettings, err := device.GetGeneralSettings()
 	if err != nil {

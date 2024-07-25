@@ -8,12 +8,12 @@ import (
 )
 
 func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	response, err := device.CancelUserConsentRequest()
 	if err != nil {
@@ -24,12 +24,12 @@ func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{
 }
 
 func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	code, err := device.GetUserConsentCode()
 	if err != nil {
@@ -44,12 +44,12 @@ func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[strin
 }
 
 func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsent, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	consentCode, _ := strconv.Atoi(userConsent.ConsentCode)
 

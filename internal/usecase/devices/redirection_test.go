@@ -11,17 +11,16 @@ import (
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 )
 
-func initRedirectionTest(t *testing.T) (*devices.Redirector, *MockRedirection, *MockRepository) {
+func initRedirectionTest(t *testing.T) (*devices.Redirector, *MockRedirection) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
 	redirect := NewMockRedirection(mockCtl)
 	u := &devices.Redirector{}
 
-	return u, redirect, repo
+	return u, redirect
 }
 
 type redTest struct {
@@ -64,7 +63,7 @@ func TestSetupWsmanClient(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			redirector, redirect, _ := initRedirectionTest(t)
+			redirector, redirect := initRedirectionTest(t)
 
 			tc.redMock(redirect)
 

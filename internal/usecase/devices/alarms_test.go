@@ -13,6 +13,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/repository"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -91,7 +92,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 
 			res: []dto.AlarmClockOccurrence(nil),
 
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 
 		{
@@ -244,7 +245,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 			res: dto.AddAlarmOutput{},
 
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 
 		{
@@ -355,7 +356,7 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 
 		{

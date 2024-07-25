@@ -1,4 +1,4 @@
-package devices_test
+package repository_test
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/repository"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -35,7 +36,7 @@ func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository, *MockWSMAN) {
 	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
 	log := logger.New("error")
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, nil, log)
 
 	return u, repo, wsmanMock
 }
@@ -55,10 +56,10 @@ func TestGetCount(t *testing.T) {
 		{
 			name: "result with error",
 			mock: func(repo *MockRepository, _ *MockWSMAN) {
-				repo.EXPECT().GetCount(context.Background(), "").Return(0, devices.ErrDatabase)
+				repo.EXPECT().GetCount(context.Background(), "").Return(0, repository.ErrDatabase)
 			},
 			res: 0,
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 	}
 
@@ -68,11 +69,11 @@ func TestGetCount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, repo, management := devicesTest(t)
+			_, repo, management := devicesTest(t)
 
 			tc.mock(repo, management)
 
-			res, err := useCase.GetCount(context.Background(), tc.tenantID)
+			res, err := repo.GetCount(context.Background(), tc.tenantID)
 
 			require.Equal(t, tc.res, res)
 			require.IsType(t, tc.err, err)
@@ -129,10 +130,10 @@ func TestGet(t *testing.T) {
 			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
-					Return(nil, devices.ErrDatabase)
+					Return(nil, repository.ErrDatabase)
 			},
 			res: []dto.Device(nil),
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:     "zero results",
@@ -154,11 +155,11 @@ func TestGet(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, repo, management := devicesTest(t)
+			_, repo, management := devicesTest(t)
 
 			tc.mock(repo, management)
 
-			results, err := useCase.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
+			results, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
 
 			require.Equal(t, tc.res, results)
 
@@ -208,7 +209,7 @@ func TestGetByID(t *testing.T) {
 					Return(nil, nil)
 			},
 			res: nil,
-			err: devices.ErrNotFound,
+			err: repository.ErrNotFound,
 		},
 	}
 
@@ -217,11 +218,11 @@ func TestGetByID(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, repo, management := devicesTest(t)
+			_, repo, management := devicesTest(t)
 
 			tc.mock(repo, management)
 
-			got, err := useCase.GetByID(context.Background(), tc.guid, tc.tenantID)
+			got, err := repo.GetByID(context.Background(), tc.guid, tc.tenantID)
 
 			if tc.err != nil {
 				require.Error(t, err)
@@ -258,7 +259,7 @@ func TestDelete(t *testing.T) {
 					Delete(context.Background(), "guid-456", "tenant-id-456").
 					Return(false, nil)
 			},
-			err: devices.ErrNotFound,
+			err: repository.ErrNotFound,
 		},
 	}
 
@@ -267,11 +268,11 @@ func TestDelete(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, repo, management := devicesTest(t)
+			_, repo, management := devicesTest(t)
 
 			tc.mock(repo, management)
 
-			err := useCase.Delete(context.Background(), tc.guid, tc.tenantID)
+			_, err := repo.Delete(context.Background(), tc.guid, tc.tenantID)
 
 			if tc.err != nil {
 				require.Error(t, err)
@@ -321,17 +322,17 @@ func TestUpdate(t *testing.T) {
 					Return(false, nil)
 			},
 			res: (*dto.Device)(nil),
-			err: devices.ErrNotFound,
+			err: repository.ErrNotFound,
 		},
 		{
 			name: "update fails - database error",
 			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Update(context.Background(), device).
-					Return(false, devices.ErrDatabase)
+					Return(false, repository.ErrDatabase)
 			},
 			res: (*dto.Device)(nil),
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 	}
 
@@ -340,11 +341,16 @@ func TestUpdate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, repo, management := devicesTest(t)
+			_, repo, management := devicesTest(t)
 
 			tc.mock(repo, management)
 
-			result, err := useCase.Update(context.Background(), deviceDTO)
+			entityDTO := &entity.Device{
+				GUID:     deviceDTO.GUID,
+				TenantID: deviceDTO.TenantID,
+			}
+
+			result, err := repo.Update(context.Background(), entityDTO)
 
 			require.Equal(t, tc.res, result)
 			require.IsType(t, tc.err, err)
@@ -384,10 +390,10 @@ func TestInsert(t *testing.T) {
 
 				repo.EXPECT().
 					Insert(context.Background(), device).
-					Return("", devices.ErrDatabase)
+					Return("", repository.ErrDatabase)
 			},
 			res: (*dto.Device)(nil),
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 	}
 
@@ -396,7 +402,7 @@ func TestInsert(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, repo, management := devicesTest(t)
+			_, repo, management := devicesTest(t)
 
 			tc.mock(repo, management)
 
@@ -406,7 +412,12 @@ func TestInsert(t *testing.T) {
 				Tags:     []string{""},
 			}
 
-			insertedDevice, err := useCase.Insert(context.Background(), deviceDTO)
+			entityDTO := &entity.Device{
+				GUID:     deviceDTO.GUID,
+				TenantID: deviceDTO.TenantID,
+			}
+
+			insertedDevice, err := repo.Insert(context.Background(), entityDTO)
 
 			if tc.err != nil {
 				require.Error(t, err)
@@ -414,7 +425,7 @@ func TestInsert(t *testing.T) {
 				require.Equal(t, tc.res, insertedDevice)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, deviceDTO.TenantID, insertedDevice.TenantID)
+				require.Equal(t, deviceDTO.TenantID, insertedDevice)
 				require.NotEmpty(t, deviceDTO.GUID)
 			}
 		})

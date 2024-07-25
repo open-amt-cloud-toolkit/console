@@ -1,4 +1,4 @@
-package devices
+package repository
 
 import (
 	"context"

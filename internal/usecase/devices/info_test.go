@@ -15,6 +15,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/repository"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -130,7 +131,7 @@ func TestGetVersion(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: map[string]interface{}(nil),
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetAMTVersion fails",
@@ -235,7 +236,7 @@ func TestGetFeatures(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: dto.Features{},
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -324,7 +325,7 @@ func TestSetFeatures(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: featureSet,
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -406,7 +407,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -489,7 +490,7 @@ func TestGetAuditLog(t *testing.T) {
 				TotalCount: 0,
 				Records:    nil,
 			},
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -569,7 +570,7 @@ func TestGetEventLog(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: []dto.EventLog(nil),
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -649,7 +650,7 @@ func TestGetGeneralSettings(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
-			err: devices.ErrDatabase,
+			err: repository.ErrDatabase,
 		},
 		{
 			name:   "GetFeatures fails",

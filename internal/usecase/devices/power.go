@@ -14,12 +14,12 @@ import (
 )
 
 func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (power.PowerActionResponse, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	response, err := device.SendPowerAction(action)
 	if err != nil {
@@ -30,12 +30,12 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 }
 
 func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	state, err := device.GetPowerState()
 	if err != nil {
@@ -48,12 +48,12 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 }
 
 func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	version, err := device.GetAMTVersion()
 	if err != nil {
@@ -116,12 +116,12 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 }
 
 func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
 
-	device := uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), false, true)
 
 	newData := boot.BootSettingDataRequest{
 		UseSOL:                 bootSetting.UseSOL,

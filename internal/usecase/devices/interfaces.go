@@ -7,7 +7,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
@@ -26,28 +25,28 @@ type (
 		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)
 		RedirectSend(ctx context.Context, deviceConnection *DeviceConnection, message []byte) error
 	}
-	Repository interface {
-		GetCount(context.Context, string) (int, error)
-		Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error)
-		GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error)
-		GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
-		GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error)
-		Delete(ctx context.Context, guid, tenantID string) (bool, error)
-		Update(ctx context.Context, d *entity.Device) (bool, error)
-		Insert(ctx context.Context, d *entity.Device) (string, error)
-		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error)
-	}
+	// Repository interface {
+	// 	GetCount(context.Context, string) (int, error)
+	// 	Get(ctx context.Context, top, skip int, tenantID string) ([]entity.Device, error)
+	// 	GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error)
+	// 	GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
+	// 	GetByTags(ctx context.Context, tags []string, method string, limit, offset int, tenantID string) ([]entity.Device, error)
+	// 	Delete(ctx context.Context, guid, tenantID string) (bool, error)
+	// 	Update(ctx context.Context, d *entity.Device) (bool, error)
+	// 	Insert(ctx context.Context, d *entity.Device) (string, error)
+	// 	GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error)
+	// }
 	Feature interface {
 		// Repository/Database Calls
-		GetCount(context.Context, string) (int, error)
-		Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error)
-		GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error)
-		GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
-		GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error)
-		Delete(ctx context.Context, guid, tenantID string) error
-		Update(ctx context.Context, d *dto.Device) (*dto.Device, error)
-		Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
-		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
+		// GetCount(context.Context, string) (int, error)
+		// Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error)
+		// GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error)
+		// GetDistinctTags(ctx context.Context, tenantID string) ([]string, error)
+		// GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error)
+		// Delete(ctx context.Context, guid, tenantID string) error
+		// Update(ctx context.Context, d *dto.Device) (*dto.Device, error)
+		// Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
+		// GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
 		// Management Calls
 		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
 		GetFeatures(ctx context.Context, guid string) (dto.Features, error)
