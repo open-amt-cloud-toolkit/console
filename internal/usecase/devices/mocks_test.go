@@ -537,6 +537,21 @@ func (mr *MockFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockFeature)(nil).GetCount), arg0, arg1)
 }
 
+// GetDiskInfo mocks base method.
+func (m *MockFeature) GetDiskInfo(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockFeatureMockRecorder) GetDiskInfo(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockFeature)(nil).GetDiskInfo), c, guid)
+}
+
 // GetDistinctTags mocks base method.
 func (m *MockFeature) GetDistinctTags(ctx context.Context, tenantID string) ([]string, error) {
 	m.ctrl.T.Helper()

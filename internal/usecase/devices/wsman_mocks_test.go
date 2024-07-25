@@ -218,6 +218,21 @@ func (mr *MockManagementMockRecorder) GetCredentialRelationships() *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCredentialRelationships", reflect.TypeOf((*MockManagement)(nil).GetCredentialRelationships))
 }
 
+// GetDiskInfo mocks base method.
+func (m *MockManagement) GetDiskInfo() (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo")
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockManagementMockRecorder) GetDiskInfo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockManagement)(nil).GetDiskInfo))
+}
+
 // GetEventLog mocks base method.
 func (m *MockManagement) GetEventLog() (messagelog.GetRecordsResponse, error) {
 	m.ctrl.T.Helper()
