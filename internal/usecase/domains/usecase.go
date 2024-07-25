@@ -153,6 +153,7 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 
 	return d2, nil
 }
+
 func DecryptAndCheckCertExpiration(domain dto.Domain) (*x509.Certificate, error) {
 	// Decode the base64 encoded PFX certificate
 	pfxData, err := base64.StdEncoding.DecodeString(domain.ProvisioningCert)
