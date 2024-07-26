@@ -46,4 +46,5 @@ type Management interface {
 	GetCertificates() (Certificates, error)
 	GetCredentialRelationships() (credential.Items, error)
 	GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
+	GetDiskInfo() (interface{}, error)
 }

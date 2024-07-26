@@ -124,6 +124,17 @@ func TestDeviceManagement(t *testing.T) {
 			response:     map[string]interface{}{"hardware": "info"},
 		},
 		{
+			name:   "getDiskInfo - successful retrieval",
+			url:    "/api/v1/amt/diskInfo/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetDiskInfo(context.Background(), "valid-guid").
+					Return(map[string]interface{}{"disk": "info"}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     map[string]interface{}{"disk": "info"},
+		},
+		{
 			name:   "getPowerState - successful retrieval",
 			url:    "/api/v1/amt/power/state/valid-guid",
 			method: http.MethodGet,

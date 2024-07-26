@@ -289,6 +289,51 @@ func (mr *MockFeatureMockRecorder) GetCertificates(c, guid any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificates", reflect.TypeOf((*MockFeature)(nil).GetCertificates), c, guid)
 }
 
+// GetCount mocks base method.
+func (m *MockFeature) GetCount(arg0 context.Context, arg1 string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCount", arg0, arg1)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCount indicates an expected call of GetCount.
+func (mr *MockFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockFeature)(nil).GetCount), arg0, arg1)
+}
+
+// GetDiskInfo mocks base method.
+func (m *MockFeature) GetDiskInfo(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockFeatureMockRecorder) GetDiskInfo(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockFeature)(nil).GetDiskInfo), c, guid)
+}
+
+// GetDistinctTags mocks base method.
+func (m *MockFeature) GetDistinctTags(ctx context.Context, tenantID string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDistinctTags", ctx, tenantID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDistinctTags indicates an expected call of GetDistinctTags.
+func (mr *MockFeatureMockRecorder) GetDistinctTags(ctx, tenantID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDistinctTags", reflect.TypeOf((*MockFeature)(nil).GetDistinctTags), ctx, tenantID)
+}
+
 // GetEventLog mocks base method.
 func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error) {
 	m.ctrl.T.Helper()
