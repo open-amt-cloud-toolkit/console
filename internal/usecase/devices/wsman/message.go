@@ -405,11 +405,6 @@ func (g *ConnectionEntry) hardwareGets() (GetHWResults, error) {
 
 	var err error
 
-	results.CSPResult, err = g.WsmanMessages.CIM.ComputerSystemPackage.Get()
-	if err != nil {
-		return results, err
-	}
-
 	results.ChassisResult, err = g.WsmanMessages.CIM.Chassis.Get()
 	if err != nil {
 		return results, err
@@ -468,23 +463,18 @@ func (g *ConnectionEntry) GetHardwareInfo() (interface{}, error) {
 	}
 
 	hwResults := HWResults{
-		CSPResult:             getHWResults.CSPResult,
-		SPPullResult:          pullHWResults.SPPullResult,
-		ChassisResult:         getHWResults.ChassisResult,
-		ChipResult:            getHWResults.ChipResult,
-		CardResult:            getHWResults.CardResult,
-		PhysicalMemoryResult:  pullHWResults.PhysicalMemoryResult,
-		MediaAccessPullResult: pullHWResults.MediaAccessPullResult,
-		PPPullResult:          pullHWResults.PPPullResult,
-		BiosResult:            getHWResults.BiosResult,
-		ProcessorResult:       getHWResults.ProcessorResult,
+		ChassisResult:        getHWResults.ChassisResult,
+		ChipResult:           getHWResults.ChipResult,
+		CardResult:           getHWResults.CardResult,
+		PhysicalMemoryResult: pullHWResults.PhysicalMemoryResult,
+		BiosResult:           getHWResults.BiosResult,
+		ProcessorResult:      getHWResults.ProcessorResult,
 	}
 
 	return createMapInterfaceForHWInfo(hwResults)
 }
 
 type GetHWResults struct {
-	CSPResult       computer.Response
 	ChassisResult   chassis.Response
 	ChipResult      chip.Response
 	CardResult      card.Response
@@ -492,33 +482,19 @@ type GetHWResults struct {
 	ProcessorResult processor.Response
 }
 type PullHWResults struct {
-	SPPullResult          system.Response
-	PhysicalMemoryResult  physical.Response
-	MediaAccessPullResult mediaaccess.Response
-	PPPullResult          physical.Response
+	PhysicalMemoryResult physical.Response
 }
 type HWResults struct {
-	CSPResult             computer.Response
-	SPPullResult          system.Response
-	ChassisResult         chassis.Response
-	ChipResult            chip.Response
-	CardResult            card.Response
-	PhysicalMemoryResult  physical.Response
-	MediaAccessPullResult mediaaccess.Response
-	PPPullResult          physical.Response
-	BiosResult            bios.Response
-	ProcessorResult       processor.Response
+	ChassisResult        chassis.Response
+	ChipResult           chip.Response
+	CardResult           card.Response
+	PhysicalMemoryResult physical.Response
+	BiosResult           bios.Response
+	ProcessorResult      processor.Response
 }
 
 func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
 	return map[string]interface{}{
-		"CIM_ComputerSystemPackage": map[string]interface{}{
-			"response":  hwResults.CSPResult.Body.GetResponse,
-			"responses": hwResults.CSPResult.Body.GetResponse,
-		},
-		"CIM_SystemPackaging": map[string]interface{}{
-			"responses": []interface{}{hwResults.SPPullResult.Body.PullResponse.SystemPackageItems},
-		},
 		"CIM_Chassis": map[string]interface{}{
 			"response":  hwResults.ChassisResult.Body.PackageResponse,
 			"responses": []interface{}{},
@@ -534,12 +510,56 @@ func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
 			"responses": []interface{}{hwResults.ProcessorResult.Body.PackageResponse},
 		}, "CIM_PhysicalMemory": map[string]interface{}{
 			"responses": hwResults.PhysicalMemoryResult.Body.PullResponse.MemoryItems,
-		}, "CIM_MediaAccessDevice": map[string]interface{}{
-			"responses": []interface{}{hwResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
-		}, "CIM_PhysicalPackage": map[string]interface{}{
-			"responses": []interface{}{hwResults.PPPullResult.Body.PullResponse.PhysicalPackage},
 		},
 	}, nil
+}
+
+func createMapInterfaceForDiskInfo(diskResults DiskResults) (interface{}, error) {
+	return map[string]interface{}{
+		"CIM_MediaAccessDevice": map[string]interface{}{
+			"responses": []interface{}{diskResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
+		}, "CIM_PhysicalPackage": map[string]interface{}{
+			"responses": []interface{}{diskResults.PPPullResult.Body.PullResponse.PhysicalPackage},
+		},
+	}, nil
+}
+
+type DiskResults struct {
+	MediaAccessPullResult mediaaccess.Response
+	PPPullResult          physical.Response
+}
+
+func (g *ConnectionEntry) GetDiskInfo() (interface{}, error) {
+	results := DiskResults{}
+
+	var err error
+
+	maEnumerateResult, err := g.WsmanMessages.CIM.MediaAccessDevice.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.MediaAccessPullResult, err = g.WsmanMessages.CIM.MediaAccessDevice.Pull(maEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	ppEnumerateResult, err := g.WsmanMessages.CIM.PhysicalPackage.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.PPPullResult, err = g.WsmanMessages.CIM.PhysicalPackage.Pull(ppEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	diskResults := DiskResults{
+		MediaAccessPullResult: results.MediaAccessPullResult,
+		PPPullResult:          results.PPPullResult,
+	}
+
+	return createMapInterfaceForDiskInfo(diskResults)
 }
 
 func (g *ConnectionEntry) GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error) {

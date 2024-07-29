@@ -33,6 +33,7 @@ func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, amt amtexplorer.F
 		h.DELETE("alarmOccurrences/:guid", r.deleteAlarmOccurrences)
 
 		h.GET("hardwareInfo/:guid", r.getHardwareInfo)
+		h.GET("diskInfo/:guid", r.getDiskInfo)
 		h.GET("power/state/:guid", r.getPowerState)
 		h.POST("power/action/:guid", r.powerAction)
 		h.POST("power/bootOptions/:guid", r.setBootOptions)
@@ -66,7 +67,17 @@ func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, version)
+	v1Features := map[string]interface{}{
+		"CIM_SoftwareIdentity": map[string]interface{}{
+			"responses": version.CIMSoftwareIdentity,
+		},
+		"AMT_SetupAndConfigurationService": map[string]interface{}{
+			"response": version.AMTSetupAndConfigurationService,
+		},
+
+	}
+
+	c.JSON(http.StatusOK, v1Features)
 }
 
 func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
@@ -186,6 +197,20 @@ func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, hwInfo)
+}
+
+func (r *deviceManagementRoutes) getDiskInfo(c *gin.Context) {
+	guid := c.Param("guid")
+
+	diskInfo, err := r.d.GetDiskInfo(c.Request.Context(), guid)
+	if err != nil {
+		r.l.Error(err, "http - v1 - getHardwareInfo")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, diskInfo)
 }
 
 func (r *deviceManagementRoutes) getPowerState(c *gin.Context) {
