@@ -27,7 +27,7 @@ func RegisterRoutes(r *gin.Engine, l logger.Interface, t devices.Feature, u Upgr
 func (r *RedirectRoutes) websocketHandler(c *gin.Context) {
 	conn, err := r.u.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
+		http.Error(c.Writer, "Could not open websocket connection", http.StatusInternalServerError)
 
 		return
 	}
@@ -36,9 +36,8 @@ func (r *RedirectRoutes) websocketHandler(c *gin.Context) {
 
 	err = r.d.Redirect(c, conn, c.Query("host"), c.Query("mode"))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Redirect failed"})
-
-		return
+		r.l.Error(err, "http - devices - v1 - redirect")
+		errorResponse(c, http.StatusInternalServerError, "redirect failed")
 	}
 
 	c.Status(http.StatusSwitchingProtocols)

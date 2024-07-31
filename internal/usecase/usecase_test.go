@@ -39,7 +39,7 @@ func TestUsecases(t *testing.T) {
 			},
 			expectedResult: &Usecases{
 				Domains:            domains.New(sqldb.NewDomainRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}),
-				Devices:            devices.New(sqldb.NewDeviceRepo(&db.SQL{}, &MockLogger{}), wsman.NewGoWSMANMessages(), devices.NewRedirector(), wsman.NewGoWSMANMessages(), &MockLogger{}),
+				Devices:            devices.New(sqldb.NewDeviceRepo(&db.SQL{}, &MockLogger{}), wsman.NewGoWSMANMessages(), devices.NewRedirector(), wsman.NewGoWSMANMessages(), &MockLogger{}), //nolint:unused
 				Profiles:           profiles.New(sqldb.NewProfileRepo(&db.SQL{}, &MockLogger{}), wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, &MockLogger{}), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}), &MockLogger{}), profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}), &MockLogger{}),
 				IEEE8021xProfiles:  ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}),
 				CIRAConfigs:        ciraconfigs.New(sqldb.NewCIRARepo(&db.SQL{}, &MockLogger{}), &MockLogger{}),
