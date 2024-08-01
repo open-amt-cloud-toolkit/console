@@ -35,7 +35,7 @@ func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository, *MockWSMAN) {
 	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
 	log := logger.New("error")
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, log)
 
 	return u, repo, wsmanMock
 }

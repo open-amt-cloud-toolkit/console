@@ -1,4 +1,4 @@
-package devices_test
+package redirection_test
 
 import (
 	"testing"

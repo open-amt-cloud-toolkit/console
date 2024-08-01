@@ -9,6 +9,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profilewificonfigs"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/redirection"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
@@ -19,6 +20,7 @@ import (
 type Usecases struct {
 	Devices            devices.Feature
 	Domains            domains.Feature
+	Redirection        redirection.Feature
 	AMTExplorer        amtexplorer.Feature
 	Profiles           profiles.Feature
 	ProfileWiFiConfigs profilewificonfigs.Feature
@@ -34,10 +36,12 @@ func NewUseCases(database *db.SQL, log logger.Interface) *Usecases {
 	wificonfig := wificonfigs.New(sqldb.NewWirelessRepo(database, log), ieee, log)
 	wsman1 := wsman.NewGoWSMANMessages(log)
 	wsman2 := amtexplorer.NewGoWSMANMessages(log)
+	wsman3 := redirection.NewGoWSMANMessages(log)
 
 	return &Usecases{
 		Domains:            domains.New(sqldb.NewDomainRepo(database, log), log),
-		Devices:            devices.New(sqldb.NewDeviceRepo(database, log), wsman1, devices.NewRedirector(), log),
+		Devices:            devices.New(sqldb.NewDeviceRepo(database, log), wsman1, log),
+		Redirection:        redirection.New(sqldb.NewDeviceRepo(database, log), wsman3, log),
 		AMTExplorer:        amtexplorer.New(sqldb.NewDeviceRepo(database, log), wsman2, log),
 		Profiles:           profiles.New(sqldb.NewProfileRepo(database, log), wificonfig, pwc, ieee, log),
 		IEEE8021xProfiles:  ieee,

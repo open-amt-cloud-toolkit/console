@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/gorilla/websocket"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
@@ -17,14 +16,6 @@ type (
 		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsmanAPI.Management
 		DestroyWsmanClient(device dto.Device)
 		Worker()
-	}
-
-	Redirection interface {
-		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman.Messages
-		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error
-		RedirectClose(ctx context.Context, deviceConnection *DeviceConnection) error
-		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)
-		RedirectSend(ctx context.Context, deviceConnection *DeviceConnection, message []byte) error
 	}
 	Repository interface {
 		GetCount(context.Context, string) (int, error)

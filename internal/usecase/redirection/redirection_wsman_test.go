@@ -1,4 +1,4 @@
-package devices
+package redirection
 
 import (
 	"context"

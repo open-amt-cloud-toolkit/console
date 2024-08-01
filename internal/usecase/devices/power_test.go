@@ -43,7 +43,7 @@ func initPowerTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement,
 
 	managementMock := NewMockManagement(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, log)
 
 	return u, wsmanMock, managementMock, repo
 }

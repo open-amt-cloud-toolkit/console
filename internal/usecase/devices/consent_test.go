@@ -31,7 +31,7 @@ func initConsentTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagemen
 
 	log := logger.New("error")
 
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, log)
 
 	return u, wsmanMock, management, repo
 }

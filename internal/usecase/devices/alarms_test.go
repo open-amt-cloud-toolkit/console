@@ -32,7 +32,7 @@ func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement
 
 	log := logger.New("error")
 
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, log)
 
 	return u, wsmanMock, management, repo
 }
