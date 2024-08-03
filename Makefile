@@ -69,6 +69,7 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/devices/wsman/interfaces.go -package devices_test > ./internal/usecase/devices/wsman_mocks_test.go
 	mockgen -source ./internal/usecase/domains/interfaces.go -package domains_test > ./internal/usecase/domains/mocks_test.go
 	mockgen -source ./internal/usecase/domains/interfaces.go -package v1 -mock_names Repository=MockDomainsRepository,Feature=MockDomainsFeature > ./internal/controller/http/v1/domains_mocks_test.go
+	mockgen -source ./internal/controller/ws/v1/interface.go -package v1 > ./internal/controller/ws/v1/mocks_test.go
 	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package ieee8021xconfigs_test > ./internal/usecase/ieee8021xconfigs/mocks_test.go
 	mockgen -source ./internal/usecase/ieee8021xconfigs/interfaces.go -package v1 -mock_names Repository=MockIEEE8021xConfigsRepository,Feature=MockIEEE8021xConfigsFeature > ./internal/controller/http/v1/ieee8021xconfigs_mocks_test.go
 	mockgen -source ./internal/usecase/profiles/interfaces.go -package v1 -mock_names Repository=MockProfilesRepository,Feature=MockProfilesFeature > ./internal/controller/http/v1/profiles_mocks_test.go
