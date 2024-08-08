@@ -1749,3 +1749,17 @@ func (g *ConnectionEntry) GetCertificates() (Certificates, error) {
 
 	return certificates, nil
 }
+
+func (g *ConnectionEntry) GetTLSSettingData() ([]tls.SettingDataResponse, error) {
+	tlsSettingDataEnumResp, err := g.WsmanMessages.AMT.TLSSettingData.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	tlsSettingDataResponse, err := g.WsmanMessages.AMT.TLSSettingData.Pull(tlsSettingDataEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+
+	return tlsSettingDataResponse.Body.PullResponse.SettingDataItems, nil
+}

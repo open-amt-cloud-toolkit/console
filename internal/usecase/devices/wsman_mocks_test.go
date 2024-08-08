@@ -20,6 +20,7 @@ import (
 	boot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	setupandconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+	tls "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 	boot0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	concrete "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	credential "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
@@ -351,6 +352,21 @@ func (m *MockManagement) GetSetupAndConfiguration() ([]setupandconfiguration.Set
 func (mr *MockManagementMockRecorder) GetSetupAndConfiguration() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSetupAndConfiguration", reflect.TypeOf((*MockManagement)(nil).GetSetupAndConfiguration))
+}
+
+// GetTLSSettingData mocks base method.
+func (m *MockManagement) GetTLSSettingData() ([]tls.SettingDataResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTLSSettingData")
+	ret0, _ := ret[0].([]tls.SettingDataResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTLSSettingData indicates an expected call of GetTLSSettingData.
+func (mr *MockManagementMockRecorder) GetTLSSettingData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTLSSettingData", reflect.TypeOf((*MockManagement)(nil).GetTLSSettingData))
 }
 
 // GetUserConsentCode mocks base method.
