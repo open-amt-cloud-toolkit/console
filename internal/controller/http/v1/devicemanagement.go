@@ -67,7 +67,17 @@ func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, version)
+	v1Features := map[string]interface{}{
+		"CIM_SoftwareIdentity": map[string]interface{}{
+			"responses": version.CIMSoftwareIdentity,
+		},
+		"AMT_SetupAndConfigurationService": map[string]interface{}{
+			"response": version.AMTSetupAndConfigurationService,
+		},
+
+	}
+
+	c.JSON(http.StatusOK, v1Features)
 }
 
 func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {

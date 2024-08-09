@@ -3,34 +3,49 @@ package devices
 import (
 	"context"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
+
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 )
 
-func (uc *UseCase) GetVersion(c context.Context, guid string) (map[string]interface{}, error) {
+func (uc *UseCase) GetVersion(c context.Context, guid string) (dto.Version, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.Version{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	version, err := device.GetAMTVersion()
+	softwareIdentity, err := device.GetAMTVersion()
 	if err != nil {
-		return nil, err
+		return dto.Version{}, err
 	}
 
 	data, err := device.GetSetupAndConfiguration()
 	if err != nil {
-		return nil, err
+		return dto.Version{}, err
 	}
 
-	response := map[string]interface{}{
-		"CIM_SoftwareIdentity": map[string]interface{}{
-			"responses": version,
-		},
-		"AMT_SetupAndConfigurationService": map[string]interface{}{
-			"response": data[0],
-		},
+	// iterate over the data and convert each entity to dto
+	d1 := make([]dto.SoftwareIdentity, len(softwareIdentity))
+
+	for i := range softwareIdentity {
+		tmpEntity := softwareIdentity[i] // create a new variable to avoid memory aliasing
+		d1[i] = *uc.softwareIdentityEntityToDTO(&tmpEntity)
+	}
+
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dto.SetupAndConfigurationServiceResponse, len(data))
+
+	for i := range data {
+		tmpEntity := data[i] // create a new variable to avoid memory aliasing
+		d2[i] = *uc.setupAndConfigurationServiceResponseEntityToDTO(&tmpEntity)
+	}
+
+	response := dto.Version{
+		CIMSoftwareIdentity:             d1,
+		AMTSetupAndConfigurationService: d2[0],
 	}
 
 	return response, nil
@@ -178,4 +193,36 @@ func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface
 	}
 
 	return response, nil
+}
+
+func (uc *UseCase) softwareIdentityEntityToDTO(d *software.SoftwareIdentity) *dto.SoftwareIdentity {
+	d1 := &dto.SoftwareIdentity{
+		InstanceID:    d.InstanceID,
+		VersionString: d.VersionString,
+		IsEntity:      d.IsEntity,
+	}
+
+	return d1
+}
+
+func (uc *UseCase) setupAndConfigurationServiceResponseEntityToDTO(d *setupandconfiguration.SetupAndConfigurationServiceResponse) *dto.SetupAndConfigurationServiceResponse {
+	d1 := &dto.SetupAndConfigurationServiceResponse{
+		RequestedState:                d.RequestedState,
+		EnabledState:                  d.EnabledState,
+		ElementName:                   d.ElementName,
+		SystemCreationClassName:       d.SystemCreationClassName,
+		SystemName:                    d.SystemName,
+		CreationClassName:             d.CreationClassName,
+		Name:                          d.Name,
+		ProvisioningMode:              d.ProvisioningMode,
+		ProvisioningState:             d.ProvisioningState,
+		ZeroTouchConfigurationEnabled: d.ZeroTouchConfigurationEnabled,
+		ProvisioningServerOTP:         d.ProvisioningServerOTP,
+		ConfigurationServerFQDN:       d.ConfigurationServerFQDN,
+		PasswordModel:                 d.PasswordModel,
+		DhcpDNSSuffix:                 d.DhcpDNSSuffix,
+		TrustedDNSSuffix:              d.TrustedDNSSuffix,
+	}
+
+	return d1
 }

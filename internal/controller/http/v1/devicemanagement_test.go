@@ -58,10 +58,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetVersion(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"version": "1.0.0"}, nil)
+					Return(dto.Version{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"version": "1.0.0"},
+			response:     dto.Version{},
 		},
 		{
 			name:   "getFeatures - successful retrieval",

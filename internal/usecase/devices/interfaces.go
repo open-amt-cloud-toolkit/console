@@ -49,7 +49,7 @@ type (
 		Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
 		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
 		// Management Calls
-		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
+		GetVersion(ctx context.Context, guid string) (dto.Version, error)
 		GetFeatures(ctx context.Context, guid string) (dto.Features, error)
 		SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error)
 		GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)
