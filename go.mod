@@ -20,7 +20,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	go.uber.org/mock v0.4.0
-	modernc.org/sqlite v1.31.1
+	modernc.org/sqlite v1.32.0
 	software.sslmate.com/src/go-pkcs12 v0.4.0
 )
 
