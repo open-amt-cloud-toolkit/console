@@ -672,6 +672,21 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetPowerState(ctx, guid any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPowerState", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetPowerState), ctx, guid)
 }
 
+// GetTLSSettingData mocks base method.
+func (m *MockDeviceManagementFeature) GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTLSSettingData", c, guid)
+	ret0, _ := ret[0].([]dto.SettingDataResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTLSSettingData indicates an expected call of GetTLSSettingData.
+func (mr *MockDeviceManagementFeatureMockRecorder) GetTLSSettingData(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTLSSettingData", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetTLSSettingData), c, guid)
+}
+
 // GetUserConsentCode mocks base method.
 func (m *MockDeviceManagementFeature) GetUserConsentCode(ctx context.Context, guid string) (map[string]any, error) {
 	m.ctrl.T.Helper()
