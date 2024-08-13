@@ -294,10 +294,10 @@ func (mr *MockManagementMockRecorder) GetHardwareInfo() *gomock.Call {
 }
 
 // GetNetworkSettings mocks base method.
-func (m *MockManagement) GetNetworkSettings() (any, error) {
+func (m *MockManagement) GetNetworkSettings() (wsman.NetworkResults, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetworkSettings")
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(wsman.NetworkResults)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

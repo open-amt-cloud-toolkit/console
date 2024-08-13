@@ -977,31 +977,31 @@ func (g *ConnectionEntry) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Respo
 	return response, nil
 }
 
-func (g *ConnectionEntry) GetNetworkSettings() (interface{}, error) {
+func (g *ConnectionEntry) GetNetworkSettings() (NetworkResults, error) {
 	networkResults := NetworkResults{}
 
 	var err error
 
 	networkResults.EthernetPortSettingsResult, err = g.GetEthernetPortSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	response, err := g.GetIPSIEEE8021xSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
 
 	networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	cimResponse, err := g.GetCIMIEEE8021xSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse

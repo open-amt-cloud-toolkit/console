@@ -628,10 +628,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetHardwareInfo(ctx, guid any
 }
 
 // GetNetworkSettings mocks base method.
-func (m *MockDeviceManagementFeature) GetNetworkSettings(c context.Context, guid string) (any, error) {
+func (m *MockDeviceManagementFeature) GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetworkSettings", c, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.NetworkSettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
