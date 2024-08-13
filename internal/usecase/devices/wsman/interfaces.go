@@ -42,7 +42,7 @@ type Management interface {
 	ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error)
 	GetAuditLog(startIndex int) (auditlog.Response, error)
 	GetEventLog() (messagelog.GetRecordsResponse, error)
-	GetNetworkSettings() (interface{}, error)
+	GetNetworkSettings() (NetworkResults, error)
 	GetCertificates() (Certificates, error)
 	GetCredentialRelationships() (credential.Items, error)
 	GetConcreteDependencies() ([]concrete.ConcreteDependency, error)

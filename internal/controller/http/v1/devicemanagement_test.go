@@ -202,10 +202,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetNetworkSettings(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"": ""}, nil)
+					Return(dto.NetworkSettings{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"": ""},
+			response:     dto.NetworkSettings{},
 		},
 		{
 			name:   "getCertificates - successful retrieval",
