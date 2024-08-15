@@ -159,10 +159,10 @@ func (mr *MockManagementMockRecorder) GetAuditLog(startIndex any) *gomock.Call {
 }
 
 // GetBootData mocks base method.
-func (m *MockManagement) GetBootData() (boot.BootCapabilitiesResponse, error) {
+func (m *MockManagement) GetBootData() (boot.BootSettingDataResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBootData")
-	ret0, _ := ret[0].(boot.BootCapabilitiesResponse)
+	ret0, _ := ret[0].(boot.BootSettingDataResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

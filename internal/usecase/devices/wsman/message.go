@@ -621,13 +621,13 @@ func (g *ConnectionEntry) SendConsentCode(code int) (interface{}, error) {
 	return response.Body.SendOptInCodeResponse, nil
 }
 
-func (g *ConnectionEntry) GetBootData() (boot.BootCapabilitiesResponse, error) {
+func (g *ConnectionEntry) GetBootData() (boot.BootSettingDataResponse, error) {
 	bootSettingData, err := g.WsmanMessages.AMT.BootSettingData.Get()
 	if err != nil {
-		return boot.BootCapabilitiesResponse{}, err
+		return boot.BootSettingDataResponse{}, err
 	}
 
-	return bootSettingData.Body.BootCapabilitiesGetResponse, nil
+	return bootSettingData.Body.BootSettingDataGetResponse, nil
 }
 
 func (g *ConnectionEntry) SetBootData(data boot.BootSettingDataRequest) (interface{}, error) {

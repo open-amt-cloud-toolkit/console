@@ -304,6 +304,41 @@ func TestGetPowerCapabilities(t *testing.T) {
 func TestSetBootOptions(t *testing.T) {
 	t.Parallel()
 
+	bootResponse := boot.BootSettingDataResponse{
+		BIOSLastStatus:           []int{2, 0},
+		BIOSPause:                false,
+		BIOSSetup:                false,
+		BootMediaIndex:           0,
+		BootguardStatus:          127,
+		ConfigurationDataReset:   false,
+		ElementName:              "Intel(r) AMT Boot Configuration Settings",
+		EnforceSecureBoot:        false,
+		FirmwareVerbosity:        0,
+		ForcedProgressEvents:     false,
+		IDERBootDevice:           0,
+		InstanceID:               "Intel(r) AMT:BootSettingData 0",
+		LockKeyboard:             false,
+		LockPowerButton:          false,
+		LockResetButton:          false,
+		LockSleepButton:          false,
+		OptionsCleared:           true,
+		OwningEntity:             "Intel(r) AMT",
+		PlatformErase:            false,
+		RPEEnabled:               false,
+		RSEPassword:              "",
+		ReflashBIOS:              false,
+		SecureBootControlEnabled: false,
+		SecureErase:              false,
+		UEFIHTTPSBootEnabled:     false,
+		UEFILocalPBABootEnabled:  false,
+		UefiBootNumberOfParams:   0,
+		UseIDER:                  false,
+		UseSOL:                   false,
+		UseSafeMode:              false,
+		UserPasswordBypass:       false,
+		WinREBootEnabled:         false,
+	}
+
 	device := &entity.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
@@ -323,6 +358,9 @@ func TestSetBootOptions(t *testing.T) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(hmm)
+				hmm.EXPECT().
+					GetBootData().
+					Return(bootResponse, nil)
 				hmm.EXPECT().
 					SetBootConfigRole(1).
 					Return(powerActionRes, nil)
@@ -356,11 +394,32 @@ func TestSetBootOptions(t *testing.T) {
 			err: devices.ErrDatabase,
 		},
 		{
+			name: "GetBootData fails",
+			manMock: func(man *MockWSMAN, hmm *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return(hmm)
+				hmm.EXPECT().
+					GetBootData().
+					Return(boot.BootSettingDataResponse{}, ErrGeneral)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(context.Background(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: power.PowerActionResponse{},
+			err: ErrGeneral,
+		},
+		{
 			name: "SetBootConfigRole fails",
 			manMock: func(man *MockWSMAN, hmm *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(hmm)
+				hmm.EXPECT().
+					GetBootData().
+					Return(bootResponse, nil)
 				hmm.EXPECT().
 					SetBootConfigRole(1).
 					Return(powerActionRes, ErrGeneral)
@@ -379,6 +438,9 @@ func TestSetBootOptions(t *testing.T) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(hmm)
+				hmm.EXPECT().
+					GetBootData().
+					Return(bootResponse, nil)
 				hmm.EXPECT().
 					SetBootConfigRole(1).
 					Return(powerActionRes, nil)
@@ -400,6 +462,9 @@ func TestSetBootOptions(t *testing.T) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(hmm)
+				hmm.EXPECT().
+					GetBootData().
+					Return(bootResponse, nil)
 				hmm.EXPECT().
 					SetBootConfigRole(1).
 					Return(powerActionRes, nil)
@@ -424,6 +489,9 @@ func TestSetBootOptions(t *testing.T) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(hmm)
+				hmm.EXPECT().
+					GetBootData().
+					Return(bootResponse, nil)
 				hmm.EXPECT().
 					SetBootConfigRole(1).
 					Return(powerActionRes, nil)
