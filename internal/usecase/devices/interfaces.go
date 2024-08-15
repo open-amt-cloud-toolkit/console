@@ -69,6 +69,7 @@ type (
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
 		GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error)
 		GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error)
+		GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error)
 		GetDiskInfo(c context.Context, guid string) (interface{}, error)
 	}
 )
