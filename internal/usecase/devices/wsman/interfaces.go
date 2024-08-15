@@ -36,7 +36,7 @@ type Management interface {
 	GetUserConsentCode() (optin.StartOptIn_OUTPUT, error)
 	SendConsentCode(code int) (interface{}, error)
 	SendPowerAction(action int) (power.PowerActionResponse, error)
-	GetBootData() (boot.BootCapabilitiesResponse, error)
+	GetBootData() (boot.BootSettingDataResponse, error)
 	SetBootData(data boot.BootSettingDataRequest) (interface{}, error)
 	SetBootConfigRole(role int) (interface{}, error)
 	ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error)

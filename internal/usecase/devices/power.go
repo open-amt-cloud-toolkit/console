@@ -123,26 +123,35 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
+	bootData, err := device.GetBootData()
+	if err != nil {
+		return power.PowerActionResponse{}, err
+	}
+
 	newData := boot.BootSettingDataRequest{
-		UseSOL:                 bootSetting.UseSOL,
-		UseSafeMode:            false,
-		ReflashBIOS:            false,
-		BIOSSetup:              bootSetting.Action < 104,
+		BIOSLastStatus:         bootData.BIOSLastStatus,
 		BIOSPause:              false,
+		BIOSSetup:              bootSetting.Action < 104,
+		BootMediaIndex:         0,
+		BootguardStatus:        bootData.BootguardStatus,
+		ConfigurationDataReset: false,
+		ElementName:            bootData.ElementName,
+		EnforceSecureBoot:      bootData.EnforceSecureBoot,
+		FirmwareVerbosity:      0,
+		ForcedProgressEvents:   false,
+		InstanceID:             bootData.InstanceID,
+		LockKeyboard:           false,
 		LockPowerButton:        false,
 		LockResetButton:        false,
-		LockKeyboard:           false,
 		LockSleepButton:        false,
+		OptionsCleared:         true,
+		OwningEntity:           bootData.OwningEntity,
+		ReflashBIOS:            false,
+		UseIDER:                bootSetting.Action > 199 && bootSetting.Action < 300,
+		UseSOL:                 bootSetting.UseSOL,
+		UseSafeMode:            false,
 		UserPasswordBypass:     false,
-		ForcedProgressEvents:   false,
-		FirmwareVerbosity:      0,
-		ConfigurationDataReset: false,
-		UseIDER:                bootSetting.Action > 199 || bootSetting.Action < 300,
-		EnforceSecureBoot:      false,
-		BootMediaIndex:         0,
 		SecureErase:            false,
-		RPEEnabled:             false,
-		PlatformErase:          false,
 	}
 
 	// boot on ider
