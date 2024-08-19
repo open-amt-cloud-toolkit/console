@@ -229,6 +229,28 @@ func TestDeviceManagement(t *testing.T) {
 			expectedCode: http.StatusInternalServerError,
 			response:     dto.SecuritySettings{},
 		},
+		{
+			name:   "getTLSsettingData - successful retrieval",
+			url:    "/api/v1/amt/tls/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
+					Return([]dto.SettingDataResponse{}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     []dto.SettingDataResponse{},
+		},
+		{
+			name:   "getTLSsettingData - failed retrieval",
+			url:    "/api/v1/amt/tls/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
+					Return([]dto.SettingDataResponse{}, ErrGeneral)
+			},
+			expectedCode: http.StatusInternalServerError,
+			response:     []dto.SettingDataResponse{},
+		},
 	}
 
 	for _, tc := range tests {
