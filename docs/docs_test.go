@@ -11,7 +11,7 @@ func TestSwaggerInfoInitialization(t *testing.T) {
 	// Assert that the SwaggerInfo is registered correctly
 	spec := swag.GetSwagger(SwaggerInfo.InstanceName())
 
-	//assert.True(t, ok, "SwaggerInfo should be registered")
+	// assert.True(t, ok, "SwaggerInfo should be registered")
 	assert.Equal(t, SwaggerInfo, spec, "SwaggerInfo should match the registered spec")
 
 	// Assert specific fields
