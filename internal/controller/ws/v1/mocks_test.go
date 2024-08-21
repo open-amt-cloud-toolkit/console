@@ -297,6 +297,21 @@ func (mr *MockFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockFeature)(nil).GetCount), arg0, arg1)
 }
 
+// GetDeviceCertificate mocks base method.
+func (m *MockFeature) GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCertificate", c, guid)
+	ret0, _ := ret[0].(dto.Certificate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceCertificate indicates an expected call of GetDeviceCertificate.
+func (mr *MockFeatureMockRecorder) GetDeviceCertificate(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCertificate", reflect.TypeOf((*MockFeature)(nil).GetDeviceCertificate), c, guid)
+}
+
 // GetDiskInfo mocks base method.
 func (m *MockFeature) GetDiskInfo(c context.Context, guid string) (any, error) {
 	m.ctrl.T.Helper()

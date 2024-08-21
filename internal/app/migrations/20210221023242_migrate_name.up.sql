@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS devices
     password TEXT,
     usetls BOOLEAN NOT NULL,
     allowselfsigned BOOLEAN NOT NULL,
+    certhash TEXT,
     PRIMARY KEY (guid, tenantid),
     UNIQUE (guid)
 );

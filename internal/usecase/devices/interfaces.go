@@ -71,5 +71,6 @@ type (
 		GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error)
 		GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error)
 		GetDiskInfo(c context.Context, guid string) (interface{}, error)
+		GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error)
 	}
 )

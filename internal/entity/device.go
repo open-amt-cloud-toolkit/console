@@ -20,6 +20,7 @@ type Device struct {
 	Password         string
 	UseTLS           bool
 	AllowSelfSigned  bool
+	CertHash         *string
 }
 
 type Explorer struct {
