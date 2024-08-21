@@ -26,6 +26,9 @@ func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Inter
 		h.GET("", r.get)
 		h.GET("stats", r.getStats)
 		h.GET("redirectstatus/:guid", r.redirectStatus)
+		h.GET("cert/:guid", r.getDeviceCertificate)
+		h.POST("cert/:guid", r.pinDeviceCertificate)
+		h.DELETE("cert/:guid", r.deleteDeviceCertificate)
 		h.GET(":guid", r.getByID)
 		h.GET("tags", r.getTags)
 		h.POST("", r.insert)
@@ -292,4 +295,124 @@ func (dr *deviceRoutes) getTags(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, tags)
+}
+
+// @Summary     Get Device Certificate
+// @Description Get Device Certificate
+// @ID          getDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [get]
+func (dr *deviceRoutes) getDeviceCertificate(c *gin.Context) {
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - cert")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	cert, err := dr.t.GetDeviceCertificate(c.Request.Context(), item.GUID)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - cert")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	cert.GUID = item.GUID
+
+	c.JSON(http.StatusOK, cert)
+}
+
+// @Summary     Pin Device Certificate
+// @Description Pins Device Certificate
+// @ID          pinDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [post]
+func (dr *deviceRoutes) pinDeviceCertificate(c *gin.Context) {
+	var certToPin dto.PinCertificate
+	if err := c.ShouldBindBodyWithJSON(&certToPin); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - getById")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	item.CertHash = certToPin.SHA256Fingerprint
+
+	item, err = dr.t.Update(c.Request.Context(), item)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - update")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
+}
+
+// @Summary     Delete Device Certificate
+// @Description Deletes Pinned Device Certificate
+// @ID          deleteDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [delete]
+func (dr *deviceRoutes) deleteDeviceCertificate(c *gin.Context) {
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - getById")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	item.CertHash = ""
+
+	item, err = dr.t.Update(c.Request.Context(), item)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - update")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
 }

@@ -1,6 +1,7 @@
 package wsman
 
 import (
+	gotls "crypto/tls"
 	"time"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
@@ -49,4 +50,5 @@ type Management interface {
 	GetCredentialRelationships() (credential.Items, error)
 	GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
 	GetDiskInfo() (interface{}, error)
+	GetDeviceCertificate() (*gotls.Certificate, error)
 }

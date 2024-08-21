@@ -1,6 +1,7 @@
 package wsman
 
 import (
+	gotls "crypto/tls"
 	"strings"
 	"sync"
 	"time"
@@ -126,6 +127,10 @@ func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirecti
 		IsRedirection:     isRedirection,
 	}
 
+	if device.CertHash != "" {
+		clientParams.PinnedCert = device.CertHash
+	}
+
 	timer := time.AfterFunc(expireAfter, func() {
 		removeConnection(device.GUID)
 	})
@@ -211,6 +216,10 @@ func (g *ConnectionEntry) GetSetupAndConfiguration() ([]setupandconfiguration.Se
 	}
 
 	return response.Body.PullResponse.SetupAndConfigurationServiceItems, nil
+}
+
+func (g *ConnectionEntry) GetDeviceCertificate() (*gotls.Certificate, error) {
+	return g.WsmanMessages.Client.GetServerCertificate()
 }
 
 var UserConsentOptions = map[int]string{

@@ -47,6 +47,10 @@ func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, logAMTMessages bool
 		IsRedirection:     false,
 	}
 
+	if device.CertHash != "" {
+		clientParams.PinnedCert = device.CertHash
+	}
+
 	connectionsMu.Lock()
 	defer connectionsMu.Unlock()
 

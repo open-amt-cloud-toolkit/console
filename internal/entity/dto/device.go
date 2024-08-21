@@ -22,6 +22,7 @@ type Device struct {
 	Password         string      `json:"password"`
 	UseTLS           bool        `json:"useTLS"`
 	AllowSelfSigned  bool        `json:"allowSelfSigned"`
+	CertHash         string      `json:"certHash"`
 }
 
 type DeviceInfo struct {
@@ -37,4 +38,21 @@ type DeviceInfo struct {
 type Explorer struct {
 	XMLInput  string `json:"xmlInput"`
 	XMLOutput string `json:"xmlOutput"`
+}
+type Certificate struct {
+	GUID               string    `json:"guid"`
+	CommonName         string    `json:"commonName"`
+	IssuerName         string    `json:"issuerName"`
+	SerialNumber       string    `json:"serialNumber"`
+	NotBefore          time.Time `json:"notBefore"`
+	NotAfter           time.Time `json:"notAfter"`
+	DNSNames           []string  `json:"dnsNames"`
+	SHA1Fingerprint    string    `json:"sha1Fingerprint"`
+	SHA256Fingerprint  string    `json:"sha256Fingerprint"`
+	PublicKeyAlgorithm string    `json:"publicKeyAlgorithm"`
+	PublicKeySize      int       `json:"publicKeySize"`
+}
+
+type PinCertificate struct {
+	SHA256Fingerprint string `json:"sha256Fingerprint"`
 }
