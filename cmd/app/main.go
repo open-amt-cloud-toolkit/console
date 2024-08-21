@@ -10,37 +10,57 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/app"
 )
 
+// Function pointers for better testability.
+var (
+	initializeConfigFunc = config.NewConfig
+	initializeAppFunc    = app.Init
+	runAppFunc           = app.Run
+)
+
 func main() {
-	// Configuration
-	cfg, err := config.NewConfig()
+	cfg, err := initializeConfigFunc()
 	if err != nil {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	err = app.Init()
+	err = initializeAppFunc()
 	if err != nil {
 		log.Fatalf("App init error: %s", err)
 	}
 
 	if os.Getenv("GIN_MODE") != "debug" {
 		go func() {
-			browserError := openBrowser("http://localhost:" + cfg.HTTP.Port)
-
+			browserError := openBrowser("http://localhost:"+cfg.HTTP.Port, runtime.GOOS)
 			if browserError != nil {
 				panic(browserError)
 			}
 		}()
 	}
-	// Run
-	app.Run(cfg)
+
+	runAppFunc(cfg)
 }
 
-func openBrowser(url string) error {
+// CommandExecutor is an interface to allow for mocking exec.Command in tests.
+type CommandExecutor interface {
+	Execute(name string, arg ...string) error
+}
+
+// RealCommandExecutor is a real implementation of CommandExecutor.
+type RealCommandExecutor struct{}
+
+func (e *RealCommandExecutor) Execute(name string, arg ...string) error {
+	return exec.Command(name, arg...).Start()
+}
+
+// Global command executor, can be replaced in tests.
+var cmdExecutor CommandExecutor = &RealCommandExecutor{}
+
+func openBrowser(url, currentOS string) error {
 	var cmd string
 
 	var args []string
 
-	switch runtime.GOOS {
+	switch currentOS {
 	case "darwin":
 		cmd = "open"
 		args = []string{url}
@@ -52,5 +72,5 @@ func openBrowser(url string) error {
 		args = []string{url}
 	}
 
-	return exec.Command(cmd, args...).Start()
+	return cmdExecutor.Execute(cmd, args...)
 }
