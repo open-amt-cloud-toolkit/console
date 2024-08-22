@@ -143,8 +143,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8m
 github.com/ncruces/go-strftime v0.1.9 h1:bY0MQC28UADQmHmaF5dgpLmImcShSi2kHU9XLdhx/f4=
 github.com/ncruces/go-strftime v0.1.9/go.mod h1:Fwc5htZGVVkseilnfgOVb9mKy6w1naJmn9CehxcKcls=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
-github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 v2.13.0 h1:umOlVP4txTm9yjpNNmCBYe5wfJr61BHVe2599061RPE=
-github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 v2.13.0/go.mod h1:LyY8fOvYBt5gawHYuivROR7EBySRuSR0u/k8QosnCeU=
+github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 v2.14.0 h1:jmQTwkHWocY4PMemtpxh4hnB87GNMXyESYmX83JqtFw=
+github.com/open-amt-cloud-toolkit/go-wsman-messages/v2 v2.14.0/go.mod h1:LyY8fOvYBt5gawHYuivROR7EBySRuSR0u/k8QosnCeU=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/image-spec v1.0.2 h1:9yCKha/T5XdGtO0q9Q9a6T5NUCsTn/DrBg0D7ufOcFM=
 github.com/pelletier/go-toml/v2 v2.2.2 h1:aYUidT7k73Pcl9nb2gScu7NSrKCSHIDE89b3+6Wq+LM=
