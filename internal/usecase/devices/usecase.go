@@ -90,6 +90,8 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 
 	if d.CertHash == "" {
 		d1.CertHash = nil
+	} else {
+		d1.CertHash = &d.CertHash
 	}
 
 	return d1
