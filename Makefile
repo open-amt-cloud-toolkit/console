@@ -66,6 +66,8 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/amtexplorer/interfaces.go -package v1 -mock_names Repository=MockAMTExplorerRepository,Feature=MockAMTExplorerFeature,WSMAN=MockAMTExplorerWSMAN > ./internal/controller/http/v1/amtexplorer_mocks_test.go
 	mockgen -source ./internal/usecase/amtexplorer/interfaces.go -package amtexplorer_test > ./internal/usecase/amtexplorer/mocks_test.go
 	mockgen -source ./internal/usecase/devices/wsman/interfaces.go -package v1 > ./internal/controller/http/v1/wsman_mocks_test.go
+	mockgen -source=./internal/app/interface.go -destination=./internal/app/mocks_test.go -package app_test
+	mockgen -source=./internal/usecase/sqldb/interface.go -destination=./internal/usecase/sqldb/mocks_test.go -package sqldb_test
 	mockgen -source ./internal/usecase/devices/wsman/interfaces.go -package devices_test > ./internal/usecase/devices/wsman_mocks_test.go
 	mockgen -source ./internal/usecase/domains/interfaces.go -package domains_test > ./internal/usecase/domains/mocks_test.go
 	mockgen -source ./internal/usecase/domains/interfaces.go -package v1 -mock_names Repository=MockDomainsRepository,Feature=MockDomainsFeature > ./internal/controller/http/v1/domains_mocks_test.go

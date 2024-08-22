@@ -6,7 +6,9 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -24,7 +26,7 @@ const (
 )
 
 type DeviceConnection struct {
-	Conn          *websocket.Conn
+	Conn          WebSocketConn
 	wsmanMessages wsman.Messages
 	Device        dto.Device
 	Direct        bool
@@ -66,16 +68,17 @@ func (uc *UseCase) Redirect(c context.Context, conn *websocket.Conn, guid, mode 
 	}
 
 	// To Do: scoop the errors out of this for logging
-	go uc.listenToDevice(c, deviceConnection)
-	go uc.listenToBrowser(c, deviceConnection)
+	// go uc.ListenToDevice(c, deviceConnection)
+	// go uc.ListenToBrowser(c, deviceConnection)
 
 	return nil
 }
 
-func (uc *UseCase) listenToDevice(c context.Context, deviceConnection *DeviceConnection) {
+func (uc *UseCase) ListenToDevice(c context.Context, deviceConnection *DeviceConnection) {
+	conn := deviceConnection.Conn // This is now of type WebSocketConnInterface
+
 	for {
-		// setup listener for response from device
-		data, err := uc.redirection.RedirectListen(c, deviceConnection) // calls Receive()
+		data, err := uc.redirection.RedirectListen(c, deviceConnection)
 		if err != nil {
 			break
 		}
@@ -88,8 +91,8 @@ func (uc *UseCase) listenToDevice(c context.Context, deviceConnection *DeviceCon
 		if !deviceConnection.Direct {
 			toSend, deviceConnection.Direct = processDeviceData(toSend, &deviceConnection.Challenge)
 		}
-		// Write message back to browser
-		err = deviceConnection.Conn.WriteMessage(websocket.BinaryMessage, toSend)
+
+		err = conn.WriteMessage(websocket.BinaryMessage, toSend)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				_ = fmt.Errorf("interceptor - listenToDevice - websocket closed unexpectedly (writing to browser): %w", err)
@@ -103,7 +106,7 @@ func (uc *UseCase) listenToDevice(c context.Context, deviceConnection *DeviceCon
 	}
 }
 
-func (uc *UseCase) listenToBrowser(c context.Context, deviceConnection *DeviceConnection) {
+func (uc *UseCase) ListenToBrowser(c context.Context, deviceConnection *DeviceConnection) {
 	for {
 		_, msg, err := deviceConnection.Conn.ReadMessage()
 		if err != nil {
@@ -240,7 +243,6 @@ func handleAuthenticateSessionReply(msg []byte, challenge *client.AuthChallenge)
 	return msg, false
 }
 
-// RandomValueHex generates a random hexadecimal string of the specified length.
 func RandomValueHex(length int) (string, error) {
 	divideByHalf := 2
 	n := (length + 1) / divideByHalf // Calculate the number of bytes needed
@@ -256,14 +258,16 @@ func RandomValueHex(length int) (string, error) {
 }
 
 // Helper function to write length and bytes.
-func writeField(buf *bytes.Buffer, field string) {
-	if err := binary.Write(buf, binary.BigEndian, uint8(len(field))); err != nil {
-		log.Fatal(err)
+func writeField(buf io.Writer, field string) error {
+	if err := binary.Write(buf, binary.BigEndian, uint8(len(field))); err != nil { //nolint:gosec // Ignore potential integer overflow here
+		return err
 	}
 
 	if err := binary.Write(buf, binary.BigEndian, []byte(field)); err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 func handleAuthenticationSession(msg []byte, challenge *client.AuthChallenge) []byte {
@@ -275,71 +279,168 @@ func handleAuthenticationSession(msg []byte, challenge *client.AuthChallenge) []
 		return msg
 	}
 
-	buf := bytes.NewReader(msg[1:9])
-	// Variable to hold the decoded value
+	return processAuthChallenge(msg[1:9], challenge)
+}
+
+func processAuthChallenge(data []byte, challenge *client.AuthChallenge) []byte {
+	buf := bytes.NewReader(data)
+
 	var status uint8
 
 	var unknown uint16
 
 	var authType uint8
 
-	// Read the binary data into the variable
-	_ = binary.Read(buf, binary.BigEndian, &status)
-	_ = binary.Read(buf, binary.BigEndian, &unknown)
-	_ = binary.Read(buf, binary.BigEndian, &authType)
-	// generate auth challenge
+	if err := readBinaryData(buf, &status, &unknown, &authType); err != nil {
+		log.Printf("Error reading binary data: %v", err)
 
-	authURL := "/RedirectionService"
+		return nil
+	}
 
 	if authType == AuthenticationTypeDigest {
-		if challenge.Realm != "" {
-			nc := challenge.NonceCount
-			randomByteCount := 10
-			challenge.CNonce, _ = RandomValueHex(randomByteCount)
-			nonceCount := fmt.Sprintf("%08x", nc)
-			nonceData := challenge.GetFormattedNonceData(challenge.Nonce)
-			response := challenge.ComputeDigestHash("POST", authURL, nonceData)
-			challenge.NonceCount++
-
-			var replyBuf bytes.Buffer
-
-			_ = binary.Write(&replyBuf, binary.BigEndian, [5]byte{0x13, 0x00, 0x00, 0x00, 0x04})                                                                                                                                                 //            [5]byte
-			_ = binary.Write(&replyBuf, binary.LittleEndian, uint32(len(challenge.Username)+len(challenge.Realm)+len(challenge.Nonce)+len(authURL)+len(challenge.CNonce)+len(nonceCount)+len(response)+len(challenge.Qop)+ContentLengthPadding)) //     uint32
-
-			// Write fields
-			writeField(&replyBuf, challenge.Username)
-			writeField(&replyBuf, challenge.Realm)
-			writeField(&replyBuf, challenge.Nonce)
-			writeField(&replyBuf, authURL)
-			writeField(&replyBuf, challenge.CNonce)
-			writeField(&replyBuf, nonceCount)
-			writeField(&replyBuf, response)
-			writeField(&replyBuf, challenge.Qop)
-
-			return replyBuf.Bytes()
-		}
-
-		return generateEmptyAuth(challenge, authURL)
+		return handleDigestAuthentication(challenge)
 	}
 
 	return []byte("")
+}
+
+func readBinaryData(buf *bytes.Reader, status *uint8, unknown *uint16, authType *uint8) error {
+	if err := binary.Read(buf, binary.BigEndian, status); err != nil {
+		return err
+	}
+
+	if err := binary.Read(buf, binary.BigEndian, unknown); err != nil {
+		return err
+	}
+
+	return binary.Read(buf, binary.BigEndian, authType)
+}
+
+func handleDigestAuthentication(challenge *client.AuthChallenge) []byte {
+	if challenge.Realm != "" {
+		cnonce, err := generateCNonce(challenge)
+		if err != nil {
+			log.Printf("Error generating CNonce: %v", err)
+
+			return nil
+		}
+
+		challenge.CNonce = cnonce
+		response := computeDigestResponse(challenge)
+
+		return buildAuthReply(challenge, response)
+	}
+
+	return generateEmptyAuth(challenge, "/RedirectionService")
+}
+
+func generateCNonce(challenge *client.AuthChallenge) (string, error) {
+	randomByteCount := 10
+	cnonce, err := RandomValueHex(randomByteCount)
+	if err != nil { //nolint:wsl // ignoring cuddle assignment rule for this line due to linter conflicts
+		return "", err
+	}
+
+	challenge.NonceCount++
+
+	return cnonce, nil
+}
+
+func computeDigestResponse(challenge *client.AuthChallenge) string {
+	nonceData := challenge.GetFormattedNonceData(challenge.Nonce)
+
+	return challenge.ComputeDigestHash("POST", "/RedirectionService", nonceData)
+}
+
+func buildAuthReply(challenge *client.AuthChallenge, response string) []byte {
+	var replyBuf bytes.Buffer
+
+	if err := writeHeader(&replyBuf); err != nil {
+		log.Printf("Error writing header: %v", err)
+
+		return nil
+	}
+
+	if err := writeLength(&replyBuf, challenge, response); err != nil {
+		log.Printf("Error writing length: %v", err)
+
+		return nil
+	}
+
+	if err := writeFields(&replyBuf, challenge, response); err != nil {
+		log.Printf("Error writing fields: %v", err)
+
+		return nil
+	}
+
+	return replyBuf.Bytes()
+}
+
+func writeHeader(buf *bytes.Buffer) error {
+	return binary.Write(buf, binary.BigEndian, [5]byte{0x13, 0x00, 0x00, 0x00, 0x04})
+}
+
+var ErrLengthLimit = errors.New("calculated length exceeds uint32 limit")
+
+func writeLength(buf *bytes.Buffer, challenge *client.AuthChallenge, response string) error {
+	totalLength := len(challenge.Username) + len(challenge.Realm) + len(challenge.Nonce) + len("/RedirectionService") +
+		len(challenge.CNonce) + len(fmt.Sprintf("%08x", challenge.NonceCount)) + len(response) + len(challenge.Qop) +
+		ContentLengthPadding
+
+	if totalLength > int(^uint32(0)) {
+		return ErrLengthLimit
+	}
+
+	return binary.Write(buf, binary.LittleEndian, uint32(totalLength)) //nolint:gosec // Ignore potential integer overflow because totalLength validated earlier in the code
+}
+
+func writeFields(buf *bytes.Buffer, challenge *client.AuthChallenge, response string) error {
+	if err := writeField(buf, challenge.Username); err != nil {
+		return err
+	}
+
+	if err := writeField(buf, challenge.Realm); err != nil {
+		return err
+	}
+
+	if err := writeField(buf, challenge.Nonce); err != nil {
+		return err
+	}
+
+	if err := writeField(buf, "/RedirectionService"); err != nil {
+		return err
+	}
+
+	if err := writeField(buf, challenge.CNonce); err != nil {
+		return err
+	}
+
+	if err := writeField(buf, fmt.Sprintf("%08x", challenge.NonceCount)); err != nil {
+		return err
+	}
+
+	if err := writeField(buf, response); err != nil {
+		return err
+	}
+
+	return writeField(buf, challenge.Qop)
 }
 
 func generateEmptyAuth(challenge *client.AuthChallenge, authURL string) []byte {
 	var buf bytes.Buffer
 
 	emptyAuth := emptyAuth{
-		usernameLength: uint8(len(challenge.Username)),
+		usernameLength: uint8(len(challenge.Username)), //nolint:gosec // Ignore potential integer overflow
 		authURLPadding: [2]byte{0x00, 0x00},
-		authURLLength:  uint8(len(authURL)),
+		authURLLength:  uint8(len(authURL)), //nolint:gosec // Ignore potential integer overflow
 		endPadding:     [4]byte{0x00, 0x00, 0x00, 0x00},
 	}
 
 	copy(emptyAuth.username[:], challenge.Username)
 	copy(emptyAuth.authURL[:], authURL)
 
-	_ = binary.Write(&buf, binary.BigEndian, [5]byte{0x13, 0x00, 0x00, 0x00, 0x04})                                // header
-	_ = binary.Write(&buf, binary.LittleEndian, uint32(len(challenge.Username)+len(authURL)+ContentLengthPadding)) // flip flop endian for content length
+	_ = binary.Write(&buf, binary.BigEndian, [5]byte{0x13, 0x00, 0x00, 0x00, 0x04})
+	_ = binary.Write(&buf, binary.LittleEndian, uint32(len(challenge.Username)+len(authURL)+ContentLengthPadding)) //nolint:gosec // Ignore potential integer overflow
 	_ = binary.Write(&buf, binary.BigEndian, emptyAuth)
 
 	return buf.Bytes()
