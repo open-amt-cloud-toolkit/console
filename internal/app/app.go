@@ -64,7 +64,7 @@ func Run(cfg *config.Config) {
 	}
 
 	wsv1.RegisterRoutes(handler, log, usecases.Devices, upgrader)
-	httpServer := httpserver.New(handler, httpserver.Port("", cfg.HTTP.Port))
+	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Host, cfg.HTTP.Port))
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
