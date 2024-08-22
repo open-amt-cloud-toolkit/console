@@ -30,7 +30,7 @@ func main() {
 
 	if os.Getenv("GIN_MODE") != "debug" {
 		go func() {
-			browserError := openBrowser("http://localhost:"+cfg.HTTP.Port, runtime.GOOS)
+			browserError := openBrowser("http://"+cfg.HTTP.Host+":"+cfg.HTTP.Port, runtime.GOOS)
 			if browserError != nil {
 				panic(browserError)
 			}
