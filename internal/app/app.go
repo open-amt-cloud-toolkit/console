@@ -1,4 +1,3 @@
-// Package app configures and runs application.
 package app
 
 import (
