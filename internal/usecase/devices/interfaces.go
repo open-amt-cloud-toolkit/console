@@ -67,7 +67,10 @@ type (
 		GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error)
 		GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
-		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
+		GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error)
 		GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error)
+		GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error)
+		GetDiskInfo(c context.Context, guid string) (interface{}, error)
+		GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error)
 	}
 )

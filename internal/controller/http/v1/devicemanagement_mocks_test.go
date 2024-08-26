@@ -537,6 +537,36 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetCount(arg0, arg1 any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetCount), arg0, arg1)
 }
 
+// GetDeviceCertificate mocks base method.
+func (m *MockDeviceManagementFeature) GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCertificate", c, guid)
+	ret0, _ := ret[0].(dto.Certificate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceCertificate indicates an expected call of GetDeviceCertificate.
+func (mr *MockDeviceManagementFeatureMockRecorder) GetDeviceCertificate(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCertificate", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetDeviceCertificate), c, guid)
+}
+
+// GetDiskInfo mocks base method.
+func (m *MockDeviceManagementFeature) GetDiskInfo(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockDeviceManagementFeatureMockRecorder) GetDiskInfo(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetDiskInfo), c, guid)
+}
+
 // GetDistinctTags mocks base method.
 func (m *MockDeviceManagementFeature) GetDistinctTags(ctx context.Context, tenantID string) ([]string, error) {
 	m.ctrl.T.Helper()
@@ -613,10 +643,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetHardwareInfo(ctx, guid any
 }
 
 // GetNetworkSettings mocks base method.
-func (m *MockDeviceManagementFeature) GetNetworkSettings(c context.Context, guid string) (any, error) {
+func (m *MockDeviceManagementFeature) GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetworkSettings", c, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.NetworkSettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -655,6 +685,21 @@ func (m *MockDeviceManagementFeature) GetPowerState(ctx context.Context, guid st
 func (mr *MockDeviceManagementFeatureMockRecorder) GetPowerState(ctx, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPowerState", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetPowerState), ctx, guid)
+}
+
+// GetTLSSettingData mocks base method.
+func (m *MockDeviceManagementFeature) GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTLSSettingData", c, guid)
+	ret0, _ := ret[0].([]dto.SettingDataResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTLSSettingData indicates an expected call of GetTLSSettingData.
+func (mr *MockDeviceManagementFeatureMockRecorder) GetTLSSettingData(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTLSSettingData", reflect.TypeOf((*MockDeviceManagementFeature)(nil).GetTLSSettingData), c, guid)
 }
 
 // GetUserConsentCode mocks base method.

@@ -3,6 +3,7 @@ app:
   repo: "open-amt-cloud-toolkit/console"
 
 http:
+  host: "localhost"
   port: "8181"
   allowed_origins:
     - "*"

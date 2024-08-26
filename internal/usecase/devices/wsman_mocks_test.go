@@ -10,6 +10,7 @@
 package devices_test
 
 import (
+	tls "crypto/tls"
 	reflect "reflect"
 	time "time"
 
@@ -20,6 +21,7 @@ import (
 	boot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	setupandconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+	tls0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 	boot0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	concrete "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	credential "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
@@ -159,10 +161,10 @@ func (mr *MockManagementMockRecorder) GetAuditLog(startIndex any) *gomock.Call {
 }
 
 // GetBootData mocks base method.
-func (m *MockManagement) GetBootData() (boot.BootCapabilitiesResponse, error) {
+func (m *MockManagement) GetBootData() (boot.BootSettingDataResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBootData")
-	ret0, _ := ret[0].(boot.BootCapabilitiesResponse)
+	ret0, _ := ret[0].(boot.BootSettingDataResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -216,6 +218,36 @@ func (m *MockManagement) GetCredentialRelationships() (credential.Items, error) 
 func (mr *MockManagementMockRecorder) GetCredentialRelationships() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCredentialRelationships", reflect.TypeOf((*MockManagement)(nil).GetCredentialRelationships))
+}
+
+// GetDeviceCertificate mocks base method.
+func (m *MockManagement) GetDeviceCertificate() (*tls.Certificate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCertificate")
+	ret0, _ := ret[0].(*tls.Certificate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceCertificate indicates an expected call of GetDeviceCertificate.
+func (mr *MockManagementMockRecorder) GetDeviceCertificate() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCertificate", reflect.TypeOf((*MockManagement)(nil).GetDeviceCertificate))
+}
+
+// GetDiskInfo mocks base method.
+func (m *MockManagement) GetDiskInfo() (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo")
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockManagementMockRecorder) GetDiskInfo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockManagement)(nil).GetDiskInfo))
 }
 
 // GetEventLog mocks base method.
@@ -279,10 +311,10 @@ func (mr *MockManagementMockRecorder) GetHardwareInfo() *gomock.Call {
 }
 
 // GetNetworkSettings mocks base method.
-func (m *MockManagement) GetNetworkSettings() (any, error) {
+func (m *MockManagement) GetNetworkSettings() (wsman.NetworkResults, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetworkSettings")
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(wsman.NetworkResults)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -336,6 +368,21 @@ func (m *MockManagement) GetSetupAndConfiguration() ([]setupandconfiguration.Set
 func (mr *MockManagementMockRecorder) GetSetupAndConfiguration() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSetupAndConfiguration", reflect.TypeOf((*MockManagement)(nil).GetSetupAndConfiguration))
+}
+
+// GetTLSSettingData mocks base method.
+func (m *MockManagement) GetTLSSettingData() ([]tls0.SettingDataResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTLSSettingData")
+	ret0, _ := ret[0].([]tls0.SettingDataResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTLSSettingData indicates an expected call of GetTLSSettingData.
+func (mr *MockManagementMockRecorder) GetTLSSettingData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTLSSettingData", reflect.TypeOf((*MockManagement)(nil).GetTLSSettingData))
 }
 
 // GetUserConsentCode mocks base method.

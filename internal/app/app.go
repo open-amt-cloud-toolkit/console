@@ -4,15 +4,17 @@ package app
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 
 	"github.com/open-amt-cloud-toolkit/console/config"
-	"github.com/open-amt-cloud-toolkit/console/internal/controller/http"
+	consolehttp "github.com/open-amt-cloud-toolkit/console/internal/controller/http"
 	wsv1 "github.com/open-amt-cloud-toolkit/console/internal/controller/ws/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
@@ -49,9 +51,20 @@ func Run(cfg *config.Config) {
 	defaultConfig.AllowHeaders = cfg.HTTP.AllowedHeaders
 
 	handler.Use(cors.New(defaultConfig))
-	http.NewRouter(handler, log, *usecases, cfg)
-	wsv1.RegisterRoutes(handler, log, usecases.Devices)
-	httpServer := httpserver.New(handler, httpserver.Port("", cfg.HTTP.Port))
+	consolehttp.NewRouter(handler, log, *usecases, cfg)
+
+	upgrader := &websocket.Upgrader{
+		ReadBufferSize:  4096,
+		WriteBufferSize: 4096,
+		Subprotocols:    []string{"direct"},
+		CheckOrigin: func(_ *http.Request) bool {
+			return true
+		},
+		EnableCompression: false,
+	}
+
+	wsv1.RegisterRoutes(handler, log, usecases.Devices, upgrader)
+	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Host, cfg.HTTP.Port))
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)

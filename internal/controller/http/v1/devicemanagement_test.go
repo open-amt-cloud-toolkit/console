@@ -124,6 +124,17 @@ func TestDeviceManagement(t *testing.T) {
 			response:     map[string]interface{}{"hardware": "info"},
 		},
 		{
+			name:   "getDiskInfo - successful retrieval",
+			url:    "/api/v1/amt/diskInfo/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetDiskInfo(context.Background(), "valid-guid").
+					Return(map[string]interface{}{"disk": "info"}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     map[string]interface{}{"disk": "info"},
+		},
+		{
 			name:   "getPowerState - successful retrieval",
 			url:    "/api/v1/amt/power/state/valid-guid",
 			method: http.MethodGet,
@@ -191,10 +202,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetNetworkSettings(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"": ""}, nil)
+					Return(dto.NetworkSettings{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"": ""},
+			response:     dto.NetworkSettings{},
 		},
 		{
 			name:   "getCertificates - successful retrieval",
@@ -217,6 +228,28 @@ func TestDeviceManagement(t *testing.T) {
 			},
 			expectedCode: http.StatusInternalServerError,
 			response:     dto.SecuritySettings{},
+		},
+		{
+			name:   "getTLSsettingData - successful retrieval",
+			url:    "/api/v1/amt/tls/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
+					Return([]dto.SettingDataResponse{}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     []dto.SettingDataResponse{},
+		},
+		{
+			name:   "getTLSsettingData - failed retrieval",
+			url:    "/api/v1/amt/tls/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
+					Return([]dto.SettingDataResponse{}, ErrGeneral)
+			},
+			expectedCode: http.StatusInternalServerError,
+			response:     []dto.SettingDataResponse{},
 		},
 	}
 

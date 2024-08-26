@@ -1,6 +1,7 @@
 package wsman
 
 import (
+	gotls "crypto/tls"
 	"time"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
@@ -8,6 +9,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
@@ -36,14 +38,17 @@ type Management interface {
 	GetUserConsentCode() (optin.StartOptIn_OUTPUT, error)
 	SendConsentCode(code int) (interface{}, error)
 	SendPowerAction(action int) (power.PowerActionResponse, error)
-	GetBootData() (boot.BootCapabilitiesResponse, error)
+	GetBootData() (boot.BootSettingDataResponse, error)
 	SetBootData(data boot.BootSettingDataRequest) (interface{}, error)
 	SetBootConfigRole(role int) (interface{}, error)
 	ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error)
 	GetAuditLog(startIndex int) (auditlog.Response, error)
 	GetEventLog() (messagelog.GetRecordsResponse, error)
-	GetNetworkSettings() (interface{}, error)
+	GetNetworkSettings() (NetworkResults, error)
 	GetCertificates() (Certificates, error)
+	GetTLSSettingData() ([]tls.SettingDataResponse, error)
 	GetCredentialRelationships() (credential.Items, error)
 	GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
+	GetDiskInfo() (interface{}, error)
+	GetDeviceCertificate() (*gotls.Certificate, error)
 }

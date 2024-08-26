@@ -1,6 +1,7 @@
 package wsman
 
 import (
+	gotls "crypto/tls"
 	"strings"
 	"sync"
 	"time"
@@ -126,6 +127,10 @@ func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirecti
 		IsRedirection:     isRedirection,
 	}
 
+	if device.CertHash != "" {
+		clientParams.PinnedCert = device.CertHash
+	}
+
 	timer := time.AfterFunc(expireAfter, func() {
 		removeConnection(device.GUID)
 	})
@@ -211,6 +216,10 @@ func (g *ConnectionEntry) GetSetupAndConfiguration() ([]setupandconfiguration.Se
 	}
 
 	return response.Body.PullResponse.SetupAndConfigurationServiceItems, nil
+}
+
+func (g *ConnectionEntry) GetDeviceCertificate() (*gotls.Certificate, error) {
+	return g.WsmanMessages.Client.GetServerCertificate()
 }
 
 var UserConsentOptions = map[int]string{
@@ -405,11 +414,6 @@ func (g *ConnectionEntry) hardwareGets() (GetHWResults, error) {
 
 	var err error
 
-	results.CSPResult, err = g.WsmanMessages.CIM.ComputerSystemPackage.Get()
-	if err != nil {
-		return results, err
-	}
-
 	results.ChassisResult, err = g.WsmanMessages.CIM.Chassis.Get()
 	if err != nil {
 		return results, err
@@ -468,23 +472,18 @@ func (g *ConnectionEntry) GetHardwareInfo() (interface{}, error) {
 	}
 
 	hwResults := HWResults{
-		CSPResult:             getHWResults.CSPResult,
-		SPPullResult:          pullHWResults.SPPullResult,
-		ChassisResult:         getHWResults.ChassisResult,
-		ChipResult:            getHWResults.ChipResult,
-		CardResult:            getHWResults.CardResult,
-		PhysicalMemoryResult:  pullHWResults.PhysicalMemoryResult,
-		MediaAccessPullResult: pullHWResults.MediaAccessPullResult,
-		PPPullResult:          pullHWResults.PPPullResult,
-		BiosResult:            getHWResults.BiosResult,
-		ProcessorResult:       getHWResults.ProcessorResult,
+		ChassisResult:        getHWResults.ChassisResult,
+		ChipResult:           getHWResults.ChipResult,
+		CardResult:           getHWResults.CardResult,
+		PhysicalMemoryResult: pullHWResults.PhysicalMemoryResult,
+		BiosResult:           getHWResults.BiosResult,
+		ProcessorResult:      getHWResults.ProcessorResult,
 	}
 
 	return createMapInterfaceForHWInfo(hwResults)
 }
 
 type GetHWResults struct {
-	CSPResult       computer.Response
 	ChassisResult   chassis.Response
 	ChipResult      chip.Response
 	CardResult      card.Response
@@ -492,33 +491,19 @@ type GetHWResults struct {
 	ProcessorResult processor.Response
 }
 type PullHWResults struct {
-	SPPullResult          system.Response
-	PhysicalMemoryResult  physical.Response
-	MediaAccessPullResult mediaaccess.Response
-	PPPullResult          physical.Response
+	PhysicalMemoryResult physical.Response
 }
 type HWResults struct {
-	CSPResult             computer.Response
-	SPPullResult          system.Response
-	ChassisResult         chassis.Response
-	ChipResult            chip.Response
-	CardResult            card.Response
-	PhysicalMemoryResult  physical.Response
-	MediaAccessPullResult mediaaccess.Response
-	PPPullResult          physical.Response
-	BiosResult            bios.Response
-	ProcessorResult       processor.Response
+	ChassisResult        chassis.Response
+	ChipResult           chip.Response
+	CardResult           card.Response
+	PhysicalMemoryResult physical.Response
+	BiosResult           bios.Response
+	ProcessorResult      processor.Response
 }
 
 func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
 	return map[string]interface{}{
-		"CIM_ComputerSystemPackage": map[string]interface{}{
-			"response":  hwResults.CSPResult.Body.GetResponse,
-			"responses": hwResults.CSPResult.Body.GetResponse,
-		},
-		"CIM_SystemPackaging": map[string]interface{}{
-			"responses": []interface{}{hwResults.SPPullResult.Body.PullResponse.SystemPackageItems},
-		},
 		"CIM_Chassis": map[string]interface{}{
 			"response":  hwResults.ChassisResult.Body.PackageResponse,
 			"responses": []interface{}{},
@@ -534,12 +519,56 @@ func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
 			"responses": []interface{}{hwResults.ProcessorResult.Body.PackageResponse},
 		}, "CIM_PhysicalMemory": map[string]interface{}{
 			"responses": hwResults.PhysicalMemoryResult.Body.PullResponse.MemoryItems,
-		}, "CIM_MediaAccessDevice": map[string]interface{}{
-			"responses": []interface{}{hwResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
-		}, "CIM_PhysicalPackage": map[string]interface{}{
-			"responses": []interface{}{hwResults.PPPullResult.Body.PullResponse.PhysicalPackage},
 		},
 	}, nil
+}
+
+func createMapInterfaceForDiskInfo(diskResults DiskResults) (interface{}, error) {
+	return map[string]interface{}{
+		"CIM_MediaAccessDevice": map[string]interface{}{
+			"responses": []interface{}{diskResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
+		}, "CIM_PhysicalPackage": map[string]interface{}{
+			"responses": []interface{}{diskResults.PPPullResult.Body.PullResponse.PhysicalPackage},
+		},
+	}, nil
+}
+
+type DiskResults struct {
+	MediaAccessPullResult mediaaccess.Response
+	PPPullResult          physical.Response
+}
+
+func (g *ConnectionEntry) GetDiskInfo() (interface{}, error) {
+	results := DiskResults{}
+
+	var err error
+
+	maEnumerateResult, err := g.WsmanMessages.CIM.MediaAccessDevice.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.MediaAccessPullResult, err = g.WsmanMessages.CIM.MediaAccessDevice.Pull(maEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	ppEnumerateResult, err := g.WsmanMessages.CIM.PhysicalPackage.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.PPPullResult, err = g.WsmanMessages.CIM.PhysicalPackage.Pull(ppEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	diskResults := DiskResults{
+		MediaAccessPullResult: results.MediaAccessPullResult,
+		PPPullResult:          results.PPPullResult,
+	}
+
+	return createMapInterfaceForDiskInfo(diskResults)
 }
 
 func (g *ConnectionEntry) GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error) {
@@ -601,13 +630,13 @@ func (g *ConnectionEntry) SendConsentCode(code int) (interface{}, error) {
 	return response.Body.SendOptInCodeResponse, nil
 }
 
-func (g *ConnectionEntry) GetBootData() (boot.BootCapabilitiesResponse, error) {
+func (g *ConnectionEntry) GetBootData() (boot.BootSettingDataResponse, error) {
 	bootSettingData, err := g.WsmanMessages.AMT.BootSettingData.Get()
 	if err != nil {
-		return boot.BootCapabilitiesResponse{}, err
+		return boot.BootSettingDataResponse{}, err
 	}
 
-	return bootSettingData.Body.BootCapabilitiesGetResponse, nil
+	return bootSettingData.Body.BootSettingDataGetResponse, nil
 }
 
 func (g *ConnectionEntry) SetBootData(data boot.BootSettingDataRequest) (interface{}, error) {
@@ -957,31 +986,31 @@ func (g *ConnectionEntry) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Respo
 	return response, nil
 }
 
-func (g *ConnectionEntry) GetNetworkSettings() (interface{}, error) {
+func (g *ConnectionEntry) GetNetworkSettings() (NetworkResults, error) {
 	networkResults := NetworkResults{}
 
 	var err error
 
 	networkResults.EthernetPortSettingsResult, err = g.GetEthernetPortSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	response, err := g.GetIPSIEEE8021xSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
 
 	networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	cimResponse, err := g.GetCIMIEEE8021xSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
 	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
@@ -1728,4 +1757,18 @@ func (g *ConnectionEntry) GetCertificates() (Certificates, error) {
 	}
 
 	return certificates, nil
+}
+
+func (g *ConnectionEntry) GetTLSSettingData() ([]tls.SettingDataResponse, error) {
+	tlsSettingDataEnumResp, err := g.WsmanMessages.AMT.TLSSettingData.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	tlsSettingDataResponse, err := g.WsmanMessages.AMT.TLSSettingData.Pull(tlsSettingDataEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+
+	return tlsSettingDataResponse.Body.PullResponse.SettingDataItems, nil
 }

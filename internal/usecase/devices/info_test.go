@@ -691,3 +691,84 @@ func TestGetGeneralSettings(t *testing.T) {
 		})
 	}
 }
+
+func TestGetDiskInfo(t *testing.T) {
+	t.Parallel()
+
+	device := &entity.Device{
+		GUID:     "device-guid-123",
+		TenantID: "tenant-id-456",
+	}
+
+	tests := []test{
+		{
+			name:   "success",
+			action: 0,
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return(man2)
+				man2.EXPECT().
+					GetDiskInfo().
+					Return(gomock.Any(), nil)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(context.Background(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: gomock.Any(),
+			err: nil,
+		},
+		{
+			name:    "GetById fails",
+			action:  0,
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(context.Background(), device.GUID, "").
+					Return(nil, ErrGeneral)
+			},
+			res: nil,
+			err: devices.ErrDatabase,
+		},
+		{
+			name:   "GetDiskInfo fails",
+			action: 0,
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return(man2)
+				man2.EXPECT().
+					GetDiskInfo().
+					Return(nil, ErrGeneral)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(context.Background(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: nil,
+			err: ErrGeneral,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			useCase, wsmanMock, management, repo := initInfoTest(t)
+
+			tc.manMock(wsmanMock, management)
+
+			tc.repoMock(repo)
+
+			res, err := useCase.GetDiskInfo(context.Background(), device.GUID)
+
+			require.Equal(t, tc.res, res)
+			require.IsType(t, tc.err, err)
+		})
+	}
+}

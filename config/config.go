@@ -22,6 +22,7 @@ type (
 
 	// HTTP -.
 	HTTP struct {
+		Host           string   `env-required:"false" yaml:"host" env:"HTTP_HOST"`
 		Port           string   `env-required:"false" yaml:"port" env:"HTTP_PORT"`
 		AllowedOrigins []string `env-required:"false" yaml:"allowed_origins" env:"HTTP_ALLOWED_ORIGINS"`
 		AllowedHeaders []string `env-required:"false" yaml:"allowed_headers" env:"HTTP_ALLOWED_HEADERS"`
@@ -49,6 +50,7 @@ func NewConfig() (*Config, error) {
 			Version: "DEVELOPMENT",
 		},
 		HTTP: HTTP{
+			Host:           "localhost",
 			Port:           "8181",
 			AllowedOrigins: []string{"*"},
 			AllowedHeaders: []string{"*"},

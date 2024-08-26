@@ -4,21 +4,17 @@ import (
 	"context"
 	"testing"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
-	cimieee8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ieee8021x"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initNetworkTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
+func initConnectionsTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -35,7 +31,7 @@ func initNetworkTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagemen
 	return u, wsmanMock, management, repo
 }
 
-func TestGetNetworkSettings(t *testing.T) {
+func TestGetTLSSettings(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
@@ -52,40 +48,34 @@ func TestGetNetworkSettings(t *testing.T) {
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
 				man2.EXPECT().
-					GetNetworkSettings().
-					Return(wsman.NetworkResults{
-						EthernetPortSettingsResult: []ethernetport.SettingsResponse{
-							{
-								LinkPolicy: []ethernetport.LinkPolicy{1, 2},
-							}, {
-								LinkPolicy: []ethernetport.LinkPolicy{1, 2},
-							},
+					GetTLSSettingData().
+					Return([]tls.SettingDataResponse{
+						{
+							ElementName:                   "",
+							InstanceID:                    "",
+							MutualAuthentication:          false,
+							Enabled:                       true,
+							TrustedCN:                     []string{},
+							AcceptNonSecureConnections:    false,
+							NonSecureConnectionsSupported: nil,
 						},
-						IPSIEEE8021xSettingsResult: ieee8021x.IEEE8021xSettingsResponse{},
-						WiFiSettingsResult:         []wifi.WiFiEndpointSettingsResponse{{}},
-						CIMIEEE8021xSettingsResult: cimieee8021x.PullResponse{
-							IEEE8021xSettingsItems: []cimieee8021x.IEEE8021xSettingsResponse{{}},
-						},
-					}, nil)
+					},
+						nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dto.NetworkSettings{
-				Wired: dto.WiredNetworkInfo{
-					IEEE8021x: dto.IEEE8021x{},
-					NetworkInfo: dto.NetworkInfo{
-						LinkPolicy: []int{1, 2},
-					},
-				},
-				Wireless: dto.WirelessNetworkInfo{
-					WiFiNetworks:      []dto.WiFiNetwork{{}},
-					IEEE8021xSettings: []dto.IEEE8021xSettings{{}},
-					NetworkInfo: dto.NetworkInfo{
-						LinkPolicy: []int{1, 2},
-					},
+			res: []dto.SettingDataResponse{
+				{
+					ElementName:                   "",
+					InstanceID:                    "",
+					MutualAuthentication:          false,
+					Enabled:                       true,
+					TrustedCN:                     []string{},
+					AcceptNonSecureConnections:    false,
+					NonSecureConnectionsSupported: nil,
 				},
 			},
 			err: nil,
@@ -98,26 +88,26 @@ func TestGetNetworkSettings(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: dto.NetworkSettings{},
+			res: []dto.SettingDataResponse(nil),
 			err: devices.ErrDatabase,
 		},
 		{
-			name:   "GetNetworkSettings fails",
+			name:   "GetTLSSettingData fails",
 			action: 0,
 			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
 				man2.EXPECT().
-					GetNetworkSettings().
-					Return(wsman.NetworkResults{}, ErrGeneral)
+					GetTLSSettingData().
+					Return(nil, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dto.NetworkSettings{},
+			res: []dto.SettingDataResponse(nil),
 			err: ErrGeneral,
 		},
 	}
@@ -127,7 +117,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, wsmanMock, management, repo := initNetworkTest(t)
+			useCase, wsmanMock, management, repo := initConnectionsTest(t)
 
 			if tc.manMock != nil {
 				tc.manMock(wsmanMock, management)
@@ -135,7 +125,7 @@ func TestGetNetworkSettings(t *testing.T) {
 
 			tc.repoMock(repo)
 
-			res, err := useCase.GetNetworkSettings(context.Background(), device.GUID)
+			res, err := useCase.GetTLSSettingData(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
 			require.IsType(t, tc.err, err)
