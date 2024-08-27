@@ -21,6 +21,7 @@ func (g *Redirector) SetupWsmanClient(device dto.Device, isRedirection, logAMTMe
 		SelfSignedAllowed: device.AllowSelfSigned,
 		LogAMTMessages:    logAMTMessages,
 		IsRedirection:     isRedirection,
+		PinnedCert:        device.CertHash,
 	}
 
 	return wsman.NewMessages(clientParams)

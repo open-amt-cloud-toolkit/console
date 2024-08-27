@@ -2,6 +2,13 @@ package devices
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/rsa"
+	"crypto/sha1" //nolint:gosec // SHA-1 is used for thumbprint not signature
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/hex"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -158,4 +165,67 @@ func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.Security
 	}
 
 	return securitySettings, nil
+}
+
+func (uc *UseCase) GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error) {
+	item, err := uc.GetByID(c, guid, "")
+	if err != nil {
+		return dto.Certificate{}, err
+	}
+
+	device := uc.device.SetupWsmanClient(*item, false, true)
+
+	cert1, err := device.GetDeviceCertificate()
+	if err != nil {
+		return dto.Certificate{}, err
+	}
+
+	var certDTOs []dto.Certificate
+
+	for _, certBytes := range cert1.Certificate {
+		// Parse each certificate byte slice into an x509.Certificate
+		cert, err := x509.ParseCertificate(certBytes)
+		if err != nil {
+			uc.log.Warn(fmt.Sprintf("Failed to parse certificate: %v", err))
+
+			continue
+		}
+
+		// Populate the DTO with certificate information
+		certDTO := populateCertificateDTO(cert)
+		certDTOs = append(certDTOs, certDTO)
+	}
+
+	return certDTOs[0], nil
+}
+
+func populateCertificateDTO(cert *x509.Certificate) dto.Certificate {
+	// Compute the SHA-1 and SHA-256 fingerprints
+	sha1Fingerprint := sha1.Sum(cert.Raw) //nolint:gosec // SHA-1 is used for thumbprint not signature
+	sha256Fingerprint := sha256.Sum256(cert.Raw)
+
+	// Determine the public key size
+	var publicKeySize int
+	switch pub := cert.PublicKey.(type) {
+	case *rsa.PublicKey:
+		publicKeySize = pub.N.BitLen()
+	case *ecdsa.PublicKey:
+		publicKeySize = pub.Curve.Params().BitSize
+	default:
+		publicKeySize = 0 // Unknown or unsupported key type
+	}
+
+	// Populate the dto.Certificate struct
+	return dto.Certificate{
+		CommonName:         cert.Subject.CommonName,
+		IssuerName:         cert.Issuer.CommonName,
+		SerialNumber:       cert.SerialNumber.String(),
+		NotBefore:          cert.NotBefore,
+		NotAfter:           cert.NotAfter,
+		DNSNames:           cert.DNSNames,
+		SHA1Fingerprint:    hex.EncodeToString(sha1Fingerprint[:]),
+		SHA256Fingerprint:  hex.EncodeToString(sha256Fingerprint[:]),
+		PublicKeyAlgorithm: cert.PublicKeyAlgorithm.String(),
+		PublicKeySize:      publicKeySize,
+	}
 }

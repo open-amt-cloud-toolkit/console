@@ -89,7 +89,7 @@ func setupEmbeddedDB(db *SQL, dbOpen OpenFunc) error {
 		return err
 	}
 
-	dbPath := filepath.Join(dirname, "device-management-toolkit", "console.db")
+	dbPath := filepath.Join(dirname, "device-management-toolkit", "console.db?_pragma=journal_mode(WAL)")
 
 	db.Pool, err = dbOpen("sqlite", dbPath)
 	if err != nil {

@@ -88,6 +88,12 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 		AllowSelfSigned: d.AllowSelfSigned,
 	}
 
+	if d.CertHash == "" {
+		d1.CertHash = nil
+	} else {
+		d1.CertHash = &d.CertHash
+	}
+
 	return d1
 }
 
@@ -114,6 +120,10 @@ func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 		Password:        d.Password,
 		UseTLS:          d.UseTLS,
 		AllowSelfSigned: d.AllowSelfSigned,
+	}
+
+	if d.CertHash != nil {
+		d1.CertHash = *d.CertHash
 	}
 
 	return d1

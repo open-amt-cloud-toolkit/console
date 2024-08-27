@@ -21,6 +21,7 @@ services:
     env_file:
       - .env
     environment:
+      HTTP_HOST: ""
       GIN_MODE: "debug"
       DB_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
     ports:
