@@ -2,16 +2,16 @@ package dto
 
 type (
 	SecuritySettings struct {
-		ProfileAssociation []ProfileAssociation `json:"ProfileAssociation"`
-		Certificates       interface{}          `json:"Certificates"`
-		Keys               interface{}          `json:"PublicKeys"`
+		ProfileAssociation []ProfileAssociation `json:"profileAssociation"`
+		Certificates       interface{}          `json:"certificates"`
+		Keys               interface{}          `json:"publicKeys"`
 	}
 
 	ProfileAssociation struct {
-		Type              string      `json:"Type"`
-		ProfileID         string      `json:"ProfileID"`
-		RootCertificate   interface{} `json:"RootCertificate,omitempty"`
-		ClientCertificate interface{} `json:"ClientCertificate,omitempty"`
-		Key               interface{} `json:"PublicKey,omitempty"`
+		Type              string      `json:"type"`
+		ProfileID         string      `json:"profileID"`
+		RootCertificate   interface{} `json:"rootCertificate,omitempty"`
+		ClientCertificate interface{} `json:"clientCertificate,omitempty"`
+		Key               interface{} `json:"publicKey,omitempty"`
 	}
 )
