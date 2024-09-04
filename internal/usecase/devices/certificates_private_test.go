@@ -249,7 +249,18 @@ var getResponse wsman.Certificates = wsman.Certificates{
 		},
 	},
 	PublicKeyCertificateResponse: publickey.RefinedPullResponse{
-		KeyManagementItems: []publickey.RefinedKeyManagementResponse{},
+		KeyManagementItems: []publickey.RefinedKeyManagementResponse{
+			{
+				CreationClassName:       "",
+				ElementName:             "",
+				EnabledDefault:          0,
+				EnabledState:            0,
+				Name:                    "",
+				RequestedState:          0,
+				SystemCreationClassName: "",
+				SystemName:              "",
+			},
+		},
 		PublicKeyCertificateItems: []publickey.RefinedPublicKeyCertificateResponse{
 			{
 				ElementName:            "Intel(r) AMT Certificate",
@@ -290,7 +301,7 @@ var getResponse wsman.Certificates = wsman.Certificates{
 				X509Certificate:        "TestCert3",
 				TrustedRootCertificate: false,
 				Issuer:                 "TestIssuer",
-				Subject:                "TestSubject2",
+				Subject:                "A=Test, CN=CommonName, C=Country",
 				ReadOnlyCertificate:    false,
 				PublicKeyHandle:        "",
 				AssociatedProfiles:     nil,
@@ -663,12 +674,111 @@ var getResponse wsman.Certificates = wsman.Certificates{
 	},
 }
 
+var parsedCerts = dto.CertificatePullResponse{
+	KeyManagementItems: []dto.RefinedKeyManagementResponse{
+		{
+			CreationClassName:       "",
+			ElementName:             "",
+			EnabledDefault:          0,
+			EnabledState:            0,
+			Name:                    "",
+			RequestedState:          0,
+			SystemCreationClassName: "",
+			SystemName:              "",
+		},
+	},
+	Certificates: []dto.RefinedCertificate{
+		{
+			ElementName:            "Intel(r) AMT Certificate",
+			InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
+			X509Certificate:        "TestCertRoot",
+			TrustedRootCertificate: true,
+			Issuer:                 "TestIssuer",
+			Subject:                "TestSubject",
+			ReadOnlyCertificate:    false,
+			PublicKeyHandle:        "",
+			AssociatedProfiles:     []string(nil),
+			DisplayName:            "Intel(r) AMT Certificate: Handle: 2",
+		},
+		{
+			ElementName:     "Intel(r) AMT Certificate",
+			InstanceID:      "Intel(r) AMT Certificate: Handle: 0",
+			X509Certificate: "TestCert0", TrustedRootCertificate: false,
+			Issuer:              "TestIssuer",
+			Subject:             "TestSubject2",
+			ReadOnlyCertificate: false,
+			PublicKeyHandle:     "",
+			AssociatedProfiles:  []string(nil),
+			DisplayName:         "Intel(r) AMT Certificate: Handle: 0",
+		},
+		{
+			ElementName:            "Intel(r) AMT Certificate",
+			InstanceID:             "Intel(r) AMT Certificate: Handle: 1",
+			X509Certificate:        "TestCert1",
+			TrustedRootCertificate: false,
+			Issuer:                 "TestIssuer",
+			Subject:                "TestSubject2",
+			ReadOnlyCertificate:    false,
+			PublicKeyHandle:        "", AssociatedProfiles: []string(nil),
+			DisplayName: "Intel(r) AMT Certificate: Handle: 1",
+		},
+		{
+			ElementName:     "Intel(r) AMT Certificate",
+			InstanceID:      "Intel(r) AMT Certificate: Handle: 3",
+			X509Certificate: "TestCert3", TrustedRootCertificate: false,
+			Issuer:              "TestIssuer",
+			Subject:             "A=Test, CN=CommonName, C=Country",
+			ReadOnlyCertificate: false,
+			PublicKeyHandle:     "",
+			AssociatedProfiles:  []string(nil),
+			DisplayName:         "CommonName",
+		},
+	},
+}
+
+var parsedKeys = dto.KeyPullResponse{
+	Keys: []dto.Key{
+		{
+			ElementName:       "Intel(r) AMT Key",
+			InstanceID:        "Intel(r) AMT Key: Handle: 0",
+			DERKey:            "Key0",
+			CertificateHandle: "",
+		},
+		{
+			ElementName:       "Intel(r) AMT Key",
+			InstanceID:        "Intel(r) AMT Key: Handle: 1",
+			DERKey:            "Key1",
+			CertificateHandle: "",
+		},
+		{
+			ElementName:       "Intel(r) AMT Key",
+			InstanceID:        "Intel(r) AMT Key: Handle: 2",
+			DERKey:            "Key2",
+			CertificateHandle: "",
+		},
+	},
+}
+
+func TestCertificatesToDTO(t *testing.T) {
+	t.Parallel()
+
+	certs := CertificatesToDTO(&getResponse.PublicKeyCertificateResponse)
+	require.Equal(t, parsedCerts, *certs)
+}
+
+func TestKeysToDTO(t *testing.T) {
+	t.Parallel()
+
+	keys := KeysToDTO(&getResponse.PublicPrivateKeyPairResponse)
+	require.Equal(t, parsedKeys, *keys)
+}
+
 func TestProcessCertificates(t *testing.T) {
 	t.Parallel()
 
 	securitySettings := dto.SecuritySettings{
-		Certificates: getResponse.PublicKeyCertificateResponse,
-		Keys:         getResponse.PublicPrivateKeyPairResponse,
+		CertificateResponse: parsedCerts,
+		KeyResponse:         parsedKeys,
 	}
 
 	tests := []certificateTest{
@@ -679,7 +789,7 @@ func TestProcessCertificates(t *testing.T) {
 					{
 						Type:      "Wireless",
 						ProfileID: "TestWifi8021xTLS",
-						RootCertificate: publickey.RefinedPublicKeyCertificateResponse{
+						RootCertificate: &dto.RefinedCertificate{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
 							X509Certificate:        "TestCertRoot",
@@ -688,7 +798,7 @@ func TestProcessCertificates(t *testing.T) {
 							PublicKeyHandle:        "",
 							AssociatedProfiles:     nil,
 						},
-						ClientCertificate: publickey.RefinedPublicKeyCertificateResponse{
+						ClientCertificate: &dto.RefinedCertificate{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 3",
 							X509Certificate:        "TestCert3",
@@ -697,7 +807,7 @@ func TestProcessCertificates(t *testing.T) {
 							PublicKeyHandle:        "",
 							AssociatedProfiles:     nil,
 						},
-						Key: publicprivate.RefinedPublicPrivateKeyPair{
+						Key: &dto.Key{
 							ElementName:       "Intel(r) AMT Key",
 							InstanceID:        "Intel(r) AMT Key: Handle: 2",
 							DERKey:            "Key2",
@@ -707,7 +817,7 @@ func TestProcessCertificates(t *testing.T) {
 					{
 						Type:      "Wireless",
 						ProfileID: "TestWifi8021xTLS2",
-						RootCertificate: publickey.RefinedPublicKeyCertificateResponse{
+						RootCertificate: &dto.RefinedCertificate{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
 							X509Certificate:        "TestCertRoot",
@@ -715,16 +825,17 @@ func TestProcessCertificates(t *testing.T) {
 							ReadOnlyCertificate:    false,
 							PublicKeyHandle:        "",
 							AssociatedProfiles: []string{
-								"TestWifi8021xTLS",
+								"Wireless - TestWifi8021xTLS",
+								"Wireless - TestWifi8021xTLS2",
 							},
 						},
-						ClientCertificate: publickey.RefinedPublicKeyCertificateResponse{},
-						Key:               publicprivate.RefinedPublicPrivateKeyPair{},
+						ClientCertificate: &dto.RefinedCertificate{},
+						Key:               &dto.Key{},
 					},
 				},
-				Certificates: publickey.RefinedPullResponse{
+				CertificateResponse: dto.CertificatePullResponse{
 					KeyManagementItems: nil,
-					PublicKeyCertificateItems: []publickey.RefinedPublicKeyCertificateResponse{
+					Certificates: []dto.RefinedCertificate{
 						{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
@@ -733,8 +844,8 @@ func TestProcessCertificates(t *testing.T) {
 							ReadOnlyCertificate:    false,
 							PublicKeyHandle:        "",
 							AssociatedProfiles: []string{
-								"exampleWifi8021xTLS",
-								"exampleWifi8021xTLS2",
+								"Wireless - exampleWifi8021xTLS",
+								"Wireless - exampleWifi8021xTLS2",
 							},
 						},
 						{
@@ -763,13 +874,13 @@ func TestProcessCertificates(t *testing.T) {
 							ReadOnlyCertificate:    false,
 							PublicKeyHandle:        "",
 							AssociatedProfiles: []string{
-								"TestWifi8021xTLS",
+								"Wireless - TestWifi8021xTLS",
 							},
 						},
 					},
 				},
-				Keys: publicprivate.RefinedPullResponse{
-					PublicPrivateKeyPairItems: []publicprivate.RefinedPublicPrivateKeyPair{
+				KeyResponse: dto.KeyPullResponse{
+					Keys: []dto.Key{
 						{
 							ElementName:       "Intel(r) AMT Key",
 							InstanceID:        "Intel(r) AMT Key: Handle: 0",
@@ -804,10 +915,10 @@ func TestProcessCertificates(t *testing.T) {
 			processCertificates(getResponse.CIMCredentialContextResponse.Items.CredentialContext, getResponse, tc.profileType, &securitySettings)
 
 			require.Equal(t, tc.res.ProfileAssociation[0].Type, securitySettings.ProfileAssociation[0].Type)
-			require.Equal(t, tc.res.ProfileAssociation[0].ClientCertificate.(publickey.RefinedPublicKeyCertificateResponse).InstanceID, securitySettings.ProfileAssociation[0].ClientCertificate.(publickey.RefinedPublicKeyCertificateResponse).InstanceID)
-			require.Equal(t, tc.res.ProfileAssociation[1].RootCertificate.(publickey.RefinedPublicKeyCertificateResponse).AssociatedProfiles, securitySettings.ProfileAssociation[1].RootCertificate.(publickey.RefinedPublicKeyCertificateResponse).AssociatedProfiles)
-			require.Equal(t, tc.res.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[3].AssociatedProfiles, securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[3].AssociatedProfiles)
-			require.Equal(t, tc.res.Keys.(publicprivate.RefinedPullResponse).PublicPrivateKeyPairItems[2].CertificateHandle, securitySettings.Keys.(publicprivate.RefinedPullResponse).PublicPrivateKeyPairItems[2].CertificateHandle)
+			require.Equal(t, tc.res.ProfileAssociation[0].ClientCertificate.InstanceID, securitySettings.ProfileAssociation[0].ClientCertificate.InstanceID)
+			require.Equal(t, tc.res.ProfileAssociation[1].RootCertificate.AssociatedProfiles, securitySettings.ProfileAssociation[1].RootCertificate.AssociatedProfiles)
+			require.Equal(t, tc.res.CertificateResponse.Certificates[3].AssociatedProfiles, securitySettings.CertificateResponse.Certificates[3].AssociatedProfiles)
+			require.Equal(t, tc.res.KeyResponse.Keys[2].CertificateHandle, securitySettings.KeyResponse.Keys[2].CertificateHandle)
 		})
 	}
 }
