@@ -66,7 +66,7 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 		d.Tags = []string{}
 	}
 
-	tags := strings.Join(d.Tags, ", ")
+	tags := strings.Join(d.Tags, ",")
 
 	d1 := &entity.Device{
 		ConnectionStatus: d.ConnectionStatus,
@@ -100,7 +100,10 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 // convert entity.Device to dto.Device.
 func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 	// convert comma separated string to []string
-	tags := strings.Split(d.Tags, ",")
+	var tags []string
+	if d.Tags != "" {
+		tags = strings.Split(d.Tags, ",")
+	}
 
 	d1 := &dto.Device{
 		ConnectionStatus: d.ConnectionStatus,

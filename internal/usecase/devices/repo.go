@@ -144,9 +144,6 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	d2 := uc.entityToDTO(updateDevice)
-	if updateDevice.Tags == "" {
-		d2.Tags = []string{}
-	}
 
 	// invalidate connection cache
 	uc.device.DestroyWsmanClient(*d2)

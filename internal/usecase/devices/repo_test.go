@@ -98,12 +98,12 @@ func TestGet(t *testing.T) {
 		{
 			GUID:     "guid-123",
 			TenantID: "tenant-id-456",
-			Tags:     []string{""},
+			Tags:     nil,
 		},
 		{
 			GUID:     "guid-456",
 			TenantID: "tenant-id-456",
-			Tags:     []string{""},
+			Tags:     nil,
 		},
 	}
 
@@ -182,7 +182,7 @@ func TestGetByID(t *testing.T) {
 	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
-		Tags:     []string{""},
+		Tags:     nil,
 	}
 
 	tests := []testUsecase{
@@ -289,12 +289,13 @@ func TestUpdate(t *testing.T) {
 	device := &entity.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
+		Tags:     "hello,test",
 	}
 
 	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
-		Tags:     []string{},
+		Tags:     []string{"hello", "test"},
 	}
 
 	tests := []testUsecase{
