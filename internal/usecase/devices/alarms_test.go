@@ -42,22 +42,19 @@ func TestGetAlarmOccurrences(t *testing.T) {
 
 	dtoDevice := &dto.Device{
 		GUID:     "device-guid-123",
-		Tags:     []string{""},
+		Tags:     nil,
 		TenantID: "tenant-id-456",
 	}
 
 	device := &entity.Device{
-		GUID: "device-guid-123",
-
+		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
 
 	tests := []test{
 		{
-			name: "success",
-
+			name:   "success",
 			action: 0,
-
 			manMock: func(man *MockWSMAN, hmm *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
@@ -66,39 +63,28 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetAlarmOccurrences().
 					Return([]alarmclock.AlarmClockOccurrence{}, nil)
 			},
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: []dto.AlarmClockOccurrence{},
-
 			err: nil,
 		},
-
 		{
-			name: "GetById fails",
-
+			name:   "GetById fails",
 			action: 0,
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-
 			res: []dto.AlarmClockOccurrence(nil),
-
 			err: devices.ErrDatabase,
 		},
-
 		{
-			name: "GetAlarmOccurrences fails",
-
+			name:   "GetAlarmOccurrences fails",
 			action: 0,
-
 			manMock: func(man *MockWSMAN, hmm *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
@@ -107,23 +93,17 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetAlarmOccurrences().
 					Return([]alarmclock.AlarmClockOccurrence{}, ErrGeneral)
 			},
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: []dto.AlarmClockOccurrence(nil),
-
 			err: ErrGeneral,
 		},
-
 		{
-			name: "GetAlarmOccurrences returns nil",
-
+			name:   "GetAlarmOccurrences returns nil",
 			action: 0,
-
 			manMock: func(man *MockWSMAN, hmm *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
@@ -132,15 +112,12 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetAlarmOccurrences().
 					Return(nil, nil)
 			},
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: []dto.AlarmClockOccurrence{},
-
 			err: nil,
 		},
 	}
@@ -172,24 +149,19 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
-		GUID: "device-guid-123",
-
+		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
 	dtoDevice := &dto.Device{
 		GUID:     "device-guid-123",
-		Tags:     []string{""},
+		Tags:     nil,
 		TenantID: "tenant-id-456",
 	}
 	occ := dto.AlarmClockOccurrence{
-		ElementName: "test",
-
-		InstanceID: "test",
-
-		StartTime: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
-
-		Interval: 1,
-
+		ElementName:        "test",
+		InstanceID:         "test",
+		StartTime:          time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+		Interval:           1,
 		DeleteOnCompletion: true,
 	}
 
@@ -207,10 +179,8 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 		err error
 	}{
 		{
-			name: "success",
-
+			name:   "success",
 			action: 0,
-
 			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
@@ -219,39 +189,28 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					CreateAlarmOccurrences(occ.InstanceID, occ.StartTime, 1, occ.DeleteOnCompletion).
 					Return(amtAlarmClock.AddAlarmOutput{}, nil)
 			},
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: dto.AddAlarmOutput{},
-
 			err: nil,
 		},
-
 		{
-			name: "GetByID fails",
-
+			name:   "GetByID fails",
 			action: 0,
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-
 			res: dto.AddAlarmOutput{},
-
 			err: devices.ErrDatabase,
 		},
-
 		{
-			name: "GetAlarmOccurrences fails",
-
+			name:   "GetAlarmOccurrences fails",
 			action: 0,
-
 			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
@@ -260,15 +219,12 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					CreateAlarmOccurrences(occ.InstanceID, occ.StartTime, 1, occ.DeleteOnCompletion).
 					Return(amtAlarmClock.AddAlarmOutput{}, ErrGeneral)
 			},
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: dto.AddAlarmOutput{},
-
 			err: devices.ErrAMT,
 		},
 	}
@@ -300,32 +256,25 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
-		GUID: "device-guid-123",
-
+		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
 
 	dtoDevice := &dto.Device{
 		GUID:     "device-guid-123",
-		Tags:     []string{""},
+		Tags:     nil,
 		TenantID: "tenant-id-456",
 	}
 	tests := []struct {
-		name string
-
-		action int
-
-		manMock func(man *MockWSMAN, man2 *MockManagement)
-
+		name     string
+		action   int
+		manMock  func(man *MockWSMAN, man2 *MockManagement)
 		repoMock func(repo *MockRepository)
-
-		err error
+		err      error
 	}{
 		{
-			name: "success",
-
+			name:   "success",
 			action: 0,
-
 			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
@@ -334,35 +283,26 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 					DeleteAlarmOccurrences("").
 					Return(nil)
 			},
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			err: nil,
 		},
-
 		{
-			name: "GetById fails",
-
+			name:   "GetById fails",
 			action: 0,
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-
 			err: devices.ErrDatabase,
 		},
-
 		{
-			name: "GetAlarmOccurrences fails",
-
+			name:   "GetAlarmOccurrences fails",
 			action: 0,
-
 			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(*dtoDevice, false, true).
@@ -371,13 +311,11 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 					DeleteAlarmOccurrences("").
 					Return(ErrGeneral)
 			},
-
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			err: ErrGeneral,
 		},
 	}
