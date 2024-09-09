@@ -763,14 +763,14 @@ func TestCertificatesToDTO(t *testing.T) {
 	t.Parallel()
 
 	certs := CertificatesToDTO(&getResponse.PublicKeyCertificateResponse)
-	require.Equal(t, parsedCerts, *certs)
+	require.Equal(t, parsedCerts, certs)
 }
 
 func TestKeysToDTO(t *testing.T) {
 	t.Parallel()
 
 	keys := KeysToDTO(&getResponse.PublicPrivateKeyPairResponse)
-	require.Equal(t, parsedKeys, *keys)
+	require.Equal(t, parsedKeys, keys)
 }
 
 func TestProcessCertificates(t *testing.T) {
