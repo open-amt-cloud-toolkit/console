@@ -28,22 +28,23 @@ const (
 	TypeWired    string = "Wired"
 )
 
-func processConcreteDependencies(certificateHandle string, profileAssociation *dto.ProfileAssociation, dependancyItems []concrete.ConcreteDependency, securitySettings dto.SecuritySettings) {
-	for x := range dependancyItems {
-		if dependancyItems[x].Antecedent.ReferenceParameters.SelectorSet.Selectors[0].Text != certificateHandle {
-			continue
+func processConcreteDependencies(certificateHandle string, profileAssociation *dto.ProfileAssociation, dependencyItems []concrete.ConcreteDependency, securitySettings dto.SecuritySettings) {
+	for i := range dependencyItems {
+		di := dependencyItems[i]
+		if di.Antecedent.ReferenceParameters.SelectorSet.Selectors[0].Text == certificateHandle {
+			updateProfileAssociationKey(di.Dependent.ReferenceParameters.SelectorSet.Selectors[0].Text, profileAssociation, securitySettings)
 		}
+	}
+}
 
-		keyHandle := dependancyItems[x].Dependent.ReferenceParameters.SelectorSet.Selectors[0].Text
+// Helper function to update profile association key if matching key is found.
+func updateProfileAssociationKey(keyHandle string, profileAssociation *dto.ProfileAssociation, securitySettings dto.SecuritySettings) {
+	for _, key := range securitySettings.KeyResponse.Keys {
+		if key.InstanceID == keyHandle {
+			keyCopy := key
+			profileAssociation.Key = &keyCopy
 
-		keys := securitySettings.KeyResponse.Keys
-		for i := range keys {
-			if keys[i].InstanceID == keyHandle {
-				keyCopy := keys[i]
-				profileAssociation.Key = &keyCopy
-
-				break
-			}
+			return
 		}
 	}
 }
@@ -92,49 +93,46 @@ func getProfileAssociationText(profileAssociation dto.ProfileAssociation) string
 func buildProfileAssociations(certificateHandle string, profileAssociation *dto.ProfileAssociation, response wsman.Certificates, securitySettings *dto.SecuritySettings) {
 	isNewProfileAssociation := true
 
-	certs := securitySettings.CertificateResponse.Certificates
-	for i := range certs {
-		if certs[i].InstanceID != certificateHandle {
-			continue
+	for i := range securitySettings.CertificateResponse.Certificates {
+		if securitySettings.CertificateResponse.Certificates[i].InstanceID == certificateHandle {
+			if securitySettings.CertificateResponse.Certificates[i].TrustedRootCertificate {
+				profileAssociation.RootCertificate = &securitySettings.CertificateResponse.Certificates[i]
+			} else {
+				profileAssociation.ClientCertificate = &securitySettings.CertificateResponse.Certificates[i]
+				processConcreteDependencies(certificateHandle, profileAssociation, response.ConcreteDependencyResponse.Items, *securitySettings)
+			}
 		}
-
-		if certs[i].TrustedRootCertificate {
-			profileAssociation.RootCertificate = &certs[i]
-
-			continue
-		}
-
-		profileAssociation.ClientCertificate = &certs[i]
-
-		processConcreteDependencies(certificateHandle, profileAssociation, response.ConcreteDependencyResponse.Items, *securitySettings)
 	}
 
-	// Check if the certificate is already in the list
-	for idx := range securitySettings.ProfileAssociation {
-		if !(securitySettings.ProfileAssociation[idx].ProfileID == profileAssociation.ProfileID) {
-			continue
+	// Update certificates in the profile association if it already exists in the list
+	for i, assoc := range securitySettings.ProfileAssociation {
+		if assoc.ProfileID == profileAssociation.ProfileID {
+			updateCertificate(&securitySettings.ProfileAssociation[i], profileAssociation)
+
+			isNewProfileAssociation = false
+
+			break
 		}
-
-		if profileAssociation.RootCertificate != nil {
-			securitySettings.ProfileAssociation[idx].RootCertificate = profileAssociation.RootCertificate
-		}
-
-		if profileAssociation.ClientCertificate != nil {
-			securitySettings.ProfileAssociation[idx].ClientCertificate = profileAssociation.ClientCertificate
-		}
-
-		if profileAssociation.Key != nil {
-			securitySettings.ProfileAssociation[idx].Key = profileAssociation.Key
-		}
-
-		isNewProfileAssociation = false
-
-		break
 	}
 
 	// If the profile is not in the list, add it
 	if isNewProfileAssociation {
 		securitySettings.ProfileAssociation = append(securitySettings.ProfileAssociation, *profileAssociation)
+	}
+}
+
+// Helper function to update certificates if they are not nil.
+func updateCertificate(existingAssoc, newAssoc *dto.ProfileAssociation) {
+	if newAssoc.RootCertificate != nil {
+		existingAssoc.RootCertificate = newAssoc.RootCertificate
+	}
+
+	if newAssoc.ClientCertificate != nil {
+		existingAssoc.ClientCertificate = newAssoc.ClientCertificate
+	}
+
+	if newAssoc.Key != nil {
+		existingAssoc.Key = newAssoc.Key
 	}
 }
 
@@ -165,8 +163,8 @@ func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.Security
 	}
 
 	securitySettings := dto.SecuritySettings{
-		CertificateResponse: *CertificatesToDTO(&response.PublicKeyCertificateResponse),
-		KeyResponse:         *KeysToDTO(&response.PublicPrivateKeyPairResponse),
+		CertificateResponse: CertificatesToDTO(&response.PublicKeyCertificateResponse),
+		KeyResponse:         KeysToDTO(&response.PublicPrivateKeyPairResponse),
 	}
 
 	if !reflect.DeepEqual(response.CIMCredentialContextResponse, credential.PullResponse{}) {
@@ -178,7 +176,7 @@ func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.Security
 	return securitySettings, nil
 }
 
-func CertificatesToDTO(r *publickey.RefinedPullResponse) *dto.CertificatePullResponse {
+func CertificatesToDTO(r *publickey.RefinedPullResponse) dto.CertificatePullResponse {
 	regex := regexp.MustCompile(`CN=[^,]+`)
 
 	keyManagementItems := make([]dto.RefinedKeyManagementResponse, len(r.KeyManagementItems))
@@ -219,13 +217,13 @@ func CertificatesToDTO(r *publickey.RefinedPullResponse) *dto.CertificatePullRes
 		}
 	}
 
-	return &dto.CertificatePullResponse{
+	return dto.CertificatePullResponse{
 		KeyManagementItems: keyManagementItems,
 		Certificates:       certItems,
 	}
 }
 
-func KeysToDTO(r *publicprivate.RefinedPullResponse) *dto.KeyPullResponse {
+func KeysToDTO(r *publicprivate.RefinedPullResponse) dto.KeyPullResponse {
 	keyItems := make([]dto.Key, len(r.PublicPrivateKeyPairItems))
 	for i, item := range r.PublicPrivateKeyPairItems {
 		keyItems[i] = dto.Key{
@@ -236,7 +234,7 @@ func KeysToDTO(r *publicprivate.RefinedPullResponse) *dto.KeyPullResponse {
 		}
 	}
 
-	return &dto.KeyPullResponse{
+	return dto.KeyPullResponse{
 		Keys: keyItems,
 	}
 }
