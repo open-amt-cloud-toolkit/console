@@ -18,7 +18,7 @@ type Device struct {
 	LastSeen         *time.Time  `json:"lastSeen,omitempty"`
 	LastDisconnected *time.Time  `json:"lastDisconnected,omitempty"`
 	DeviceInfo       *DeviceInfo `json:"deviceInfo,omitempty"`
-	Username         string      `json:"username"`
+	Username         string      `json:"username" binding:"max=16"`
 	Password         string      `json:"password"`
 	UseTLS           bool        `json:"useTLS"`
 	AllowSelfSigned  bool        `json:"allowSelfSigned"`
