@@ -87,23 +87,25 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 
 	sqlQuery, _, err := r.Builder.
 		Select(
-			"wireless_profile_name",
-			"authentication_method",
-			"encryption_method",
-			"ssid",
-			"psk_value",
-			"psk_passphrase",
-			"link_policy",
+			"w.wireless_profile_name",
+			"w.authentication_method",
+			"w.encryption_method",
+			"w.ssid",
+			"w.psk_value",
+			"w.psk_passphrase",
+			"w.link_policy",
 			"w.tenant_id",
-			"ieee8021x_profile_name",
-			"auth_protocol",
-			"pxe_timeout integer",
-			"wired_interface",
+			"w.ieee8021x_profile_name",
+			"w.auth_protocol",
+			"w.pxe_timeout",
+			"w.wired_interface",
+			"e.pxe_timeout AS e_pxe_timeout",
+			"e.wired_interface AS e_wired_interface",
 		).
 		From("wirelessconfigs w").
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
 		Where("w.tenant_id = ?", tenantID).
-		OrderBy("wireless_profile_name").
+		OrderBy("w.wireless_profile_name").
 		Limit(uint64(top)).
 		Offset(uint64(skip)).
 		ToSql()
@@ -152,9 +154,9 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 			"link_policy",
 			"w.tenant_id",
 			"ieee8021x_profile_name",
-			"auth_protocol",
-			"pxe_timeout",
-			"wired_interface",
+			"w.auth_protocol",
+			"w.pxe_timeout",
+			"w.wired_interface",
 		).
 		From("wirelessconfigs w").
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
