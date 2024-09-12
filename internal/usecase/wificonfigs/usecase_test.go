@@ -8,7 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -17,7 +17,7 @@ type test struct {
 	name        string
 	top         int
 	skip        int
-	input       dto.WirelessConfig
+	input       dtov1.WirelessConfig
 	profileName string
 	tenantID    string
 	mock        func(*MockRepository, ...interface{})
@@ -34,24 +34,24 @@ func (m MockIEEE8021x) GetCount(_ context.Context, _ string) (int, error) {
 	return 0, nil
 }
 
-func (m MockIEEE8021x) Get(_ context.Context, _, _ int, _ string) ([]dto.IEEE8021xConfig, error) {
-	return []dto.IEEE8021xConfig{}, nil
+func (m MockIEEE8021x) Get(_ context.Context, _, _ int, _ string) ([]dtov1.IEEE8021xConfig, error) {
+	return []dtov1.IEEE8021xConfig{}, nil
 }
 
-func (m MockIEEE8021x) GetByName(_ context.Context, _, _ string) (*dto.IEEE8021xConfig, error) {
-	return &dto.IEEE8021xConfig{}, nil
+func (m MockIEEE8021x) GetByName(_ context.Context, _, _ string) (*dtov1.IEEE8021xConfig, error) {
+	return &dtov1.IEEE8021xConfig{}, nil
 }
 
 func (m MockIEEE8021x) Delete(_ context.Context, _, _ string) error {
 	return nil
 }
 
-func (m MockIEEE8021x) Update(_ context.Context, _ *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
-	return &dto.IEEE8021xConfig{}, nil
+func (m MockIEEE8021x) Update(_ context.Context, _ *dtov1.IEEE8021xConfig) (*dtov1.IEEE8021xConfig, error) {
+	return &dtov1.IEEE8021xConfig{}, nil
 }
 
-func (m MockIEEE8021x) Insert(_ context.Context, _ *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
-	return &dto.IEEE8021xConfig{}, nil
+func (m MockIEEE8021x) Insert(_ context.Context, _ *dtov1.IEEE8021xConfig) (*dtov1.IEEE8021xConfig, error) {
+	return &dtov1.IEEE8021xConfig{}, nil
 }
 
 func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *MockRepository) {
@@ -170,13 +170,13 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	testWifiConfigDTOs := []dto.WirelessConfig{
+	testWifiConfigDTOs := []dtov1.WirelessConfig{
 		{
 			ProfileName:          "test-wirelessconfig-1",
 			TenantID:             "tenant-id-456",
 			LinkPolicy:           []int{1, 2},
 			IEEE8021xProfileName: &ieeeProfileName,
-			IEEE8021xProfileObject: &dto.IEEE8021xConfig{
+			IEEE8021xProfileObject: &dtov1.IEEE8021xConfig{
 				AuthenticationProtocol: 0,
 				WiredInterface:         false,
 			},
@@ -212,7 +212,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), args[0], args[1], args[2]).
 					Return(nil, wificonfigs.ErrDatabase)
 			},
-			res: []dto.WirelessConfig(nil),
+			res: []dtov1.WirelessConfig(nil),
 			err: wificonfigs.ErrDatabase,
 		},
 		{
@@ -225,7 +225,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), args[0], args[1], args[2]).
 					Return([]entity.WirelessConfig{}, nil)
 			},
-			res: []dto.WirelessConfig{},
+			res: []dtov1.WirelessConfig{},
 			err: nil,
 		},
 	}
@@ -261,7 +261,7 @@ func TestGetByName(t *testing.T) {
 		Version:     "123",
 	}
 
-	wirelessConfigDTO := &dto.WirelessConfig{
+	wirelessConfigDTO := &dtov1.WirelessConfig{
 		ProfileName: "test-WirelessConfig",
 		TenantID:    "tenant-id-456",
 		Version:     "123",
@@ -271,7 +271,7 @@ func TestGetByName(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful retrieval",
-			input: dto.WirelessConfig{
+			input: dtov1.WirelessConfig{
 				ProfileName: "test-wirelessConfig",
 				TenantID:    "tenant-id-456",
 			},
@@ -285,7 +285,7 @@ func TestGetByName(t *testing.T) {
 		},
 		{
 			name: "WirelessConfig not found",
-			input: dto.WirelessConfig{
+			input: dtov1.WirelessConfig{
 				ProfileName: "unknown-WirelessConfig",
 				TenantID:    "tenant-id-456",
 			},
@@ -294,7 +294,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), args[0], args[1]).
 					Return(nil, nil)
 			},
-			res: (*dto.WirelessConfig)(nil),
+			res: (*dtov1.WirelessConfig)(nil),
 			err: wificonfigs.ErrNotFound,
 		},
 	}
@@ -378,7 +378,7 @@ func TestUpdate(t *testing.T) {
 		LinkPolicy:  new(string),
 	}
 
-	wirelessConfigDTO := &dto.WirelessConfig{
+	wirelessConfigDTO := &dtov1.WirelessConfig{
 		ProfileName: "test-WirelessConfig",
 		TenantID:    "tenant-id-456",
 		Version:     "123",
@@ -406,7 +406,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), wirelessConfig).
 					Return(false, wificonfigs.ErrNotFound)
 			},
-			res: (*dto.WirelessConfig)(nil),
+			res: (*dtov1.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,
 		},
 		{
@@ -416,7 +416,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), wirelessConfig).
 					Return(false, wificonfigs.ErrDatabase)
 			},
-			res: (*dto.WirelessConfig)(nil),
+			res: (*dtov1.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,
 		},
 	}
@@ -448,7 +448,7 @@ func TestInsert(t *testing.T) {
 		LinkPolicy:  new(string),
 	}
 
-	wirelessConfigDTO := &dto.WirelessConfig{
+	wirelessConfigDTO := &dtov1.WirelessConfig{
 		ProfileName: "test-WirelessConfig",
 		TenantID:    "tenant-id-456",
 		Version:     "123",
@@ -476,7 +476,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), wirelessConfig).
 					Return("", wificonfigs.ErrDatabase)
 			},
-			res: (*dto.WirelessConfig)(nil),
+			res: (*dtov1.WirelessConfig)(nil),
 			err: wificonfigs.ErrDatabase,
 		},
 	}

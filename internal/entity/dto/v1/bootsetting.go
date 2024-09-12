@@ -1,4 +1,4 @@
-package dto
+package dtov1
 
 type BootSetting struct {
 	Action int  `json:"action" binding:"required" example:"8"`

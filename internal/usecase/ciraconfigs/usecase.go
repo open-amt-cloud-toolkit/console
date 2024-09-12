@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -40,13 +40,13 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.CIRAConfig, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.CIRAConfig, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
 	}
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dto.CIRAConfig, len(data))
+	d1 := make([]dtov1.CIRAConfig, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -56,7 +56,7 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	return d1, nil
 }
 
-func (uc *UseCase) GetByName(ctx context.Context, configName, tenantID string) (*dto.CIRAConfig, error) {
+func (uc *UseCase) GetByName(ctx context.Context, configName, tenantID string) (*dtov1.CIRAConfig, error) {
 	data, err := uc.repo.GetByName(ctx, configName, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByName", "uc.repo.GetByName", err)
@@ -84,7 +84,7 @@ func (uc *UseCase) Delete(ctx context.Context, configName, tenantID string) erro
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *dto.CIRAConfig) (*dto.CIRAConfig, error) {
+func (uc *UseCase) Update(ctx context.Context, d *dtov1.CIRAConfig) (*dtov1.CIRAConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
 	updated, err := uc.repo.Update(ctx, d1)
@@ -106,7 +106,7 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.CIRAConfig) (*dto.CIRAConf
 	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *dto.CIRAConfig) (*dto.CIRAConfig, error) {
+func (uc *UseCase) Insert(ctx context.Context, d *dtov1.CIRAConfig) (*dtov1.CIRAConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
 	_, err := uc.repo.Insert(ctx, d1)
@@ -124,8 +124,8 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.CIRAConfig) (*dto.CIRAConf
 	return d2, nil
 }
 
-// convert dto.CIRAConfig to entity.CIRAConfig.
-func (uc *UseCase) dtoToEntity(d *dto.CIRAConfig) *entity.CIRAConfig {
+// convert dtov1.CIRAConfig to entity.CIRAConfig.
+func (uc *UseCase) dtoToEntity(d *dtov1.CIRAConfig) *entity.CIRAConfig {
 	d1 := &entity.CIRAConfig{
 		ConfigName:          d.ConfigName,
 		MPSAddress:          d.MPSAddress,
@@ -145,9 +145,9 @@ func (uc *UseCase) dtoToEntity(d *dto.CIRAConfig) *entity.CIRAConfig {
 	return d1
 }
 
-// convert entity.CIRAConfig to dto.CIRAConfig.
-func (uc *UseCase) entityToDTO(d *entity.CIRAConfig) *dto.CIRAConfig {
-	d1 := &dto.CIRAConfig{
+// convert entity.CIRAConfig to dtov1.CIRAConfig.
+func (uc *UseCase) entityToDTO(d *entity.CIRAConfig) *dtov1.CIRAConfig {
+	d1 := &dtov1.CIRAConfig{
 		ConfigName:          d.ConfigName,
 		MPSAddress:          d.MPSAddress,
 		MPSPort:             d.MPSPort,

@@ -8,7 +8,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/stretchr/testify/require"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type powerTest struct {
@@ -18,7 +18,7 @@ type powerTest struct {
 
 	amtVersion   int
 	capabilities boot.BootCapabilitiesResponse
-	bootSettings dto.BootSetting
+	bootSettings dtov1.BootSetting
 	version      []software.SoftwareIdentity
 }
 
@@ -102,7 +102,7 @@ func TestDetermineIDERBootDevice(t *testing.T) {
 			res: boot.BootSettingDataRequest{
 				IDERBootDevice: 1,
 			},
-			bootSettings: dto.BootSetting{
+			bootSettings: dtov1.BootSetting{
 				Action: 202,
 			},
 		},
@@ -111,7 +111,7 @@ func TestDetermineIDERBootDevice(t *testing.T) {
 			res: boot.BootSettingDataRequest{
 				IDERBootDevice: 0,
 			},
-			bootSettings: dto.BootSetting{
+			bootSettings: dtov1.BootSetting{
 				Action: 999,
 			},
 		},
@@ -140,21 +140,21 @@ func TestGetBootSource(t *testing.T) {
 		{
 			name: "Action 400",
 			res:  string(cimBoot.PXE),
-			bootSettings: dto.BootSetting{
+			bootSettings: dtov1.BootSetting{
 				Action: 400,
 			},
 		},
 		{
 			name: "Action 202",
 			res:  string(cimBoot.CD),
-			bootSettings: dto.BootSetting{
+			bootSettings: dtov1.BootSetting{
 				Action: 202,
 			},
 		},
 		{
 			name: "Action 999",
 			res:  "",
-			bootSettings: dto.BootSetting{
+			bootSettings: dtov1.BootSetting{
 				Action: 999,
 			},
 		},
@@ -179,14 +179,14 @@ func TestDetermineBootAction(t *testing.T) {
 		{
 			name: "Master Bus Reset",
 			res:  10,
-			bootSettings: dto.BootSetting{
+			bootSettings: dtov1.BootSetting{
 				Action: 200,
 			},
 		},
 		{
 			name: "Power On",
 			res:  2,
-			bootSettings: dto.BootSetting{
+			bootSettings: dtov1.BootSetting{
 				Action: 999,
 			},
 		},

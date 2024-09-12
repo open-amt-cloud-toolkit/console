@@ -10,7 +10,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -257,7 +257,7 @@ func TestSendConsentCode(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	consent := dto.UserConsent{
+	consent := dtov1.UserConsent{
 		ConsentCode: "123456",
 	}
 

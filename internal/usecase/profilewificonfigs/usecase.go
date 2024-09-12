@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -28,7 +28,7 @@ func New(r Repository, log logger.Interface) *UseCase {
 	}
 }
 
-func (uc *UseCase) GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dto.ProfileWiFiConfigs, error) {
+func (uc *UseCase) GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dtov1.ProfileWiFiConfigs, error) {
 	data, err := uc.repo.GetByProfileName(ctx, profileName, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
@@ -39,7 +39,7 @@ func (uc *UseCase) GetByProfileName(ctx context.Context, profileName, tenantID s
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dto.ProfileWiFiConfigs, len(data))
+	d1 := make([]dtov1.ProfileWiFiConfigs, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -58,7 +58,7 @@ func (uc *UseCase) DeleteByProfileName(ctx context.Context, profileName, tenantI
 	return nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *dto.ProfileWiFiConfigs) error {
+func (uc *UseCase) Insert(ctx context.Context, d *dtov1.ProfileWiFiConfigs) error {
 	d1 := uc.dtoToEntity(d)
 
 	_, err := uc.repo.Insert(ctx, d1)
@@ -69,8 +69,8 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.ProfileWiFiConfigs) error 
 	return nil
 }
 
-// convert dto.ProfileWiFiConfigs to entity.ProfileWiFiConfigs.
-func (uc *UseCase) dtoToEntity(d *dto.ProfileWiFiConfigs) *entity.ProfileWiFiConfigs {
+// convert dtov1.ProfileWiFiConfigs to entity.ProfileWiFiConfigs.
+func (uc *UseCase) dtoToEntity(d *dtov1.ProfileWiFiConfigs) *entity.ProfileWiFiConfigs {
 	d1 := &entity.ProfileWiFiConfigs{
 		Priority:            d.Priority,
 		WirelessProfileName: d.WirelessProfileName,
@@ -81,9 +81,9 @@ func (uc *UseCase) dtoToEntity(d *dto.ProfileWiFiConfigs) *entity.ProfileWiFiCon
 	return d1
 }
 
-// convert entity.ProfileWiFiConfigs to dto.ProfileWiFiConfigs.
-func (uc *UseCase) entityToDTO(d *entity.ProfileWiFiConfigs) *dto.ProfileWiFiConfigs {
-	d1 := &dto.ProfileWiFiConfigs{
+// convert entity.ProfileWiFiConfigs to dtov1.ProfileWiFiConfigs.
+func (uc *UseCase) entityToDTO(d *entity.ProfileWiFiConfigs) *dtov1.ProfileWiFiConfigs {
+	d1 := &dtov1.ProfileWiFiConfigs{
 		Priority:            d.Priority,
 		WirelessProfileName: d.WirelessProfileName,
 		ProfileName:         d.ProfileName,

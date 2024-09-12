@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -16,7 +16,7 @@ type deviceRoutes struct {
 	l logger.Interface
 }
 
-var ErrValidationDevices = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
+var ErrValidationDevices = dtov1.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
 
 func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
@@ -38,8 +38,8 @@ func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Inter
 }
 
 type DeviceCountResponse struct {
-	Count int          `json:"totalCount"`
-	Data  []dto.Device `json:"data"`
+	Count int            `json:"totalCount"`
+	Data  []dtov1.Device `json:"data"`
 }
 type DeviceStatResponse struct {
 	TotalCount        int `json:"totalCount"`
@@ -93,7 +93,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 	hostname := c.Query("hostname")
 	friendlyName := c.Query("friendlyName")
 
-	var items []dto.Device
+	var items []dtov1.Device
 
 	var err error
 
@@ -138,8 +138,8 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 	}
 }
 
-func (dr *deviceRoutes) getByColumnOrTags(c *gin.Context, column, value string, limit, skip int, tenantID string) ([]dto.Device, error) {
-	var items []dto.Device
+func (dr *deviceRoutes) getByColumnOrTags(c *gin.Context, column, value string, limit, skip int, tenantID string) ([]dtov1.Device, error) {
+	var items []dtov1.Device
 
 	var err error
 
@@ -197,7 +197,7 @@ func (dr *deviceRoutes) getByID(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/devices [post]
 func (dr *deviceRoutes) insert(c *gin.Context) {
-	var device dto.Device
+	var device dtov1.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
 		validationErr := ErrValidationDevices.Wrap("insert", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)
@@ -226,7 +226,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/devices [patch]
 func (dr *deviceRoutes) update(c *gin.Context) {
-	var device dto.Device
+	var device dtov1.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
 		ErrorResponse(c, err)
 
@@ -347,7 +347,7 @@ func (dr *deviceRoutes) getDeviceCertificate(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/devices/cert/:guid [post]
 func (dr *deviceRoutes) pinDeviceCertificate(c *gin.Context) {
-	var certToPin dto.PinCertificate
+	var certToPin dtov1.PinCertificate
 	if err := c.ShouldBindBodyWithJSON(&certToPin); err != nil {
 		ErrorResponse(c, err)
 

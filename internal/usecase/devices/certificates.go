@@ -18,7 +18,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
@@ -28,7 +28,7 @@ const (
 	TypeWired    string = "Wired"
 )
 
-func processConcreteDependencies(certificateHandle string, profileAssociation *dto.ProfileAssociation, dependencyItems []concrete.ConcreteDependency, securitySettings dto.SecuritySettings) {
+func processConcreteDependencies(certificateHandle string, profileAssociation *dtov1.ProfileAssociation, dependencyItems []concrete.ConcreteDependency, securitySettings dtov1.SecuritySettings) {
 	for i := range dependencyItems {
 		di := dependencyItems[i]
 		if di.Antecedent.ReferenceParameters.SelectorSet.Selectors[0].Text == certificateHandle {
@@ -38,7 +38,7 @@ func processConcreteDependencies(certificateHandle string, profileAssociation *d
 }
 
 // Helper function to update profile association key if matching key is found.
-func updateProfileAssociationKey(keyHandle string, profileAssociation *dto.ProfileAssociation, securitySettings dto.SecuritySettings) {
+func updateProfileAssociationKey(keyHandle string, profileAssociation *dtov1.ProfileAssociation, securitySettings dtov1.SecuritySettings) {
 	for _, key := range securitySettings.KeyResponse.Keys {
 		if key.InstanceID == keyHandle {
 			keyCopy := key
@@ -49,7 +49,7 @@ func updateProfileAssociationKey(keyHandle string, profileAssociation *dto.Profi
 	}
 }
 
-func buildCertificateAssociations(profileAssociation dto.ProfileAssociation, securitySettings *dto.SecuritySettings) {
+func buildCertificateAssociations(profileAssociation dtov1.ProfileAssociation, securitySettings *dtov1.SecuritySettings) {
 	var publicKeyHandle string
 
 	if profileAssociation.ClientCertificate != nil {
@@ -81,7 +81,7 @@ func buildCertificateAssociations(profileAssociation dto.ProfileAssociation, sec
 	}
 }
 
-func getProfileAssociationText(profileAssociation dto.ProfileAssociation) string {
+func getProfileAssociationText(profileAssociation dtov1.ProfileAssociation) string {
 	value := profileAssociation.Type
 	if profileAssociation.Type == TypeWireless {
 		value += " - " + profileAssociation.ProfileID
@@ -90,7 +90,7 @@ func getProfileAssociationText(profileAssociation dto.ProfileAssociation) string
 	return value
 }
 
-func buildProfileAssociations(certificateHandle string, profileAssociation *dto.ProfileAssociation, response wsman.Certificates, securitySettings *dto.SecuritySettings) {
+func buildProfileAssociations(certificateHandle string, profileAssociation *dtov1.ProfileAssociation, response wsman.Certificates, securitySettings *dtov1.SecuritySettings) {
 	isNewProfileAssociation := true
 
 	for i := range securitySettings.CertificateResponse.Certificates {
@@ -122,7 +122,7 @@ func buildProfileAssociations(certificateHandle string, profileAssociation *dto.
 }
 
 // Helper function to update certificates if they are not nil.
-func updateCertificate(existingAssoc, newAssoc *dto.ProfileAssociation) {
+func updateCertificate(existingAssoc, newAssoc *dtov1.ProfileAssociation) {
 	if newAssoc.RootCertificate != nil {
 		existingAssoc.RootCertificate = newAssoc.RootCertificate
 	}
@@ -136,9 +136,9 @@ func updateCertificate(existingAssoc, newAssoc *dto.ProfileAssociation) {
 	}
 }
 
-func processCertificates(contextItems []credential.CredentialContext, response wsman.Certificates, profileType string, securitySettings *dto.SecuritySettings) {
+func processCertificates(contextItems []credential.CredentialContext, response wsman.Certificates, profileType string, securitySettings *dtov1.SecuritySettings) {
 	for idx := range contextItems {
-		var profileAssociation dto.ProfileAssociation
+		var profileAssociation dtov1.ProfileAssociation
 
 		profileAssociation.Type = profileType
 		profileAssociation.ProfileID = strings.TrimPrefix(contextItems[idx].ElementProvidingContext.ReferenceParameters.SelectorSet.Selectors[0].Text, "Intel(r) AMT:IEEE 802.1x Settings ")
@@ -149,20 +149,20 @@ func processCertificates(contextItems []credential.CredentialContext, response w
 	}
 }
 
-func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
+func (uc *UseCase) GetCertificates(c context.Context, guid string) (dtov1.SecuritySettings, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return dto.SecuritySettings{}, err
+		return dtov1.SecuritySettings{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	response, err := device.GetCertificates()
 	if err != nil {
-		return dto.SecuritySettings{}, err
+		return dtov1.SecuritySettings{}, err
 	}
 
-	securitySettings := dto.SecuritySettings{
+	securitySettings := dtov1.SecuritySettings{
 		CertificateResponse: CertificatesToDTO(&response.PublicKeyCertificateResponse),
 		KeyResponse:         KeysToDTO(&response.PublicPrivateKeyPairResponse),
 	}
@@ -176,12 +176,12 @@ func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.Security
 	return securitySettings, nil
 }
 
-func CertificatesToDTO(r *publickey.RefinedPullResponse) dto.CertificatePullResponse {
+func CertificatesToDTO(r *publickey.RefinedPullResponse) dtov1.CertificatePullResponse {
 	regex := regexp.MustCompile(`CN=[^,]+`)
 
-	keyManagementItems := make([]dto.RefinedKeyManagementResponse, len(r.KeyManagementItems))
+	keyManagementItems := make([]dtov1.RefinedKeyManagementResponse, len(r.KeyManagementItems))
 	for i := range r.KeyManagementItems {
-		keyManagementItems[i] = dto.RefinedKeyManagementResponse{
+		keyManagementItems[i] = dtov1.RefinedKeyManagementResponse{
 			CreationClassName:       keyManagementItems[i].CreationClassName,
 			ElementName:             keyManagementItems[i].ElementName,
 			EnabledDefault:          keyManagementItems[i].EnabledDefault,
@@ -193,7 +193,7 @@ func CertificatesToDTO(r *publickey.RefinedPullResponse) dto.CertificatePullResp
 		}
 	}
 
-	certItems := make([]dto.RefinedCertificate, len(r.PublicKeyCertificateItems))
+	certItems := make([]dtov1.RefinedCertificate, len(r.PublicKeyCertificateItems))
 
 	for i := range r.PublicKeyCertificateItems {
 		displayName := regex.FindString(r.PublicKeyCertificateItems[i].Subject)
@@ -203,7 +203,7 @@ func CertificatesToDTO(r *publickey.RefinedPullResponse) dto.CertificatePullResp
 			displayName = r.PublicKeyCertificateItems[i].InstanceID
 		}
 
-		certItems[i] = dto.RefinedCertificate{
+		certItems[i] = dtov1.RefinedCertificate{
 			ElementName:            r.PublicKeyCertificateItems[i].ElementName,
 			InstanceID:             r.PublicKeyCertificateItems[i].InstanceID,
 			X509Certificate:        r.PublicKeyCertificateItems[i].X509Certificate,
@@ -217,16 +217,16 @@ func CertificatesToDTO(r *publickey.RefinedPullResponse) dto.CertificatePullResp
 		}
 	}
 
-	return dto.CertificatePullResponse{
+	return dtov1.CertificatePullResponse{
 		KeyManagementItems: keyManagementItems,
 		Certificates:       certItems,
 	}
 }
 
-func KeysToDTO(r *publicprivate.RefinedPullResponse) dto.KeyPullResponse {
-	keyItems := make([]dto.Key, len(r.PublicPrivateKeyPairItems))
+func KeysToDTO(r *publicprivate.RefinedPullResponse) dtov1.KeyPullResponse {
+	keyItems := make([]dtov1.Key, len(r.PublicPrivateKeyPairItems))
 	for i, item := range r.PublicPrivateKeyPairItems {
-		keyItems[i] = dto.Key{
+		keyItems[i] = dtov1.Key{
 			ElementName:       item.ElementName,
 			InstanceID:        item.InstanceID,
 			DERKey:            item.DERKey,
@@ -234,25 +234,25 @@ func KeysToDTO(r *publicprivate.RefinedPullResponse) dto.KeyPullResponse {
 		}
 	}
 
-	return dto.KeyPullResponse{
+	return dtov1.KeyPullResponse{
 		Keys: keyItems,
 	}
 }
 
-func (uc *UseCase) GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error) {
+func (uc *UseCase) GetDeviceCertificate(c context.Context, guid string) (dtov1.Certificate, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return dto.Certificate{}, err
+		return dtov1.Certificate{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	cert1, err := device.GetDeviceCertificate()
 	if err != nil {
-		return dto.Certificate{}, err
+		return dtov1.Certificate{}, err
 	}
 
-	var certDTOs []dto.Certificate
+	var certDTOs []dtov1.Certificate
 
 	for _, certBytes := range cert1.Certificate {
 		// Parse each certificate byte slice into an x509.Certificate
@@ -271,7 +271,7 @@ func (uc *UseCase) GetDeviceCertificate(c context.Context, guid string) (dto.Cer
 	return certDTOs[0], nil
 }
 
-func populateCertificateDTO(cert *x509.Certificate) dto.Certificate {
+func populateCertificateDTO(cert *x509.Certificate) dtov1.Certificate {
 	// Compute the SHA-1 and SHA-256 fingerprints
 	sha1Fingerprint := sha1.Sum(cert.Raw) //nolint:gosec // SHA-1 is used for thumbprint not signature
 	sha256Fingerprint := sha256.Sum256(cert.Raw)
@@ -288,7 +288,7 @@ func populateCertificateDTO(cert *x509.Certificate) dto.Certificate {
 	}
 
 	// Populate the dto.Certificate struct
-	return dto.Certificate{
+	return dtov1.Certificate{
 		CommonName:         cert.Subject.CommonName,
 		IssuerName:         cert.Issuer.CommonName,
 		SerialNumber:       cert.SerialNumber.String(),

@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
@@ -266,10 +266,10 @@ func (mr *MockManagementMockRecorder) GetEventLog() *gomock.Call {
 }
 
 // GetFeatures mocks base method.
-func (m *MockManagement) GetFeatures() (dto.Features, error) {
+func (m *MockManagement) GetFeatures() (dtov1.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures")
-	ret0, _ := ret[0].(dto.Features)
+	ret0, _ := ret[0].(dtov1.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -461,10 +461,10 @@ func (mr *MockManagementMockRecorder) SetBootData(data any) *gomock.Call {
 }
 
 // SetFeatures mocks base method.
-func (m *MockManagement) SetFeatures(arg0 dto.Features) (dto.Features, error) {
+func (m *MockManagement) SetFeatures(arg0 dtov1.Features) (dtov1.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFeatures", arg0)
-	ret0, _ := ret[0].(dto.Features)
+	ret0, _ := ret[0].(dtov1.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

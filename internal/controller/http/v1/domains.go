@@ -5,13 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-var ErrValidationDomains = dto.NotValidError{Console: consoleerrors.CreateConsoleError("DomainsAPI")}
+var ErrValidationDomains = dtov1.NotValidError{Console: consoleerrors.CreateConsoleError("DomainsAPI")}
 
 type domainRoutes struct {
 	t domains.Feature
@@ -32,8 +32,8 @@ func NewDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Inter
 }
 
 type DomainCountResponse struct {
-	Count int          `json:"totalCount"`
-	Data  []dto.Domain `json:"data"`
+	Count int            `json:"totalCount"`
+	Data  []dtov1.Domain `json:"data"`
 }
 
 // @Summary     Show Domains
@@ -113,7 +113,7 @@ func (r *domainRoutes) getByName(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/domains [post]
 func (r *domainRoutes) insert(c *gin.Context) {
-	var domain dto.Domain
+	var domain dtov1.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
 		validationErr := ErrValidationDomains.Wrap("insert", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)
@@ -142,7 +142,7 @@ func (r *domainRoutes) insert(c *gin.Context) {
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/Domains [patch]
 func (r *domainRoutes) update(c *gin.Context) {
-	var domain dto.Domain
+	var domain dtov1.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
 		validationErr := ErrValidationDomains.Wrap("update", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)

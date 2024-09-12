@@ -13,7 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -49,15 +50,26 @@ func TestGetFeatures(t *testing.T) {
 		response     interface{}
 	}{
 		{
+			name:   "getVersion - successful retrieval",
+			url:    "/api/v2/amt/version/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetVersion(context.Background(), "valid-guid").
+					Return(dtov1.Version{}, dtov2.Version{}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     dtov2.Version{},
+		},
+		{
 			name:   "getFeatures - successful retrieval",
 			url:    "/api/v2/amt/features/valid-guid",
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(dto.Features{}, nil)
+					Return(dtov1.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     dto.Features{},
+			response:     dtov1.Features{},
 		},
 	}
 

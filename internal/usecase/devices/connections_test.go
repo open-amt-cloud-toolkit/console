@@ -9,7 +9,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -67,7 +67,7 @@ func TestGetTLSSettings(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: []dto.SettingDataResponse{
+			res: []dtov1.SettingDataResponse{
 				{
 					ElementName:                   "",
 					InstanceID:                    "",
@@ -88,7 +88,7 @@ func TestGetTLSSettings(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: []dto.SettingDataResponse(nil),
+			res: []dtov1.SettingDataResponse(nil),
 			err: devices.ErrDatabase,
 		},
 		{
@@ -107,7 +107,7 @@ func TestGetTLSSettings(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: []dto.SettingDataResponse(nil),
+			res: []dtov1.SettingDataResponse(nil),
 			err: ErrGeneral,
 		},
 	}

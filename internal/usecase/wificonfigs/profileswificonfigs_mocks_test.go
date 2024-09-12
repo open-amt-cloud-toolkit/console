@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -124,10 +124,10 @@ func (mr *MockProfileWiFiConfigsFeatureMockRecorder) DeleteByProfileName(ctx, pr
 }
 
 // GetByProfileName mocks base method.
-func (m *MockProfileWiFiConfigsFeature) GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dto.ProfileWiFiConfigs, error) {
+func (m *MockProfileWiFiConfigsFeature) GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dtov1.ProfileWiFiConfigs, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByProfileName", ctx, profileName, tenantID)
-	ret0, _ := ret[0].([]dto.ProfileWiFiConfigs)
+	ret0, _ := ret[0].([]dtov1.ProfileWiFiConfigs)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -139,7 +139,7 @@ func (mr *MockProfileWiFiConfigsFeatureMockRecorder) GetByProfileName(ctx, profi
 }
 
 // Insert mocks base method.
-func (m *MockProfileWiFiConfigsFeature) Insert(ctx context.Context, p *dto.ProfileWiFiConfigs) error {
+func (m *MockProfileWiFiConfigsFeature) Insert(ctx context.Context, p *dtov1.ProfileWiFiConfigs) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, p)
 	ret0, _ := ret[0].(error)

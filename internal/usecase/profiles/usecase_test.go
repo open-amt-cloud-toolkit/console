@@ -8,7 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -99,13 +99,13 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	testProfileDTOs := []dto.Profile{
+	testProfileDTOs := []dtov1.Profile{
 		{
 			ProfileName:          "test-profile-1",
 			TenantID:             "tenant-id-456",
 			Tags:                 []string{""},
 			IEEE8021xProfileName: &ieeeProfileName,
-			IEEE8021xProfile: &dto.IEEE8021xConfig{
+			IEEE8021xProfile: &dtov1.IEEE8021xConfig{
 				ProfileName:            ieeeProfileName,
 				TenantID:               "tenant-id-456",
 				WiredInterface:         true,
@@ -131,10 +131,10 @@ func TestGet(t *testing.T) {
 					Return(testProfiles, nil)
 				profileWifiRepo.EXPECT().
 					GetByProfileName(context.Background(), "test-profile-1", "tenant-id-456").
-					Return([]dto.ProfileWiFiConfigs{}, nil)
+					Return([]dtov1.ProfileWiFiConfigs{}, nil)
 				profileWifiRepo.EXPECT().
 					GetByProfileName(context.Background(), "test-profile-2", "tenant-id-456").
-					Return([]dto.ProfileWiFiConfigs{}, nil)
+					Return([]dtov1.ProfileWiFiConfigs{}, nil)
 			},
 			res: testProfileDTOs,
 			err: nil,
@@ -149,7 +149,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, profiles.ErrDatabase)
 			},
-			res: []dto.Profile(nil),
+			res: []dtov1.Profile(nil),
 			err: profiles.ErrDatabase,
 		},
 		{
@@ -162,7 +162,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Profile{}, nil)
 			},
-			res: []dto.Profile{},
+			res: []dtov1.Profile{},
 			err: nil,
 		},
 	}
@@ -198,7 +198,7 @@ func TestGetByName(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
-	profileDTO := &dto.Profile{
+	profileDTO := &dtov1.Profile{
 		ProfileName: "test-profile",
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
@@ -218,7 +218,7 @@ func TestGetByName(t *testing.T) {
 					Return(profile, nil)
 				profilewificonfigfeat.EXPECT().
 					GetByProfileName(context.Background(), "test-profile", "tenant-id-456").
-					Return([]dto.ProfileWiFiConfigs{}, nil)
+					Return([]dtov1.ProfileWiFiConfigs{}, nil)
 			},
 			res: profileDTO,
 			err: nil,
@@ -234,7 +234,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-profile", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*dto.Profile)(nil),
+			res: (*dtov1.Profile)(nil),
 			err: profiles.ErrNotFound,
 		},
 	}
@@ -323,12 +323,12 @@ func TestUpdate(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
-	profileDTO := &dto.Profile{
+	profileDTO := &dtov1.Profile{
 		ProfileName: "example-profile",
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
 		Tags:        []string{""},
-		WiFiConfigs: []dto.ProfileWiFiConfigs{
+		WiFiConfigs: []dtov1.ProfileWiFiConfigs{
 			{
 				ProfileName:         "example-profile",
 				WirelessProfileName: "wireless-profile-1",
@@ -366,7 +366,7 @@ func TestUpdate(t *testing.T) {
 					CheckProfileExists(context.Background(), profileDTO.WiFiConfigs[0].WirelessProfileName, profileDTO.TenantID).
 					Return(true, nil)
 			},
-			res: (*dto.Profile)(nil),
+			res: (*dtov1.Profile)(nil),
 			err: profiles.ErrDatabase,
 		},
 		{
@@ -379,7 +379,7 @@ func TestUpdate(t *testing.T) {
 					CheckProfileExists(context.Background(), profileDTO.WiFiConfigs[0].WirelessProfileName, profileDTO.TenantID).
 					Return(true, nil)
 			},
-			res: (*dto.Profile)(nil),
+			res: (*dtov1.Profile)(nil),
 			err: profiles.ErrDatabase,
 		},
 	}
@@ -411,13 +411,13 @@ func TestInsert(t *testing.T) {
 		DHCPEnabled: true,
 	}
 
-	profileDTO := &dto.Profile{
+	profileDTO := &dtov1.Profile{
 		ProfileName: "new-profile",
 		TenantID:    "tenant-id-789",
 		Version:     "1.0.0",
 		Tags:        []string{""},
 		DHCPEnabled: true,
-		WiFiConfigs: []dto.ProfileWiFiConfigs{
+		WiFiConfigs: []dtov1.ProfileWiFiConfigs{
 			{
 				ProfileName:         "new-profile",
 				WirelessProfileName: "wireless-profile-1",
@@ -455,7 +455,7 @@ func TestInsert(t *testing.T) {
 					CheckProfileExists(context.Background(), profileDTO.WiFiConfigs[0].WirelessProfileName, profileDTO.TenantID).
 					Return(true, nil)
 			},
-			res: (*dto.Profile)(nil),
+			res: (*dtov1.Profile)(nil),
 			err: profiles.ErrDatabase,
 		},
 	}

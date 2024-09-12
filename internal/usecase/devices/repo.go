@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
@@ -28,14 +28,14 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.Device, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dto.Device, len(data))
+	d1 := make([]dtov1.Device, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -45,14 +45,14 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	return d1, nil
 }
 
-func (uc *UseCase) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error) {
+func (uc *UseCase) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dtov1.Device, error) {
 	data, err := uc.repo.GetByColumn(ctx, columnName, queryValue, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByColumn", "uc.repo.GetByColumn", err)
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dto.Device, len(data))
+	d1 := make([]dtov1.Device, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -62,7 +62,7 @@ func (uc *UseCase) GetByColumn(ctx context.Context, columnName, queryValue, tena
 	return d1, nil
 }
 
-func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
+func (uc *UseCase) GetByID(ctx context.Context, guid, tenantID string) (*dtov1.Device, error) {
 	data, err := uc.repo.GetByID(ctx, guid, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByID", "uc.repo.GetByID", err)
@@ -94,7 +94,7 @@ func (uc *UseCase) GetDistinctTags(ctx context.Context, tenantID string) ([]stri
 	return allTags, nil
 }
 
-func (uc *UseCase) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error) {
+func (uc *UseCase) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dtov1.Device, error) {
 	splitTags := strings.Split(tags, ",")
 
 	data, err := uc.repo.GetByTags(ctx, splitTags, method, limit, offset, tenantID)
@@ -103,7 +103,7 @@ func (uc *UseCase) GetByTags(ctx context.Context, tags, method string, limit, of
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dto.Device, len(data))
+	d1 := make([]dtov1.Device, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -126,7 +126,7 @@ func (uc *UseCase) Delete(ctx context.Context, guid, tenantID string) error {
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
+func (uc *UseCase) Update(ctx context.Context, d *dtov1.Device) (*dtov1.Device, error) {
 	d1 := uc.dtoToEntity(d)
 
 	updated, err := uc.repo.Update(ctx, d1)
@@ -151,7 +151,7 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *dto.Device) (*dto.Device, error) {
+func (uc *UseCase) Insert(ctx context.Context, d *dtov1.Device) (*dtov1.Device, error) {
 	d1 := uc.dtoToEntity(d)
 
 	if d1.GUID == "" {

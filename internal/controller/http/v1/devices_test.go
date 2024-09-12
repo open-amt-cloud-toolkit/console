@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -41,14 +41,14 @@ type deviceTest struct {
 	url          string
 	mock         func(repo *MockDeviceManagementFeature)
 	response     interface{}
-	requestBody  dto.Device
+	requestBody  dtov1.Device
 	expectedCode int
 }
 
 var (
 	timeNow        = time.Now().UTC()
-	requestDevice  = dto.Device{ConnectionStatus: true, MPSInstance: "mpsInstance", Hostname: "hostname", GUID: "guid", MPSUsername: "mpsusername", Tags: []string{"tag1", "tag2"}, TenantID: "tenantId", FriendlyName: "friendlyName", DNSSuffix: "dnsSuffix", Username: "admin", Password: "password", UseTLS: true, AllowSelfSigned: true, LastConnected: &timeNow, LastSeen: &timeNow, LastDisconnected: &timeNow}
-	responseDevice = dto.Device{ConnectionStatus: true, MPSInstance: "mpsInstance", Hostname: "hostname", GUID: "guid", MPSUsername: "mpsusername", Tags: []string{"tag1", "tag2"}, TenantID: "tenantId", FriendlyName: "friendlyName", DNSSuffix: "dnsSuffix", Username: "admin", Password: "password", UseTLS: true, AllowSelfSigned: true, LastConnected: &timeNow, LastSeen: &timeNow, LastDisconnected: &timeNow}
+	requestDevice  = dtov1.Device{ConnectionStatus: true, MPSInstance: "mpsInstance", Hostname: "hostname", GUID: "guid", MPSUsername: "mpsusername", Tags: []string{"tag1", "tag2"}, TenantID: "tenantId", FriendlyName: "friendlyName", DNSSuffix: "dnsSuffix", Username: "admin", Password: "password", UseTLS: true, AllowSelfSigned: true, LastConnected: &timeNow, LastSeen: &timeNow, LastDisconnected: &timeNow}
+	responseDevice = dtov1.Device{ConnectionStatus: true, MPSInstance: "mpsInstance", Hostname: "hostname", GUID: "guid", MPSUsername: "mpsusername", Tags: []string{"tag1", "tag2"}, TenantID: "tenantId", FriendlyName: "friendlyName", DNSSuffix: "dnsSuffix", Username: "admin", Password: "password", UseTLS: true, AllowSelfSigned: true, LastConnected: &timeNow, LastSeen: &timeNow, LastDisconnected: &timeNow}
 )
 
 func TestDevicesRoutes(t *testing.T) {
@@ -60,11 +60,11 @@ func TestDevicesRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/devices",
 			mock: func(device *MockDeviceManagementFeature) {
-				device.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.Device{{
+				device.EXPECT().Get(context.Background(), 25, 0, "").Return([]dtov1.Device{{
 					GUID: "guid", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname",
 				}}, nil)
 			},
-			response:     []dto.Device{{GUID: "guid", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname"}},
+			response:     []dtov1.Device{{GUID: "guid", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname"}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -72,12 +72,12 @@ func TestDevicesRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/devices?$top=10&$skip=1&$count=true",
 			mock: func(device *MockDeviceManagementFeature) {
-				device.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.Device{{
+				device.EXPECT().Get(context.Background(), 10, 1, "").Return([]dtov1.Device{{
 					GUID: "guid", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname",
 				}}, nil)
 				device.EXPECT().GetCount(context.Background(), "").Return(1, nil)
 			},
-			response:     DeviceCountResponse{Count: 1, Data: []dto.Device{{GUID: "guid", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname"}}},
+			response:     DeviceCountResponse{Count: 1, Data: []dtov1.Device{{GUID: "guid", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname"}}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -85,11 +85,11 @@ func TestDevicesRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/devices/123e4567-e89b-12d3-a456-426614174000",
 			mock: func(device *MockDeviceManagementFeature) {
-				device.EXPECT().GetByID(context.Background(), "123e4567-e89b-12d3-a456-426614174000", "").Return(&dto.Device{
+				device.EXPECT().GetByID(context.Background(), "123e4567-e89b-12d3-a456-426614174000", "").Return(&dtov1.Device{
 					GUID: "123e4567-e89b-12d3-a456-426614174000", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname",
 				}, nil)
 			},
-			response:     &dto.Device{GUID: "123e4567-e89b-12d3-a456-426614174000", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname"},
+			response:     &dtov1.Device{GUID: "123e4567-e89b-12d3-a456-426614174000", MPSUsername: "mpsusername", Username: "admin", Password: "password", ConnectionStatus: true, Hostname: "hostname"},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -117,7 +117,7 @@ func TestDevicesRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/devices",
 			mock: func(device *MockDeviceManagementFeature) {
-				deviceTest := &dto.Device{
+				deviceTest := &dtov1.Device{
 					ConnectionStatus: true,
 					MPSInstance:      "mpsInstance",
 					Hostname:         "hostname",
@@ -146,7 +146,7 @@ func TestDevicesRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/devices",
 			mock: func(device *MockDeviceManagementFeature) {
-				deviceTest := &dto.Device{
+				deviceTest := &dtov1.Device{
 					ConnectionStatus: true,
 					MPSInstance:      "mpsInstance",
 					Hostname:         "hostname",
@@ -195,7 +195,7 @@ func TestDevicesRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/devices",
 			mock: func(device *MockDeviceManagementFeature) {
-				deviceTest := &dto.Device{
+				deviceTest := &dtov1.Device{
 					ConnectionStatus: true,
 					MPSInstance:      "mpsInstance",
 					Hostname:         "hostname",
@@ -224,7 +224,7 @@ func TestDevicesRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/devices",
 			mock: func(device *MockDeviceManagementFeature) {
-				deviceTest := &dto.Device{
+				deviceTest := &dtov1.Device{
 					ConnectionStatus: true,
 					MPSInstance:      "mpsInstance",
 					Hostname:         "hostname",

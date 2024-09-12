@@ -14,7 +14,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -344,7 +344,7 @@ func TestSetBootOptions(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	bootSetting := dto.BootSetting{
+	bootSetting := dtov1.BootSetting{
 		Action: 400,
 		UseSOL: true,
 	}

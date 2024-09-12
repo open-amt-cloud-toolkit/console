@@ -56,14 +56,14 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/amtexplorer"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var (
 	ErrExplorerGeneral = errors.New("general error")
-	executeResponse    = dto.Explorer{
+	executeResponse    = dtov1.Explorer{
 		XMLInput:  `<?xml version="1.0" encoding="utf-8"?><Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns="http://www.w3.org/2003/05/soap-envelope"><Header><a:Action>http://schemas.xmlsoap.org/ws/2004/09/enumeration/Pull</a:Action><a:To>/wsman</a:To><w:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</w:ResourceURI><a:MessageID>1</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><w:OperationTimeout>PT60S</w:OperationTimeout></Header><Body><Pull xmlns="http://schemas.xmlsoap.org/ws/2004/09/enumeration"><EnumerationContext>4F020000-0000-0000-0000-000000000000</EnumerationContext><MaxElements>999</MaxElements><MaxCharacters>99999</MaxCharacters></Pull></Body></Envelope>`,
 		XMLOutput: `<?xml version="1.0" encoding="UTF-8"?><a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope" xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd" xmlns:g="http://schemas.xmlsoap.org/ws/2004/09/enumeration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><a:Header><b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To><b:RelatesTo>1</b:RelatesTo><b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action><b:MessageID>uuid:00000000-8086-8086-8086-0000000009F5</b:MessageID><c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</c:ResourceURI></a:Header><a:Body><g:PullResponse><g:Items></g:Items><g:EndOfSequence></g:EndOfSequence></g:PullResponse></a:Body></a:Envelope>`,
 	}
@@ -84,7 +84,7 @@ func initSupportedCallList(m *MockAMTExplorer) []string {
 	return methods
 }
 
-func initExplorerTest(t *testing.T) (*amtexplorer.UseCase, *MockRepository, *MockWSMAN, *MockAMTExplorer, dto.Explorer) {
+func initExplorerTest(t *testing.T) (*amtexplorer.UseCase, *MockRepository, *MockWSMAN, *MockAMTExplorer, dtov1.Explorer) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -163,7 +163,7 @@ func TestExecuteCall(t *testing.T) {
 					SetupWsmanClient(context.Background(), true).
 					Return(amt)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrDatabase,
 		},
 		{
@@ -179,7 +179,7 @@ func TestExecuteCall(t *testing.T) {
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerUseCase,
 		},
 		{
@@ -219,7 +219,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMT8021xCredentialContext().
 					Return(ieee8021x.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -258,7 +258,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMT8021xProfile().
 					Return(ieee8021x.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -277,7 +277,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTAlarmClockService().
 					Return(alarmclock.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
-			res: dto.Explorer{
+			res: dtov1.Explorer{
 				XMLInput:  `<?xml version="1.0" encoding="utf-8"?><Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns="http://www.w3.org/2003/05/soap-envelope"><Header><a:Action>http://schemas.xmlsoap.org/ws/2004/09/enumeration/Pull</a:Action><a:To>/wsman</a:To><w:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</w:ResourceURI><a:MessageID>1</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><w:OperationTimeout>PT60S</w:OperationTimeout></Header><Body><Pull xmlns="http://schemas.xmlsoap.org/ws/2004/09/enumeration"><EnumerationContext>4F020000-0000-0000-0000-000000000000</EnumerationContext><MaxElements>999</MaxElements><MaxCharacters>99999</MaxCharacters></Pull></Body></Envelope>`,
 				XMLOutput: `<?xml version="1.0" encoding="UTF-8"?><a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope" xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd" xmlns:g="http://schemas.xmlsoap.org/ws/2004/09/enumeration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><a:Header><b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To><b:RelatesTo>1</b:RelatesTo><b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action><b:MessageID>uuid:00000000-8086-8086-8086-0000000009F5</b:MessageID><c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</c:ResourceURI></a:Header><a:Body><g:PullResponse><g:Items></g:Items><g:EndOfSequence></g:EndOfSequence></g:PullResponse></a:Body></a:Envelope>`,
 			},
@@ -299,7 +299,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTAlarmClockService().
 					Return(alarmclock.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -318,7 +318,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTAuditLog().
 					Return(auditlog.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
-			res: dto.Explorer{
+			res: dtov1.Explorer{
 				XMLInput:  `<?xml version="1.0" encoding="utf-8"?><Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns="http://www.w3.org/2003/05/soap-envelope"><Header><a:Action>http://schemas.xmlsoap.org/ws/2004/09/enumeration/Pull</a:Action><a:To>/wsman</a:To><w:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</w:ResourceURI><a:MessageID>1</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><w:OperationTimeout>PT60S</w:OperationTimeout></Header><Body><Pull xmlns="http://schemas.xmlsoap.org/ws/2004/09/enumeration"><EnumerationContext>4F020000-0000-0000-0000-000000000000</EnumerationContext><MaxElements>999</MaxElements><MaxCharacters>99999</MaxCharacters></Pull></Body></Envelope>`,
 				XMLOutput: `<?xml version="1.0" encoding="UTF-8"?><a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope" xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd" xmlns:g="http://schemas.xmlsoap.org/ws/2004/09/enumeration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><a:Header><b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To><b:RelatesTo>1</b:RelatesTo><b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action><b:MessageID>uuid:00000000-8086-8086-8086-0000000009F5</b:MessageID><c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</c:ResourceURI></a:Header><a:Body><g:PullResponse><g:Items></g:Items><g:EndOfSequence></g:EndOfSequence></g:PullResponse></a:Body></a:Envelope>`,
 			},
@@ -340,7 +340,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTAuditLog().
 					Return(auditlog.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -359,7 +359,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTAuthorizationService().
 					Return(authorization.Response{Message: &client.Message{XMLInput: executeResponse.XMLInput, XMLOutput: executeResponse.XMLOutput}}, nil)
 			},
-			res: dto.Explorer{
+			res: dtov1.Explorer{
 				XMLInput:  `<?xml version="1.0" encoding="utf-8"?><Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:w="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns="http://www.w3.org/2003/05/soap-envelope"><Header><a:Action>http://schemas.xmlsoap.org/ws/2004/09/enumeration/Pull</a:Action><a:To>/wsman</a:To><w:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</w:ResourceURI><a:MessageID>1</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><w:OperationTimeout>PT60S</w:OperationTimeout></Header><Body><Pull xmlns="http://schemas.xmlsoap.org/ws/2004/09/enumeration"><EnumerationContext>4F020000-0000-0000-0000-000000000000</EnumerationContext><MaxElements>999</MaxElements><MaxCharacters>99999</MaxCharacters></Pull></Body></Envelope>`,
 				XMLOutput: `<?xml version="1.0" encoding="UTF-8"?><a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope" xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd" xmlns:g="http://schemas.xmlsoap.org/ws/2004/09/enumeration" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><a:Header><b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To><b:RelatesTo>1</b:RelatesTo><b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action><b:MessageID>uuid:00000000-8086-8086-8086-0000000009F5</b:MessageID><c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_8021xCredentialContext</c:ResourceURI></a:Header><a:Body><g:PullResponse><g:Items></g:Items><g:EndOfSequence></g:EndOfSequence></g:PullResponse></a:Body></a:Envelope>`,
 			},
@@ -381,7 +381,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTAuthorizationService().
 					Return(authorization.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -419,7 +419,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTBootCapabilities().
 					Return(boot.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -457,7 +457,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTBootSettingData().
 					Return(boot.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -495,7 +495,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTEnvironmentDetectionSettingData().
 					Return(environmentdetection.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -533,7 +533,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTEthernetPortSettings().
 					Return(ethernetport.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -571,7 +571,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTGeneralSettings().
 					Return(general.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -609,7 +609,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTKerberosSettingData().
 					Return(kerberos.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -647,7 +647,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTManagementPresenceRemoteSAP().
 					Return(managementpresence.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -685,7 +685,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTMessageLog().
 					Return(messagelog.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -723,7 +723,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTMPSUsernamePassword().
 					Return(mps.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -761,7 +761,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTPublicKeyCertificate().
 					Return(publickey.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -799,7 +799,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTPublicKeyManagementService().
 					Return(publickey.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -837,7 +837,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTPublicPrivateKeyPair().
 					Return(publicprivate.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -875,7 +875,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTRedirectionService().
 					Return(redirection.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -913,7 +913,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTRemoteAccessPolicyAppliesToMPS().
 					Return(remoteaccess.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -951,7 +951,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTRemoteAccessPolicyRule().
 					Return(remoteaccess.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -989,7 +989,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTRemoteAccessService().
 					Return(remoteaccess.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1027,7 +1027,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTSetupAndConfigurationService().
 					Return(setupandconfiguration.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1065,7 +1065,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTTimeSynchronizationService().
 					Return(timesynchronization.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1103,7 +1103,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTTLSCredentialContext().
 					Return(tls.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1141,7 +1141,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTTLSProtocolEndpointCollection().
 					Return(tls.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1179,7 +1179,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTTLSSettingData().
 					Return(tls.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1217,7 +1217,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTUserInitiatedConnectionService().
 					Return(userinitiatedconnection.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1256,7 +1256,7 @@ func TestExecuteCall(t *testing.T) {
 					GetAMTWiFiPortConfigurationService().
 					Return(wifiportconfiguration.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1294,7 +1294,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMBIOSElement().
 					Return(bios.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1332,7 +1332,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMBootConfigSetting().
 					Return(cimboot.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1370,7 +1370,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMBootService().
 					Return(cimboot.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1408,7 +1408,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMBootSourceSetting().
 					Return(cimboot.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1446,7 +1446,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMCard().
 					Return(card.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1484,7 +1484,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMChassis().
 					Return(chassis.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1522,7 +1522,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMChip().
 					Return(chip.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1560,7 +1560,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMComputerSystemPackage().
 					Return(computer.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1598,7 +1598,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMConcreteDependency().
 					Return(concrete.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1636,7 +1636,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMCredentialContext().
 					Return(credential.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1674,7 +1674,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMIEEE8021xSettings().
 					Return(cimieee8021x.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1712,7 +1712,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMKVMRedirectionSAP().
 					Return(kvm.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1750,7 +1750,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMMediaAccessDevice().
 					Return(mediaaccess.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1788,7 +1788,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMPhysicalMemory().
 					Return(physical.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1826,7 +1826,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMPhysicalPackage().
 					Return(physical.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1864,7 +1864,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMPowerManagementService().
 					Return(power.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1902,7 +1902,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMProcessor().
 					Return(processor.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1940,7 +1940,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMServiceAvailableToElement().
 					Return(service.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -1978,7 +1978,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMSoftwareIdentity().
 					Return(software.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2016,7 +2016,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMSystemPackaging().
 					Return(system.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2054,7 +2054,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMWiFiEndpointSettings().
 					Return(wifi.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2092,7 +2092,7 @@ func TestExecuteCall(t *testing.T) {
 					GetCIMWiFiPort().
 					Return(wifi.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2130,7 +2130,7 @@ func TestExecuteCall(t *testing.T) {
 					GetIPS8021xCredentialContext().
 					Return(ipsieee8021x.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2168,7 +2168,7 @@ func TestExecuteCall(t *testing.T) {
 					GetIPSAlarmClockOccurrence().
 					Return(ipsalarmclock.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2206,7 +2206,7 @@ func TestExecuteCall(t *testing.T) {
 					GetIPSHostBasedSetupService().
 					Return(hostbasedsetup.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2244,7 +2244,7 @@ func TestExecuteCall(t *testing.T) {
 					GetIPSIEEE8021xSettings().
 					Return(ipsieee8021x.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 		{
@@ -2282,7 +2282,7 @@ func TestExecuteCall(t *testing.T) {
 					GetIPSOptInService().
 					Return(optin.Response{}, ErrExplorerGeneral)
 			},
-			res: &dto.Explorer{},
+			res: &dtov1.Explorer{},
 			err: amtexplorer.ErrExplorerAMT,
 		},
 	}
@@ -2302,7 +2302,7 @@ func TestExecuteCall(t *testing.T) {
 				formattedXMLInput := formatXML(executeResponse.XMLInput)
 				formattedXMLOutput := formatXML(executeResponse.XMLOutput)
 
-				tc.res = &dto.Explorer{
+				tc.res = &dtov1.Explorer{
 					XMLInput:  formattedXMLInput,
 					XMLOutput: formattedXMLOutput,
 				}

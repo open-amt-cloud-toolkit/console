@@ -11,13 +11,13 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
 	"github.com/stretchr/testify/require"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
 type certificateTest struct {
 	name string
-	res  dto.SecuritySettings
+	res  dtov1.SecuritySettings
 	err  error
 
 	profileType string
@@ -674,8 +674,8 @@ var getResponse wsman.Certificates = wsman.Certificates{
 	},
 }
 
-var parsedCerts = dto.CertificatePullResponse{
-	KeyManagementItems: []dto.RefinedKeyManagementResponse{
+var parsedCerts = dtov1.CertificatePullResponse{
+	KeyManagementItems: []dtov1.RefinedKeyManagementResponse{
 		{
 			CreationClassName:       "",
 			ElementName:             "",
@@ -687,7 +687,7 @@ var parsedCerts = dto.CertificatePullResponse{
 			SystemName:              "",
 		},
 	},
-	Certificates: []dto.RefinedCertificate{
+	Certificates: []dtov1.RefinedCertificate{
 		{
 			ElementName:            "Intel(r) AMT Certificate",
 			InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
@@ -736,8 +736,8 @@ var parsedCerts = dto.CertificatePullResponse{
 	},
 }
 
-var parsedKeys = dto.KeyPullResponse{
-	Keys: []dto.Key{
+var parsedKeys = dtov1.KeyPullResponse{
+	Keys: []dtov1.Key{
 		{
 			ElementName:       "Intel(r) AMT Key",
 			InstanceID:        "Intel(r) AMT Key: Handle: 0",
@@ -776,7 +776,7 @@ func TestKeysToDTO(t *testing.T) {
 func TestProcessCertificates(t *testing.T) {
 	t.Parallel()
 
-	securitySettings := dto.SecuritySettings{
+	securitySettings := dtov1.SecuritySettings{
 		CertificateResponse: parsedCerts,
 		KeyResponse:         parsedKeys,
 	}
@@ -784,12 +784,12 @@ func TestProcessCertificates(t *testing.T) {
 	tests := []certificateTest{
 		{
 			name: "success",
-			res: dto.SecuritySettings{
-				ProfileAssociation: []dto.ProfileAssociation{
+			res: dtov1.SecuritySettings{
+				ProfileAssociation: []dtov1.ProfileAssociation{
 					{
 						Type:      "Wireless",
 						ProfileID: "TestWifi8021xTLS",
-						RootCertificate: &dto.RefinedCertificate{
+						RootCertificate: &dtov1.RefinedCertificate{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
 							X509Certificate:        "TestCertRoot",
@@ -798,7 +798,7 @@ func TestProcessCertificates(t *testing.T) {
 							PublicKeyHandle:        "",
 							AssociatedProfiles:     nil,
 						},
-						ClientCertificate: &dto.RefinedCertificate{
+						ClientCertificate: &dtov1.RefinedCertificate{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 3",
 							X509Certificate:        "TestCert3",
@@ -807,7 +807,7 @@ func TestProcessCertificates(t *testing.T) {
 							PublicKeyHandle:        "",
 							AssociatedProfiles:     nil,
 						},
-						Key: &dto.Key{
+						Key: &dtov1.Key{
 							ElementName:       "Intel(r) AMT Key",
 							InstanceID:        "Intel(r) AMT Key: Handle: 2",
 							DERKey:            "Key2",
@@ -817,7 +817,7 @@ func TestProcessCertificates(t *testing.T) {
 					{
 						Type:      "Wireless",
 						ProfileID: "TestWifi8021xTLS2",
-						RootCertificate: &dto.RefinedCertificate{
+						RootCertificate: &dtov1.RefinedCertificate{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
 							X509Certificate:        "TestCertRoot",
@@ -829,13 +829,13 @@ func TestProcessCertificates(t *testing.T) {
 								"Wireless - TestWifi8021xTLS2",
 							},
 						},
-						ClientCertificate: &dto.RefinedCertificate{},
-						Key:               &dto.Key{},
+						ClientCertificate: &dtov1.RefinedCertificate{},
+						Key:               &dtov1.Key{},
 					},
 				},
-				CertificateResponse: dto.CertificatePullResponse{
+				CertificateResponse: dtov1.CertificatePullResponse{
 					KeyManagementItems: nil,
-					Certificates: []dto.RefinedCertificate{
+					Certificates: []dtov1.RefinedCertificate{
 						{
 							ElementName:            "Intel(r) AMT Certificate",
 							InstanceID:             "Intel(r) AMT Certificate: Handle: 2",
@@ -879,8 +879,8 @@ func TestProcessCertificates(t *testing.T) {
 						},
 					},
 				},
-				KeyResponse: dto.KeyPullResponse{
-					Keys: []dto.Key{
+				KeyResponse: dtov1.KeyPullResponse{
+					Keys: []dtov1.Key{
 						{
 							ElementName:       "Intel(r) AMT Key",
 							InstanceID:        "Intel(r) AMT Key: Handle: 0",

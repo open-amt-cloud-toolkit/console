@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -30,12 +30,12 @@ func New(r Repository, d WSMAN, log logger.Interface) *UseCase {
 	}
 }
 
-// convert entity.Device to dto.Device.
-func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
+// convert entity.Device to dtov1.Device.
+func (uc *UseCase) entityToDTO(d *entity.Device) *dtov1.Device {
 	// convert comma separated string to []string
 	tags := strings.Split(d.Tags, ",")
 
-	d1 := &dto.Device{
+	d1 := &dtov1.Device{
 		ConnectionStatus: d.ConnectionStatus,
 		MPSInstance:      d.MPSInstance,
 		Hostname:         d.Hostname,

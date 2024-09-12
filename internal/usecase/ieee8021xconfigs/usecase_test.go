@@ -8,7 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -136,7 +136,7 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	IEEE8021xConfigDTOs := []dto.IEEE8021xConfig{
+	IEEE8021xConfigDTOs := []dtov1.IEEE8021xConfig{
 		{
 			ProfileName: "test-IEEE8021xConfig-1",
 			TenantID:    "tenant-id-456",
@@ -171,7 +171,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
-			res: []dto.IEEE8021xConfig(nil),
+			res: []dtov1.IEEE8021xConfig(nil),
 			err: ieee8021xconfigs.ErrDatabase,
 		},
 		{
@@ -184,7 +184,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.IEEE8021xConfig{}, nil)
 			},
-			res: []dto.IEEE8021xConfig{},
+			res: []dtov1.IEEE8021xConfig{},
 			err: nil,
 		},
 	}
@@ -220,7 +220,7 @@ func TestGetByName(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
-	ieee8021xconfigDTO := &dto.IEEE8021xConfig{
+	ieee8021xconfigDTO := &dtov1.IEEE8021xConfig{
 		ProfileName: "test-profile",
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
@@ -252,7 +252,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-ieee8021xconfig", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*dto.IEEE8021xConfig)(nil),
+			res: (*dtov1.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrNotFound,
 		},
 	}
@@ -335,7 +335,7 @@ func TestUpdate(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
-	ieee8021xconfigDTO := &dto.IEEE8021xConfig{
+	ieee8021xconfigDTO := &dtov1.IEEE8021xConfig{
 		ProfileName: "example-ieee8021xconfig",
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
@@ -362,7 +362,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), ieee8021xconfig).
 					Return(false, ieee8021xconfigs.ErrNotFound)
 			},
-			res: (*dto.IEEE8021xConfig)(nil),
+			res: (*dtov1.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrDatabase,
 		},
 		{
@@ -372,7 +372,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), ieee8021xconfig).
 					Return(false, ieee8021xconfigs.ErrDatabase)
 			},
-			res: (*dto.IEEE8021xConfig)(nil),
+			res: (*dtov1.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}
@@ -402,7 +402,7 @@ func TestInsert(t *testing.T) {
 		Version:     "1.0.0",
 	}
 
-	ieee8021xconfigDTO := &dto.IEEE8021xConfig{
+	ieee8021xconfigDTO := &dtov1.IEEE8021xConfig{
 		ProfileName: "new-ieee8021xconfig",
 		TenantID:    "tenant-id-789",
 		Version:     "1.0.0",
@@ -429,7 +429,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), ieee8021xconfig).
 					Return("", ieee8021xconfigs.ErrDatabase)
 			},
-			res: (*dto.IEEE8021xConfig)(nil),
+			res: (*dtov1.IEEE8021xConfig)(nil),
 			err: ieee8021xconfigs.ErrDatabase,
 		},
 	}

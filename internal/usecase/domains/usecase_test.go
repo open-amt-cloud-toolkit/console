@@ -10,7 +10,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -95,7 +95,7 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	testDomainDTOs := []dto.Domain{
+	testDomainDTOs := []dtov1.Domain{
 		{
 			ProfileName: "test-domain-1",
 			TenantID:    "tenant-id-456",
@@ -130,7 +130,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, domains.ErrDatabase)
 			},
-			res: []dto.Domain(nil),
+			res: []dtov1.Domain(nil),
 			err: domains.ErrDatabase,
 		},
 		{
@@ -143,7 +143,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Domain{}, nil)
 			},
-			res: []dto.Domain{},
+			res: []dtov1.Domain{},
 			err: nil,
 		},
 	}
@@ -184,7 +184,7 @@ func TestGetDomainByDomainSuffix(t *testing.T) {
 		Version:                       "1.0.0",
 	}
 
-	domainDTO := dto.Domain{
+	domainDTO := dtov1.Domain{
 		ProfileName:                   "test-domain",
 		DomainSuffix:                  "test.com",
 		ProvisioningCert:              "test-cert",
@@ -262,7 +262,7 @@ func TestGetByName(t *testing.T) {
 		Version:                       "1.0.0",
 	}
 
-	domainDTO := &dto.Domain{
+	domainDTO := &dtov1.Domain{
 		ProfileName:                   "test-domain",
 		DomainSuffix:                  "test-domain",
 		ProvisioningCert:              "test-cert",
@@ -298,7 +298,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-domain", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*dto.Domain)(nil),
+			res: (*dtov1.Domain)(nil),
 			err: domains.ErrNotFound,
 		},
 	}
@@ -382,7 +382,7 @@ func TestUpdate(t *testing.T) {
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
 	}
-	domainDTO := &dto.Domain{
+	domainDTO := &dtov1.Domain{
 		ProfileName: "example-domain",
 		TenantID:    "tenant-id-456",
 		Version:     "1.0.0",
@@ -409,7 +409,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), domain).
 					Return(false, nil)
 			},
-			res: (*dto.Domain)(nil),
+			res: (*dtov1.Domain)(nil),
 			err: domains.ErrNotFound,
 		},
 		{
@@ -419,7 +419,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), domain).
 					Return(false, domains.ErrDatabase)
 			},
-			res: (*dto.Domain)(nil),
+			res: (*dtov1.Domain)(nil),
 			err: domains.ErrDatabase,
 		},
 	}
@@ -454,7 +454,7 @@ func TestInsert(t *testing.T) {
 		ExpirationDate:                "2033-08-01T07:12:09Z",
 		Version:                       "1.0.0",
 	}
-	domainDTO := &dto.Domain{
+	domainDTO := &dtov1.Domain{
 		ProfileName:                   "new-domain",
 		DomainSuffix:                  "newdomain.com",
 		ProvisioningCert:              generateTestPFX(),
@@ -486,7 +486,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), domain).
 					Return("", domains.ErrDatabase)
 			},
-			res: (*dto.Domain)(nil),
+			res: (*dtov1.Domain)(nil),
 			err: domains.ErrDatabase,
 		},
 	}
@@ -520,7 +520,7 @@ func generateTestPFX() string {
 func TestDecryptAndCheckCertExpiration_Valid(t *testing.T) {
 	t.Parallel()
 
-	domain := dto.Domain{
+	domain := dtov1.Domain{
 		ProvisioningCert:         generateTestPFX(),
 		ProvisioningCertPassword: "P@ssw0rd",
 	}
@@ -536,7 +536,7 @@ func TestDecryptAndCheckCertExpiration_Valid(t *testing.T) {
 func TestDecryptAndCheckCertExpiration_Expired(t *testing.T) {
 	t.Parallel()
 
-	domain := dto.Domain{
+	domain := dtov1.Domain{
 		ProvisioningCert:         "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",
 		ProvisioningCertPassword: "",
 	}
@@ -553,7 +553,7 @@ func TestDecryptAndCheckCertExpiration_Expired(t *testing.T) {
 func TestDecryptAndCheckCertExpiration_IncorrectPassword(t *testing.T) {
 	t.Parallel()
 
-	domain := dto.Domain{
+	domain := dtov1.Domain{
 		ProvisioningCert:         generateTestPFX(),
 		ProvisioningCertPassword: "WrongP@ssw0rd",
 	}

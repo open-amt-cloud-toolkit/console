@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type (
@@ -18,10 +18,10 @@ type (
 	}
 	Feature interface {
 		GetCount(ctx context.Context, tenantID string) (int, error)
-		Get(ctx context.Context, top, skip int, tenantID string) ([]dto.CIRAConfig, error)
-		GetByName(ctx context.Context, configName, tenantID string) (*dto.CIRAConfig, error)
+		Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.CIRAConfig, error)
+		GetByName(ctx context.Context, configName, tenantID string) (*dtov1.CIRAConfig, error)
 		Delete(ctx context.Context, profileName, tenantID string) error
-		Update(ctx context.Context, p *dto.CIRAConfig) (*dto.CIRAConfig, error)
-		Insert(ctx context.Context, p *dto.CIRAConfig) (*dto.CIRAConfig, error)
+		Update(ctx context.Context, p *dtov1.CIRAConfig) (*dtov1.CIRAConfig, error)
+		Insert(ctx context.Context, p *dtov1.CIRAConfig) (*dtov1.CIRAConfig, error)
 	}
 )

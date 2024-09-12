@@ -53,7 +53,7 @@ import (
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -85,7 +85,7 @@ func NewGoWSMANMessages(log logger.Interface) *GoWSMANMessages {
 	}
 }
 
-func (g GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
+func (g GoWSMANMessages) DestroyWsmanClient(device dtov1.Device) {
 	if entry, ok := connections[device.GUID]; ok {
 		entry.Timer.Stop()
 		removeConnection(device.GUID)
@@ -104,7 +104,7 @@ func (g GoWSMANMessages) Worker() {
 	}
 }
 
-func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) Management {
+func (g GoWSMANMessages) SetupWsmanClient(device dtov1.Device, isRedirection, logAMTMessages bool) Management {
 	resultChan := make(chan *ConnectionEntry)
 
 	// Queue the request
@@ -115,7 +115,7 @@ func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logA
 	return <-resultChan
 }
 
-func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
+func (g GoWSMANMessages) setupWsmanClientInternal(device dtov1.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
@@ -228,23 +228,23 @@ var UserConsentOptions = map[int]string{
 	4294967295: "all",
 }
 
-func (g *ConnectionEntry) GetFeatures() (dto.Features, error) {
+func (g *ConnectionEntry) GetFeatures() (dtov1.Features, error) {
 	redirectionResult, err := g.WsmanMessages.AMT.RedirectionService.Get()
 	if err != nil {
-		return dto.Features{}, err
+		return dtov1.Features{}, err
 	}
 
 	optServiceResult, err := g.WsmanMessages.IPS.OptInService.Get()
 	if err != nil {
-		return dto.Features{}, err
+		return dtov1.Features{}, err
 	}
 
 	kvmResult, err := g.WsmanMessages.CIM.KVMRedirectionSAP.Get()
 	if err != nil {
-		return dto.Features{}, err
+		return dtov1.Features{}, err
 	}
 
-	settingsResults := dto.Features{
+	settingsResults := dtov1.Features{
 		UserConsent: UserConsentOptions[int(optServiceResult.Body.GetAndPutResponse.OptInRequired)],
 		EnableSOL:   (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
 		EnableIDER:  (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
@@ -256,7 +256,7 @@ func (g *ConnectionEntry) GetFeatures() (dto.Features, error) {
 	return settingsResults, nil
 }
 
-func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, error) {
+func (g *ConnectionEntry) SetFeatures(features dtov1.Features) (dtov1.Features, error) {
 	// redirection
 	requestedState, listenerEnabled, err := configureRedirection(features, g)
 	if err != nil {
@@ -315,7 +315,7 @@ func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, erro
 	return features, nil
 }
 
-func configureKVM(features dto.Features, listenerEnabled int, g *ConnectionEntry) (int, error) {
+func configureKVM(features dtov1.Features, listenerEnabled int, g *ConnectionEntry) (int, error) {
 	kvmRequestedState := kvm.RedirectionSAPDisable
 	if features.EnableKVM {
 		kvmRequestedState = kvm.RedirectionSAPEnable
@@ -330,7 +330,7 @@ func configureKVM(features dto.Features, listenerEnabled int, g *ConnectionEntry
 	return listenerEnabled, nil
 }
 
-func configureRedirection(features dto.Features, g *ConnectionEntry) (redirection.RequestedState, int, error) {
+func configureRedirection(features dtov1.Features, g *ConnectionEntry) (redirection.RequestedState, int, error) {
 	requestedState := redirection.DisableIDERAndSOL
 	listenerEnabled := 0
 

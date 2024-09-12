@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type (
@@ -21,10 +21,10 @@ type (
 	Feature interface {
 		CheckProfileExists(ctx context.Context, profileName, tenantID string) (bool, error)
 		GetCount(ctx context.Context, tenantID string) (int, error)
-		Get(ctx context.Context, top, skip int, tenantID string) ([]dto.WirelessConfig, error)
-		GetByName(ctx context.Context, guid, tenantID string) (*dto.WirelessConfig, error)
+		Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.WirelessConfig, error)
+		GetByName(ctx context.Context, guid, tenantID string) (*dtov1.WirelessConfig, error)
 		Delete(ctx context.Context, profileName, tenantID string) error
-		Update(ctx context.Context, p *dto.WirelessConfig) (*dto.WirelessConfig, error)
-		Insert(ctx context.Context, p *dto.WirelessConfig) (*dto.WirelessConfig, error)
+		Update(ctx context.Context, p *dtov1.WirelessConfig) (*dtov1.WirelessConfig, error)
+		Insert(ctx context.Context, p *dtov1.WirelessConfig) (*dtov1.WirelessConfig, error)
 	}
 )

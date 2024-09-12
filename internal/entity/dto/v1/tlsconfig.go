@@ -1,4 +1,4 @@
-package dto
+package dtov1
 
 type TLSCerts struct {
 	RootCertificate   CertCreationResult `json:"rootCertificate"`

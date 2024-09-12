@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -199,10 +199,10 @@ func (mr *MockwificonfigsFeatureMockRecorder) Delete(ctx, profileName, tenantID 
 }
 
 // Get mocks base method.
-func (m *MockwificonfigsFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.WirelessConfig, error) {
+func (m *MockwificonfigsFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]dto.WirelessConfig)
+	ret0, _ := ret[0].([]dtov1.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -214,10 +214,10 @@ func (mr *MockwificonfigsFeatureMockRecorder) Get(ctx, top, skip, tenantID any) 
 }
 
 // GetByName mocks base method.
-func (m *MockwificonfigsFeature) GetByName(ctx context.Context, guid, tenantID string) (*dto.WirelessConfig, error) {
+func (m *MockwificonfigsFeature) GetByName(ctx context.Context, guid, tenantID string) (*dtov1.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, guid, tenantID)
-	ret0, _ := ret[0].(*dto.WirelessConfig)
+	ret0, _ := ret[0].(*dtov1.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -244,10 +244,10 @@ func (mr *MockwificonfigsFeatureMockRecorder) GetCount(ctx, tenantID any) *gomoc
 }
 
 // Insert mocks base method.
-func (m *MockwificonfigsFeature) Insert(ctx context.Context, p *dto.WirelessConfig) (*dto.WirelessConfig, error) {
+func (m *MockwificonfigsFeature) Insert(ctx context.Context, p *dtov1.WirelessConfig) (*dtov1.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, p)
-	ret0, _ := ret[0].(*dto.WirelessConfig)
+	ret0, _ := ret[0].(*dtov1.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -259,10 +259,10 @@ func (mr *MockwificonfigsFeatureMockRecorder) Insert(ctx, p any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockwificonfigsFeature) Update(ctx context.Context, p *dto.WirelessConfig) (*dto.WirelessConfig, error) {
+func (m *MockwificonfigsFeature) Update(ctx context.Context, p *dtov1.WirelessConfig) (*dtov1.WirelessConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, p)
-	ret0, _ := ret[0].(*dto.WirelessConfig)
+	ret0, _ := ret[0].(*dtov1.WirelessConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

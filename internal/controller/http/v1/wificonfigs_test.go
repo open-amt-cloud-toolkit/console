@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -40,13 +40,13 @@ type wifiConfigTest struct {
 	url          string
 	mock         func(repo *MockWiFiConfigsFeature)
 	response     interface{}
-	requestBody  dto.WirelessConfig
+	requestBody  dtov1.WirelessConfig
 	expectedCode int
 }
 
 var (
-	requestWiFiConfig  = dto.WirelessConfig{AuthenticationMethod: 4, EncryptionMethod: 3, SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"}
-	responseWiFiConfig = dto.WirelessConfig{AuthenticationMethod: 4, EncryptionMethod: 3, SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"}
+	requestWiFiConfig  = dtov1.WirelessConfig{AuthenticationMethod: 4, EncryptionMethod: 3, SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"}
+	responseWiFiConfig = dtov1.WirelessConfig{AuthenticationMethod: 4, EncryptionMethod: 3, SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"}
 )
 
 func TestWiFiConfigRoutes(t *testing.T) {
@@ -58,11 +58,11 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.WirelessConfig{{
+				wificonfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dtov1.WirelessConfig{{
 					ProfileName: "profile",
 				}}, nil)
 			},
-			response:     []dto.WirelessConfig{{ProfileName: "profile"}},
+			response:     []dtov1.WirelessConfig{{ProfileName: "profile"}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -70,12 +70,12 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs?$top=10&$skip=1&$count=true",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.WirelessConfig{{
+				wificonfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dtov1.WirelessConfig{{
 					ProfileName: "profile",
 				}}, nil)
 				wificonfig.EXPECT().GetCount(context.Background(), "").Return(1, nil)
 			},
-			response:     dto.WirelessConfigCountResponse{Count: 1, Data: []dto.WirelessConfig{{ProfileName: "profile"}}},
+			response:     dtov1.WirelessConfigCountResponse{Count: 1, Data: []dtov1.WirelessConfig{{ProfileName: "profile"}}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -93,11 +93,11 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs/profile",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.WirelessConfig{
+				wificonfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dtov1.WirelessConfig{
 					ProfileName: "profile",
 				}, nil)
 			},
-			response:     dto.WirelessConfig{ProfileName: "profile"},
+			response:     dtov1.WirelessConfig{ProfileName: "profile"},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -115,7 +115,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/wirelessconfigs",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfigTest := &dto.WirelessConfig{
+				wificonfigTest := &dtov1.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
 					SSID:                 "exampleSSID",
@@ -137,7 +137,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/wirelessconfigs",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfigTest := &dto.WirelessConfig{
+				wificonfigTest := &dtov1.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
 					SSID:                 "exampleSSID",
@@ -159,7 +159,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/wirelessconfigs",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfigTest := &dto.WirelessConfig{
+				wificonfigTest := &dtov1.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
 					SSID:                 "exampleSSID",
@@ -173,7 +173,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 				wificonfig.EXPECT().Insert(context.Background(), wificonfigTest).Return(nil, wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
-			requestBody:  dto.WirelessConfig{AuthenticationMethod: 4, EncryptionMethod: 3, SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"},
+			requestBody:  dtov1.WirelessConfig{AuthenticationMethod: 4, EncryptionMethod: 3, SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"},
 			expectedCode: http.StatusBadRequest,
 		},
 		{
@@ -201,7 +201,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/wirelessconfigs",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfigTest := &dto.WirelessConfig{
+				wificonfigTest := &dtov1.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
 					SSID:                 "exampleSSID",
@@ -223,7 +223,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/wirelessconfigs",
 			mock: func(wificonfig *MockWiFiConfigsFeature) {
-				wificonfigTest := &dto.WirelessConfig{
+				wificonfigTest := &dtov1.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
 					SSID:                 "exampleSSID",

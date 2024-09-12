@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -40,13 +40,13 @@ type ciraconfigTest struct {
 	url          string
 	mock         func(repo *MockCIRAConfigsFeature)
 	response     interface{}
-	requestBody  dto.CIRAConfig
+	requestBody  dtov1.CIRAConfig
 	expectedCode int
 }
 
 var (
-	requestCIRAConfig  = dto.CIRAConfig{ConfigName: "ciraconfig", MPSAddress: "https://example.com", MPSPort: 4433, Username: "username", Password: "password", CommonName: "example.com", ServerAddressFormat: 201, AuthMethod: 2, MPSRootCertificate: "-----BEGIN CERTIFICATE-----\n...", ProxyDetails: "http://example.com", TenantID: "abc123", RegeneratePassword: true, Version: "1.0.0"}
-	responseCIRAConfig = dto.CIRAConfig{ConfigName: "ciraconfig", MPSAddress: "https://example.com", MPSPort: 4433, Username: "username", Password: "password", CommonName: "example.com", ServerAddressFormat: 201, AuthMethod: 2, MPSRootCertificate: "-----BEGIN CERTIFICATE-----\n...", ProxyDetails: "http://example.com", TenantID: "abc123", RegeneratePassword: true, Version: "1.0.0"}
+	requestCIRAConfig  = dtov1.CIRAConfig{ConfigName: "ciraconfig", MPSAddress: "https://example.com", MPSPort: 4433, Username: "username", Password: "password", CommonName: "example.com", ServerAddressFormat: 201, AuthMethod: 2, MPSRootCertificate: "-----BEGIN CERTIFICATE-----\n...", ProxyDetails: "http://example.com", TenantID: "abc123", RegeneratePassword: true, Version: "1.0.0"}
+	responseCIRAConfig = dtov1.CIRAConfig{ConfigName: "ciraconfig", MPSAddress: "https://example.com", MPSPort: 4433, Username: "username", Password: "password", CommonName: "example.com", ServerAddressFormat: 201, AuthMethod: 2, MPSRootCertificate: "-----BEGIN CERTIFICATE-----\n...", ProxyDetails: "http://example.com", TenantID: "abc123", RegeneratePassword: true, Version: "1.0.0"}
 )
 
 func TestCIRAConfigRoutes(t *testing.T) {
@@ -58,11 +58,11 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.CIRAConfig{{
+				ciraconfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dtov1.CIRAConfig{{
 					ConfigName: "config",
 				}}, nil)
 			},
-			response:     []dto.CIRAConfig{{ConfigName: "config"}},
+			response:     []dtov1.CIRAConfig{{ConfigName: "config"}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -70,12 +70,12 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs?$top=10&$skip=1&$count=true",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.CIRAConfig{{
+				ciraconfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dtov1.CIRAConfig{{
 					ConfigName: "config",
 				}}, nil)
 				ciraconfig.EXPECT().GetCount(context.Background(), "").Return(1, nil)
 			},
-			response:     CIRAConfigCountResponse{Count: 1, Data: []dto.CIRAConfig{{ConfigName: "config"}}},
+			response:     CIRAConfigCountResponse{Count: 1, Data: []dtov1.CIRAConfig{{ConfigName: "config"}}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -93,11 +93,11 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs/profile",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.CIRAConfig{
+				ciraconfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dtov1.CIRAConfig{
 					ConfigName: "config",
 				}, nil)
 			},
-			response:     dto.CIRAConfig{ConfigName: "config"},
+			response:     dtov1.CIRAConfig{ConfigName: "config"},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -115,7 +115,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ciraconfigs",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfigTest := &dto.CIRAConfig{
+				ciraconfigTest := &dtov1.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",
 					MPSPort:             4433,
@@ -141,7 +141,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ciraconfigs",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfigTest := &dto.CIRAConfig{
+				ciraconfigTest := &dtov1.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",
 					MPSPort:             4433,
@@ -167,7 +167,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ciraconfigs",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfig400Test := &dto.CIRAConfig{
+				ciraconfig400Test := &dtov1.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					ServerAddressFormat: 201,
 					AuthMethod:          2,
@@ -180,7 +180,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 				ciraconfig.EXPECT().Insert(context.Background(), ciraconfig400Test).Return(nil, ciraconfigs.ErrDatabase)
 			},
 			response:     ciraconfigs.ErrDatabase,
-			requestBody:  dto.CIRAConfig{ConfigName: "ciraconfig", ServerAddressFormat: 201, AuthMethod: 2, MPSRootCertificate: "-----BEGIN CERTIFICATE-----\n...", ProxyDetails: "http://example.com", TenantID: "abc123", RegeneratePassword: true, Version: "1.0.0"},
+			requestBody:  dtov1.CIRAConfig{ConfigName: "ciraconfig", ServerAddressFormat: 201, AuthMethod: 2, MPSRootCertificate: "-----BEGIN CERTIFICATE-----\n...", ProxyDetails: "http://example.com", TenantID: "abc123", RegeneratePassword: true, Version: "1.0.0"},
 			expectedCode: http.StatusBadRequest,
 		},
 		{
@@ -208,7 +208,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/ciraconfigs",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfigTest := &dto.CIRAConfig{
+				ciraconfigTest := &dtov1.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",
 					MPSPort:             4433,
@@ -234,7 +234,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/ciraconfigs",
 			mock: func(ciraconfig *MockCIRAConfigsFeature) {
-				ciraconfigTest := &dto.CIRAConfig{
+				ciraconfigTest := &dtov1.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",
 					MPSPort:             4433,

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -49,7 +49,7 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.IEEE8021xConfig, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.IEEE8021xConfig, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
@@ -60,7 +60,7 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dto.IEEE8021xConfig, len(data))
+	d1 := make([]dtov1.IEEE8021xConfig, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -70,7 +70,7 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	return d1, nil
 }
 
-func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*dto.IEEE8021xConfig, error) {
+func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*dtov1.IEEE8021xConfig, error) {
 	data, err := uc.repo.GetByName(ctx, profileName, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByName", "uc.repo.GetByName", err)
@@ -98,7 +98,7 @@ func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) err
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+func (uc *UseCase) Update(ctx context.Context, d *dtov1.IEEE8021xConfig) (*dtov1.IEEE8021xConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
 	updated, err := uc.repo.Update(ctx, d1)
@@ -120,7 +120,7 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.IEEE8021xConfig) (*dto.IEE
 	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
+func (uc *UseCase) Insert(ctx context.Context, d *dtov1.IEEE8021xConfig) (*dtov1.IEEE8021xConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
 	_, err := uc.repo.Insert(ctx, d1)
@@ -138,8 +138,8 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.IEEE8021xConfig) (*dto.IEE
 	return d2, nil
 }
 
-// convert dto.Domain to entity.Domain.
-func (uc *UseCase) dtoToEntity(d *dto.IEEE8021xConfig) *entity.IEEE8021xConfig {
+// convert dtov1.Domain to entity.Domain.
+func (uc *UseCase) dtoToEntity(d *dtov1.IEEE8021xConfig) *entity.IEEE8021xConfig {
 	d1 := &entity.IEEE8021xConfig{
 		ProfileName:            d.ProfileName,
 		AuthenticationProtocol: d.AuthenticationProtocol,
@@ -152,9 +152,9 @@ func (uc *UseCase) dtoToEntity(d *dto.IEEE8021xConfig) *entity.IEEE8021xConfig {
 	return d1
 }
 
-// convert entity.Domain to dto.Domain.
-func (uc *UseCase) entityToDTO(d *entity.IEEE8021xConfig) *dto.IEEE8021xConfig {
-	d1 := &dto.IEEE8021xConfig{
+// convert entity.Domain to dtov1.Domain.
+func (uc *UseCase) entityToDTO(d *entity.IEEE8021xConfig) *dtov1.IEEE8021xConfig {
+	d1 := &dtov1.IEEE8021xConfig{
 		ProfileName:            d.ProfileName,
 		AuthenticationProtocol: d.AuthenticationProtocol,
 		PXETimeout:             d.PXETimeout,

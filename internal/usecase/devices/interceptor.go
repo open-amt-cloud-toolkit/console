@@ -13,7 +13,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 type DeviceConnection struct {
 	Conn          *websocket.Conn
 	wsmanMessages wsman.Messages
-	Device        dto.Device
+	Device        dtov1.Device
 	Direct        bool
 	Mode          string
 	Challenge     client.AuthChallenge

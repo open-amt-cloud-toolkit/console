@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{}, error) {
@@ -43,7 +43,7 @@ func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[strin
 	return response, nil
 }
 
-func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsent, guid string) (interface{}, error) {
+func (uc *UseCase) SendConsentCode(c context.Context, userConsent dtov1.UserConsent, guid string) (interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err

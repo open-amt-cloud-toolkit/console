@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-var ErrValidationWifiConfig = dto.NotValidError{Console: consoleerrors.CreateConsoleError("WifiConfigsAPI")}
+var ErrValidationWifiConfig = dtov1.NotValidError{Console: consoleerrors.CreateConsoleError("WifiConfigsAPI")}
 
 type WirelessConfigRoutes struct {
 	t wificonfigs.Feature
@@ -25,7 +25,7 @@ func NewWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l 
 
 	if binding.Validator != nil {
 		if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-			err := v.RegisterValidation("authforieee8021x", dto.ValidateAuthandIEEE)
+			err := v.RegisterValidation("authforieee8021x", dtov1.ValidateAuthandIEEE)
 			if err != nil {
 				l.Error(err, "failed to register validation")
 			}
@@ -66,7 +66,7 @@ func (r *WirelessConfigRoutes) get(c *gin.Context) {
 			ErrorResponse(c, err)
 		}
 
-		countResponse := dto.WirelessConfigCountResponse{
+		countResponse := dtov1.WirelessConfigCountResponse{
 			Count: count,
 			Data:  items,
 		}
@@ -92,7 +92,7 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 }
 
 func (r *WirelessConfigRoutes) insert(c *gin.Context) {
-	var config dto.WirelessConfig
+	var config dtov1.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		validationErr := ErrValidationWifiConfig.Wrap("insert", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)
@@ -113,7 +113,7 @@ func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 }
 
 func (r *WirelessConfigRoutes) update(c *gin.Context) {
-	var config dto.WirelessConfig
+	var config dtov1.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		validationErr := ErrValidationWifiConfig.Wrap("update", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)

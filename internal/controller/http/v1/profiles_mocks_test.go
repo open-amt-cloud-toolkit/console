@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -169,10 +169,10 @@ func (mr *MockProfilesFeatureMockRecorder) Delete(ctx, profileName, tenantID any
 }
 
 // Get mocks base method.
-func (m *MockProfilesFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Profile, error) {
+func (m *MockProfilesFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]dto.Profile)
+	ret0, _ := ret[0].([]dtov1.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -184,10 +184,10 @@ func (mr *MockProfilesFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *go
 }
 
 // GetByName mocks base method.
-func (m *MockProfilesFeature) GetByName(ctx context.Context, profileName, tenantID string) (*dto.Profile, error) {
+func (m *MockProfilesFeature) GetByName(ctx context.Context, profileName, tenantID string) (*dtov1.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, profileName, tenantID)
-	ret0, _ := ret[0].(*dto.Profile)
+	ret0, _ := ret[0].(*dtov1.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -214,10 +214,10 @@ func (mr *MockProfilesFeatureMockRecorder) GetCount(ctx, tenantID any) *gomock.C
 }
 
 // Insert mocks base method.
-func (m *MockProfilesFeature) Insert(ctx context.Context, p *dto.Profile) (*dto.Profile, error) {
+func (m *MockProfilesFeature) Insert(ctx context.Context, p *dtov1.Profile) (*dtov1.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, p)
-	ret0, _ := ret[0].(*dto.Profile)
+	ret0, _ := ret[0].(*dtov1.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -229,10 +229,10 @@ func (mr *MockProfilesFeatureMockRecorder) Insert(ctx, p any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockProfilesFeature) Update(ctx context.Context, p *dto.Profile) (*dto.Profile, error) {
+func (m *MockProfilesFeature) Update(ctx context.Context, p *dtov1.Profile) (*dtov1.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, p)
-	ret0, _ := ret[0].(*dto.Profile)
+	ret0, _ := ret[0].(*dtov1.Profile)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -19,14 +19,14 @@ import (
 	ipsAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type Management interface {
 	GetAMTVersion() ([]software.SoftwareIdentity, error)
 	GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error)
-	GetFeatures() (dto.Features, error)
-	SetFeatures(dto.Features) (dto.Features, error)
+	GetFeatures() (dtov1.Features, error)
+	SetFeatures(dtov1.Features) (dtov1.Features, error)
 	GetAlarmOccurrences() ([]ipsAlarmClock.AlarmClockOccurrence, error)
 	CreateAlarmOccurrences(name string, startTime time.Time, interval int, deleteOnCompletion bool) (alarmclock.AddAlarmOutput, error)
 	DeleteAlarmOccurrences(instanceID string) error
