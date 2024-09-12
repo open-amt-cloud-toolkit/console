@@ -84,6 +84,73 @@ func (mr *MockWSMANMockRecorder) Worker() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Worker", reflect.TypeOf((*MockWSMAN)(nil).Worker))
 }
 
+// MockWebSocketConn is a mock of WebSocketConn interface.
+type MockWebSocketConn struct {
+	ctrl     *gomock.Controller
+	recorder *MockWebSocketConnMockRecorder
+}
+
+// MockWebSocketConnMockRecorder is the mock recorder for MockWebSocketConn.
+type MockWebSocketConnMockRecorder struct {
+	mock *MockWebSocketConn
+}
+
+// NewMockWebSocketConn creates a new mock instance.
+func NewMockWebSocketConn(ctrl *gomock.Controller) *MockWebSocketConn {
+	mock := &MockWebSocketConn{ctrl: ctrl}
+	mock.recorder = &MockWebSocketConnMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockWebSocketConn) EXPECT() *MockWebSocketConnMockRecorder {
+	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockWebSocketConn) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockWebSocketConnMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockWebSocketConn)(nil).Close))
+}
+
+// ReadMessage mocks base method.
+func (m *MockWebSocketConn) ReadMessage() (int, []byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadMessage")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].([]byte)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ReadMessage indicates an expected call of ReadMessage.
+func (mr *MockWebSocketConnMockRecorder) ReadMessage() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadMessage", reflect.TypeOf((*MockWebSocketConn)(nil).ReadMessage))
+}
+
+// WriteMessage mocks base method.
+func (m *MockWebSocketConn) WriteMessage(messageType int, data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WriteMessage", messageType, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteMessage indicates an expected call of WriteMessage.
+func (mr *MockWebSocketConnMockRecorder) WriteMessage(messageType, data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMessage", reflect.TypeOf((*MockWebSocketConn)(nil).WriteMessage), messageType, data)
+}
+
 // MockRedirection is a mock of Redirection interface.
 type MockRedirection struct {
 	ctrl     *gomock.Controller
