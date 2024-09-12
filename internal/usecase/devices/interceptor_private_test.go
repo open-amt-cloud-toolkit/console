@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"math"
+	"strings"
 	"testing"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
@@ -430,6 +432,177 @@ func TestHandleAuthenticateSessionReply(t *testing.T) {
 				require.Equal(t, tc.expectedChallenge.Realm, challenge.Realm)
 				require.Equal(t, tc.expectedChallenge.Nonce, challenge.Nonce)
 				require.Equal(t, tc.expectedChallenge.Qop, challenge.Qop)
+			}
+		})
+	}
+}
+
+var ErrGeneral = errors.New("general error")
+
+func TestBuildAuthReply(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		challenge      *client.AuthChallenge
+		response       string
+		expectedResult []byte
+		expectedError  bool
+	}{
+		{
+			name: "Error on writeLength (exceeds limit)",
+			challenge: &client.AuthChallenge{
+				Username: strings.Repeat("A", int(math.MaxUint32)),
+			},
+			response:       "response",
+			expectedResult: nil,
+			expectedError:  true,
+		},
+		{
+			name: "Error on writeFields (field length exceeds limit)",
+			challenge: &client.AuthChallenge{
+				Username: strings.Repeat("A", math.MaxUint8+1), // Length exceeds limit
+			},
+			response:       "response",
+			expectedResult: nil,
+			expectedError:  true,
+		},
+		{
+			name: "Successful buildAuthReply",
+			challenge: &client.AuthChallenge{
+				Username:   "user",
+				Realm:      "realm",
+				Nonce:      "nonce",
+				CNonce:     "cnonce",
+				Qop:        "qop",
+				NonceCount: 1,
+			},
+			response:       "response",
+			expectedResult: []byte{0x13, 0x00, 0x00, 0x00, 0x04}, // Start with header bytes, expected to append the rest based on length and fields
+			expectedError:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Call the function under test
+			result := buildAuthReply(tc.challenge, tc.response)
+
+			// Assertions
+			if tc.expectedError {
+				require.Nil(t, result)
+			} else {
+				require.NotNil(t, result)
+				require.Equal(t, tc.expectedResult[:5], result[:5]) // Check the header, and compare further based on your actual output
+			}
+		})
+	}
+}
+
+func TestWriteFields(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		challenge     *client.AuthChallenge
+		response      string
+		expectedError bool
+	}{
+		{
+			name: "Successful writeFields",
+			challenge: &client.AuthChallenge{
+				Username:   "user",
+				Realm:      "realm",
+				Nonce:      "nonce",
+				CNonce:     "cnonce",
+				Qop:        "qop",
+				NonceCount: 1,
+			},
+			response:      "response",
+			expectedError: false,
+		},
+		{
+			name: "writeField error on Username",
+			challenge: &client.AuthChallenge{
+				Username: strings.Repeat("A", math.MaxUint8+1), // Length exceeds limit
+			},
+			response:      "response",
+			expectedError: true,
+		},
+		{
+			name: "writeField error on Realm",
+			challenge: &client.AuthChallenge{
+				Realm: strings.Repeat("A", math.MaxUint8+1), // Length exceeds limit
+			},
+			response:      "response",
+			expectedError: true,
+		},
+		{
+			name: "writeField error on Nonce",
+			challenge: &client.AuthChallenge{
+				Nonce: strings.Repeat("A", math.MaxUint8+1), // Length exceeds limit
+			},
+			response:      "response",
+			expectedError: true,
+		},
+		{
+			name: "writeField error on CNonce",
+			challenge: &client.AuthChallenge{
+				CNonce: strings.Repeat("A", math.MaxUint8+1), // Length exceeds limit
+			},
+			response:      "response",
+			expectedError: true,
+		},
+		{
+			name: "writeField error on NonceCount",
+			challenge: &client.AuthChallenge{
+				NonceCount: 1,
+			},
+			response:      strings.Repeat("B", math.MaxUint8+1), // Length exceeds limit
+			expectedError: true,
+		},
+		{
+			name: "writeField error on response",
+			challenge: &client.AuthChallenge{
+				Username: "user",
+				Realm:    "realm",
+				Nonce:    "nonce",
+				CNonce:   "cnonce",
+				Qop:      "qop",
+			},
+			response:      strings.Repeat("C", math.MaxUint8+1), // Length exceeds limit
+			expectedError: true,
+		},
+		{
+			name: "writeField error on Qop",
+			challenge: &client.AuthChallenge{
+				Username: "user",
+				Realm:    "realm",
+				Nonce:    "nonce",
+				CNonce:   "cnonce",
+				Qop:      strings.Repeat("D", math.MaxUint8+1), // Length exceeds limit
+			},
+			response:      "response",
+			expectedError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			buf := &bytes.Buffer{}
+			err := writeFields(buf, tc.challenge, tc.response)
+
+			// Assertions
+			if tc.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
