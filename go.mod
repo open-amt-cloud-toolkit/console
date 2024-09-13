@@ -22,13 +22,14 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	go.uber.org/mock v0.4.0
-	modernc.org/sqlite v1.33.0
+	modernc.org/sqlite v1.33.1
 	software.sslmate.com/src/go-pkcs12 v0.5.0
 )
 
 require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	modernc.org/libc v1.55.3 // indirect
 )
 
 require (
