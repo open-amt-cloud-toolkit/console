@@ -244,16 +244,34 @@ func (g *ConnectionEntry) GetFeatures() (dto.Features, error) {
 		return dto.Features{}, err
 	}
 
+	iderEnabled, solEnabled := getSOLAndIDERState(redirectionResult.Body.GetAndPutResponse.EnabledState)
+
 	settingsResults := dto.Features{
 		UserConsent: UserConsentOptions[int(optServiceResult.Body.GetAndPutResponse.OptInRequired)],
-		EnableSOL:   (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
-		EnableIDER:  (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
+		EnableSOL:   solEnabled,
+		EnableIDER:  iderEnabled,
 		EnableKVM:   kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.Enabled) || kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.EnabledButOffline),
 		Redirection: redirectionResult.Body.GetAndPutResponse.ListenerEnabled,
 		OptInState:  optServiceResult.Body.GetAndPutResponse.OptInState,
 	}
 
 	return settingsResults, nil
+}
+
+func getSOLAndIDERState(enabledState redirection.EnabledState) (iderEnabled, solEnabled bool) {
+	//nolint:exhaustive // we only care about IDER and SOL states. Other scenarios are handled by the default case.
+	switch enabledState {
+	case redirection.IDERAndSOLAreDisabled:
+		return false, false
+	case redirection.IDERIsEnabledAndSOLIsDisabled:
+		return true, false
+	case redirection.SOLIsEnabledAndIDERIsDisabled:
+		return false, true
+	case redirection.IDERAndSOLAreEnabled:
+		return true, true
+	default:
+		return false, false // default case if state is invalid
+	}
 }
 
 func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, error) {
@@ -264,7 +282,7 @@ func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, erro
 	}
 
 	// kvm
-	listenerEnabled, err = configureKVM(features, listenerEnabled, g)
+	kvmListenerEnabled, err := configureKVM(features, g)
 	if err != nil {
 		return features, err
 	}
@@ -279,7 +297,7 @@ func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, erro
 		CreationClassName:       currentRedirection.Body.GetAndPutResponse.CreationClassName,
 		ElementName:             currentRedirection.Body.GetAndPutResponse.ElementName,
 		EnabledState:            redirection.EnabledState(requestedState),
-		ListenerEnabled:         listenerEnabled == 1,
+		ListenerEnabled:         listenerEnabled == 1 || kvmListenerEnabled == 1,
 		Name:                    currentRedirection.Body.GetAndPutResponse.Name,
 		SystemCreationClassName: currentRedirection.Body.GetAndPutResponse.SystemCreationClassName,
 		SystemName:              currentRedirection.Body.GetAndPutResponse.SystemName,
@@ -289,6 +307,9 @@ func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, erro
 	if err != nil {
 		return features, err
 	}
+
+	// Update Redirection, this is important when KVM, IDER and SOL are all false
+	features.Redirection = listenerEnabled == 1 || kvmListenerEnabled == 1
 
 	// user consent
 	optInResponse, err := g.WsmanMessages.IPS.OptInService.Get()
@@ -315,8 +336,10 @@ func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, erro
 	return features, nil
 }
 
-func configureKVM(features dto.Features, listenerEnabled int, g *ConnectionEntry) (int, error) {
+func configureKVM(features dto.Features, g *ConnectionEntry) (int, error) {
 	kvmRequestedState := kvm.RedirectionSAPDisable
+	listenerEnabled := 0
+
 	if features.EnableKVM {
 		kvmRequestedState = kvm.RedirectionSAPEnable
 		listenerEnabled = 1
