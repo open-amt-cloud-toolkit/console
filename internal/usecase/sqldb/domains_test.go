@@ -1,4 +1,3 @@
-//nolint:gci // ignore import order
 package sqldb_test
 
 import (
@@ -10,12 +9,12 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	_ "modernc.org/sqlite"
 )
 
 func TestDomainRepo_GetCount(t *testing.T) {

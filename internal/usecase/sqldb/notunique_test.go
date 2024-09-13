@@ -8,7 +8,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
-func TestForeignKeyViolationError_Error(t *testing.T) {
+func TestNotUniqueError_Error(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -18,7 +18,7 @@ func TestForeignKeyViolationError_Error(t *testing.T) {
 	}{
 		{
 			name:           "Basic error message",
-			consoleError:   consoleerrors.InternalError{Message: "foreign key constraint failed"},
+			consoleError:   consoleerrors.InternalError{Message: "unique constraint violation"},
 			expectedResult: " -  - : ",
 		},
 		{
@@ -33,7 +33,7 @@ func TestForeignKeyViolationError_Error(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := ForeignKeyViolationError{Console: tc.consoleError}
+			err := NotUniqueError{Console: tc.consoleError}
 			result := err.Error()
 
 			require.Equal(t, tc.expectedResult, result)
@@ -41,7 +41,7 @@ func TestForeignKeyViolationError_Error(t *testing.T) {
 	}
 }
 
-func TestForeignKeyViolationError_Wrap(t *testing.T) {
+func TestNotUniqueError_Wrap(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -53,7 +53,7 @@ func TestForeignKeyViolationError_Wrap(t *testing.T) {
 		{
 			name:           "Wrap with details",
 			initialMessage: "error occurred",
-			details:        "foreign key constraint",
+			details:        "unique constraint",
 			expectedResult: " -  - : ",
 		},
 		{
@@ -70,7 +70,7 @@ func TestForeignKeyViolationError_Wrap(t *testing.T) {
 			t.Parallel()
 
 			internalErr := consoleerrors.InternalError{Message: tc.initialMessage}
-			err := ForeignKeyViolationError{Console: internalErr}
+			err := NotUniqueError{Console: internalErr}
 
 			wrappedErr := err.Wrap(tc.details)
 
