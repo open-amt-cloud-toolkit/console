@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"

@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 type EventLog struct {
 	DeviceAddress   int    `json:"DeviceAddress"`

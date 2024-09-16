@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 type ProfileWiFiConfigs struct {
 	Priority            int    `json:"priority,omitempty" binding:"min=1,max=255" example:"1"`

@@ -6,12 +6,12 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type Redirector struct{}
 
-func (g *Redirector) SetupWsmanClient(device dtov1.Device, isRedirection, logAMTMessages bool) wsman.Messages {
+func (g *Redirector) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -40,13 +40,13 @@ type testIEEE8021xConfigs struct {
 	url          string
 	mock         func(repo *MockIEEE8021xConfigsFeature)
 	response     interface{}
-	requestBody  dtov1.IEEE8021xConfig
+	requestBody  dto.IEEE8021xConfig
 	expectedCode int
 }
 
 var pxeTime = 120
 
-var ieee8021xconfigTest = dtov1.IEEE8021xConfig{
+var ieee8021xconfigTest = dto.IEEE8021xConfig{
 	ProfileName:            "newprofile",
 	AuthenticationProtocol: 2,
 	PXETimeout:             &pxeTime,
@@ -64,11 +64,11 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs",
 			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
-				ieeeConfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dtov1.IEEE8021xConfig{{
+				ieeeConfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.IEEE8021xConfig{{
 					ProfileName: "profile",
 				}}, nil)
 			},
-			response:     []dtov1.IEEE8021xConfig{{ProfileName: "profile"}},
+			response:     []dto.IEEE8021xConfig{{ProfileName: "profile"}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -76,12 +76,12 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs?$top=10&$skip=1&$count=true",
 			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
-				ieeeConfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dtov1.IEEE8021xConfig{{
+				ieeeConfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.IEEE8021xConfig{{
 					ProfileName: "profile",
 				}}, nil)
 				ieeeConfig.EXPECT().GetCount(context.Background(), "").Return(1, nil)
 			},
-			response:     IEEE8021xConfigCountResponse{Count: 1, Data: []dtov1.IEEE8021xConfig{{ProfileName: "profile"}}},
+			response:     IEEE8021xConfigCountResponse{Count: 1, Data: []dto.IEEE8021xConfig{{ProfileName: "profile"}}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -99,11 +99,11 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs/profile",
 			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
-				ieeeConfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dtov1.IEEE8021xConfig{
+				ieeeConfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.IEEE8021xConfig{
 					ProfileName: "profile",
 				}, nil)
 			},
-			response:     dtov1.IEEE8021xConfig{ProfileName: "profile"},
+			response:     dto.IEEE8021xConfig{ProfileName: "profile"},
 			expectedCode: http.StatusOK,
 		},
 		{

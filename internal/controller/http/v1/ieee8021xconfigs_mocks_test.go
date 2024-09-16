@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -199,10 +199,10 @@ func (mr *MockIEEE8021xConfigsFeatureMockRecorder) Delete(ctx, profileName, tena
 }
 
 // Get mocks base method.
-func (m *MockIEEE8021xConfigsFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.IEEE8021xConfig, error) {
+func (m *MockIEEE8021xConfigsFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.IEEE8021xConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]dtov1.IEEE8021xConfig)
+	ret0, _ := ret[0].([]dto.IEEE8021xConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -214,10 +214,10 @@ func (mr *MockIEEE8021xConfigsFeatureMockRecorder) Get(ctx, top, skip, tenantID 
 }
 
 // GetByName mocks base method.
-func (m *MockIEEE8021xConfigsFeature) GetByName(ctx context.Context, profileName, tenantID string) (*dtov1.IEEE8021xConfig, error) {
+func (m *MockIEEE8021xConfigsFeature) GetByName(ctx context.Context, profileName, tenantID string) (*dto.IEEE8021xConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, profileName, tenantID)
-	ret0, _ := ret[0].(*dtov1.IEEE8021xConfig)
+	ret0, _ := ret[0].(*dto.IEEE8021xConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -244,10 +244,10 @@ func (mr *MockIEEE8021xConfigsFeatureMockRecorder) GetCount(ctx, tenantID any) *
 }
 
 // Insert mocks base method.
-func (m *MockIEEE8021xConfigsFeature) Insert(ctx context.Context, p *dtov1.IEEE8021xConfig) (*dtov1.IEEE8021xConfig, error) {
+func (m *MockIEEE8021xConfigsFeature) Insert(ctx context.Context, p *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, p)
-	ret0, _ := ret[0].(*dtov1.IEEE8021xConfig)
+	ret0, _ := ret[0].(*dto.IEEE8021xConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -259,10 +259,10 @@ func (mr *MockIEEE8021xConfigsFeatureMockRecorder) Insert(ctx, p any) *gomock.Ca
 }
 
 // Update mocks base method.
-func (m *MockIEEE8021xConfigsFeature) Update(ctx context.Context, p *dtov1.IEEE8021xConfig) (*dtov1.IEEE8021xConfig, error) {
+func (m *MockIEEE8021xConfigsFeature) Update(ctx context.Context, p *dto.IEEE8021xConfig) (*dto.IEEE8021xConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, p)
-	ret0, _ := ret[0].(*dtov1.IEEE8021xConfig)
+	ret0, _ := ret[0].(*dto.IEEE8021xConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

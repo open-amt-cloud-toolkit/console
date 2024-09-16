@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 type UserConsent struct {
 	ConsentCode string `json:"consentCode" binding:"required" example:"123456"`

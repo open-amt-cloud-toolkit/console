@@ -9,7 +9,7 @@ import (
 	"software.sslmate.com/src/go-pkcs12"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -47,14 +47,14 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.Domain, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Domain, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dtov1.Domain, len(data))
+	d1 := make([]dto.Domain, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -64,7 +64,7 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	return d1, nil
 }
 
-func (uc *UseCase) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*dtov1.Domain, error) {
+func (uc *UseCase) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*dto.Domain, error) {
 	data, err := uc.repo.GetDomainByDomainSuffix(ctx, domainSuffix, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetDomainByDomainSuffix", "uc.repo.GetDomainByDomainSuffix", err)
@@ -79,7 +79,7 @@ func (uc *UseCase) GetDomainByDomainSuffix(ctx context.Context, domainSuffix, te
 	return d2, nil
 }
 
-func (uc *UseCase) GetByName(ctx context.Context, domainName, tenantID string) (*dtov1.Domain, error) {
+func (uc *UseCase) GetByName(ctx context.Context, domainName, tenantID string) (*dto.Domain, error) {
 	data, err := uc.repo.GetByName(ctx, domainName, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByName", "uc.repo.GetByName", err)
@@ -107,7 +107,7 @@ func (uc *UseCase) Delete(ctx context.Context, domainName, tenantID string) erro
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *dtov1.Domain) (*dtov1.Domain, error) {
+func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	d1 := uc.dtoToEntity(d)
 
 	updated, err := uc.repo.Update(ctx, d1)
@@ -129,7 +129,7 @@ func (uc *UseCase) Update(ctx context.Context, d *dtov1.Domain) (*dtov1.Domain, 
 	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *dtov1.Domain) (*dtov1.Domain, error) {
+func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	d1 := uc.dtoToEntity(d)
 
 	cert, err := DecryptAndCheckCertExpiration(*d)
@@ -154,7 +154,7 @@ func (uc *UseCase) Insert(ctx context.Context, d *dtov1.Domain) (*dtov1.Domain, 
 	return d2, nil
 }
 
-func DecryptAndCheckCertExpiration(domain dtov1.Domain) (*x509.Certificate, error) {
+func DecryptAndCheckCertExpiration(domain dto.Domain) (*x509.Certificate, error) {
 	// Decode the base64 encoded PFX certificate
 	pfxData, err := base64.StdEncoding.DecodeString(domain.ProvisioningCert)
 	if err != nil {
@@ -175,8 +175,8 @@ func DecryptAndCheckCertExpiration(domain dtov1.Domain) (*x509.Certificate, erro
 	return cert, nil
 }
 
-// convert dtov1.Domain to entity.Domain.
-func (uc *UseCase) dtoToEntity(d *dtov1.Domain) *entity.Domain {
+// convert dto.Domain to entity.Domain.
+func (uc *UseCase) dtoToEntity(d *dto.Domain) *entity.Domain {
 	d1 := &entity.Domain{
 		ProfileName:                   d.ProfileName,
 		DomainSuffix:                  d.DomainSuffix,
@@ -190,8 +190,8 @@ func (uc *UseCase) dtoToEntity(d *dtov1.Domain) *entity.Domain {
 	return d1
 }
 
-// convert entity.Domain to dtov1.Domain.
-func (uc *UseCase) entityToDTO(d *entity.Domain) *dtov1.Domain {
+// convert entity.Domain to dto.Domain.
+func (uc *UseCase) entityToDTO(d *entity.Domain) *dto.Domain {
 	// parse expiration date
 	var expirationDate time.Time
 
@@ -204,7 +204,7 @@ func (uc *UseCase) entityToDTO(d *entity.Domain) *dtov1.Domain {
 		}
 	}
 
-	d1 := &dtov1.Domain{
+	d1 := &dto.Domain{
 		ProfileName:                   d.ProfileName,
 		DomainSuffix:                  d.DomainSuffix,
 		ProvisioningCert:              d.ProvisioningCert,

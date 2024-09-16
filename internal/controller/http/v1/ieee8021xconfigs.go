@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-var ErrValidation8021xConfig = dtov1.NotValidError{Console: consoleerrors.CreateConsoleError("8021xConfigAPI")}
+var ErrValidation8021xConfig = dto.NotValidError{Console: consoleerrors.CreateConsoleError("8021xConfigAPI")}
 
 type ieee8021xConfigRoutes struct {
 	t ieee8021xconfigs.Feature
@@ -25,7 +25,7 @@ func NewIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Featu
 
 	if binding.Validator != nil {
 		if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-			err := v.RegisterValidation("authProtocolValidator", dtov1.AuthProtocolValidator)
+			err := v.RegisterValidation("authProtocolValidator", dto.AuthProtocolValidator)
 			if err != nil {
 				l.Error(err, "failed to register validation")
 			}
@@ -43,8 +43,8 @@ func NewIEEE8021xConfigRoutes(handler *gin.RouterGroup, t ieee8021xconfigs.Featu
 }
 
 type IEEE8021xConfigCountResponse struct {
-	Count int                     `json:"totalCount"`
-	Data  []dtov1.IEEE8021xConfig `json:"data"`
+	Count int                   `json:"totalCount"`
+	Data  []dto.IEEE8021xConfig `json:"data"`
 }
 
 func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
@@ -97,7 +97,7 @@ func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 }
 
 func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
-	var config dtov1.IEEE8021xConfig
+	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		validationErr := ErrValidation8021xConfig.Wrap("insert", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)
@@ -117,7 +117,7 @@ func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 }
 
 func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
-	var config dtov1.IEEE8021xConfig
+	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		validationErr := ErrValidation8021xConfig.Wrap("update", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)

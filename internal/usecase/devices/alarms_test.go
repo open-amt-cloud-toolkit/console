@@ -11,7 +11,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -40,7 +40,7 @@ func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement
 func TestGetAlarmOccurrences(t *testing.T) {
 	t.Parallel()
 
-	dtoDevice := &dtov1.Device{
+	dtoDevice := &dto.Device{
 		GUID:     "device-guid-123",
 		Tags:     nil,
 		TenantID: "tenant-id-456",
@@ -69,7 +69,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: []dtov1.AlarmClockOccurrence{},
+			res: []dto.AlarmClockOccurrence{},
 			err: nil,
 		},
 		{
@@ -81,7 +81,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			res: []dtov1.AlarmClockOccurrence(nil),
+			res: []dto.AlarmClockOccurrence(nil),
 			err: devices.ErrDatabase,
 		},
 		{
@@ -101,7 +101,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: []dtov1.AlarmClockOccurrence(nil),
+			res: []dto.AlarmClockOccurrence(nil),
 			err: ErrGeneral,
 		},
 		{
@@ -121,7 +121,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: []dtov1.AlarmClockOccurrence{},
+			res: []dto.AlarmClockOccurrence{},
 			err: nil,
 		},
 	}
@@ -156,12 +156,12 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
-	dtoDevice := &dtov1.Device{
+	dtoDevice := &dto.Device{
 		GUID:     "device-guid-123",
 		Tags:     nil,
 		TenantID: "tenant-id-456",
 	}
-	occ := dtov1.AlarmClockOccurrence{
+	occ := dto.AlarmClockOccurrence{
 		ElementName:        "test",
 		InstanceID:         "test",
 		StartTime:          time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -178,7 +178,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 
 		repoMock func(repo *MockRepository)
 
-		res dtov1.AddAlarmOutput
+		res dto.AddAlarmOutput
 
 		err error
 	}{
@@ -198,7 +198,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.AddAlarmOutput{},
+			res: dto.AddAlarmOutput{},
 			err: nil,
 		},
 		{
@@ -209,7 +209,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: dtov1.AddAlarmOutput{},
+			res: dto.AddAlarmOutput{},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -228,7 +228,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.AddAlarmOutput{},
+			res: dto.AddAlarmOutput{},
 			err: devices.ErrAMT,
 		},
 	}
@@ -264,7 +264,7 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	dtoDevice := &dtov1.Device{
+	dtoDevice := &dto.Device{
 		GUID:     "device-guid-123",
 		Tags:     nil,
 		TenantID: "tenant-id-456",

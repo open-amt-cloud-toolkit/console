@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -40,11 +40,11 @@ type testProfiles struct {
 	url          string
 	mock         func(repo *MockProfilesFeature)
 	response     interface{}
-	requestBody  dtov1.Profile
+	requestBody  dto.Profile
 	expectedCode int
 }
 
-var profileTest = dtov1.Profile{
+var profileTest = dto.Profile{
 	ProfileName:                "newprofile",
 	AMTPassword:                "P@ssw0rd",
 	GenerateRandomPassword:     false,
@@ -80,11 +80,11 @@ func TestProfileRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles",
 			mock: func(profile *MockProfilesFeature) {
-				profile.EXPECT().Get(context.Background(), 25, 0, "").Return([]dtov1.Profile{{
+				profile.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.Profile{{
 					ProfileName: "profile",
 				}}, nil)
 			},
-			response:     []dtov1.Profile{{ProfileName: "profile"}},
+			response:     []dto.Profile{{ProfileName: "profile"}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -92,12 +92,12 @@ func TestProfileRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles?$top=10&$skip=1&$count=true",
 			mock: func(domain *MockProfilesFeature) {
-				domain.EXPECT().Get(context.Background(), 10, 1, "").Return([]dtov1.Profile{{
+				domain.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.Profile{{
 					ProfileName: "profile",
 				}}, nil)
 				domain.EXPECT().GetCount(context.Background(), "").Return(1, nil)
 			},
-			response:     ProfileCountResponse{Count: 1, Data: []dtov1.Profile{{ProfileName: "profile"}}},
+			response:     ProfileCountResponse{Count: 1, Data: []dto.Profile{{ProfileName: "profile"}}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -115,11 +115,11 @@ func TestProfileRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles/profile",
 			mock: func(profile *MockProfilesFeature) {
-				profile.EXPECT().GetByName(context.Background(), "profile", "").Return(&dtov1.Profile{
+				profile.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.Profile{
 					ProfileName: "profile",
 				}, nil)
 			},
-			response:     dtov1.Profile{ProfileName: "profile"},
+			response:     dto.Profile{ProfileName: "profile"},
 			expectedCode: http.StatusOK,
 		},
 		{

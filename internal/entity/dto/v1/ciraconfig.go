@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 const (
 	ServerAddressFormatIPv4 = 3

@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-var ErrValidationProfile = dtov1.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
+var ErrValidationProfile = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
 
 type profileRoutes struct {
 	t profiles.Feature
@@ -25,8 +25,8 @@ func NewProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Int
 
 	if binding.Validator != nil {
 		if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-			_ = v.RegisterValidation("genpasswordwone", dtov1.ValidateAMTPassOrGenRan)
-			_ = v.RegisterValidation("ciraortls", dtov1.ValidateCIRAOrTLS)
+			_ = v.RegisterValidation("genpasswordwone", dto.ValidateAMTPassOrGenRan)
+			_ = v.RegisterValidation("ciraortls", dto.ValidateCIRAOrTLS)
 		}
 	}
 
@@ -41,8 +41,8 @@ func NewProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Int
 }
 
 type ProfileCountResponse struct {
-	Count int             `json:"totalCount"`
-	Data  []dtov1.Profile `json:"data"`
+	Count int           `json:"totalCount"`
+	Data  []dto.Profile `json:"data"`
 }
 
 // @Summary     Show Profiles
@@ -124,7 +124,7 @@ func (r *profileRoutes) getByName(c *gin.Context) {
 // @Router      /api/v1/admin/profiles [post]
 
 func (r *profileRoutes) insert(c *gin.Context) {
-	var profile dtov1.Profile
+	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
 		validationErr := ErrValidationProfile.Wrap("insert", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)
@@ -154,7 +154,7 @@ func (r *profileRoutes) insert(c *gin.Context) {
 // @Router      /api/v1/admin/Profiles [patch]
 
 func (r *profileRoutes) update(c *gin.Context) {
-	var profile dtov1.Profile
+	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
 		validationErr := ErrValidationProfile.Wrap("update", "ShouldBindJSON", err)
 		ErrorResponse(c, validationErr)

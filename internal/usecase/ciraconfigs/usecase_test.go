@@ -8,7 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -19,7 +19,7 @@ type test struct {
 	skip       int
 	configName string
 	tenantID   string
-	input      dtov1.CIRAConfig
+	input      dto.CIRAConfig
 	mock       func(*MockRepository)
 	res        interface{}
 	err        error
@@ -92,7 +92,7 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	testCIRAConfigDTOs := []dtov1.CIRAConfig{
+	testCIRAConfigDTOs := []dto.CIRAConfig{
 		{
 			ConfigName: "test-config-1",
 			TenantID:   "tenant-id-456",
@@ -127,7 +127,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, ciraconfigs.ErrDatabase)
 			},
-			res: []dtov1.CIRAConfig(nil),
+			res: []dto.CIRAConfig(nil),
 			err: ciraconfigs.ErrDatabase,
 		},
 		{
@@ -140,7 +140,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.CIRAConfig{}, nil)
 			},
-			res: []dtov1.CIRAConfig{},
+			res: []dto.CIRAConfig{},
 			err: nil,
 		},
 	}
@@ -177,7 +177,7 @@ func TestGetByName(t *testing.T) {
 		Version:    "1.0.0",
 	}
 
-	ciraconfigDTO := &dtov1.CIRAConfig{
+	ciraconfigDTO := &dto.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
 		Version:    "1.0.0",
@@ -186,7 +186,7 @@ func TestGetByName(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful retrieval",
-			input: dtov1.CIRAConfig{
+			input: dto.CIRAConfig{
 				ConfigName: "test-config",
 				TenantID:   "tenant-id-456",
 			},
@@ -200,7 +200,7 @@ func TestGetByName(t *testing.T) {
 		},
 		{
 			name: "ciraconfig not found",
-			input: dtov1.CIRAConfig{
+			input: dto.CIRAConfig{
 				ConfigName: "unknown-ciraconfig",
 				TenantID:   "tenant-id-456",
 			},
@@ -209,7 +209,7 @@ func TestGetByName(t *testing.T) {
 					GetByName(context.Background(), "unknown-ciraconfig", "tenant-id-456").
 					Return(nil, nil)
 			},
-			res: (*dtov1.CIRAConfig)(nil),
+			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrNotFound,
 		},
 	}
@@ -295,7 +295,7 @@ func TestUpdate(t *testing.T) {
 		Version:    "1.0.0",
 	}
 
-	ciraconfigDTO := &dtov1.CIRAConfig{
+	ciraconfigDTO := &dto.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
 		Version:    "1.0.0",
@@ -322,7 +322,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), ciraconfig).
 					Return(false, nil)
 			},
-			res: (*dtov1.CIRAConfig)(nil),
+			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrNotFound,
 		},
 		{
@@ -332,7 +332,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), ciraconfig).
 					Return(false, ciraconfigs.ErrDatabase)
 			},
-			res: (*dtov1.CIRAConfig)(nil),
+			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrDatabase,
 		},
 	}
@@ -363,7 +363,7 @@ func TestInsert(t *testing.T) {
 		Version:    "1.0.0",
 	}
 
-	ciraconfigDTO := &dtov1.CIRAConfig{
+	ciraconfigDTO := &dto.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
 		Version:    "1.0.0",
@@ -390,7 +390,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), ciraconfig).
 					Return("", ciraconfigs.ErrDatabase)
 			},
-			res: (*dtov1.CIRAConfig)(nil),
+			res: (*dto.CIRAConfig)(nil),
 			err: ciraconfigs.ErrDatabase,
 		},
 	}

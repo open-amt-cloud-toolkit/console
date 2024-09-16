@@ -13,7 +13,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -100,13 +100,13 @@ func TestGetVersion(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: dtov1.Version{CIMSoftwareIdentity: []dtov1.SoftwareIdentity{
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity{
 				{
 					InstanceID:    "Flash",
 					VersionString: "0.0.0",
 					IsEntity:      true,
 				},
-			}, AMTSetupAndConfigurationService: dtov1.SetupAndConfigurationServiceResponse{RequestedState: 1, EnabledState: 1, ElementName: "SampleElementName", SystemCreationClassName: "SampleSystemCreationClassName", SystemName: "SampleSystemName", CreationClassName: "SampleCreationClassName", Name: "SampleName", ProvisioningMode: 1, ProvisioningState: 1, ZeroTouchConfigurationEnabled: true, ProvisioningServerOTP: "SampleProvisioningServerOTP", ConfigurationServerFQDN: "SampleConfigurationServerFQDN", PasswordModel: 1, DhcpDNSSuffix: "SampleDhcpDNSSuffix", TrustedDNSSuffix: "SampleTrustedDNSSuffix"}},
+			}, AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 1, EnabledState: 1, ElementName: "SampleElementName", SystemCreationClassName: "SampleSystemCreationClassName", SystemName: "SampleSystemName", CreationClassName: "SampleCreationClassName", Name: "SampleName", ProvisioningMode: 1, ProvisioningState: 1, ZeroTouchConfigurationEnabled: true, ProvisioningServerOTP: "SampleProvisioningServerOTP", ConfigurationServerFQDN: "SampleConfigurationServerFQDN", PasswordModel: 1, DhcpDNSSuffix: "SampleDhcpDNSSuffix", TrustedDNSSuffix: "SampleTrustedDNSSuffix"}},
 
 			err: nil,
 		},
@@ -120,7 +120,7 @@ func TestGetVersion(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			res: dtov1.Version{CIMSoftwareIdentity: []dtov1.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dtov1.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
 
 			err: devices.ErrDatabase,
 		},
@@ -141,7 +141,7 @@ func TestGetVersion(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: dtov1.Version{},
+			res: dto.Version{},
 
 			err: ErrGeneral,
 		},
@@ -166,7 +166,7 @@ func TestGetVersion(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: dtov1.Version{CIMSoftwareIdentity: []dtov1.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dtov1.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
 
 			err: ErrGeneral,
 		},
@@ -211,14 +211,14 @@ func TestGetFeatures(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					GetFeatures().
-					Return(dtov1.Features{}, nil)
+					Return(dto.Features{}, nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.Features{},
+			res: dto.Features{},
 			err: nil,
 		},
 		{
@@ -230,7 +230,7 @@ func TestGetFeatures(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: dtov1.Features{},
+			res: dto.Features{},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -242,14 +242,14 @@ func TestGetFeatures(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					GetFeatures().
-					Return(dtov1.Features{}, ErrGeneral)
+					Return(dto.Features{}, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.Features{},
+			res: dto.Features{},
 			err: ErrGeneral,
 		},
 	}
@@ -283,7 +283,7 @@ func TestSetFeatures(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	featureSet := dtov1.Features{
+	featureSet := dto.Features{
 		UserConsent: "kvm",
 		EnableSOL:   true,
 		EnableIDER:  true,
@@ -469,7 +469,7 @@ func TestGetAuditLog(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.AuditLog{},
+			res: dto.AuditLog{},
 			err: nil,
 		},
 		{
@@ -481,7 +481,7 @@ func TestGetAuditLog(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: dtov1.AuditLog{
+			res: dto.AuditLog{
 				TotalCount: 0,
 				Records:    nil,
 			},
@@ -503,7 +503,7 @@ func TestGetAuditLog(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.AuditLog{TotalCount: 0, Records: nil},
+			res: dto.AuditLog{TotalCount: 0, Records: nil},
 			err: ErrGeneral,
 		},
 	}
@@ -552,7 +552,7 @@ func TestGetEventLog(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: []dtov1.EventLog{},
+			res: []dto.EventLog{},
 			err: nil,
 		},
 		{
@@ -564,7 +564,7 @@ func TestGetEventLog(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: []dtov1.EventLog(nil),
+			res: []dto.EventLog(nil),
 			err: devices.ErrDatabase,
 		},
 		{
@@ -583,7 +583,7 @@ func TestGetEventLog(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: []dtov1.EventLog(nil),
+			res: []dto.EventLog(nil),
 			err: ErrGeneral,
 		},
 	}

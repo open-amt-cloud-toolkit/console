@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profilewificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
@@ -28,7 +28,7 @@ var (
 	ErrProfilesUseCase = consoleerrors.CreateConsoleError("ProfilesUseCase")
 	ErrDatabase        = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
 	ErrNotFound        = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
-	ErrNotValid        = dtov1.NotValidError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
+	ErrNotValid        = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
 )
 
 // New -.
@@ -52,7 +52,7 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.Profile, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Profile, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
@@ -63,7 +63,7 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dtov1.Profile, len(data))
+	d1 := make([]dto.Profile, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -78,7 +78,7 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	return d1, nil
 }
 
-func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*dtov1.Profile, error) {
+func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*dto.Profile, error) {
 	data, err := uc.repo.GetByName(ctx, profileName, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByName", "uc.repo.GetByName", err)
@@ -118,7 +118,7 @@ func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) err
 	return nil
 }
 
-func (uc *UseCase) isWifiProfileExists(ctx context.Context, d *dtov1.Profile, action string) error {
+func (uc *UseCase) isWifiProfileExists(ctx context.Context, d *dto.Profile, action string) error {
 	if len(d.WiFiConfigs) > 0 {
 		// check if the wireless profile is exists in the database
 		wifiProfiles := []string{}
@@ -142,7 +142,7 @@ func (uc *UseCase) isWifiProfileExists(ctx context.Context, d *dtov1.Profile, ac
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *dtov1.Profile) (*dtov1.Profile, error) {
+func (uc *UseCase) Update(ctx context.Context, d *dto.Profile) (*dto.Profile, error) {
 	d1 := uc.dtoToEntity(d)
 
 	err := uc.isWifiProfileExists(ctx, d, "update")
@@ -191,7 +191,7 @@ func (uc *UseCase) Update(ctx context.Context, d *dtov1.Profile) (*dtov1.Profile
 	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *dtov1.Profile) (*dtov1.Profile, error) {
+func (uc *UseCase) Insert(ctx context.Context, d *dto.Profile) (*dto.Profile, error) {
 	d1 := uc.dtoToEntity(d)
 
 	if err := uc.isWifiProfileExists(ctx, d, "insert"); err != nil {
@@ -245,7 +245,7 @@ func (uc *UseCase) insertProfile(ctx context.Context, d1 *entity.Profile) error 
 	return err
 }
 
-func (uc *UseCase) insertProfileWifiConfigs(ctx context.Context, d *dtov1.Profile) error {
+func (uc *UseCase) insertProfileWifiConfigs(ctx context.Context, d *dto.Profile) error {
 	if len(d.WiFiConfigs) > 0 {
 		for _, wifiConfig := range d.WiFiConfigs {
 			wifiConfig.ProfileName = d.ProfileName
@@ -261,7 +261,7 @@ func (uc *UseCase) insertProfileWifiConfigs(ctx context.Context, d *dtov1.Profil
 	return nil
 }
 
-func (uc *UseCase) createdProfile(ctx context.Context, d *dtov1.Profile) (*dtov1.Profile, error) {
+func (uc *UseCase) createdProfile(ctx context.Context, d *dto.Profile) (*dto.Profile, error) {
 	newProfile, err := uc.repo.GetByName(ctx, d.ProfileName, d.TenantID)
 	if err != nil {
 		return nil, err
@@ -273,8 +273,8 @@ func (uc *UseCase) createdProfile(ctx context.Context, d *dtov1.Profile) (*dtov1
 	return d2, nil
 }
 
-// convert dtov1.Profile to entity.Profile.
-func (uc *UseCase) dtoToEntity(d *dtov1.Profile) *entity.Profile {
+// convert dto.Profile to entity.Profile.
+func (uc *UseCase) dtoToEntity(d *dto.Profile) *entity.Profile {
 	// convert []string to comma separated string
 	tags := strings.Join(d.Tags, ", ")
 
@@ -306,11 +306,11 @@ func (uc *UseCase) dtoToEntity(d *dtov1.Profile) *entity.Profile {
 	return d1
 }
 
-// convert entity.Profile to dtov1.Profile.
-func (uc *UseCase) entityToDTO(d *entity.Profile) *dtov1.Profile {
+// convert entity.Profile to dto.Profile.
+func (uc *UseCase) entityToDTO(d *entity.Profile) *dto.Profile {
 	// convert comma separated string to []string
 	tags := strings.Split(d.Tags, ",")
-	d1 := &dtov1.Profile{
+	d1 := &dto.Profile{
 		ProfileName:                d.ProfileName,
 		AMTPassword:                d.AMTPassword,
 		CreationDate:               d.CreationDate,
@@ -336,7 +336,7 @@ func (uc *UseCase) entityToDTO(d *entity.Profile) *dtov1.Profile {
 	}
 
 	if d.IEEE8021xProfileName != nil && *d.IEEE8021xProfileName != "" {
-		val := &dtov1.IEEE8021xConfig{
+		val := &dto.IEEE8021xConfig{
 			ProfileName:            *d.IEEE8021xProfileName,
 			AuthenticationProtocol: *d.AuthenticationProtocol,
 			PXETimeout:             d.PXETimeout,

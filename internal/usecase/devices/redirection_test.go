@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 )
 
@@ -33,7 +33,7 @@ type redTest struct {
 func TestSetupWsmanClient(t *testing.T) {
 	t.Parallel()
 
-	device := &dtov1.Device{
+	device := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}

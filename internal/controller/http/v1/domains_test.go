@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -46,13 +46,13 @@ type test struct {
 	url          string
 	mock         func(repo *MockDomainsFeature)
 	response     interface{}
-	requestBody  dtov1.Domain
+	requestBody  dto.Domain
 	expectedCode int
 }
 
 var (
-	requestDomain  = dtov1.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
-	responseDomain = dtov1.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
+	requestDomain  = dto.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
+	responseDomain = dto.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
 )
 
 func TestDomainRoutes(t *testing.T) {
@@ -64,11 +64,11 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/domains",
 			mock: func(domain *MockDomainsFeature) {
-				domain.EXPECT().Get(context.Background(), 25, 0, "").Return([]dtov1.Domain{{
+				domain.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.Domain{{
 					ProfileName: "profile",
 				}}, nil)
 			},
-			response:     []dtov1.Domain{{ProfileName: "profile"}},
+			response:     []dto.Domain{{ProfileName: "profile"}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -76,12 +76,12 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/domains?$top=10&$skip=1&$count=true",
 			mock: func(domain *MockDomainsFeature) {
-				domain.EXPECT().Get(context.Background(), 10, 1, "").Return([]dtov1.Domain{{
+				domain.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.Domain{{
 					ProfileName: "profile",
 				}}, nil)
 				domain.EXPECT().GetCount(context.Background(), "").Return(1, nil)
 			},
-			response:     DomainCountResponse{Count: 1, Data: []dtov1.Domain{{ProfileName: "profile"}}},
+			response:     DomainCountResponse{Count: 1, Data: []dto.Domain{{ProfileName: "profile"}}},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -99,11 +99,11 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodGet,
 			url:    "/api/v1/admin/domains/profile",
 			mock: func(domain *MockDomainsFeature) {
-				domain.EXPECT().GetByName(context.Background(), "profile", "").Return(&dtov1.Domain{
+				domain.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.Domain{
 					ProfileName: "profile",
 				}, nil)
 			},
-			response:     dtov1.Domain{ProfileName: "profile"},
+			response:     dto.Domain{ProfileName: "profile"},
 			expectedCode: http.StatusOK,
 		},
 		{
@@ -121,7 +121,7 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/domains",
 			mock: func(domain *MockDomainsFeature) {
-				domainTest := &dtov1.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
+				domainTest := &dto.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
 				domain.EXPECT().Insert(context.Background(), domainTest).Return(domainTest, nil)
 			},
 			response:     responseDomain,
@@ -133,7 +133,7 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/domains",
 			mock: func(domain *MockDomainsFeature) {
-				domainTest := &dtov1.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
+				domainTest := &dto.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
 				domain.EXPECT().Insert(context.Background(), domainTest).Return(nil, domains.ErrDatabase)
 			},
 			response:     domains.ErrDatabase,
@@ -145,11 +145,11 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/api/v1/admin/domains",
 			mock: func(domain *MockDomainsFeature) {
-				domain400Test := &dtov1.Domain{ProfileName: "p1", TenantID: "t1", DomainSuffix: "domain1.com", ProvisioningCert: "cert1", ProvisioningCertStorageFormat: "string1"}
+				domain400Test := &dto.Domain{ProfileName: "p1", TenantID: "t1", DomainSuffix: "domain1.com", ProvisioningCert: "cert1", ProvisioningCertStorageFormat: "string1"}
 				domain.EXPECT().Insert(context.Background(), domain400Test).Return(nil, domains.ErrDatabase)
 			},
 			response:     domains.ErrDatabase,
-			requestBody:  dtov1.Domain{ProfileName: "p1", TenantID: "t1", DomainSuffix: "domain1.com", ProvisioningCert: "cert1", ProvisioningCertStorageFormat: "string1"},
+			requestBody:  dto.Domain{ProfileName: "p1", TenantID: "t1", DomainSuffix: "domain1.com", ProvisioningCert: "cert1", ProvisioningCertStorageFormat: "string1"},
 			expectedCode: http.StatusBadRequest,
 		},
 		{
@@ -177,7 +177,7 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/domains",
 			mock: func(domain *MockDomainsFeature) {
-				domainTest := &dtov1.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
+				domainTest := &dto.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
 				domain.EXPECT().Update(context.Background(), domainTest).Return(domainTest, nil)
 			},
 			response:     responseDomain,
@@ -189,7 +189,7 @@ func TestDomainRoutes(t *testing.T) {
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/domains",
 			mock: func(domain *MockDomainsFeature) {
-				domainTest := &dtov1.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
+				domainTest := &dto.Domain{ProfileName: "newProfile", TenantID: "tenant1", DomainSuffix: "domain.com", ProvisioningCert: "cert", ProvisioningCertStorageFormat: "string", ProvisioningCertPassword: "password"}
 				domain.EXPECT().Update(context.Background(), domainTest).Return(nil, domains.ErrDatabase)
 			},
 			response:     domains.ErrDatabase,

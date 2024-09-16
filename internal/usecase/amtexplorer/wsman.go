@@ -7,7 +7,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -28,14 +28,14 @@ func NewGoWSMANMessages(log logger.Interface) *GoWSMANMessages {
 	}
 }
 
-func (g GoWSMANMessages) DestroyWsmanClient(device dtov1.Device) {
+func (g GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
 	if entry, ok := connections[device.GUID]; ok {
 		entry.Timer.Stop()
 		removeConnection(device.GUID)
 	}
 }
 
-func (g GoWSMANMessages) SetupWsmanClient(device dtov1.Device, logAMTMessages bool) AMTExplorer {
+func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, logAMTMessages bool) AMTExplorer {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,

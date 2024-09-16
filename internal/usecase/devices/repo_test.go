@@ -8,7 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -94,7 +94,7 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	testDeviceDTOs := []dtov1.Device{
+	testDeviceDTOs := []dto.Device{
 		{
 			GUID:     "guid-123",
 			TenantID: "tenant-id-456",
@@ -131,7 +131,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, devices.ErrDatabase)
 			},
-			res: []dtov1.Device(nil),
+			res: []dto.Device(nil),
 			err: devices.ErrDatabase,
 		},
 		{
@@ -144,7 +144,7 @@ func TestGet(t *testing.T) {
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Device{}, nil)
 			},
-			res: []dtov1.Device{},
+			res: []dto.Device{},
 			err: nil,
 		},
 	}
@@ -179,7 +179,7 @@ func TestGetByID(t *testing.T) {
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
-	deviceDTO := &dtov1.Device{
+	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 		Tags:     nil,
@@ -292,7 +292,7 @@ func TestUpdate(t *testing.T) {
 		Tags:     "hello,test",
 	}
 
-	deviceDTO := &dtov1.Device{
+	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 		Tags:     []string{"hello", "test"},
@@ -321,7 +321,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), device).
 					Return(false, nil)
 			},
-			res: (*dtov1.Device)(nil),
+			res: (*dto.Device)(nil),
 			err: devices.ErrNotFound,
 		},
 		{
@@ -331,7 +331,7 @@ func TestUpdate(t *testing.T) {
 					Update(context.Background(), device).
 					Return(false, devices.ErrDatabase)
 			},
-			res: (*dtov1.Device)(nil),
+			res: (*dto.Device)(nil),
 			err: devices.ErrDatabase,
 		},
 	}
@@ -387,7 +387,7 @@ func TestInsert(t *testing.T) {
 					Insert(context.Background(), device).
 					Return("", devices.ErrDatabase)
 			},
-			res: (*dtov1.Device)(nil),
+			res: (*dto.Device)(nil),
 			err: devices.ErrDatabase,
 		},
 	}
@@ -401,7 +401,7 @@ func TestInsert(t *testing.T) {
 
 			tc.mock(repo, management)
 
-			deviceDTO := &dtov1.Device{
+			deviceDTO := &dto.Device{
 				GUID:     "device-guid-123",
 				TenantID: "tenant-id-456",
 				Tags:     []string{""},

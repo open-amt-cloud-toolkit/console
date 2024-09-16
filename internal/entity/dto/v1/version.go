@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 type (
 	SoftwareIdentity struct {

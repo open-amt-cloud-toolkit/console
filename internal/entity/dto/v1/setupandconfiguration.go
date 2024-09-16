@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"

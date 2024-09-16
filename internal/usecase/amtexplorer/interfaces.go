@@ -48,12 +48,12 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type (
 	AMTExplorer interface {
-		// SetupWsmanClient(device dtov1.Device, isRedirection, logAMTMessages bool) *wsmanAPI.ConnectionEntry
+		// SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) *wsmanAPI.ConnectionEntry
 		GetAMT8021xCredentialContext() (ieee8021x.Response, error)
 		GetAMT8021xProfile() (ieee8021x.Response, error)
 		GetAMTAlarmClockService() (alarmclock.Response, error)
@@ -112,13 +112,13 @@ type (
 	}
 	Feature interface {
 		GetExplorerSupportedCalls() []string
-		ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dtov1.Explorer, error)
+		ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dto.Explorer, error)
 	}
 	Repository interface {
 		GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error)
 	}
 	WSMAN interface {
-		SetupWsmanClient(device dtov1.Device, logMessages bool) AMTExplorer
-		DestroyWsmanClient(device dtov1.Device)
+		SetupWsmanClient(device dto.Device, logMessages bool) AMTExplorer
+		DestroyWsmanClient(device dto.Device)
 	}
 )

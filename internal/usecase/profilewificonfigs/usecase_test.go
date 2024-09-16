@@ -8,7 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profilewificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -54,7 +54,7 @@ func TestGetByProfileName(t *testing.T) {
 					},
 				}, nil)
 			},
-			res: []dtov1.ProfileWiFiConfigs{
+			res: []dto.ProfileWiFiConfigs{
 				{
 					ProfileName: "profile1",
 					TenantID:    "tenant1",

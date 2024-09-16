@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 import "github.com/go-playground/validator/v10"
 

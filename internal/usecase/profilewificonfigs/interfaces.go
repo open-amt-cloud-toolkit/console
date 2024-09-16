@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type (
@@ -15,8 +15,8 @@ type (
 	}
 
 	Feature interface {
-		GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dtov1.ProfileWiFiConfigs, error)
+		GetByProfileName(ctx context.Context, profileName, tenantID string) ([]dto.ProfileWiFiConfigs, error)
 		DeleteByProfileName(ctx context.Context, profileName, tenantID string) error
-		Insert(ctx context.Context, p *dtov1.ProfileWiFiConfigs) error
+		Insert(ctx context.Context, p *dto.ProfileWiFiConfigs) error
 	}
 )

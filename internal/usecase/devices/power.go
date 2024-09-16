@@ -10,7 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (power.PowerActionResponse, error) {
@@ -115,7 +115,7 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 	return response
 }
 
-func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dtov1.BootSetting) (power.PowerActionResponse, error) {
+func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return power.PowerActionResponse{}, err
@@ -188,7 +188,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 	return powerActionResult, nil
 }
 
-func determineIDERBootDevice(bootSetting dtov1.BootSetting, newData *boot.BootSettingDataRequest) {
+func determineIDERBootDevice(bootSetting dto.BootSetting, newData *boot.BootSettingDataRequest) {
 	if bootSetting.Action == 202 || bootSetting.Action == 203 {
 		newData.IDERBootDevice = 1
 	} else {
@@ -198,7 +198,7 @@ func determineIDERBootDevice(bootSetting dtov1.BootSetting, newData *boot.BootSe
 
 // "Intel(r) AMT: Force PXE Boot".
 // "Intel(r) AMT: Force CD/DVD Boot".
-func getBootSource(bootSetting dtov1.BootSetting) string {
+func getBootSource(bootSetting dto.BootSetting) string {
 	if bootSetting.Action == 400 || bootSetting.Action == 401 {
 		return string(cimBoot.PXE)
 	} else if bootSetting.Action == 202 || bootSetting.Action == 203 {
@@ -208,7 +208,7 @@ func getBootSource(bootSetting dtov1.BootSetting) string {
 	return ""
 }
 
-func determineBootAction(bootSetting *dtov1.BootSetting) {
+func determineBootAction(bootSetting *dto.BootSetting) {
 	if bootSetting.Action == 101 || bootSetting.Action == 200 || bootSetting.Action == 202 || bootSetting.Action == 301 || bootSetting.Action == 400 {
 		bootSetting.Action = int(power.MasterBusReset)
 	} else {

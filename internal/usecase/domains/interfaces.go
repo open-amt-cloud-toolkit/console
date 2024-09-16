@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type (
@@ -19,11 +19,11 @@ type (
 	}
 	Feature interface {
 		GetCount(context.Context, string) (int, error)
-		Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.Domain, error)
-		GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*dtov1.Domain, error)
-		GetByName(ctx context.Context, name, tenantID string) (*dtov1.Domain, error)
+		Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Domain, error)
+		GetDomainByDomainSuffix(ctx context.Context, domainSuffix, tenantID string) (*dto.Domain, error)
+		GetByName(ctx context.Context, name, tenantID string) (*dto.Domain, error)
 		Delete(ctx context.Context, name, tenantID string) error
-		Update(ctx context.Context, d *dtov1.Domain) (*dtov1.Domain, error)
-		Insert(ctx context.Context, d *dtov1.Domain) (*dtov1.Domain, error)
+		Update(ctx context.Context, d *dto.Domain) (*dto.Domain, error)
+		Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error)
 	}
 )

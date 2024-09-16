@@ -12,7 +12,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -73,17 +73,17 @@ func TestGetNetworkSettings(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.NetworkSettings{
-				Wired: dtov1.WiredNetworkInfo{
-					IEEE8021x: dtov1.IEEE8021x{},
-					NetworkInfo: dtov1.NetworkInfo{
+			res: dto.NetworkSettings{
+				Wired: dto.WiredNetworkInfo{
+					IEEE8021x: dto.IEEE8021x{},
+					NetworkInfo: dto.NetworkInfo{
 						LinkPolicy: []int{1, 2},
 					},
 				},
-				Wireless: dtov1.WirelessNetworkInfo{
-					WiFiNetworks:      []dtov1.WiFiNetwork{{}},
-					IEEE8021xSettings: []dtov1.IEEE8021xSettings{{}},
-					NetworkInfo: dtov1.NetworkInfo{
+				Wireless: dto.WirelessNetworkInfo{
+					WiFiNetworks:      []dto.WiFiNetwork{{}},
+					IEEE8021xSettings: []dto.IEEE8021xSettings{{}},
+					NetworkInfo: dto.NetworkInfo{
 						LinkPolicy: []int{1, 2},
 					},
 				},
@@ -98,7 +98,7 @@ func TestGetNetworkSettings(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: dtov1.NetworkSettings{},
+			res: dto.NetworkSettings{},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -117,7 +117,7 @@ func TestGetNetworkSettings(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.NetworkSettings{},
+			res: dto.NetworkSettings{},
 			err: ErrGeneral,
 		},
 	}

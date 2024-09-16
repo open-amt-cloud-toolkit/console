@@ -7,30 +7,30 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 )
 
-func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dtov1.Version, v2 dtov2.Version, err error) {
+func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v2 dtov2.Version, err error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return dtov1.Version{}, dtov2.Version{}, err
+		return dto.Version{}, dtov2.Version{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	softwareIdentity, err := device.GetAMTVersion()
 	if err != nil {
-		return dtov1.Version{}, dtov2.Version{}, err
+		return dto.Version{}, dtov2.Version{}, err
 	}
 
 	data, err := device.GetSetupAndConfiguration()
 	if err != nil {
-		return dtov1.Version{}, dtov2.Version{}, err
+		return dto.Version{}, dtov2.Version{}, err
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dtov1.SoftwareIdentity, len(softwareIdentity))
+	d1 := make([]dto.SoftwareIdentity, len(softwareIdentity))
 
 	for i := range softwareIdentity {
 		tmpEntity := softwareIdentity[i] // create a new variable to avoid memory aliasing
@@ -38,14 +38,14 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dtov1.Version,
 	}
 
 	// iterate over the data and convert each entity to dto
-	d3 := make([]dtov1.SetupAndConfigurationServiceResponse, len(data))
+	d3 := make([]dto.SetupAndConfigurationServiceResponse, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
 		d3[i] = *uc.setupAndConfigurationServiceResponseEntityToDTO(&tmpEntity)
 	}
 
-	v1Version := dtov1.Version{
+	v1Version := dto.Version{
 		CIMSoftwareIdentity:             d1,
 		AMTSetupAndConfigurationService: d3[0],
 	}
@@ -55,23 +55,23 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dtov1.Version,
 	return v1Version, v2Version, nil
 }
 
-func (uc *UseCase) GetFeatures(c context.Context, guid string) (dtov1.Features, error) {
+func (uc *UseCase) GetFeatures(c context.Context, guid string) (dto.Features, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return dtov1.Features{}, err
+		return dto.Features{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	features, err := device.GetFeatures()
 	if err != nil {
-		return dtov1.Features{}, err
+		return dto.Features{}, err
 	}
 
 	return features, nil
 }
 
-func (uc *UseCase) SetFeatures(c context.Context, guid string, features dtov1.Features) (dtov1.Features, error) {
+func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Features) (dto.Features, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return features, err
@@ -119,27 +119,27 @@ func (uc *UseCase) GetDiskInfo(c context.Context, guid string) (interface{}, err
 	return diskInfo, nil
 }
 
-func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dtov1.AuditLog, error) {
+func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dto.AuditLog, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return dtov1.AuditLog{}, err
+		return dto.AuditLog{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	response, err := device.GetAuditLog(startIndex)
 	if err != nil {
-		return dtov1.AuditLog{}, err
+		return dto.AuditLog{}, err
 	}
 
-	auditLogResponse := dtov1.AuditLog{}
+	auditLogResponse := dto.AuditLog{}
 	auditLogResponse.TotalCount = response.Body.ReadRecordsResponse.TotalRecordCount
 	auditLogResponse.Records = response.Body.DecodedRecordsResponse
 
 	return auditLogResponse, nil
 }
 
-func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dtov1.EventLog, error) {
+func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
@@ -152,11 +152,11 @@ func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dtov1.EventLog
 		return nil, err
 	}
 
-	events := make([]dtov1.EventLog, len(eventLogs.RefinedEventData))
+	events := make([]dto.EventLog, len(eventLogs.RefinedEventData))
 
 	for idx := range eventLogs.RefinedEventData {
 		event := &eventLogs.RefinedEventData[idx]
-		dtoEvent := dtov1.EventLog{
+		dtoEvent := dto.EventLog{
 			// DeviceAddress:   event.DeviceAddress,
 			// EventSensorType: event.EventSensorType,
 			// EventType:       event.EventType,
@@ -199,8 +199,8 @@ func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface
 	return response, nil
 }
 
-func (uc *UseCase) softwareIdentityEntityToDTOv1(d *software.SoftwareIdentity) *dtov1.SoftwareIdentity {
-	d1 := &dtov1.SoftwareIdentity{
+func (uc *UseCase) softwareIdentityEntityToDTOv1(d *software.SoftwareIdentity) *dto.SoftwareIdentity {
+	d1 := &dto.SoftwareIdentity{
 		InstanceID:    d.InstanceID,
 		VersionString: d.VersionString,
 		IsEntity:      d.IsEntity,
@@ -237,8 +237,8 @@ func (uc *UseCase) softwareIdentityEntityToDTOv2(d []software.SoftwareIdentity) 
 	}
 }
 
-func (uc *UseCase) setupAndConfigurationServiceResponseEntityToDTO(d *setupandconfiguration.SetupAndConfigurationServiceResponse) *dtov1.SetupAndConfigurationServiceResponse {
-	d1 := &dtov1.SetupAndConfigurationServiceResponse{
+func (uc *UseCase) setupAndConfigurationServiceResponseEntityToDTO(d *setupandconfiguration.SetupAndConfigurationServiceResponse) *dto.SetupAndConfigurationServiceResponse {
+	d1 := &dto.SetupAndConfigurationServiceResponse{
 		RequestedState:                d.RequestedState,
 		EnabledState:                  d.EnabledState,
 		ElementName:                   d.ElementName,

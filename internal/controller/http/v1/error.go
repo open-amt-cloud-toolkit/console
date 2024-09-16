@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
@@ -22,7 +22,7 @@ func ErrorResponse(c *gin.Context, err error) {
 	var (
 		validatorErr    validator.ValidationErrors
 		nfErr           sqldb.NotFoundError
-		notValidErr     dtov1.NotValidError
+		notValidErr     dto.NotValidError
 		dbErr           sqldb.DatabaseError
 		NotUniqueErr    sqldb.NotUniqueError
 		amtErr          devices.AMTError
@@ -52,7 +52,7 @@ func ErrorResponse(c *gin.Context, err error) {
 	}
 }
 
-func notValidErrorHandle(c *gin.Context, err dtov1.NotValidError) {
+func notValidErrorHandle(c *gin.Context, err dto.NotValidError) {
 	c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Console.FriendlyMessage()})
 }
 

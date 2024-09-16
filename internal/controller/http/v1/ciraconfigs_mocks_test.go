@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -169,10 +169,10 @@ func (mr *MockCIRAConfigsFeatureMockRecorder) Delete(ctx, profileName, tenantID 
 }
 
 // Get mocks base method.
-func (m *MockCIRAConfigsFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.CIRAConfig, error) {
+func (m *MockCIRAConfigsFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.CIRAConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]dtov1.CIRAConfig)
+	ret0, _ := ret[0].([]dto.CIRAConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -184,10 +184,10 @@ func (mr *MockCIRAConfigsFeatureMockRecorder) Get(ctx, top, skip, tenantID any) 
 }
 
 // GetByName mocks base method.
-func (m *MockCIRAConfigsFeature) GetByName(ctx context.Context, configName, tenantID string) (*dtov1.CIRAConfig, error) {
+func (m *MockCIRAConfigsFeature) GetByName(ctx context.Context, configName, tenantID string) (*dto.CIRAConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByName", ctx, configName, tenantID)
-	ret0, _ := ret[0].(*dtov1.CIRAConfig)
+	ret0, _ := ret[0].(*dto.CIRAConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -214,10 +214,10 @@ func (mr *MockCIRAConfigsFeatureMockRecorder) GetCount(ctx, tenantID any) *gomoc
 }
 
 // Insert mocks base method.
-func (m *MockCIRAConfigsFeature) Insert(ctx context.Context, p *dtov1.CIRAConfig) (*dtov1.CIRAConfig, error) {
+func (m *MockCIRAConfigsFeature) Insert(ctx context.Context, p *dto.CIRAConfig) (*dto.CIRAConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, p)
-	ret0, _ := ret[0].(*dtov1.CIRAConfig)
+	ret0, _ := ret[0].(*dto.CIRAConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -229,10 +229,10 @@ func (mr *MockCIRAConfigsFeatureMockRecorder) Insert(ctx, p any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockCIRAConfigsFeature) Update(ctx context.Context, p *dtov1.CIRAConfig) (*dtov1.CIRAConfig, error) {
+func (m *MockCIRAConfigsFeature) Update(ctx context.Context, p *dto.CIRAConfig) (*dto.CIRAConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, p)
-	ret0, _ := ret[0].(*dtov1.CIRAConfig)
+	ret0, _ := ret[0].(*dto.CIRAConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

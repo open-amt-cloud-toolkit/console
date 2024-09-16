@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 type Features struct {
 	UserConsent string `json:"userConsent" example:"kvm"`

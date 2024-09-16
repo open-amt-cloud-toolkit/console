@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -59,10 +59,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetVersion(context.Background(), "valid-guid").
-					Return(dtov1.Version{}, dtov2.Version{}, nil)
+					Return(dto.Version{}, dtov2.Version{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     dtov1.Version{},
+			response:     dto.Version{},
 		},
 		{
 			name:   "getFeatures - successful retrieval",
@@ -70,7 +70,7 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(dtov1.Features{}, nil)
+					Return(dto.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
 			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "redirection": false, "optInState": 0, "userConsent": ""},
@@ -79,12 +79,12 @@ func TestDeviceManagement(t *testing.T) {
 			name:        "setFeatures - successful setting",
 			url:         "/api/v1/amt/features/valid-guid",
 			method:      http.MethodPost,
-			requestBody: dtov1.Features{},
+			requestBody: dto.Features{},
 			mock: func(m *MockDeviceManagementFeature) {
-				m.EXPECT().SetFeatures(context.Background(), "valid-guid", dtov1.Features{}).Return(dtov1.Features{}, nil)
+				m.EXPECT().SetFeatures(context.Background(), "valid-guid", dto.Features{}).Return(dto.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     dtov1.Features{},
+			response:     dto.Features{},
 		},
 		{
 			name:   "getAlarmOccurrences - successful retrieval",
@@ -92,16 +92,16 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetAlarmOccurrences(context.Background(), "valid-guid").
-					Return([]dtov1.AlarmClockOccurrence{}, nil)
+					Return([]dto.AlarmClockOccurrence{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     []dtov1.AlarmClockOccurrence{},
+			response:     []dto.AlarmClockOccurrence{},
 		},
 		{
 			name:   "deleteAlarmOccurrences - successful deletion",
 			url:    "/api/v1/amt/alarmOccurrences/valid-guid",
 			method: http.MethodDelete,
-			requestBody: dtov1.AlarmClockOccurrence{
+			requestBody: dto.AlarmClockOccurrence{
 				ElementName:        "elementName",
 				StartTime:          aGoodTime,
 				Interval:           1,
@@ -150,7 +150,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "powerAction - successful action",
 			url:    "/api/v1/amt/power/action/valid-guid",
 			method: http.MethodPost,
-			requestBody: dtov1.PowerAction{
+			requestBody: dto.PowerAction{
 				Action: 4,
 			},
 			mock: func(m *MockDeviceManagementFeature) {
@@ -166,10 +166,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetAuditLog(context.Background(), 0, "valid-guid").
-					Return(dtov1.AuditLog{}, nil)
+					Return(dto.AuditLog{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     dtov1.AuditLog{},
+			response:     dto.AuditLog{},
 		},
 		{
 			name:   "getEventLog - successful retrieval",
@@ -177,20 +177,20 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetEventLog(context.Background(), "valid-guid").
-					Return([]dtov1.EventLog{}, nil)
+					Return([]dto.EventLog{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     []dtov1.EventLog{},
+			response:     []dto.EventLog{},
 		},
 		{
 			name:   "setBootOptions - successful setting",
 			url:    "/api/v1/amt/power/bootOptions/valid-guid",
 			method: http.MethodPost,
-			requestBody: dtov1.BootSetting{
+			requestBody: dto.BootSetting{
 				Action: 109,
 			},
 			mock: func(m *MockDeviceManagementFeature) {
-				m.EXPECT().SetBootOptions(context.Background(), "valid-guid", dtov1.BootSetting{
+				m.EXPECT().SetBootOptions(context.Background(), "valid-guid", dto.BootSetting{
 					Action: 109,
 				}).Return(power.PowerActionResponse{ReturnValue: 0}, nil)
 			},
@@ -203,10 +203,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetNetworkSettings(context.Background(), "valid-guid").
-					Return(dtov1.NetworkSettings{}, nil)
+					Return(dto.NetworkSettings{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     dtov1.NetworkSettings{},
+			response:     dto.NetworkSettings{},
 		},
 		{
 			name:   "getCertificates - successful retrieval",
@@ -214,10 +214,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
-					Return(dtov1.SecuritySettings{}, nil)
+					Return(dto.SecuritySettings{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     dtov1.SecuritySettings{},
+			response:     dto.SecuritySettings{},
 		},
 		{
 			name:   "getCertificates - failed retrieval",
@@ -225,10 +225,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
-					Return(dtov1.SecuritySettings{}, ErrGeneral)
+					Return(dto.SecuritySettings{}, ErrGeneral)
 			},
 			expectedCode: http.StatusInternalServerError,
-			response:     dtov1.SecuritySettings{},
+			response:     dto.SecuritySettings{},
 		},
 		{
 			name:   "getTLSsettingData - successful retrieval",
@@ -236,10 +236,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
-					Return([]dtov1.SettingDataResponse{}, nil)
+					Return([]dto.SettingDataResponse{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     []dtov1.SettingDataResponse{},
+			response:     []dto.SettingDataResponse{},
 		},
 		{
 			name:   "getTLSsettingData - failed retrieval",
@@ -247,10 +247,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
-					Return([]dtov1.SettingDataResponse{}, ErrGeneral)
+					Return([]dto.SettingDataResponse{}, ErrGeneral)
 			},
 			expectedCode: http.StatusInternalServerError,
-			response:     []dtov1.SettingDataResponse{},
+			response:     []dto.SettingDataResponse{},
 		},
 	}
 

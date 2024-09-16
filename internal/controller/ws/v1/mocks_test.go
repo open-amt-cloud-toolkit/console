@@ -16,7 +16,7 @@ import (
 
 	gin "github.com/gin-gonic/gin"
 	websocket "github.com/gorilla/websocket"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	gomock "go.uber.org/mock/gomock"
@@ -136,10 +136,10 @@ func (mr *MockFeatureMockRecorder) CancelUserConsent(ctx, guid any) *gomock.Call
 }
 
 // CreateAlarmOccurrences mocks base method.
-func (m *MockFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm dtov1.AlarmClockOccurrence) (dtov1.AddAlarmOutput, error) {
+func (m *MockFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAlarmOccurrences", ctx, guid, alarm)
-	ret0, _ := ret[0].(dtov1.AddAlarmOutput)
+	ret0, _ := ret[0].(dto.AddAlarmOutput)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -179,10 +179,10 @@ func (mr *MockFeatureMockRecorder) DeleteAlarmOccurrences(ctx, guid, instanceID 
 }
 
 // Get mocks base method.
-func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.Device, error) {
+func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]dtov1.Device)
+	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -194,10 +194,10 @@ func (mr *MockFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Cal
 }
 
 // GetAlarmOccurrences mocks base method.
-func (m *MockFeature) GetAlarmOccurrences(ctx context.Context, guid string) ([]dtov1.AlarmClockOccurrence, error) {
+func (m *MockFeature) GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAlarmOccurrences", ctx, guid)
-	ret0, _ := ret[0].([]dtov1.AlarmClockOccurrence)
+	ret0, _ := ret[0].([]dto.AlarmClockOccurrence)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -209,10 +209,10 @@ func (mr *MockFeatureMockRecorder) GetAlarmOccurrences(ctx, guid any) *gomock.Ca
 }
 
 // GetAuditLog mocks base method.
-func (m *MockFeature) GetAuditLog(ctx context.Context, startIndex int, guid string) (dtov1.AuditLog, error) {
+func (m *MockFeature) GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAuditLog", ctx, startIndex, guid)
-	ret0, _ := ret[0].(dtov1.AuditLog)
+	ret0, _ := ret[0].(dto.AuditLog)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -224,10 +224,10 @@ func (mr *MockFeatureMockRecorder) GetAuditLog(ctx, startIndex, guid any) *gomoc
 }
 
 // GetByColumn mocks base method.
-func (m *MockFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dtov1.Device, error) {
+func (m *MockFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantID)
-	ret0, _ := ret[0].([]dtov1.Device)
+	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -239,10 +239,10 @@ func (mr *MockFeatureMockRecorder) GetByColumn(ctx, columnName, queryValue, tena
 }
 
 // GetByID mocks base method.
-func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*dtov1.Device, error) {
+func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(*dtov1.Device)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -254,10 +254,10 @@ func (mr *MockFeatureMockRecorder) GetByID(ctx, guid, tenantID any) *gomock.Call
 }
 
 // GetByTags mocks base method.
-func (m *MockFeature) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dtov1.Device, error) {
+func (m *MockFeature) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByTags", ctx, tags, method, limit, offset, tenantID)
-	ret0, _ := ret[0].([]dtov1.Device)
+	ret0, _ := ret[0].([]dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -269,10 +269,10 @@ func (mr *MockFeatureMockRecorder) GetByTags(ctx, tags, method, limit, offset, t
 }
 
 // GetCertificates mocks base method.
-func (m *MockFeature) GetCertificates(c context.Context, guid string) (dtov1.SecuritySettings, error) {
+func (m *MockFeature) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCertificates", c, guid)
-	ret0, _ := ret[0].(dtov1.SecuritySettings)
+	ret0, _ := ret[0].(dto.SecuritySettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -299,10 +299,10 @@ func (mr *MockFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
 }
 
 // GetDeviceCertificate mocks base method.
-func (m *MockFeature) GetDeviceCertificate(c context.Context, guid string) (dtov1.Certificate, error) {
+func (m *MockFeature) GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceCertificate", c, guid)
-	ret0, _ := ret[0].(dtov1.Certificate)
+	ret0, _ := ret[0].(dto.Certificate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -344,10 +344,10 @@ func (mr *MockFeatureMockRecorder) GetDistinctTags(ctx, tenantID any) *gomock.Ca
 }
 
 // GetEventLog mocks base method.
-func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]dtov1.EventLog, error) {
+func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEventLog", ctx, guid)
-	ret0, _ := ret[0].([]dtov1.EventLog)
+	ret0, _ := ret[0].([]dto.EventLog)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -359,10 +359,10 @@ func (mr *MockFeatureMockRecorder) GetEventLog(ctx, guid any) *gomock.Call {
 }
 
 // GetFeatures mocks base method.
-func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (dtov1.Features, error) {
+func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures", ctx, guid)
-	ret0, _ := ret[0].(dtov1.Features)
+	ret0, _ := ret[0].(dto.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -404,10 +404,10 @@ func (mr *MockFeatureMockRecorder) GetHardwareInfo(ctx, guid any) *gomock.Call {
 }
 
 // GetNetworkSettings mocks base method.
-func (m *MockFeature) GetNetworkSettings(c context.Context, guid string) (dtov1.NetworkSettings, error) {
+func (m *MockFeature) GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetworkSettings", c, guid)
-	ret0, _ := ret[0].(dtov1.NetworkSettings)
+	ret0, _ := ret[0].(dto.NetworkSettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -449,10 +449,10 @@ func (mr *MockFeatureMockRecorder) GetPowerState(ctx, guid any) *gomock.Call {
 }
 
 // GetTLSSettingData mocks base method.
-func (m *MockFeature) GetTLSSettingData(c context.Context, guid string) ([]dtov1.SettingDataResponse, error) {
+func (m *MockFeature) GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTLSSettingData", c, guid)
-	ret0, _ := ret[0].([]dtov1.SettingDataResponse)
+	ret0, _ := ret[0].([]dto.SettingDataResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -479,10 +479,10 @@ func (mr *MockFeatureMockRecorder) GetUserConsentCode(ctx, guid any) *gomock.Cal
 }
 
 // GetVersion mocks base method.
-func (m *MockFeature) GetVersion(ctx context.Context, guid string) (dtov1.Version, dtov2.Version, error) {
+func (m *MockFeature) GetVersion(ctx context.Context, guid string) (dto.Version, dtov2.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
-	ret0, _ := ret[0].(dtov1.Version)
+	ret0, _ := ret[0].(dto.Version)
 	ret1, _ := ret[1].(dtov2.Version)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -495,10 +495,10 @@ func (mr *MockFeatureMockRecorder) GetVersion(ctx, guid any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, d *dtov1.Device) (*dtov1.Device, error) {
+func (m *MockFeature) Insert(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(*dtov1.Device)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -524,7 +524,7 @@ func (mr *MockFeatureMockRecorder) Redirect(ctx, conn, guid, mode any) *gomock.C
 }
 
 // SendConsentCode mocks base method.
-func (m *MockFeature) SendConsentCode(ctx context.Context, code dtov1.UserConsent, guid string) (any, error) {
+func (m *MockFeature) SendConsentCode(ctx context.Context, code dto.UserConsent, guid string) (any, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendConsentCode", ctx, code, guid)
 	ret0, _ := ret[0].(any)
@@ -554,7 +554,7 @@ func (mr *MockFeatureMockRecorder) SendPowerAction(ctx, guid, action any) *gomoc
 }
 
 // SetBootOptions mocks base method.
-func (m *MockFeature) SetBootOptions(ctx context.Context, guid string, bootSetting dtov1.BootSetting) (power.PowerActionResponse, error) {
+func (m *MockFeature) SetBootOptions(ctx context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetBootOptions", ctx, guid, bootSetting)
 	ret0, _ := ret[0].(power.PowerActionResponse)
@@ -569,10 +569,10 @@ func (mr *MockFeatureMockRecorder) SetBootOptions(ctx, guid, bootSetting any) *g
 }
 
 // SetFeatures mocks base method.
-func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features dtov1.Features) (dtov1.Features, error) {
+func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFeatures", ctx, guid, features)
-	ret0, _ := ret[0].(dtov1.Features)
+	ret0, _ := ret[0].(dto.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -584,10 +584,10 @@ func (mr *MockFeatureMockRecorder) SetFeatures(ctx, guid, features any) *gomock.
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, d *dtov1.Device) (*dtov1.Device, error) {
+func (m *MockFeature) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(*dtov1.Device)
+	ret0, _ := ret[0].(*dto.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

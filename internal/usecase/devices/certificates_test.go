@@ -11,7 +11,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -59,14 +59,14 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.SecuritySettings{
-				ProfileAssociation: []dtov1.ProfileAssociation(nil),
-				CertificateResponse: dtov1.CertificatePullResponse{
-					KeyManagementItems: []dtov1.RefinedKeyManagementResponse{},
-					Certificates:       []dtov1.RefinedCertificate{},
+			res: dto.SecuritySettings{
+				ProfileAssociation: []dto.ProfileAssociation(nil),
+				CertificateResponse: dto.CertificatePullResponse{
+					KeyManagementItems: []dto.RefinedKeyManagementResponse{},
+					Certificates:       []dto.RefinedCertificate{},
 				},
-				KeyResponse: dtov1.KeyPullResponse{
-					Keys: []dtov1.Key{},
+				KeyResponse: dto.KeyPullResponse{
+					Keys: []dto.Key{},
 				},
 			},
 			err: nil,
@@ -156,8 +156,8 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.SecuritySettings{
-				ProfileAssociation: []dtov1.ProfileAssociation{
+			res: dto.SecuritySettings{
+				ProfileAssociation: []dto.ProfileAssociation{
 					{
 						Type:              "TLS",
 						ProfileID:         "TLSProtocolEndpoint Instances Collection",
@@ -166,12 +166,12 @@ func TestGetCertificates(t *testing.T) {
 						Key:               nil,
 					},
 				},
-				CertificateResponse: dtov1.CertificatePullResponse{
-					KeyManagementItems: []dtov1.RefinedKeyManagementResponse{},
-					Certificates:       []dtov1.RefinedCertificate{},
+				CertificateResponse: dto.CertificatePullResponse{
+					KeyManagementItems: []dto.RefinedKeyManagementResponse{},
+					Certificates:       []dto.RefinedCertificate{},
 				},
-				KeyResponse: dtov1.KeyPullResponse{
-					Keys: []dtov1.Key{},
+				KeyResponse: dto.KeyPullResponse{
+					Keys: []dto.Key{},
 				},
 			},
 			err: nil,
@@ -184,7 +184,7 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: dtov1.SecuritySettings{},
+			res: dto.SecuritySettings{},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -203,7 +203,7 @@ func TestGetCertificates(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: dtov1.SecuritySettings{},
+			res: dto.SecuritySettings{},
 			err: ErrGeneral,
 		},
 	}

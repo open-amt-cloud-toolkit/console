@@ -5,10 +5,10 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
-func (uc *UseCase) GetTLSSettingData(c context.Context, guid string) ([]dtov1.SettingDataResponse, error) {
+func (uc *UseCase) GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (uc *UseCase) GetTLSSettingData(c context.Context, guid string) ([]dtov1.Se
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dtov1.SettingDataResponse, len(response))
+	d1 := make([]dto.SettingDataResponse, len(response))
 
 	for i := range response {
 		tmpEntity := response[i] // create a new variable to avoid memory aliasing
@@ -32,8 +32,8 @@ func (uc *UseCase) GetTLSSettingData(c context.Context, guid string) ([]dtov1.Se
 	return d1, nil
 }
 
-func (uc *UseCase) tlsSettingDataEntityToDTO(d *tls.SettingDataResponse) *dtov1.SettingDataResponse {
-	d1 := &dtov1.SettingDataResponse{
+func (uc *UseCase) tlsSettingDataEntityToDTO(d *tls.SettingDataResponse) *dto.SettingDataResponse {
+	d1 := &dto.SettingDataResponse{
 		ElementName:                   d.ElementName,
 		InstanceID:                    d.InstanceID,
 		MutualAuthentication:          d.MutualAuthentication,

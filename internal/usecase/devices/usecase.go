@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -59,8 +59,8 @@ func New(r Repository, d WSMAN, redirection Redirection, log logger.Interface) *
 	return uc
 }
 
-// convert dtov1.Device to entity.Device.
-func (uc *UseCase) dtoToEntity(d *dtov1.Device) *entity.Device {
+// convert dto.Device to entity.Device.
+func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 	// convert []string to comma separated string
 	if d.Tags == nil {
 		d.Tags = []string{}
@@ -97,15 +97,15 @@ func (uc *UseCase) dtoToEntity(d *dtov1.Device) *entity.Device {
 	return d1
 }
 
-// convert entity.Device to dtov1.Device.
-func (uc *UseCase) entityToDTO(d *entity.Device) *dtov1.Device {
+// convert entity.Device to dto.Device.
+func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 	// convert comma separated string to []string
 	var tags []string
 	if d.Tags != "" {
 		tags = strings.Split(d.Tags, ",")
 	}
 
-	d1 := &dtov1.Device{
+	d1 := &dto.Device{
 		ConnectionStatus: d.ConnectionStatus,
 		MPSInstance:      d.MPSInstance,
 		Hostname:         d.Hostname,

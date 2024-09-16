@@ -3,31 +3,31 @@ package devices
 import (
 	"context"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
-func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dtov1.NetworkSettings, error) {
+func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return dtov1.NetworkSettings{}, err
+		return dto.NetworkSettings{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	response, err := device.GetNetworkSettings()
 	if err != nil {
-		return dtov1.NetworkSettings{}, err
+		return dto.NetworkSettings{}, err
 	}
 
-	ns := dtov1.NetworkSettings{
-		Wired: dtov1.WiredNetworkInfo{
-			IEEE8021x: dtov1.IEEE8021x{
+	ns := dto.NetworkSettings{
+		Wired: dto.WiredNetworkInfo{
+			IEEE8021x: dto.IEEE8021x{
 				Enabled:       int(response.IPSIEEE8021xSettingsResult.Enabled),
 				AvailableInS0: response.IPSIEEE8021xSettingsResult.AvailableInS0,
 				PxeTimeout:    response.IPSIEEE8021xSettingsResult.PxeTimeout,
 			},
-			NetworkInfo: dtov1.NetworkInfo{
+			NetworkInfo: dto.NetworkInfo{
 				ElementName:                  response.EthernetPortSettingsResult[0].ElementName,
 				InstanceID:                   response.EthernetPortSettingsResult[0].InstanceID,
 				VLANTag:                      response.EthernetPortSettingsResult[0].VLANTag,
@@ -51,8 +51,8 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dtov1.Net
 				PhysicalNicMedium:            int(response.EthernetPortSettingsResult[0].PhysicalNicMedium),
 			},
 		},
-		Wireless: dtov1.WirelessNetworkInfo{
-			NetworkInfo: dtov1.NetworkInfo{
+		Wireless: dto.WirelessNetworkInfo{
+			NetworkInfo: dto.NetworkInfo{
 				ElementName:                  response.EthernetPortSettingsResult[1].ElementName,
 				InstanceID:                   response.EthernetPortSettingsResult[1].InstanceID,
 				VLANTag:                      response.EthernetPortSettingsResult[1].VLANTag,
@@ -81,7 +81,7 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dtov1.Net
 	convertLinkPolicy(response, &ns)
 
 	for _, v := range response.WiFiSettingsResult {
-		ns.Wireless.WiFiNetworks = append(ns.Wireless.WiFiNetworks, dtov1.WiFiNetwork{
+		ns.Wireless.WiFiNetworks = append(ns.Wireless.WiFiNetworks, dto.WiFiNetwork{
 			SSID:                 v.SSID,
 			AuthenticationMethod: int(v.AuthenticationMethod),
 			EncryptionMethod:     int(v.EncryptionMethod),
@@ -92,7 +92,7 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dtov1.Net
 
 	for i := range response.CIMIEEE8021xSettingsResult.IEEE8021xSettingsItems {
 		v := &response.CIMIEEE8021xSettingsResult.IEEE8021xSettingsItems[i]
-		ns.Wireless.IEEE8021xSettings = append(ns.Wireless.IEEE8021xSettings, dtov1.IEEE8021xSettings{
+		ns.Wireless.IEEE8021xSettings = append(ns.Wireless.IEEE8021xSettings, dto.IEEE8021xSettings{
 			AuthenticationProtocol:          v.AuthenticationProtocol,
 			RoamingIdentity:                 v.RoamingIdentity,
 			ServerCertificateName:           v.ServerCertificateName,
@@ -107,7 +107,7 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dtov1.Net
 	return ns, nil
 }
 
-func convertLinkPolicy(response wsman.NetworkResults, ns *dtov1.NetworkSettings) {
+func convertLinkPolicy(response wsman.NetworkResults, ns *dto.NetworkSettings) {
 	for _, v := range response.EthernetPortSettingsResult[0].LinkPolicy {
 		ns.Wired.NetworkInfo.LinkPolicy = append(ns.Wired.NetworkInfo.LinkPolicy, int(v))
 	}

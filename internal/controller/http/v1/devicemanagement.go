@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/amtexplorer"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -97,7 +97,7 @@ func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
 	guid := c.Param("guid")
 
-	var features dtov1.Features
+	var features dto.Features
 
 	if err := c.ShouldBindJSON(&features); err != nil {
 		ErrorResponse(c, err)
@@ -133,7 +133,7 @@ func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
 func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 	guid := c.Param("guid")
 
-	alarm := &dtov1.AlarmClockOccurrence{}
+	alarm := &dto.AlarmClockOccurrence{}
 	if err := c.ShouldBindJSON(alarm); err != nil {
 		ErrorResponse(c, err)
 
@@ -154,7 +154,7 @@ func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 	guid := c.Param("guid")
 
-	alarm := dtov1.DeleteAlarmOccurrenceRequest{}
+	alarm := dto.DeleteAlarmOccurrenceRequest{}
 	if err := c.ShouldBindJSON(&alarm); err != nil {
 		ErrorResponse(c, err)
 
@@ -277,7 +277,7 @@ func (r *deviceManagementRoutes) getUserConsentCode(c *gin.Context) {
 func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 	guid := c.Param("guid")
 
-	var userConsent dtov1.UserConsent
+	var userConsent dto.UserConsent
 	if err := c.ShouldBindJSON(&userConsent); err != nil {
 		ErrorResponse(c, err)
 
@@ -298,7 +298,7 @@ func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 func (r *deviceManagementRoutes) powerAction(c *gin.Context) {
 	guid := c.Param("guid")
 
-	var powerAction dtov1.PowerAction
+	var powerAction dto.PowerAction
 	if err := c.ShouldBindJSON(&powerAction); err != nil {
 		ErrorResponse(c, err)
 
@@ -357,7 +357,7 @@ func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 func (r *deviceManagementRoutes) setBootOptions(c *gin.Context) {
 	guid := c.Param("guid")
 
-	var bootSetting dtov1.BootSetting
+	var bootSetting dto.BootSetting
 	if err := c.ShouldBindJSON(&bootSetting); err != nil {
 		ErrorResponse(c, err)
 

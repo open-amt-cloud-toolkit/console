@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -56,14 +56,14 @@ func (uc *UseCase) GetCount(ctx context.Context, tenantID string) (int, error) {
 	return count, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dtov1.WirelessConfig, error) {
+func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.WirelessConfig, error) {
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
 	}
 
 	// iterate over the data and convert each entity to dto
-	d1 := make([]dtov1.WirelessConfig, len(data))
+	d1 := make([]dto.WirelessConfig, len(data))
 
 	for i := range data {
 		tmpEntity := data[i] // create a new variable to avoid memory aliasing
@@ -73,7 +73,7 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	return d1, nil
 }
 
-func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*dtov1.WirelessConfig, error) {
+func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) (*dto.WirelessConfig, error) {
 	data, err := uc.repo.GetByName(ctx, profileName, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("GetByName", "uc.repo.GetByName", err)
@@ -101,7 +101,7 @@ func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) err
 	return nil
 }
 
-func (uc *UseCase) Update(ctx context.Context, d *dtov1.WirelessConfig) (*dtov1.WirelessConfig, error) {
+func (uc *UseCase) Update(ctx context.Context, d *dto.WirelessConfig) (*dto.WirelessConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
 	// check if the IEEE profile is exists in the database
@@ -131,7 +131,7 @@ func (uc *UseCase) Update(ctx context.Context, d *dtov1.WirelessConfig) (*dtov1.
 	return d2, nil
 }
 
-func (uc *UseCase) Insert(ctx context.Context, d *dtov1.WirelessConfig) (*dtov1.WirelessConfig, error) {
+func (uc *UseCase) Insert(ctx context.Context, d *dto.WirelessConfig) (*dto.WirelessConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
 	// check if the IEEE profile is exists in the database
@@ -157,8 +157,8 @@ func (uc *UseCase) Insert(ctx context.Context, d *dtov1.WirelessConfig) (*dtov1.
 	return d2, nil
 }
 
-// convert dtov1.WirelessConfig to entity.WirelessConfig.
-func (uc *UseCase) dtoToEntity(d *dtov1.WirelessConfig) *entity.WirelessConfig {
+// convert dto.WirelessConfig to entity.WirelessConfig.
+func (uc *UseCase) dtoToEntity(d *dto.WirelessConfig) *entity.WirelessConfig {
 	// convert []int to comma separated string
 	linkPolicy := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(d.LinkPolicy)), ","), "[]")
 
@@ -178,8 +178,8 @@ func (uc *UseCase) dtoToEntity(d *dtov1.WirelessConfig) *entity.WirelessConfig {
 	return d1
 }
 
-// convert entity.WirelessConfig to dtov1.WirelessConfig.
-func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dtov1.WirelessConfig {
+// convert entity.WirelessConfig to dto.WirelessConfig.
+func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 	// convert comma separated string to []int
 	linkPolicyInt := []int{}
 
@@ -200,7 +200,7 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dtov1.WirelessConfig {
 		}
 	}
 
-	d1 := &dtov1.WirelessConfig{
+	d1 := &dto.WirelessConfig{
 		ProfileName:          d.ProfileName,
 		AuthenticationMethod: d.AuthenticationMethod,
 		EncryptionMethod:     d.EncryptionMethod,
@@ -214,7 +214,7 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dtov1.WirelessConfig {
 	}
 
 	if d.IEEE8021xProfileName != nil && *d.IEEE8021xProfileName != "" {
-		val := &dtov1.IEEE8021xConfig{
+		val := &dto.IEEE8021xConfig{
 			AuthenticationProtocol: *d.AuthenticationProtocol,
 			PXETimeout:             d.PXETimeout,
 			WiredInterface:         *d.WiredInterface,

@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-xmlfmt/xmlfmt"
 
-	dtov1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
@@ -36,10 +36,10 @@ func (uc *UseCase) GetExplorerSupportedCalls() []string {
 	return methods
 }
 
-func (uc *UseCase) ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dtov1.Explorer, error) {
+func (uc *UseCase) ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dto.Explorer, error) {
 	item, err := uc.repo.GetByID(ctx, guid, tenantID)
 	if err != nil {
-		return &dtov1.Explorer{}, ErrDatabase.Wrap("ExecuteCall", "uc.repo.GetByID", err)
+		return &dto.Explorer{}, ErrDatabase.Wrap("ExecuteCall", "uc.repo.GetByID", err)
 	}
 
 	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), true)
@@ -53,17 +53,17 @@ func (uc *UseCase) ExecuteCall(ctx context.Context, guid, call, tenantID string)
 	if !method.IsValid() {
 		uc.log.Warn("Method %s not found\n", call)
 
-		return &dtov1.Explorer{}, ErrExplorerUseCase.Wrap("ExecuteCall", "uc.amt.Get"+call, nil)
+		return &dto.Explorer{}, ErrExplorerUseCase.Wrap("ExecuteCall", "uc.amt.Get"+call, nil)
 	}
 
 	input := make([]reflect.Value, 0)
 	// invoke the method
 	resultType, err := invokeMethod(input, method)
 	if err != nil {
-		return &dtov1.Explorer{}, ErrExplorerAMT.Wrap("ExecuteCall", "uc.amt.Get"+call, err)
+		return &dto.Explorer{}, ErrExplorerAMT.Wrap("ExecuteCall", "uc.amt.Get"+call, err)
 	}
 
-	explorer := &dtov1.Explorer{}
+	explorer := &dto.Explorer{}
 	// Iterate over the fields
 
 	readResult(resultType, explorer)
@@ -102,7 +102,7 @@ func invokeMethod(input []reflect.Value, method reflect.Value) (reflect.Value, e
 	return resultType, nil
 }
 
-func readResult(resultType reflect.Value, explorer *dtov1.Explorer) {
+func readResult(resultType reflect.Value, explorer *dto.Explorer) {
 	// Iterate over the fields
 	for i := 0; i < resultType.NumField(); i++ {
 		field := resultType.Field(i)

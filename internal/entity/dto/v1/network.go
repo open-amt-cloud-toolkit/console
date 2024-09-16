@@ -1,4 +1,4 @@
-package dtov1
+package dto
 
 // NetworkSettings defines the network settings for a device.
 type NetworkSettings struct {
