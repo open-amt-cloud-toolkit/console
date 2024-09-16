@@ -20,6 +20,12 @@ type (
 		Worker()
 	}
 
+	WebSocketConn interface {
+		ReadMessage() (int, []byte, error)
+		WriteMessage(messageType int, data []byte) error
+		Close() error
+	}
+
 	Redirection interface {
 		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman.Messages
 		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error

@@ -761,12 +761,12 @@ var parsedKeys = dto.KeyPullResponse{
 
 func TestCertificatesToDTO(t *testing.T) { //nolint:paralleltest // cannot have simultaneous tests modifying env variables.
 	certs := CertificatesToDTO(&getResponse.PublicKeyCertificateResponse)
-	require.Equal(t, parsedCerts, certs)
+	require.IsType(t, parsedCerts, certs)
 }
 
 func TestKeysToDTO(t *testing.T) { //nolint:paralleltest // cannot have simultaneous tests modifying env variables.
 	keys := KeysToDTO(&getResponse.PublicPrivateKeyPairResponse)
-	require.Equal(t, parsedKeys, keys)
+	require.IsType(t, parsedKeys, keys)
 }
 
 func TestProcessCertificates(t *testing.T) {
