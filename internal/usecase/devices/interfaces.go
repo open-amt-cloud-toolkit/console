@@ -8,7 +8,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
@@ -55,7 +56,7 @@ type (
 		Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
 		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
 		// Management Calls
-		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
+		GetVersion(ctx context.Context, guid string) (dto.Version, dtov2.Version, error)
 		GetFeatures(ctx context.Context, guid string) (dto.Features, error)
 		SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error)
 		GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)

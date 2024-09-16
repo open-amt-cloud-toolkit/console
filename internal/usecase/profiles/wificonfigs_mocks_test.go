@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	gomock "go.uber.org/mock/gomock"
 )
 

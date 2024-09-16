@@ -13,7 +13,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -47,7 +47,13 @@ func TestGetVersion(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	softwares := []software.SoftwareIdentity{}
+	softwares := []software.SoftwareIdentity{
+		{
+			InstanceID:    "Flash",
+			VersionString: "0.0.0",
+			IsEntity:      true,
+		},
+	}
 
 	responses := []setupandconfiguration.SetupAndConfigurationServiceResponse{}
 
@@ -93,31 +99,15 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}{
-				"AMT_SetupAndConfigurationService": map[string]interface{}{
-					"response": setupandconfiguration.SetupAndConfigurationServiceResponse{
-						XMLName:                       xml.Name{Space: "", Local: "AMT_SetupAndConfigurationService"},
-						RequestedState:                1,
-						EnabledState:                  1,
-						ElementName:                   "SampleElementName",
-						SystemCreationClassName:       "SampleSystemCreationClassName",
-						SystemName:                    "SampleSystemName",
-						CreationClassName:             "SampleCreationClassName",
-						Name:                          "SampleName",
-						ProvisioningMode:              1,
-						ProvisioningState:             1,
-						ZeroTouchConfigurationEnabled: true,
-						ProvisioningServerOTP:         "SampleProvisioningServerOTP",
-						ConfigurationServerFQDN:       "SampleConfigurationServerFQDN",
-						PasswordModel:                 1,
-						DhcpDNSSuffix:                 "SampleDhcpDNSSuffix",
-						TrustedDNSSuffix:              "SampleTrustedDNSSuffix",
-					},
+
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity{
+				{
+					InstanceID:    "Flash",
+					VersionString: "0.0.0",
+					IsEntity:      true,
 				},
-				"CIM_SoftwareIdentity": map[string]interface{}{
-					"responses": []software.SoftwareIdentity{},
-				},
-			},
+			}, AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 1, EnabledState: 1, ElementName: "SampleElementName", SystemCreationClassName: "SampleSystemCreationClassName", SystemName: "SampleSystemName", CreationClassName: "SampleCreationClassName", Name: "SampleName", ProvisioningMode: 1, ProvisioningState: 1, ZeroTouchConfigurationEnabled: true, ProvisioningServerOTP: "SampleProvisioningServerOTP", ConfigurationServerFQDN: "SampleConfigurationServerFQDN", PasswordModel: 1, DhcpDNSSuffix: "SampleDhcpDNSSuffix", TrustedDNSSuffix: "SampleTrustedDNSSuffix"}},
+
 			err: nil,
 		},
 		{
@@ -129,7 +119,9 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: map[string]interface{}(nil),
+
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
+
 			err: devices.ErrDatabase,
 		},
 		{
@@ -148,7 +140,9 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}(nil),
+
+			res: dto.Version{},
+
 			err: ErrGeneral,
 		},
 		{
@@ -171,7 +165,9 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}(nil),
+
+			res: dto.Version{CIMSoftwareIdentity: []dto.SoftwareIdentity(nil), AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponse{RequestedState: 0, EnabledState: 0, ElementName: "", SystemCreationClassName: "", SystemName: "", CreationClassName: "", Name: "", ProvisioningMode: 0, ProvisioningState: 0, ZeroTouchConfigurationEnabled: false, ProvisioningServerOTP: "", ConfigurationServerFQDN: "", PasswordModel: 0, DhcpDNSSuffix: "", TrustedDNSSuffix: ""}},
+
 			err: ErrGeneral,
 		},
 	}
@@ -188,7 +184,7 @@ func TestGetVersion(t *testing.T) {
 
 			tc.repoMock(repo)
 
-			res, err := useCase.GetVersion(context.Background(), device.GUID)
+			res, _, err := useCase.GetVersion(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
 

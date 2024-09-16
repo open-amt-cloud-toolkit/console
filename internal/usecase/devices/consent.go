@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{}, error) {
