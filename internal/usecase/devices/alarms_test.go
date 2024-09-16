@@ -68,7 +68,6 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: []dto.AlarmClockOccurrence{},
 			err: nil,
 		},
@@ -80,7 +79,6 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-
 			res: []dto.AlarmClockOccurrence(nil),
 			err: devices.ErrDatabase,
 		},
@@ -100,7 +98,6 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: []dto.AlarmClockOccurrence(nil),
 			err: ErrGeneral,
 		},
@@ -120,7 +117,6 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: []dto.AlarmClockOccurrence{},
 			err: nil,
 		},

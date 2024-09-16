@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,7 +9,9 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
-func TestForeignKeyViolationError_Error(t *testing.T) {
+var ErrRecordDoesNotExist = errors.New("record does not exist")
+
+func TestNotFoundError_Error(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -18,7 +21,7 @@ func TestForeignKeyViolationError_Error(t *testing.T) {
 	}{
 		{
 			name:           "Basic error message",
-			consoleError:   consoleerrors.InternalError{Message: "foreign key constraint failed"},
+			consoleError:   consoleerrors.InternalError{Message: "record not found"},
 			expectedResult: " -  - : ",
 		},
 		{
@@ -33,7 +36,7 @@ func TestForeignKeyViolationError_Error(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := ForeignKeyViolationError{Console: tc.consoleError}
+			err := NotFoundError{Console: tc.consoleError}
 			result := err.Error()
 
 			require.Equal(t, tc.expectedResult, result)
@@ -41,26 +44,32 @@ func TestForeignKeyViolationError_Error(t *testing.T) {
 	}
 }
 
-func TestForeignKeyViolationError_Wrap(t *testing.T) {
+func TestNotFoundError_Wrap(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name           string
 		initialMessage string
-		details        string
+		call           string
+		function       string
+		err            error
 		expectedResult string
 	}{
 		{
-			name:           "Wrap with details",
-			initialMessage: "error occurred",
-			details:        "foreign key constraint",
-			expectedResult: " -  - : ",
+			name:           "Wrap with valid error",
+			initialMessage: "some error occurred",
+			call:           "FindRecord",
+			function:       "Query",
+			err:            ErrRecordDoesNotExist,
+			expectedResult: " - Query - FindRecord: record does not exist",
 		},
 		{
-			name:           "Wrap with empty details",
-			initialMessage: "error occurred",
-			details:        "",
-			expectedResult: " -  - : ",
+			name:           "Wrap with nil error",
+			initialMessage: "another error occurred",
+			call:           "FindRecord",
+			function:       "Query",
+			err:            nil,
+			expectedResult: " - Query - FindRecord: ",
 		},
 	}
 
@@ -70,9 +79,9 @@ func TestForeignKeyViolationError_Wrap(t *testing.T) {
 			t.Parallel()
 
 			internalErr := consoleerrors.InternalError{Message: tc.initialMessage}
-			err := ForeignKeyViolationError{Console: internalErr}
+			err := NotFoundError{Console: internalErr}
 
-			wrappedErr := err.Wrap(tc.details)
+			wrappedErr := err.Wrap(tc.call, tc.function, tc.err)
 
 			require.Equal(t, tc.expectedResult, wrappedErr.Error())
 		})

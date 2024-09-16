@@ -21,7 +21,6 @@ func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 	h := handler.Group("/amt")
 	{
 		h.GET("version/:guid", r.getVersion)
-
 		h.GET("features/:guid", r.getFeatures)
 	}
 }

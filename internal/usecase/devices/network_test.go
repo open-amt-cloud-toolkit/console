@@ -56,9 +56,16 @@ func TestGetNetworkSettings(t *testing.T) {
 					Return(wsman.NetworkResults{
 						EthernetPortSettingsResult: []ethernetport.SettingsResponse{
 							{
-								LinkPolicy: []ethernetport.LinkPolicy{1, 2},
+								LinkPolicy:             []ethernetport.LinkPolicy{14, 16},
+								PhysicalConnectionType: 0,
+								PhysicalNicMedium:      0,
 							}, {
-								LinkPolicy: []ethernetport.LinkPolicy{1, 2},
+								LinkPolicy:              []ethernetport.LinkPolicy{14, 16},
+								LinkPreference:          1,
+								LinkControl:             1,
+								WLANLinkProtectionLevel: 1,
+								PhysicalConnectionType:  3,
+								PhysicalNicMedium:       1,
 							},
 						},
 						IPSIEEE8021xSettingsResult: ieee8021x.IEEE8021xSettingsResponse{},
@@ -77,14 +84,21 @@ func TestGetNetworkSettings(t *testing.T) {
 				Wired: dto.WiredNetworkInfo{
 					IEEE8021x: dto.IEEE8021x{},
 					NetworkInfo: dto.NetworkInfo{
-						LinkPolicy: []int{1, 2},
+						LinkPolicy:             []string{"Sx AC", "S0 DC"},
+						PhysicalConnectionType: "Integrated LAN NIC",
+						PhysicalNicMedium:      "SMBUS",
 					},
 				},
 				Wireless: dto.WirelessNetworkInfo{
 					WiFiNetworks:      []dto.WiFiNetwork{{}},
 					IEEE8021xSettings: []dto.IEEE8021xSettings{{}},
 					NetworkInfo: dto.NetworkInfo{
-						LinkPolicy: []int{1, 2},
+						LinkPolicy:              []string{"Sx AC", "S0 DC"},
+						LinkPreference:          "Management Engine",
+						LinkControl:             "Management Engine",
+						WLANLinkProtectionLevel: "None",
+						PhysicalConnectionType:  "Wireless LAN",
+						PhysicalNicMedium:       "PCIe",
 					},
 				},
 			},

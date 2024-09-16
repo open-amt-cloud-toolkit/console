@@ -1,12 +1,12 @@
-//nolint:gci // Ignore import order
 package sqldb
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/stretchr/testify/require"
+
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
 var (
