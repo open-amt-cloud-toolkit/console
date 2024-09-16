@@ -20,8 +20,23 @@ func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 
 	h := handler.Group("/amt")
 	{
+		h.GET("version/:guid", r.getVersion)
 		h.GET("features/:guid", r.getFeatures)
 	}
+}
+
+func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
+	guid := c.Param("guid")
+
+	_, v2, err := r.d.GetVersion(c.Request.Context(), guid)
+	if err != nil {
+		r.l.Error(err, "http - v2 - GetVersion")
+		v1.ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, v2)
 }
 
 func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {

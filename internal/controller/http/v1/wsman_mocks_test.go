@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"

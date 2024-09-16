@@ -15,7 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -58,10 +59,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetVersion(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"version": "1.0.0"}, nil)
+					Return(dto.Version{}, dtov2.Version{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"version": "1.0.0"},
+			response:     dto.Version{},
 		},
 		{
 			name:   "getFeatures - successful retrieval",

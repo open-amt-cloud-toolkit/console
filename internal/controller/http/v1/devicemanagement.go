@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/amtexplorer"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -60,7 +60,7 @@ func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, amt amtexplorer.F
 func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 	guid := c.Param("guid")
 
-	version, err := r.d.GetVersion(c.Request.Context(), guid)
+	versionv1, _, err := r.d.GetVersion(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - GetVersion")
 		ErrorResponse(c, err)
@@ -68,7 +68,7 @@ func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, version)
+	c.JSON(http.StatusOK, versionv1)
 }
 
 func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {

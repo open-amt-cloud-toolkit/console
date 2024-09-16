@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	v1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	amtexplorer "github.com/open-amt-cloud-toolkit/console/internal/usecase/amtexplorer"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
@@ -934,10 +934,10 @@ func (m *MockFeature) EXPECT() *MockFeatureMockRecorder {
 }
 
 // ExecuteCall mocks base method.
-func (m *MockFeature) ExecuteCall(ctx context.Context, guid, call, tenantID string) (*dto.Explorer, error) {
+func (m *MockFeature) ExecuteCall(ctx context.Context, guid, call, tenantID string) (*v1.Explorer, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExecuteCall", ctx, guid, call, tenantID)
-	ret0, _ := ret[0].(*dto.Explorer)
+	ret0, _ := ret[0].(*v1.Explorer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1024,7 +1024,7 @@ func (m *MockWSMAN) EXPECT() *MockWSMANMockRecorder {
 }
 
 // DestroyWsmanClient mocks base method.
-func (m *MockWSMAN) DestroyWsmanClient(device dto.Device) {
+func (m *MockWSMAN) DestroyWsmanClient(device v1.Device) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "DestroyWsmanClient", device)
 }
@@ -1036,7 +1036,7 @@ func (mr *MockWSMANMockRecorder) DestroyWsmanClient(device any) *gomock.Call {
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockWSMAN) SetupWsmanClient(device dto.Device, logMessages bool) amtexplorer.AMTExplorer {
+func (m *MockWSMAN) SetupWsmanClient(device v1.Device, logMessages bool) amtexplorer.AMTExplorer {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetupWsmanClient", device, logMessages)
 	ret0, _ := ret[0].(amtexplorer.AMTExplorer)

@@ -5,7 +5,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 func (uc *UseCase) GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error) {

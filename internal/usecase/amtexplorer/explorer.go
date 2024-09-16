@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-xmlfmt/xmlfmt"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
