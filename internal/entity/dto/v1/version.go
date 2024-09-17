@@ -1,14 +1,20 @@
 package dto
 
 type (
+	SoftwareIdentityResponses struct {
+		Responses []SoftwareIdentity `json:"responses"`
+	}
+	SetupAndConfigurationServiceResponses struct {
+		Response SetupAndConfigurationServiceResponse `json:"response"`
+	}
 	SoftwareIdentity struct {
-		InstanceID    string `json:"instanceID"`
+		InstanceID    string `json:"InstanceID"`
 		VersionString string `json:"VersionString" example:"<major>.<minor>.<revision>.<build>"`
-		IsEntity      bool   `json:"isEntity" example:"true"`
+		IsEntity      bool   `json:"IsEntity" example:"true"`
 	}
 
 	Version struct {
-		CIMSoftwareIdentity             []SoftwareIdentity                   `json:"cimSoftwareIdentity"`
-		AMTSetupAndConfigurationService SetupAndConfigurationServiceResponse `json:"amtSetupAndConfigurationService"`
+		CIMSoftwareIdentity             SoftwareIdentityResponses             `json:"CIM_SoftwareIdentity"`
+		AMTSetupAndConfigurationService SetupAndConfigurationServiceResponses `json:"AMT_SetupAndConfigurationService"`
 	}
 )
