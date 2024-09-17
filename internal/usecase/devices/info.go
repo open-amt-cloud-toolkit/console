@@ -46,8 +46,8 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v
 	}
 
 	v1Version := dto.Version{
-		CIMSoftwareIdentity:             d1,
-		AMTSetupAndConfigurationService: d3[0],
+		CIMSoftwareIdentity:             dto.SoftwareIdentityResponses{Responses: d1},
+		AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponses{Response: d3[0]},
 	}
 
 	v2Version := *uc.softwareIdentityEntityToDTOv2(softwareIdentity)
