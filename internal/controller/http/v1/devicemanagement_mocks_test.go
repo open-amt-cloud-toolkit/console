@@ -16,7 +16,7 @@ import (
 	websocket "github.com/gorilla/websocket"
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
 	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
-	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+	v2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	wsman0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
@@ -696,10 +696,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetGeneralSettings(ctx, guid 
 }
 
 // GetHardwareInfo mocks base method.
-func (m *MockDeviceManagementFeature) GetHardwareInfo(ctx context.Context, guid string) (any, error) {
+func (m *MockDeviceManagementFeature) GetHardwareInfo(ctx context.Context, guid string) (dto.HardwareInfoResults, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHardwareInfo", ctx, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.HardwareInfoResults)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -786,11 +786,11 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetUserConsentCode(ctx, guid 
 }
 
 // GetVersion mocks base method.
-func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (dto.Version, dtov2.Version, error) {
+func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (dto.Version, v2.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
 	ret0, _ := ret[0].(dto.Version)
-	ret1, _ := ret[1].(dtov2.Version)
+	ret1, _ := ret[1].(v2.Version)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

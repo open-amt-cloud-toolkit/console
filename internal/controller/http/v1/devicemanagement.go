@@ -179,7 +179,7 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 	guid := c.Param("guid")
 
-	hwInfo, err := r.d.GetHardwareInfo(c.Request.Context(), guid)
+	hwInfo, _, err := r.d.GetHardwareInfo(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getHardwareInfo")
 		ErrorResponse(c, err)
@@ -187,6 +187,67 @@ func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
 		return
 	}
 
+	// v1HwInfo := map[string]interface{}{
+	// 	"CIM_ComputerSystemPackage": map[string]interface{}{
+	// 		"response":  hwInfo.CIM_ComputerSystemPackage.PlatformGUID,
+	// 		"responses": hwInfo.CIM_ComputerSystemPackage.PlatformGUID,
+	// 	},
+	// 	"CIM_SystemPackaging": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.CIM_SystemPackage},
+	// 	},
+	// 	"CIM_Chassis": map[string]interface{}{
+	// 		"response":  hwInfo.CIM_Chassis,
+	// 		"responses": []interface{}{},
+	// 	}, "CIM_Chip": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.CIM_Chip},
+	// 	}, "CIM_Card": map[string]interface{}{
+	// 		"response":  hwInfo.CIM_Card,
+	// 		"responses": []interface{}{},
+	// 	}, "CIM_BIOSElement": map[string]interface{}{
+	// 		"response":  hwInfo.CIM_BIOSElement,
+	// 		"responses": []interface{}{},
+	// 	}, "CIM_Processor": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.CIM_Processor},
+	// 	}, "CIM_PhysicalMemory": map[string]interface{}{
+	// 		"responses": hwInfo.CIM_PhysicalMemory,
+	// 	}, "CIM_MediaAccessDevice": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.CIM_MediaAccessDevice},
+	// 	}, "CIM_PhysicalPackage": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.CIM_PhysicalPackage},
+	// 	},
+	// }
+
+	// v1HwInfo := map[string]interface{}{
+	// 	"CIM_ComputerSystemPackage": map[string]interface{}{
+	// 		"response":  hwInfo.CSPResult.Body.GetResponse,
+	// 		"responses": hwInfo.CSPResult.Body.GetResponse,
+	// 	},
+	// 	"CIM_SystemPackaging": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.SPPullResult.Body.PullResponse.SystemPackageItems},
+	// 	},
+	// 	"CIM_Chassis": map[string]interface{}{
+	// 		"response":  hwInfo.ChassisResult.Body.PackageResponse,
+	// 		"responses": []interface{}{},
+	// 	}, "CIM_Chip": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.ChipResult.Body.PackageResponse},
+	// 	}, "CIM_Card": map[string]interface{}{
+	// 		"response":  hwInfo.CardResult.Body.PackageResponse,
+	// 		"responses": []interface{}{},
+	// 	}, "CIM_BIOSElement": map[string]interface{}{
+	// 		"response":  hwInfo.BiosResult.Body.GetResponse,
+	// 		"responses": []interface{}{},
+	// 	}, "CIM_Processor": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.ProcessorResult.Body.PackageResponse},
+	// 	}, "CIM_PhysicalMemory": map[string]interface{}{
+	// 		"responses": hwInfo.PhysicalMemoryResult.Body.PullResponse.MemoryItems,
+	// 	}, "CIM_MediaAccessDevice": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
+	// 	}, "CIM_PhysicalPackage": map[string]interface{}{
+	// 		"responses": []interface{}{hwInfo.PPPullResult.Body.PullResponse.PhysicalPackage},
+	// 	},
+	// }
+
+	// c.JSON(http.StatusOK, v1HwInfo)
 	c.JSON(http.StatusOK, hwInfo)
 }
 

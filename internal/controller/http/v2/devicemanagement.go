@@ -22,7 +22,7 @@ func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 	{
 		h.GET("version/:guid", r.getVersion)
 		h.GET("features/:guid", r.getFeatures)
-	}
+		h.GET("hardwareInfo/:guid", r.getHardwareInfo)}
 }
 
 func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
@@ -51,4 +51,18 @@ func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, features)
+}
+
+func (r *deviceManagementRoutes) getHardwareInfo(c *gin.Context) {
+	guid := c.Param("guid")
+
+	_, hwInfo, err := r.d.GetHardwareInfo(c.Request.Context(), guid)
+	if err != nil {
+		r.l.Error(err, "http - v2 - getHardwareInfo")
+		v1.ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, hwInfo)
 }

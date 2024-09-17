@@ -3,12 +3,22 @@ package devices
 import (
 	"context"
 	"strconv"
+	"unsafe"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+
+	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
+	// "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chassis"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chip"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
 )
 
 func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v2 dtov2.Version, err error) {
@@ -87,20 +97,24 @@ func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Feat
 	return features, nil
 }
 
-func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (v1 dto.HardwareInfoResults, v2 dtov2.HardwareInfoResults, err error) {
+		item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.HardwareInfoResults{}, dtov2.HardwareInfoResults{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	hwInfo, err := device.GetHardwareInfo()
 	if err != nil {
-		return nil, err
+		return dto.HardwareInfoResults{}, dtov2.HardwareInfoResults{}, err
 	}
 
-	return hwInfo, nil
+	d1 := *uc.getHardwareInfoEntityToDTO(&hwInfo)
+
+	d2 := *uc.getHardwareInfoEntityToDTOv2(&hwInfo)
+
+	return d1, d2, nil
 }
 
 func (uc *UseCase) GetDiskInfo(c context.Context, guid string) (interface{}, error) {
@@ -258,3 +272,480 @@ func (uc *UseCase) setupAndConfigurationServiceResponseEntityToDTO(d *setupandco
 
 	return d1
 }
+
+func (uc *UseCase) getHardwareInfoEntityToDTO(d *wsmanAPI.HWResults) *dto.HardwareInfoResults {
+	d1 := &dto.HardwareInfoResults{
+		CIM_ComputerSystemPackage: dto.CIM_ComputerSystemPackage{
+			Response: d.CSPResult.Body.GetResponse.PlatformGUID,
+			Responses: d.CSPResult.Body.GetResponse.PlatformGUID,
+		},
+		CIM_SystemPackage: dto.CIM_SystemPackage{},
+		CIM_Chassis: dto.CIM_Chassis{
+			Response: dto.CIMChassisResponse{
+				Version:           d.ChassisResult.Body.PackageResponse.Version,
+				SerialNumber:      d.ChassisResult.Body.PackageResponse.SerialNumber,
+				Model:             d.ChassisResult.Body.PackageResponse.Model,
+				Manufacturer:      d.ChassisResult.Body.PackageResponse.Manufacturer,
+				ElementName:       d.ChassisResult.Body.PackageResponse.ElementName,
+				CreationClassName: d.ChassisResult.Body.PackageResponse.CreationClassName,
+				Tag:               d.ChassisResult.Body.PackageResponse.Tag,
+				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChassisResult.Body.PackageResponse.OperationalStatus)),
+				// OperationalStatus:  operationalStatusToDTOv2(d.ChassisResult.Body.PackageResponse.OperationalStatus),
+				PackageType:        int(d.ChassisResult.Body.PackageResponse.PackageType),
+				ChassisPackageType: int(d.ChassisResult.Body.PackageResponse.ChassisPackageType),
+			},
+		},
+		// CIM_Chip: dto.CIM_Chip{
+		// 	Responses: []dto.CIMChip{
+		// 		Get: dto.CIMChipGet{
+		// 			CanBeFRUed:        d.ChipResult.Body.PackageResponse.CanBeFRUed,
+		// 			CreationClassName: d.ChipResult.Body.PackageResponse.CreationClassName,
+		// 			ElementName:       d.ChipResult.Body.PackageResponse.ElementName,
+		// 			Manufacturer:      d.ChipResult.Body.PackageResponse.Manufacturer,
+		// 			OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChipResult.Body.PackageResponse.OperationalStatus)),
+		// 			// OperationalStatus: d.ChipResult.Body.PackageResponse.OperationalStatus,
+		// 			Tag:     d.ChipResult.Body.PackageResponse.Tag,
+		// 			Version: d.ChipResult.Body.PackageResponse.Version,
+		// 		},
+		// 	},
+		// 	Pull: chipItemsToDTOv2(d.ChipResult.Body.PullResponse.ChipItems),
+		// },
+		CIM_Card: dto.CIM_Card{
+			Response: dto.CIMCardResponse{
+				Get: dto.CIMCardResponseGet{
+					CanBeFRUed:        d.CardResult.Body.PackageResponse.CanBeFRUed,
+					CreationClassName: d.CardResult.Body.PackageResponse.CreationClassName,
+					ElementName:       d.CardResult.Body.PackageResponse.ElementName,
+					Manufacturer:      d.CardResult.Body.PackageResponse.Manufacturer,
+					Model:             d.CardResult.Body.PackageResponse.Model,
+					OperationalStatus: *(*[]int)(unsafe.Pointer(&d.CardResult.Body.PackageResponse.OperationalStatus)),
+					// OperationalStatus: d.CardResult.Body.PackageResponse.OperationalStatus,
+					PackageType:  int(d.CardResult.Body.PackageResponse.PackageType),
+					SerialNumber: d.CardResult.Body.PackageResponse.SerialNumber,
+					Tag:          d.CardResult.Body.PackageResponse.Tag,
+					Version:      d.CardResult.Body.PackageResponse.Version,
+				},
+				//Pull: cardItemsToDTOv2(d.CardResult.Body.PullResponse.CardItems),
+			},
+		},
+		CIM_BIOSElement: dto.CIM_BIOSElement{
+			Response: dto.CIMBIOSElementResponse{
+				TargetOperatingSystem: dto.TargetOperatingSystem(d.BiosResult.Body.GetResponse.TargetOperatingSystem),
+				SoftwareElementID:     d.BiosResult.Body.GetResponse.SoftwareElementID,
+				SoftwareElementState:  dto.SoftwareElementState(d.BiosResult.Body.GetResponse.SoftwareElementState),
+				Name:                  d.BiosResult.Body.GetResponse.Name,
+				OperationalStatus:     *(*[]int)(unsafe.Pointer(&d.BiosResult.Body.GetResponse.OperationalStatus)),
+				// OperationalStatus:     d.BiosResult.Body.GetResponse.OperationalStatus,
+				ElementName:  d.BiosResult.Body.GetResponse.ElementName,
+				Version:      d.BiosResult.Body.GetResponse.Version,
+				Manufacturer: d.BiosResult.Body.GetResponse.Manufacturer,
+				PrimaryBIOS:  d.BiosResult.Body.GetResponse.PrimaryBIOS,
+				ReleaseDate:  dto.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
+			},
+			// Pull: biosItemsToDTOv2(d.BiosResult.Body.PullResponse.BiosElementItems),
+		},
+		// CIM_Processor: dto.CIM_Processor{
+		// 	Get: dto.CIMProcessorResponsesGet{
+		// 		DeviceID:                d.ProcessorResult.Body.PackageResponse.DeviceID,
+		// 		CreationClassName:       d.ProcessorResult.Body.PackageResponse.CreationClassName,
+		// 		SystemName:              d.ProcessorResult.Body.PackageResponse.SystemName,
+		// 		SystemCreationClassName: d.ProcessorResult.Body.PackageResponse.SystemCreationClassName,
+		// 		ElementName:             d.ProcessorResult.Body.PackageResponse.ElementName,
+		// 		OperationalStatus:       *(*[]int)(unsafe.Pointer(&d.ProcessorResult.Body.PackageResponse.OperationalStatus)),
+		// 		// OperationalStatus:       d.ProcessorResult.Body.PackageResponse.OperationalStatus,
+		// 		HealthState:            dtov2.HealthState(d.ProcessorResult.Body.PackageResponse.HealthState),
+		// 		EnabledState:           dtov2.EnabledState(d.ProcessorResult.Body.PackageResponse.EnabledState),
+		// 		RequestedState:         dtov2.RequestedState(d.ProcessorResult.Body.PackageResponse.RequestedState),
+		// 		Role:                   d.ProcessorResult.Body.PackageResponse.Role,
+		// 		Family:                 d.ProcessorResult.Body.PackageResponse.Family,
+		// 		OtherFamilyDescription: d.ProcessorResult.Body.PackageResponse.OtherFamilyDescription,
+		// 		UpgradeMethod:          dtov2.UpgradeMethod(d.ProcessorResult.Body.PackageResponse.UpgradeMethod),
+		// 		MaxClockSpeed:          d.ProcessorResult.Body.PackageResponse.MaxClockSpeed,
+		// 		CurrentClockSpeed:      d.ProcessorResult.Body.PackageResponse.CurrentClockSpeed,
+		// 		Stepping:               d.ProcessorResult.Body.PackageResponse.Stepping,
+		// 		CPUStatus:              dtov2.CPUStatus(d.ProcessorResult.Body.PackageResponse.CPUStatus),
+		// 		ExternalBusClockSpeed:  d.ProcessorResult.Body.PackageResponse.ExternalBusClockSpeed,
+		// 	},
+		// 	Pull: processorItemsToDTOv2(d.ProcessorResult.Body.PullResponse.PackageItems),
+		// },
+		// CIM_PhysicalMemory: dto.CIM_PhysicalMemory{
+		// 	Get: dtov2.PhysicalMemory{
+		// 		PartNumber:        d.PhysicalMemoryResult.Body.MemoryResponse.PartNumber,
+		// 		SerialNumber:      d.PhysicalMemoryResult.Body.MemoryResponse.SerialNumber,
+		// 		Manufacturer:      d.PhysicalMemoryResult.Body.MemoryResponse.Manufacturer,
+		// 		ElementName:       d.PhysicalMemoryResult.Body.MemoryResponse.ElementName,
+		// 		CreationClassName: d.PhysicalMemoryResult.Body.MemoryResponse.CreationClassName,
+		// 		Tag:               d.PhysicalMemoryResult.Body.MemoryResponse.Tag,
+		// 		OperationalStatus: *(*[]int)(unsafe.Pointer(&d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus)),
+		// 		// OperationalStatus:          d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus,
+		// 		FormFactor:                 d.PhysicalMemoryResult.Body.MemoryResponse.FormFactor,
+		// 		MemoryType:                 dtov2.MemoryType(d.PhysicalMemoryResult.Body.MemoryResponse.MemoryType),
+		// 		Speed:                      d.PhysicalMemoryResult.Body.MemoryResponse.Speed,
+		// 		Capacity:                   d.PhysicalMemoryResult.Body.MemoryResponse.Capacity,
+		// 		BankLabel:                  d.PhysicalMemoryResult.Body.MemoryResponse.BankLabel,
+		// 		ConfiguredMemoryClockSpeed: d.PhysicalMemoryResult.Body.MemoryResponse.ConfiguredMemoryClockSpeed,
+		// 		IsSpeedInMhz:               d.PhysicalMemoryResult.Body.MemoryResponse.IsSpeedInMhz,
+		// 		MaxMemorySpeed:             d.PhysicalMemoryResult.Body.MemoryResponse.MaxMemorySpeed,
+		// 	},
+		// 	Pull: physicalMemoryToDTOv2(d.PhysicalMemoryResult.Body.PullResponse.MemoryItems),
+		// },
+		// CIM_MediaAccessDevices: dto.CIMMediaAccessDevice{
+		// 	Pull: mediaAccessDeviceToDTO(d.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices),
+		// },
+		// CIM_PhysicalPackage: dto.CIM_PhysicalPackage{
+		// 	PullMemoryItems: ppPullResponseMemoryToDTOv2(d.PPPullResult.Body.PullResponse),
+		// 	PullCardItems:   ppPullResponseCardToDTOv2(d.PPPullResult.Body.PullResponse),
+		// },
+	}
+
+	return d1
+}
+
+func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.HardwareInfoResults {
+	d1 := &dtov2.HardwareInfoResults{
+		ComputerSystemPackage: dtov2.CIMComputerSystemPackage{
+			PlatformGUID: d.CSPResult.Body.GetResponse.PlatformGUID,
+		},
+		SystemPackage: dtov2.CIMSystemPackage{},
+		Chassis: dtov2.CIMChassis{
+			Version:           d.ChassisResult.Body.PackageResponse.Version,
+			SerialNumber:      d.ChassisResult.Body.PackageResponse.SerialNumber,
+			Model:             d.ChassisResult.Body.PackageResponse.Model,
+			Manufacturer:      d.ChassisResult.Body.PackageResponse.Manufacturer,
+			ElementName:       d.ChassisResult.Body.PackageResponse.ElementName,
+			CreationClassName: d.ChassisResult.Body.PackageResponse.CreationClassName,
+			Tag:               d.ChassisResult.Body.PackageResponse.Tag,
+			OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChassisResult.Body.PackageResponse.OperationalStatus)),
+			// OperationalStatus:  operationalStatusToDTOv2(d.ChassisResult.Body.PackageResponse.OperationalStatus),
+			PackageType:        dtov2.PackageType(d.ChassisResult.Body.PackageResponse.PackageType),
+			ChassisPackageType: dtov2.ChassisPackageType(d.ChassisResult.Body.PackageResponse.ChassisPackageType),
+		},
+		Chip: dtov2.CIMChip{
+			Get: dtov2.ChipItems{
+				CanBeFRUed:        d.ChipResult.Body.PackageResponse.CanBeFRUed,
+				CreationClassName: d.ChipResult.Body.PackageResponse.CreationClassName,
+				ElementName:       d.ChipResult.Body.PackageResponse.ElementName,
+				Manufacturer:      d.ChipResult.Body.PackageResponse.Manufacturer,
+				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChipResult.Body.PackageResponse.OperationalStatus)),
+				// OperationalStatus: d.ChipResult.Body.PackageResponse.OperationalStatus,
+				Tag:     d.ChipResult.Body.PackageResponse.Tag,
+				Version: d.ChipResult.Body.PackageResponse.Version,
+			},
+			Pull: chipItemsToDTOv2(d.ChipResult.Body.PullResponse.ChipItems),
+		},
+		Card: dtov2.CIMCard{
+			Get: dtov2.CardItems{
+				CanBeFRUed:        d.CardResult.Body.PackageResponse.CanBeFRUed,
+				CreationClassName: d.CardResult.Body.PackageResponse.CreationClassName,
+				ElementName:       d.CardResult.Body.PackageResponse.ElementName,
+				Manufacturer:      d.CardResult.Body.PackageResponse.Manufacturer,
+				Model:             d.CardResult.Body.PackageResponse.Model,
+				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.CardResult.Body.PackageResponse.OperationalStatus)),
+				// OperationalStatus: d.CardResult.Body.PackageResponse.OperationalStatus,
+				PackageType:  dtov2.PackageType(d.CardResult.Body.PackageResponse.PackageType),
+				SerialNumber: d.CardResult.Body.PackageResponse.SerialNumber,
+				Tag:          d.CardResult.Body.PackageResponse.Tag,
+				Version:      d.CardResult.Body.PackageResponse.Version,
+			},
+			Pull: cardItemsToDTOv2(d.CardResult.Body.PullResponse.CardItems),
+		},
+		BIOSElement: dtov2.CIMBIOSElement{
+			// Get: dto.BiosElement{
+			TargetOperatingSystem: dtov2.TargetOperatingSystem(d.BiosResult.Body.GetResponse.TargetOperatingSystem),
+			SoftwareElementID:     d.BiosResult.Body.GetResponse.SoftwareElementID,
+			SoftwareElementState:  dtov2.SoftwareElementState(d.BiosResult.Body.GetResponse.SoftwareElementState),
+			Name:                  d.BiosResult.Body.GetResponse.Name,
+			OperationalStatus:     *(*[]int)(unsafe.Pointer(&d.BiosResult.Body.GetResponse.OperationalStatus)),
+			// OperationalStatus:     d.BiosResult.Body.GetResponse.OperationalStatus,
+			ElementName:  d.BiosResult.Body.GetResponse.ElementName,
+			Version:      d.BiosResult.Body.GetResponse.Version,
+			Manufacturer: d.BiosResult.Body.GetResponse.Manufacturer,
+			PrimaryBIOS:  d.BiosResult.Body.GetResponse.PrimaryBIOS,
+			ReleaseDate:  dtov2.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
+			// },
+			// Pull: biosItemsToDTOv2(d.BiosResult.Body.PullResponse.BiosElementItems),
+		},
+		Processor: dtov2.CIMProcessor{
+			Get: dtov2.ProcessorItems{
+				DeviceID:                d.ProcessorResult.Body.PackageResponse.DeviceID,
+				CreationClassName:       d.ProcessorResult.Body.PackageResponse.CreationClassName,
+				SystemName:              d.ProcessorResult.Body.PackageResponse.SystemName,
+				SystemCreationClassName: d.ProcessorResult.Body.PackageResponse.SystemCreationClassName,
+				ElementName:             d.ProcessorResult.Body.PackageResponse.ElementName,
+				OperationalStatus:       *(*[]int)(unsafe.Pointer(&d.ProcessorResult.Body.PackageResponse.OperationalStatus)),
+				// OperationalStatus:       d.ProcessorResult.Body.PackageResponse.OperationalStatus,
+				HealthState:            dtov2.HealthState(d.ProcessorResult.Body.PackageResponse.HealthState),
+				EnabledState:           dtov2.EnabledState(d.ProcessorResult.Body.PackageResponse.EnabledState),
+				RequestedState:         dtov2.RequestedState(d.ProcessorResult.Body.PackageResponse.RequestedState),
+				Role:                   d.ProcessorResult.Body.PackageResponse.Role,
+				Family:                 d.ProcessorResult.Body.PackageResponse.Family,
+				OtherFamilyDescription: d.ProcessorResult.Body.PackageResponse.OtherFamilyDescription,
+				UpgradeMethod:          dtov2.UpgradeMethod(d.ProcessorResult.Body.PackageResponse.UpgradeMethod),
+				MaxClockSpeed:          d.ProcessorResult.Body.PackageResponse.MaxClockSpeed,
+				CurrentClockSpeed:      d.ProcessorResult.Body.PackageResponse.CurrentClockSpeed,
+				Stepping:               d.ProcessorResult.Body.PackageResponse.Stepping,
+				CPUStatus:              dtov2.CPUStatus(d.ProcessorResult.Body.PackageResponse.CPUStatus),
+				ExternalBusClockSpeed:  d.ProcessorResult.Body.PackageResponse.ExternalBusClockSpeed,
+			},
+			Pull: processorItemsToDTOv2(d.ProcessorResult.Body.PullResponse.PackageItems),
+		},
+		PhysicalMemory: dtov2.CIMPhysicalMemory{
+			Get: dtov2.PhysicalMemory{
+				PartNumber:        d.PhysicalMemoryResult.Body.MemoryResponse.PartNumber,
+				SerialNumber:      d.PhysicalMemoryResult.Body.MemoryResponse.SerialNumber,
+				Manufacturer:      d.PhysicalMemoryResult.Body.MemoryResponse.Manufacturer,
+				ElementName:       d.PhysicalMemoryResult.Body.MemoryResponse.ElementName,
+				CreationClassName: d.PhysicalMemoryResult.Body.MemoryResponse.CreationClassName,
+				Tag:               d.PhysicalMemoryResult.Body.MemoryResponse.Tag,
+				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus)),
+				// OperationalStatus:          d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus,
+				FormFactor:                 d.PhysicalMemoryResult.Body.MemoryResponse.FormFactor,
+				MemoryType:                 dtov2.MemoryType(d.PhysicalMemoryResult.Body.MemoryResponse.MemoryType),
+				Speed:                      d.PhysicalMemoryResult.Body.MemoryResponse.Speed,
+				Capacity:                   d.PhysicalMemoryResult.Body.MemoryResponse.Capacity,
+				BankLabel:                  d.PhysicalMemoryResult.Body.MemoryResponse.BankLabel,
+				ConfiguredMemoryClockSpeed: d.PhysicalMemoryResult.Body.MemoryResponse.ConfiguredMemoryClockSpeed,
+				IsSpeedInMhz:               d.PhysicalMemoryResult.Body.MemoryResponse.IsSpeedInMhz,
+				MaxMemorySpeed:             d.PhysicalMemoryResult.Body.MemoryResponse.MaxMemorySpeed,
+			},
+			Pull: physicalMemoryToDTOv2(d.PhysicalMemoryResult.Body.PullResponse.MemoryItems),
+		},
+		MediaAccessDevices: dtov2.CIMMediaAccessDevice{
+			Pull: mediaAccessDeviceToDTOv2(d.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices),
+		},
+		PhysicalPackage: dtov2.CIMPhysicalPackage{
+			PullMemoryItems: ppPullResponseMemoryToDTOv2(d.PPPullResult.Body.PullResponse),
+			PullCardItems:   ppPullResponseCardToDTOv2(d.PPPullResult.Body.PullResponse),
+		},
+	}
+
+	return d1
+}
+
+func chipItemsToDTOv2(d []chip.PackageResponse) []dtov2.ChipItems {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.ChipItems, len(d))
+
+	for i := range d {
+		d2[i] = dtov2.ChipItems{
+			CanBeFRUed:        d[i].CanBeFRUed,
+			CreationClassName: d[i].CreationClassName,
+			ElementName:       d[i].ElementName,
+			Manufacturer:      d[i].Manufacturer,
+			OperationalStatus: *(*[]int)(unsafe.Pointer(&d[i].OperationalStatus)),
+			Tag:               d[i].Tag,
+			Version:           d[i].Version,
+		}
+	}
+
+	return d2
+}
+
+func cardItemsToDTOv2(d []card.PackageResponse) []dtov2.CardItems {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.CardItems, len(d))
+
+	for i := range d {
+		d2[i] = dtov2.CardItems{
+			CanBeFRUed:        d[i].CanBeFRUed,
+			CreationClassName: d[i].CreationClassName,
+			ElementName:       d[i].ElementName,
+			Manufacturer:      d[i].Manufacturer,
+			Model:             d[i].Model,
+			OperationalStatus: *(*[]int)(unsafe.Pointer(&d[i].OperationalStatus)),
+			PackageType:       dtov2.PackageType(d[i].PackageType),
+			SerialNumber:      d[i].SerialNumber,
+			Tag:               d[i].Tag,
+			Version:           d[i].Version,
+		}
+	}
+
+	return d2
+}
+
+func biosItemsToDTOv2(d []bios.BiosElement) []dtov2.CIMBIOSElement {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.CIMBIOSElement, len(d))
+
+	for i := range d {
+		d2[i] = dtov2.CIMBIOSElement{
+			TargetOperatingSystem: dtov2.TargetOperatingSystem(d[i].TargetOperatingSystem),
+			SoftwareElementID:     d[i].SoftwareElementID,
+			SoftwareElementState:  dtov2.SoftwareElementState(d[i].SoftwareElementState),
+			Name:                  d[i].Name,
+			OperationalStatus:     *(*[]int)(unsafe.Pointer(&d[i].OperationalStatus)),
+			ElementName:           d[i].ElementName,
+			Version:               d[i].Version,
+			Manufacturer:          d[i].Manufacturer,
+			PrimaryBIOS:           d[i].PrimaryBIOS,
+			ReleaseDate:           dtov2.Time(d[i].ReleaseDate),
+		}
+	}
+
+	return d2
+}
+
+func processorItemsToDTOv2(d []processor.PackageResponse) []dtov2.ProcessorItems {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.ProcessorItems, len(d))
+
+	for i := range d {
+		d2[i] = dtov2.ProcessorItems{
+			DeviceID:                d[i].DeviceID,
+			CreationClassName:       d[i].CreationClassName,
+			SystemName:              d[i].SystemName,
+			SystemCreationClassName: d[i].SystemCreationClassName,
+			ElementName:             d[i].ElementName,
+			OperationalStatus:       *(*[]int)(unsafe.Pointer(&d[i].OperationalStatus)),
+			HealthState:             dtov2.HealthState(d[i].HealthState),
+			EnabledState:            dtov2.EnabledState(d[i].EnabledState),
+			RequestedState:          dtov2.RequestedState(d[i].RequestedState),
+			Role:                    d[i].Role,
+			Family:                  d[i].Family,
+			OtherFamilyDescription:  d[i].OtherFamilyDescription,
+			UpgradeMethod:           dtov2.UpgradeMethod(d[i].UpgradeMethod),
+			MaxClockSpeed:           d[i].MaxClockSpeed,
+			CurrentClockSpeed:       d[i].CurrentClockSpeed,
+			Stepping:                d[i].Stepping,
+			CPUStatus:               dtov2.CPUStatus(d[i].CPUStatus),
+			ExternalBusClockSpeed:   d[i].ExternalBusClockSpeed,
+		}
+	}
+
+	return d2
+}
+
+func physicalMemoryToDTOv2(d []physical.PhysicalMemory) []dtov2.PhysicalMemory {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.PhysicalMemory, len(d))
+
+	for i := range d {
+		d2[i] = dtov2.PhysicalMemory{
+			PartNumber:                 d[i].PartNumber,
+			SerialNumber:               d[i].SerialNumber,
+			Manufacturer:               d[i].Manufacturer,
+			ElementName:                d[i].ElementName,
+			CreationClassName:          d[i].CreationClassName,
+			Tag:                        d[i].Tag,
+			OperationalStatus:          *(*[]int)(unsafe.Pointer(&d[i].OperationalStatus)),
+			FormFactor:                 d[i].FormFactor,
+			MemoryType:                 dtov2.MemoryType(d[i].MemoryType),
+			Speed:                      d[i].Speed,
+			Capacity:                   d[i].Capacity,
+			BankLabel:                  d[i].BankLabel,
+			ConfiguredMemoryClockSpeed: d[i].ConfiguredMemoryClockSpeed,
+			IsSpeedInMhz:               d[i].IsSpeedInMhz,
+			MaxMemorySpeed:             d[i].MaxMemorySpeed,
+		}
+	}
+
+	return d2
+}
+
+func mediaAccessDeviceToDTOv2(d []mediaaccess.MediaAccessDevice) []dtov2.MediaAccessDevice {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.MediaAccessDevice, len(d))
+
+	for i := range d {
+		d2[i] = dtov2.MediaAccessDevice{
+			// Capabilities:            d[1].Capabilities,
+			CreationClassName:       d[1].CreationClassName,
+			DeviceID:                d[1].DeviceID,
+			ElementName:             d[1].ElementName,
+			EnabledDefault:          dtov2.EnabledDefault(d[1].EnabledDefault),
+			EnabledState:            dtov2.EnabledState(d[1].EnabledState),
+			MaxMediaSize:            d[1].MaxMediaSize,
+			OperationalStatus:       *(*[]int)(unsafe.Pointer(&d[i].OperationalStatus)),
+			RequestedState:          dtov2.RequestedState(d[1].RequestedState),
+			Security:                dtov2.Security(d[1].Security),
+			SystemCreationClassName: d[1].SystemCreationClassName,
+			SystemName:              d[1].SystemName}
+	}
+
+	return d2
+}
+
+func ppPullResponseMemoryToDTOv2(d physical.PullResponse) []dtov2.PhysicalMemory {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.PhysicalMemory, len(d.MemoryItems))
+
+	for i := range d.MemoryItems {
+		d2[i] = dtov2.PhysicalMemory{
+			PartNumber:                 d.MemoryItems[i].PartNumber,
+			SerialNumber:               d.MemoryItems[i].SerialNumber,
+			Manufacturer:               d.MemoryItems[i].Manufacturer,
+			ElementName:                d.MemoryItems[i].ElementName,
+			CreationClassName:          d.MemoryItems[i].CreationClassName,
+			Tag:                        d.MemoryItems[i].Tag,
+			OperationalStatus:          *(*[]int)(unsafe.Pointer(&d.MemoryItems[i].OperationalStatus)),
+			FormFactor:                 d.MemoryItems[i].FormFactor,
+			MemoryType:                 dtov2.MemoryType(d.MemoryItems[i].MemoryType),
+			Speed:                      d.MemoryItems[i].Speed,
+			Capacity:                   d.MemoryItems[i].Capacity,
+			BankLabel:                  d.MemoryItems[i].BankLabel,
+			ConfiguredMemoryClockSpeed: d.MemoryItems[i].ConfiguredMemoryClockSpeed,
+			IsSpeedInMhz:               d.MemoryItems[i].IsSpeedInMhz,
+			MaxMemorySpeed:             d.MemoryItems[i].MaxMemorySpeed,
+		}
+	}
+
+	return d2
+}
+
+func ppPullResponseCardToDTOv2(d physical.PullResponse) []dtov2.CardItems {
+	// iterate over the data and convert each entity to dto
+	d2 := make([]dtov2.CardItems, len(d.PhysicalPackage))
+
+	for i := range d.PhysicalPackage {
+		d2[i] = dtov2.CardItems{
+			CanBeFRUed:        d.PhysicalPackage[i].CanBeFRUed,
+			CreationClassName: d.PhysicalPackage[i].CreationClassName,
+			ElementName:       d.PhysicalPackage[i].ElementName,
+			Manufacturer:      d.PhysicalPackage[i].Manufacturer,
+			Model:             d.PhysicalPackage[i].Model,
+			OperationalStatus: *(*[]int)(unsafe.Pointer(&d.PhysicalPackage[i].OperationalStatus)),
+			PackageType:       dtov2.PackageType(d.PhysicalPackage[i].PackageType),
+			SerialNumber:      d.PhysicalPackage[i].SerialNumber,
+			Tag:               d.PhysicalPackage[i].Tag,
+		}
+	}
+
+	return d2
+}
+
+// func operationalStatusToDTO[T int](d []T) []int {
+// 	// iterate over the data and convert each entity to dto
+// 	d2 := make([]int, len(d))
+
+// 	for i := range d {
+// 		d2[i] = int(d[i])
+// 	}
+// 	return d2
+// }
+
+// func operationalStatusToDTO[T IntBase](d []T) []int {
+// 	d2 := make([]int, len(d))
+// 	for i, v := range d {
+// 		d2[i] = int(v) // Explicit conversion to int
+// 	}
+// 	return d2
+// }
+
+// Define an interface for types that can convert to int
+// type IntConvertible interface {
+// 	ToInt() int
+// }
+
+// // Implement the interface for custom types
+// func (v chassis.OperationalStatus) ToInt() int {
+// 	return int(v)
+// }
+
+// // Generic function to convert slices of any custom int-based type to slices of int
+// func operationalStatus[T IntConvertible](d []T) []int {
+// 	d2 := make([]int, len(d))
+// 	for i, v := range d {
+// 		d2[i] = v.ToInt() // Use the interface method to convert to int
+// 	}
+// 	return d2
+// }
