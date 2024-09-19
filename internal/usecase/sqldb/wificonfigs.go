@@ -19,8 +19,9 @@ type WirelessRepo struct {
 }
 
 var (
-	ErrWiFiDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
-	ErrWiFiNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiDatabase                = DatabaseError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiNotUnique               = NotUniqueError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
+	ErrWiFiIEEEForeignKeyViolation = ForeignKeyViolationError{Console: consoleerrors.CreateConsoleError("WirelessRepo")}
 )
 
 // New -.
@@ -33,7 +34,7 @@ func (r *WirelessRepo) CheckProfileExists(_ context.Context, profileName, tenant
 	sqlQuery, _, err := r.Builder.
 		Select("COUNT(*) OVER() AS total_count").
 		From("wirelessconfigs").
-		Where("wireless_profile_name and tenant_id = ?", profileName, tenantID).
+		Where("wireless_profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return false, ErrWiFiDatabase.Wrap("CheckProfileExists", "r.Builder", err)
@@ -41,7 +42,7 @@ func (r *WirelessRepo) CheckProfileExists(_ context.Context, profileName, tenant
 
 	var count int
 
-	err = r.Pool.QueryRow(sqlQuery, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(sqlQuery, profileName, tenantID).Scan(&count)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -86,23 +87,25 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 
 	sqlQuery, _, err := r.Builder.
 		Select(
-			"wireless_profile_name",
-			"authentication_method",
-			"encryption_method",
-			"ssid",
-			"psk_value",
-			"psk_passphrase",
-			"link_policy",
+			"w.wireless_profile_name",
+			"w.authentication_method",
+			"w.encryption_method",
+			"w.ssid",
+			"w.psk_value",
+			"w.psk_passphrase",
+			"w.link_policy",
 			"w.tenant_id",
-			"ieee8021x_profile_name",
-			"auth_protocol",
-			"pxe_timeout integer",
-			"wired_interface",
+			"w.ieee8021x_profile_name",
+			"w.auth_protocol",
+			"w.pxe_timeout",
+			"w.wired_interface",
+			"e.pxe_timeout AS e_pxe_timeout",
+			"e.wired_interface AS e_wired_interface",
 		).
 		From("wirelessconfigs w").
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
 		Where("w.tenant_id = ?", tenantID).
-		OrderBy("wireless_profile_name").
+		OrderBy("w.wireless_profile_name").
 		Limit(uint64(top)).
 		Offset(uint64(skip)).
 		ToSql()
@@ -151,9 +154,9 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 			"link_policy",
 			"w.tenant_id",
 			"ieee8021x_profile_name",
-			"auth_protocol",
-			"pxe_timeout",
-			"wired_interface",
+			"w.auth_protocol",
+			"w.pxe_timeout",
+			"w.wired_interface",
 		).
 		From("wirelessconfigs w").
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
@@ -207,6 +210,11 @@ func (r *WirelessRepo) Delete(_ context.Context, profileName, tenantID string) (
 
 	res, err := r.Pool.Exec(sqlQuery, args...)
 	if err != nil {
+		// Check for PostgreSQL and SQLite foreign key violation errors
+		if db.CheckForeignKeyViolation(err) {
+			return false, ErrProfileWiFiConfigsForeignKeyViolation.Wrap(err.Error())
+		}
+
 		return false, ErrWiFiDatabase.Wrap("Delete", "r.Pool.Exec", err)
 	}
 
@@ -285,6 +293,10 @@ func (r *WirelessRepo) Insert(_ context.Context, p *entity.WirelessConfig) (stri
 	if err != nil {
 		if db.CheckNotUnique(err) {
 			return "", ErrWiFiNotUnique.Wrap(err.Error())
+		}
+
+		if db.CheckForeignKeyViolation(err) {
+			return "", ErrWiFiIEEEForeignKeyViolation.Wrap(err.Error())
 		}
 
 		return "", ErrWiFiDatabase.Wrap("Insert", "r.Pool.QueryRow", err)

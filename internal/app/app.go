@@ -2,16 +2,19 @@
 package app
 
 import (
+	"database/sql"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 
 	"github.com/open-amt-cloud-toolkit/console/config"
-	v1 "github.com/open-amt-cloud-toolkit/console/internal/controller/http/v1"
+	consolehttp "github.com/open-amt-cloud-toolkit/console/internal/controller/http"
 	"github.com/open-amt-cloud-toolkit/console/internal/controller/tcp/cira"
 	wsv1 "github.com/open-amt-cloud-toolkit/console/internal/controller/ws/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase"
@@ -28,7 +31,7 @@ func Run(cfg *config.Config) {
 	cfg.App.Version = Version
 	log.Info("app - Run - version: " + cfg.App.Version)
 	// Repository
-	database, err := db.New(cfg.DB.URL, db.MaxPoolSize(cfg.DB.PoolMax))
+	database, err := db.New(cfg.DB.URL, sql.Open, db.MaxPoolSize(cfg.DB.PoolMax), db.EnableForeignKeys(true))
 	if err != nil {
 		log.Fatal(fmt.Errorf("app - Run - db.New: %w", err))
 	}
@@ -49,15 +52,26 @@ func Run(cfg *config.Config) {
 	defaultConfig.AllowHeaders = cfg.HTTP.AllowedHeaders
 
 	handler.Use(cors.New(defaultConfig))
-	v1.NewRouter(handler, log, *usecases, cfg)
-	wsv1.RegisterRoutes(handler, log, usecases.Devices)
+	consolehttp.NewRouter(handler, log, *usecases, cfg)
+
+	upgrader := &websocket.Upgrader{
+		ReadBufferSize:  4096,
+		WriteBufferSize: 4096,
+		Subprotocols:    []string{"direct"},
+		CheckOrigin: func(_ *http.Request) bool {
+			return true
+		},
+		EnableCompression: false,
+	}
+
+	wsv1.RegisterRoutes(handler, log, usecases.Devices, upgrader)
 
 	ciraServer, err := cira.NewServer("config/cert.pem", "config/key.pem")
 	if err != nil {
 		log.Fatal("CIRA Server failed: %v", err)
 	}
 
-	httpServer := httpserver.New(handler, httpserver.Port("", cfg.HTTP.Port))
+	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Host, cfg.HTTP.Port))
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)

@@ -2,61 +2,32 @@ package devices
 
 import (
 	"context"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
-	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
-	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
 type (
-	Management interface {
-		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool)
+	WSMAN interface {
+		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsmanAPI.Management
 		DestroyWsmanClient(device dto.Device)
-		GetAMTVersion() ([]software.SoftwareIdentity, error)
-		GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error)
-		GetFeatures() (interface{}, error)
-		SetFeatures(dto.Features) (dto.Features, error)
-		GetAlarmOccurrences() ([]alarmclock.AlarmClockOccurrence, error)
-		CreateAlarmOccurrences(name string, startTime time.Time, interval int, deleteOnCompletion bool) (amtAlarmClock.AddAlarmOutput, error)
-		DeleteAlarmOccurrences(instanceID string) error
-		GetHardwareInfo() (interface{}, error)
-		GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error)
-		GetPowerCapabilities() (boot.BootCapabilitiesResponse, error)
-		GetGeneralSettings() (interface{}, error)
-		CancelUserConsentRequest() (interface{}, error)
-		GetUserConsentCode() (optin.StartOptIn_OUTPUT, error)
-		SendConsentCode(code int) (interface{}, error)
-		SendPowerAction(action int) (power.PowerActionResponse, error)
-		GetBootData() (boot.BootCapabilitiesResponse, error)
-		SetBootData(data boot.BootSettingDataRequest) (interface{}, error)
-		SetBootConfigRole(role int) (interface{}, error)
-		ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error)
-		GetAuditLog(startIndex int) (auditlog.Response, error)
-		GetEventLog() (messagelog.GetRecordsResponse, error)
-		GetNetworkSettings() (interface{}, error)
-		GetCertificates() (wsmanAPI.Certificates, error)
-		GetCredentialRelationships() (credential.Items, error)
-		GetConcreteDependencies() ([]concrete.ConcreteDependency, error)
+		Worker()
 	}
+
+	WebSocketConn interface {
+		ReadMessage() (int, []byte, error)
+		WriteMessage(messageType int, data []byte) error
+		Close() error
+	}
+
 	Redirection interface {
-		SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages
+		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman.Messages
 		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectClose(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)
@@ -71,6 +42,7 @@ type (
 		Delete(ctx context.Context, guid, tenantID string) (bool, error)
 		Update(ctx context.Context, d *entity.Device) (bool, error)
 		Insert(ctx context.Context, d *entity.Device) (string, error)
+		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error)
 	}
 	Feature interface {
 		// Repository/Database Calls
@@ -82,12 +54,13 @@ type (
 		Delete(ctx context.Context, guid, tenantID string) error
 		Update(ctx context.Context, d *dto.Device) (*dto.Device, error)
 		Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
+		GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
 		// Management Calls
-		GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
-		GetFeatures(ctx context.Context, guid string) (interface{}, error)
+		GetVersion(ctx context.Context, guid string) (dto.Version, dtov2.Version, error)
+		GetFeatures(ctx context.Context, guid string) (dto.Features, error)
 		SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error)
-		GetAlarmOccurrences(ctx context.Context, guid string) ([]alarmclock.AlarmClockOccurrence, error)
-		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (amtAlarmClock.AddAlarmOutput, error)
+		GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)
+		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error)
 		DeleteAlarmOccurrences(ctx context.Context, guid, instanceID string) error
 		GetHardwareInfo(ctx context.Context, guid string) (interface{}, error)
 		GetPowerState(ctx context.Context, guid string) (map[string]interface{}, error)
@@ -101,7 +74,10 @@ type (
 		GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error)
 		GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
-		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
-		GetCertificates(c context.Context, guid string) (interface{}, error)
+		GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error)
+		GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error)
+		GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error)
+		GetDiskInfo(c context.Context, guid string) (interface{}, error)
+		GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error)
 	}
 )

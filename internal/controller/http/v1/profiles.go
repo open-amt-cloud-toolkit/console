@@ -4,19 +4,31 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidationProfile = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
 
 type profileRoutes struct {
 	t profiles.Feature
 	l logger.Interface
 }
 
-func newProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Interface) {
+func NewProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Interface) {
 	r := &profileRoutes{t, l}
+
+	if binding.Validator != nil {
+		if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+			_ = v.RegisterValidation("genpasswordwone", dto.ValidateAMTPassOrGenRan)
+			_ = v.RegisterValidation("ciraortls", dto.ValidateCIRAOrTLS)
+		}
+	}
 
 	h := handler.Group("/profiles")
 	{
@@ -45,7 +57,8 @@ type ProfileCountResponse struct {
 func (r *profileRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationProfile.Wrap("get", "ShouldBindQuery", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -53,7 +66,7 @@ func (r *profileRoutes) get(c *gin.Context) {
 	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - get")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -62,7 +75,7 @@ func (r *profileRoutes) get(c *gin.Context) {
 		count, err := r.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - v1 - getCount")
-			errorResponse(c, err)
+			ErrorResponse(c, err)
 		}
 
 		countResponse := ProfileCountResponse{
@@ -92,7 +105,7 @@ func (r *profileRoutes) getByName(c *gin.Context) {
 	item, err := r.t.GetByName(c.Request.Context(), name, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - getByName")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -113,7 +126,8 @@ func (r *profileRoutes) getByName(c *gin.Context) {
 func (r *profileRoutes) insert(c *gin.Context) {
 	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationProfile.Wrap("insert", "ShouldBindJSON", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -121,7 +135,7 @@ func (r *profileRoutes) insert(c *gin.Context) {
 	newProfile, err := r.t.Insert(c.Request.Context(), &profile)
 	if err != nil {
 		r.l.Error(err, "http - v1 - insert")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -142,7 +156,8 @@ func (r *profileRoutes) insert(c *gin.Context) {
 func (r *profileRoutes) update(c *gin.Context) {
 	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationProfile.Wrap("update", "ShouldBindJSON", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -150,7 +165,7 @@ func (r *profileRoutes) update(c *gin.Context) {
 	updatedProfile, err := r.t.Update(c.Request.Context(), &profile)
 	if err != nil {
 		r.l.Error(err, "http - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -174,7 +189,7 @@ func (r *profileRoutes) delete(c *gin.Context) {
 	err := r.t.Delete(c.Request.Context(), name, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - delete")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type Redirector struct{}
@@ -21,6 +21,7 @@ func (g *Redirector) SetupWsmanClient(device dto.Device, isRedirection, logAMTMe
 		SelfSignedAllowed: device.AllowSelfSigned,
 		LogAMTMessages:    logAMTMessages,
 		IsRedirection:     isRedirection,
+		PinnedCert:        device.CertHash,
 	}
 
 	return wsman.NewMessages(clientParams)

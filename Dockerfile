@@ -1,16 +1,17 @@
 # Step 1: Modules caching
-FROM golang:1.22-alpine3.19@sha256:c46c4609d3cc74a149347161fc277e11516f523fd8aa6347c9631527da0b7a56 as modules
+FROM golang:1.23-alpine3.20@sha256:ac67716dd016429be8d4c2c53a248d7bcdf06d34127d3dc451bda6aa5a87bc06 as modules
 COPY go.mod go.sum /modules/
 WORKDIR /modules
+RUN apk add --no-cache git
 RUN go mod download
 
 # Step 2: Builder
-FROM golang:1.22-alpine3.19@sha256:c46c4609d3cc74a149347161fc277e11516f523fd8aa6347c9631527da0b7a56 as builder
+FROM golang:1.23-alpine3.20@sha256:ac67716dd016429be8d4c2c53a248d7bcdf06d34127d3dc451bda6aa5a87bc06 as builder
 COPY --from=modules /go/pkg /go/pkg
 COPY . /app
 WORKDIR /app
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -tags migrate -o /bin/app ./cmd/app
+  go build -o /bin/app ./cmd/app
 
 # Step 3: Final
 FROM scratch

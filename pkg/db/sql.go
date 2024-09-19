@@ -1,4 +1,3 @@
-// Package postgres implements postgres connection.
 package db
 
 import (
@@ -12,7 +11,8 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib" // pgx driver
-	_ "modernc.org/sqlite"             // sqlite3 driver
+	"modernc.org/sqlite"               // sqlite driver
+	sqlite3 "modernc.org/sqlite/lib"
 )
 
 const (
@@ -29,13 +29,17 @@ type SQL struct {
 	connAttempts int
 	connTimeout  time.Duration
 
-	Builder    squirrel.StatementBuilderType
-	Pool       *sql.DB
-	IsEmbedded bool
+	Builder           squirrel.StatementBuilderType
+	Pool              *sql.DB
+	IsEmbedded        bool
+	enableForeignKeys bool
 }
 
+// OpenFunc is a type for functions that open a database connection.
+type OpenFunc func(driverName, dataSourceName string) (*sql.DB, error)
+
 // New -.
-func New(url string, opts ...Option) (*SQL, error) {
+func New(url string, dbOpen OpenFunc, opts ...Option) (*SQL, error) {
 	db := &SQL{
 		maxPoolSize:  _defaultMaxPoolSize,
 		connAttempts: _defaultConnAttempts,
@@ -52,21 +56,32 @@ func New(url string, opts ...Option) (*SQL, error) {
 	var err error
 
 	if strings.HasPrefix(url, "postgres://") {
-		err = setupHostedDB(db, url)
+		err = setupHostedDB(db, url, dbOpen)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		err = setupEmbeddedDB(db)
-		if err != nil {
-			return nil, err
-		}
+
+		return db, nil
+	}
+
+	err = setupEmbeddedDB(db, dbOpen)
+	if err != nil {
+		return nil, err
+	}
+
+	if !db.enableForeignKeys {
+		return db, err
+	}
+
+	err = enableForeignKeys(db.Pool)
+	if err != nil {
+		return nil, err
 	}
 
 	return db, nil
 }
 
-func setupEmbeddedDB(db *SQL) error {
+func setupEmbeddedDB(db *SQL, dbOpen OpenFunc) error {
 	db.IsEmbedded = true
 
 	dirname, err := os.UserConfigDir()
@@ -74,7 +89,9 @@ func setupEmbeddedDB(db *SQL) error {
 		return err
 	}
 
-	db.Pool, err = sql.Open("sqlite", filepath.Join(dirname, "device-management-toolkit", "console.db"))
+	dbPath := filepath.Join(dirname, "device-management-toolkit", "console.db?_pragma=journal_mode(WAL)")
+
+	db.Pool, err = dbOpen("sqlite", dbPath)
 	if err != nil {
 		return err
 	}
@@ -82,10 +99,21 @@ func setupEmbeddedDB(db *SQL) error {
 	return nil
 }
 
-func setupHostedDB(db *SQL, url string) error {
+func enableForeignKeys(db *sql.DB) error {
+	_, err := db.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		db.Close()
+
+		return err
+	}
+
+	return nil
+}
+
+func setupHostedDB(db *SQL, url string, dbOpen OpenFunc) error {
 	var err error
 
-	db.Pool, err = sql.Open("pgx", url)
+	db.Pool, err = dbOpen("pgx", url)
 	if err != nil {
 		return err
 	}
@@ -106,6 +134,29 @@ func CheckNotUnique(err error) bool {
 		if pgErr.Code == UniqueViolation {
 			return true
 		}
+	}
+
+	var sqlErr *sqlite.Error
+	if errors.As(err, &sqlErr) {
+		if sqlErr.Code() == sqlite3.SQLITE_CONSTRAINT_UNIQUE || sqlErr.Code() == sqlite3.SQLITE_CONSTRAINT_PRIMARYKEY {
+			return true
+		}
+	}
+
+	return false
+}
+
+func CheckForeignKeyViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == "23503" {
+			return true
+		}
+	}
+
+	// SQLite constraint error check
+	if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
+		return true
 	}
 
 	return false

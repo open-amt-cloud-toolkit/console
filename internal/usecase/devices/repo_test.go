@@ -8,7 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -19,23 +19,25 @@ type testUsecase struct {
 	tenantID string
 	top      int
 	skip     int
-	mock     func(*MockRepository, *MockManagement)
+	mock     func(*MockRepository, *MockWSMAN)
 	res      interface{}
 	err      error
 }
 
-func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository, *MockManagement) {
+func devicesTest(t *testing.T) (*devices.UseCase, *MockRepository, *MockWSMAN) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	repo := NewMockRepository(mockCtl)
-	management := NewMockManagement(mockCtl)
-	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
-	return u, repo, management
+	log := logger.New("error")
+	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+
+	return u, repo, wsmanMock
 }
 
 func TestGetCount(t *testing.T) {
@@ -44,7 +46,7 @@ func TestGetCount(t *testing.T) {
 	tests := []testUsecase{
 		{
 			name: "empty result",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, nil)
 			},
 			res: 0,
@@ -52,7 +54,7 @@ func TestGetCount(t *testing.T) {
 		},
 		{
 			name: "result with error",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, devices.ErrDatabase)
 			},
 			res: 0,
@@ -96,12 +98,12 @@ func TestGet(t *testing.T) {
 		{
 			GUID:     "guid-123",
 			TenantID: "tenant-id-456",
-			Tags:     []string{""},
+			Tags:     nil,
 		},
 		{
 			GUID:     "guid-456",
 			TenantID: "tenant-id-456",
-			Tags:     []string{""},
+			Tags:     nil,
 		},
 	}
 
@@ -111,7 +113,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testDevices, nil)
@@ -124,7 +126,7 @@ func TestGet(t *testing.T) {
 			top:      5,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, devices.ErrDatabase)
@@ -137,7 +139,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     20,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Device{}, nil)
@@ -180,7 +182,7 @@ func TestGetByID(t *testing.T) {
 	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
-		Tags:     []string{""},
+		Tags:     nil,
 	}
 
 	tests := []testUsecase{
@@ -188,7 +190,7 @@ func TestGetByID(t *testing.T) {
 			name:     "successful retrieval",
 			guid:     "device-guid-123",
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					GetByID(context.Background(), "device-guid-123", "tenant-id-456").
 					Return(device, nil)
@@ -200,7 +202,7 @@ func TestGetByID(t *testing.T) {
 			name:     "device not found",
 			guid:     "device-guid-unknown",
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					GetByID(context.Background(), "device-guid-unknown", "tenant-id-456").
 					Return(nil, nil)
@@ -240,7 +242,7 @@ func TestDelete(t *testing.T) {
 			name:     "successful deletion",
 			guid:     "guid-123",
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Delete(context.Background(), "guid-123", "tenant-id-456").
 					Return(true, nil)
@@ -251,7 +253,7 @@ func TestDelete(t *testing.T) {
 			name:     "deletion fails - device not found",
 			guid:     "guid-456",
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Delete(context.Background(), "guid-456", "tenant-id-456").
 					Return(false, nil)
@@ -273,7 +275,7 @@ func TestDelete(t *testing.T) {
 
 			if tc.err != nil {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.err.Error())
+				require.Equal(t, err.Error(), tc.err.Error())
 			} else {
 				require.NoError(t, err)
 			}
@@ -287,18 +289,19 @@ func TestUpdate(t *testing.T) {
 	device := &entity.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
+		Tags:     "hello,test",
 	}
 
 	deviceDTO := &dto.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
-		Tags:     []string{""},
+		Tags:     []string{"hello", "test"},
 	}
 
 	tests := []testUsecase{
 		{
 			name: "successful update",
-			mock: func(repo *MockRepository, management *MockManagement) {
+			mock: func(repo *MockRepository, management *MockWSMAN) {
 				repo.EXPECT().
 					Update(context.Background(), device).
 					Return(true, nil)
@@ -313,7 +316,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - not found",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Update(context.Background(), device).
 					Return(false, nil)
@@ -323,7 +326,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - database error",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				repo.EXPECT().
 					Update(context.Background(), device).
 					Return(false, devices.ErrDatabase)
@@ -356,7 +359,7 @@ func TestInsert(t *testing.T) {
 	tests := []testUsecase{
 		{
 			name: "successful insertion",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				device := &entity.Device{
 					GUID:     "device-guid-123",
 					TenantID: "tenant-id-456",
@@ -374,7 +377,7 @@ func TestInsert(t *testing.T) {
 		},
 		{
 			name: "insertion fails - database error",
-			mock: func(repo *MockRepository, _ *MockManagement) {
+			mock: func(repo *MockRepository, _ *MockWSMAN) {
 				device := &entity.Device{
 					GUID:     "device-guid-123",
 					TenantID: "tenant-id-456",

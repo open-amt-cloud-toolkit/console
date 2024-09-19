@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{}, error) {
@@ -13,9 +13,9 @@ func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	response, err := uc.device.CancelUserConsentRequest()
+	response, err := device.CancelUserConsentRequest()
 	if err != nil {
 		return nil, err
 	}
@@ -29,9 +29,9 @@ func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[strin
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
-	code, err := uc.device.GetUserConsentCode()
+	code, err := device.GetUserConsentCode()
 	if err != nil {
 		return nil, err
 	}
@@ -49,11 +49,11 @@ func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsen
 		return nil, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	consentCode, _ := strconv.Atoi(userConsent.ConsentCode)
 
-	response, err := uc.device.SendConsentCode(consentCode)
+	response, err := device.SendConsentCode(consentCode)
 	if err != nil {
 		return nil, err
 	}

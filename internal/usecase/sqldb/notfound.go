@@ -12,7 +12,7 @@ func (e NotFoundError) Error() string {
 
 func (e NotFoundError) Wrap(call, function string, err error) error {
 	_ = e.Console.Wrap(call, function, err)
-	e.Console.Message = "requested resource not found"
+	e.Console.Message = "Error not found"
 
 	return e
 }

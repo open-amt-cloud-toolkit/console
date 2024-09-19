@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -104,6 +104,14 @@ func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) err
 func (uc *UseCase) Update(ctx context.Context, d *dto.WirelessConfig) (*dto.WirelessConfig, error) {
 	d1 := uc.dtoToEntity(d)
 
+	// check if the IEEE profile is exists in the database
+	if d1.IEEE8021xProfileName != nil && *d1.IEEE8021xProfileName != "" {
+		_, err := uc.ieee.GetByName(ctx, *d1.IEEE8021xProfileName, d.TenantID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	updated, err := uc.repo.Update(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Update", "uc.repo.Update", err)
@@ -125,6 +133,14 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.WirelessConfig) (*dto.Wire
 
 func (uc *UseCase) Insert(ctx context.Context, d *dto.WirelessConfig) (*dto.WirelessConfig, error) {
 	d1 := uc.dtoToEntity(d)
+
+	// check if the IEEE profile is exists in the database
+	if d1.IEEE8021xProfileName != nil && *d1.IEEE8021xProfileName != "" {
+		_, err := uc.ieee.GetByName(ctx, *d1.IEEE8021xProfileName, d.TenantID)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	_, err := uc.repo.Insert(ctx, d1)
 	if err != nil {

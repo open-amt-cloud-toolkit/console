@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -29,7 +29,7 @@ func wifiTest(t *testing.T) (*MockWiFiConfigsFeature, *gin.Engine) {
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
 
-	newWirelessConfigRoutes(handler, wificonfig, log)
+	NewWirelessConfigRoutes(handler, wificonfig, log)
 
 	return wificonfig, engine
 }
@@ -86,7 +86,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 				wificonfig.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "get wificonfig by name",
@@ -108,7 +108,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 				wificonfig.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert wificonfig",
@@ -152,7 +152,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			},
 			response:     wificonfigs.ErrDatabase,
 			requestBody:  requestWiFiConfig,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert wificonfig validation - failed",
@@ -173,7 +173,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 				wificonfig.EXPECT().Insert(context.Background(), wificonfigTest).Return(nil, wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
-			requestBody:  dto.WirelessConfig{SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"},
+			requestBody:  dto.WirelessConfig{AuthenticationMethod: 4, EncryptionMethod: 3, SSID: "exampleSSID", PSKValue: 12345, PSKPassphrase: "examplepassphrase", ProfileName: "newprofile", LinkPolicy: []int{1, 2, 3}, TenantID: "tenant1", Version: "1.0"},
 			expectedCode: http.StatusBadRequest,
 		},
 		{
@@ -194,7 +194,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 				wificonfig.EXPECT().Delete(context.Background(), "profile", "").Return(wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "update wificonfig",
@@ -238,7 +238,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			},
 			response:     wificonfigs.ErrDatabase,
 			requestBody:  requestWiFiConfig,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 	}
 

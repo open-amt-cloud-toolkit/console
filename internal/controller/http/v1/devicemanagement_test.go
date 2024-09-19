@@ -12,11 +12,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -30,18 +30,18 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 
 	log := logger.New("error")
 	deviceManagement := NewMockDeviceManagementFeature(mockCtl)
-
+	amtExplorerMock := NewMockAMTExplorerFeature(mockCtl)
 	engine := gin.New()
 	handler := engine.Group("/api/v1")
 
-	newAmtRoutes(handler, deviceManagement, log)
+	NewAmtRoutes(handler, deviceManagement, amtExplorerMock, log)
 
 	return deviceManagement, engine
 }
 
 var aGoodTime = time.Unix(int64(1073007983), 0)
 
-func TestGetNetworkSettings(t *testing.T) {
+func TestDeviceManagement(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -59,10 +59,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetVersion(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"version": "1.0.0"}, nil)
+					Return(dto.Version{}, dtov2.Version{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"version": "1.0.0"},
+			response:     dto.Version{},
 		},
 		{
 			name:   "getFeatures - successful retrieval",
@@ -70,10 +70,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"features": []string{"feature1", "feature2"}}, nil)
+					Return(dto.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"features": []string{"feature1", "feature2"}},
+			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "redirection": false, "optInState": 0, "userConsent": ""},
 		},
 		{
 			name:        "setFeatures - successful setting",
@@ -92,10 +92,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetAlarmOccurrences(context.Background(), "valid-guid").
-					Return([]alarmclock.AlarmClockOccurrence{}, nil)
+					Return([]dto.AlarmClockOccurrence{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     []alarmclock.AlarmClockOccurrence{},
+			response:     []dto.AlarmClockOccurrence{},
 		},
 		{
 			name:   "deleteAlarmOccurrences - successful deletion",
@@ -123,6 +123,17 @@ func TestGetNetworkSettings(t *testing.T) {
 			},
 			expectedCode: http.StatusOK,
 			response:     map[string]interface{}{"hardware": "info"},
+		},
+		{
+			name:   "getDiskInfo - successful retrieval",
+			url:    "/api/v1/amt/diskInfo/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetDiskInfo(context.Background(), "valid-guid").
+					Return(map[string]interface{}{"disk": "info"}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     map[string]interface{}{"disk": "info"},
 		},
 		{
 			name:   "getPowerState - successful retrieval",
@@ -192,10 +203,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetNetworkSettings(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"": ""}, nil)
+					Return(dto.NetworkSettings{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"": ""},
+			response:     dto.NetworkSettings{},
 		},
 		{
 			name:   "getCertificates - successful retrieval",
@@ -203,10 +214,10 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"": ""}, nil)
+					Return(dto.SecuritySettings{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"": ""},
+			response:     dto.SecuritySettings{},
 		},
 		{
 			name:   "getCertificates - failed retrieval",
@@ -214,10 +225,32 @@ func TestGetNetworkSettings(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
-					Return(nil, ErrGeneral)
+					Return(dto.SecuritySettings{}, ErrGeneral)
 			},
 			expectedCode: http.StatusInternalServerError,
-			response:     nil,
+			response:     dto.SecuritySettings{},
+		},
+		{
+			name:   "getTLSsettingData - successful retrieval",
+			url:    "/api/v1/amt/tls/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
+					Return([]dto.SettingDataResponse{}, nil)
+			},
+			expectedCode: http.StatusOK,
+			response:     []dto.SettingDataResponse{},
+		},
+		{
+			name:   "getTLSsettingData - failed retrieval",
+			url:    "/api/v1/amt/tls/valid-guid",
+			method: http.MethodGet,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
+					Return([]dto.SettingDataResponse{}, ErrGeneral)
+			},
+			expectedCode: http.StatusInternalServerError,
+			response:     []dto.SettingDataResponse{},
 		},
 	}
 

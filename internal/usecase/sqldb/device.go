@@ -73,7 +73,8 @@ func (r *DeviceRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 			"username",
 			"password",
 			"usetls",
-			"allowselfsigned").
+			"allowselfsigned",
+			"certhash").
 		From("devices").
 		Where("tenantid = ?", tenantID).
 		OrderBy("guid").
@@ -95,20 +96,20 @@ func (r *DeviceRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 
 	defer rows.Close()
 
-	domains := make([]entity.Device, 0)
+	devices := make([]entity.Device, 0)
 
 	for rows.Next() {
 		d := entity.Device{}
 
-		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned)
+		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned, &d.CertHash)
 		if err != nil {
 			return nil, ErrDeviceDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
 
-		domains = append(domains, d)
+		devices = append(devices, d)
 	}
 
-	return domains, nil
+	return devices, nil
 }
 
 // GetByID -.
@@ -128,7 +129,8 @@ func (r *DeviceRepo) GetByID(_ context.Context, guid, tenantID string) (*entity.
 			"username",
 			"password",
 			"usetls",
-			"allowselfsigned").
+			"allowselfsigned",
+			"certhash").
 		From("devices").
 		Where("guid = ? and tenantid = ?").
 		ToSql()
@@ -152,7 +154,7 @@ func (r *DeviceRepo) GetByID(_ context.Context, guid, tenantID string) (*entity.
 	for rows.Next() {
 		d := &entity.Device{}
 
-		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned)
+		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned, &d.CertHash)
 		if err != nil {
 			return d, ErrDeviceDatabase.Wrap("Get", "rows.Scan: ", err)
 		}
@@ -248,35 +250,28 @@ func (r *DeviceRepo) GetByTags(_ context.Context, tags []string, method string, 
 		Offset(uint64(offset)).
 		ToSql()
 	if err != nil {
-		return []entity.Device{}, ErrDeviceDatabase.Wrap("GetByTags", "r.Builder: ", err)
+		return nil, ErrDeviceDatabase.Wrap("GetByTags", "r.Builder: ", err)
 	}
 
 	rows, err := r.Pool.Query(sqlQuery, args...)
 	if err != nil {
-		return []entity.Device{}, ErrDeviceDatabase.Wrap("GetByTags", "r.Pool.Query", err)
+		return nil, ErrDeviceDatabase.Wrap("GetByTags", "r.Pool.QueryContext", err)
 	}
-
 	defer rows.Close()
 
 	if rows.Err() != nil {
-		return nil, ErrDeviceDatabase.Wrap("Get", "rows.Err", rows.Err())
+		return nil, ErrDeviceDatabase.Wrap("GetByTags", "rows.Err", rows.Err())
 	}
 
 	devices := make([]entity.Device, 0)
 
 	for rows.Next() {
-		d := entity.Device{}
-
-		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo)
-		if err != nil {
-			return []entity.Device{d}, ErrDeviceDatabase.Wrap("GetByTags", "rows.Scan", err)
+		var d entity.Device
+		if err := rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo); err != nil {
+			return nil, ErrDeviceDatabase.Wrap("GetByTags", "rows.Scan", err)
 		}
 
 		devices = append(devices, d)
-	}
-
-	if len(devices) == 0 {
-		return []entity.Device{}, nil
 	}
 
 	return devices, nil
@@ -323,6 +318,7 @@ func (r *DeviceRepo) Update(_ context.Context, d *entity.Device) (bool, error) {
 		Set("password", d.Password).
 		Set("useTLS", d.UseTLS).
 		Set("allowSelfSigned", d.AllowSelfSigned).
+		Set("certhash", d.CertHash).
 		Where("guid = ? AND tenantid = ?", d.GUID, d.TenantID).
 		ToSql()
 	if err != nil {
@@ -346,8 +342,8 @@ func (r *DeviceRepo) Update(_ context.Context, d *entity.Device) (bool, error) {
 func (r *DeviceRepo) Insert(_ context.Context, d *entity.Device) (string, error) {
 	insertBuilder := r.Builder.
 		Insert("devices").
-		Columns("guid", "hostname", "tags", "mpsinstance", "connectionstatus", "mpsusername", "tenantid", "friendlyname", "dnssuffix", "deviceinfo", "username", "password", "usetls", "allowselfsigned").
-		Values(d.GUID, d.Hostname, d.Tags, d.MPSInstance, d.ConnectionStatus, d.MPSUsername, d.TenantID, d.FriendlyName, d.DNSSuffix, d.DeviceInfo, d.Username, d.Password, d.UseTLS, d.AllowSelfSigned)
+		Columns("guid", "hostname", "tags", "mpsinstance", "connectionstatus", "mpsusername", "tenantid", "friendlyname", "dnssuffix", "deviceinfo", "username", "password", "usetls", "allowselfsigned", "certhash").
+		Values(d.GUID, d.Hostname, d.Tags, d.MPSInstance, d.ConnectionStatus, d.MPSUsername, d.TenantID, d.FriendlyName, d.DNSSuffix, d.DeviceInfo, d.Username, d.Password, d.UseTLS, d.AllowSelfSigned, d.CertHash)
 
 	if !r.IsEmbedded {
 		insertBuilder = insertBuilder.Suffix("RETURNING xmin::text")
@@ -375,4 +371,56 @@ func (r *DeviceRepo) Insert(_ context.Context, d *entity.Device) (string, error)
 	}
 
 	return version, nil
+}
+
+func (r *DeviceRepo) GetByColumn(_ context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error) {
+	sqlQuery, _, err := r.Builder.
+		Select(
+			"guid",
+			"hostname",
+			"tags",
+			"mpsinstance",
+			"connectionstatus",
+			"mpsusername",
+			"tenantid",
+			"friendlyname",
+			"dnssuffix",
+			"deviceinfo",
+			"username",
+			"password",
+			"usetls",
+			"allowselfsigned",
+			"certhash").
+		From("devices").
+		Where(columnName+" = ? AND tenantid = ?", queryValue, tenantID).
+		ToSql()
+	if err != nil {
+		return nil, ErrDeviceDatabase.Wrap("Get", "r.Builder: ", err)
+	}
+
+	rows, err := r.Pool.Query(sqlQuery, queryValue, tenantID)
+	if err != nil {
+		return nil, ErrDeviceDatabase.Wrap("Get", "r.Pool.Query", err)
+	}
+
+	if rows.Err() != nil {
+		return nil, ErrDeviceDatabase.Wrap("Get", "rows.Err", rows.Err())
+	}
+
+	defer rows.Close()
+
+	devices := make([]entity.Device, 0)
+
+	for rows.Next() {
+		d := entity.Device{}
+
+		err = rows.Scan(&d.GUID, &d.Hostname, &d.Tags, &d.MPSInstance, &d.ConnectionStatus, &d.MPSUsername, &d.TenantID, &d.FriendlyName, &d.DNSSuffix, &d.DeviceInfo, &d.Username, &d.Password, &d.UseTLS, &d.AllowSelfSigned, &d.CertHash)
+		if err != nil {
+			return nil, ErrDeviceDatabase.Wrap("Get", "rows.Scan: ", err)
+		}
+
+		devices = append(devices, d)
+	}
+
+	return devices, nil
 }

@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
@@ -15,7 +16,9 @@ type deviceRoutes struct {
 	l logger.Interface
 }
 
-func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
+var ErrValidationDevices = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
+
+func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
 
 	h := handler.Group("/devices")
@@ -23,6 +26,9 @@ func newDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Inter
 		h.GET("", r.get)
 		h.GET("stats", r.getStats)
 		h.GET("redirectstatus/:guid", r.redirectStatus)
+		h.GET("cert/:guid", r.getDeviceCertificate)
+		h.POST("cert/:guid", r.pinDeviceCertificate)
+		h.DELETE("cert/:guid", r.deleteDeviceCertificate)
 		h.GET(":guid", r.getByID)
 		h.GET("tags", r.getTags)
 		h.POST("", r.insert)
@@ -54,7 +60,7 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 	count, err := dr.t.GetCount(c.Request.Context(), "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - getCount")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -78,40 +84,45 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 func (dr *deviceRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
 
 	tags := c.Query("tags")
+	hostname := c.Query("hostname")
+	friendlyName := c.Query("friendlyName")
 
 	var items []dto.Device
 
 	var err error
 
-	if tags != "" {
-		items, err = dr.t.GetByTags(c.Request.Context(), tags, c.Query("method"), odata.Top, odata.Skip, "")
-		if err != nil {
-			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, err)
+	switch {
+	case hostname != "":
+		items, err = dr.getByColumnOrTags(c, "HostName", hostname, odata.Top, odata.Skip, "")
 
-			return
-		}
-	} else {
+	case friendlyName != "":
+		items, err = dr.getByColumnOrTags(c, "FriendlyName", friendlyName, odata.Top, odata.Skip, "")
+
+	case tags != "":
+		items, err = dr.getByColumnOrTags(c, "Tags", tags, odata.Top, odata.Skip, "")
+
+	default:
 		items, err = dr.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
-		if err != nil {
-			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, err)
+	}
 
-			return
-		}
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - get")
+		ErrorResponse(c, err)
+
+		return
 	}
 
 	if odata.Count {
 		count, err := dr.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			dr.l.Error(err, "http - devices - v1 - get")
-			errorResponse(c, err)
+			ErrorResponse(c, err)
 
 			return
 		}
@@ -127,6 +138,25 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 	}
 }
 
+func (dr *deviceRoutes) getByColumnOrTags(c *gin.Context, column, value string, limit, skip int, tenantID string) ([]dto.Device, error) {
+	var items []dto.Device
+
+	var err error
+
+	ctx := c.Request.Context()
+	if column == "Tags" {
+		items, err = dr.t.GetByTags(ctx, value, c.Query("method"), limit, skip, tenantID)
+	} else {
+		items, err = dr.t.GetByColumn(ctx, column, value, "")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // @Summary     Get Device by ID
 // @Description Get a device by ID
 // @ID          getDevice
@@ -139,7 +169,7 @@ func (dr *deviceRoutes) get(c *gin.Context) {
 func (dr *deviceRoutes) getByID(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -149,7 +179,7 @@ func (dr *deviceRoutes) getByID(c *gin.Context) {
 	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - get")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -169,7 +199,8 @@ func (dr *deviceRoutes) getByID(c *gin.Context) {
 func (dr *deviceRoutes) insert(c *gin.Context) {
 	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDevices.Wrap("insert", "ShouldBindJSON", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -177,7 +208,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 	newDevice, err := dr.t.Insert(c.Request.Context(), &device)
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - insert")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -197,7 +228,7 @@ func (dr *deviceRoutes) insert(c *gin.Context) {
 func (dr *deviceRoutes) update(c *gin.Context) {
 	var device dto.Device
 	if err := c.ShouldBindJSON(&device); err != nil {
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -205,7 +236,7 @@ func (dr *deviceRoutes) update(c *gin.Context) {
 	updatedDevice, err := dr.t.Update(c.Request.Context(), &device)
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -228,7 +259,7 @@ func (dr *deviceRoutes) delete(c *gin.Context) {
 	err := dr.t.Delete(c.Request.Context(), guid, "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - delete")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -258,10 +289,130 @@ func (dr *deviceRoutes) getTags(c *gin.Context) {
 	tags, err := dr.t.GetDistinctTags(c.Request.Context(), "")
 	if err != nil {
 		dr.l.Error(err, "http - devices - v1 - tags")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
 
 	c.JSON(http.StatusOK, tags)
+}
+
+// @Summary     Get Device Certificate
+// @Description Get Device Certificate
+// @ID          getDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [get]
+func (dr *deviceRoutes) getDeviceCertificate(c *gin.Context) {
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - cert")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	cert, err := dr.t.GetDeviceCertificate(c.Request.Context(), item.GUID)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - cert")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	cert.GUID = item.GUID
+
+	c.JSON(http.StatusOK, cert)
+}
+
+// @Summary     Pin Device Certificate
+// @Description Pins Device Certificate
+// @ID          pinDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [post]
+func (dr *deviceRoutes) pinDeviceCertificate(c *gin.Context) {
+	var certToPin dto.PinCertificate
+	if err := c.ShouldBindBodyWithJSON(&certToPin); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - getById")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	item.CertHash = certToPin.SHA256Fingerprint
+
+	item, err = dr.t.Update(c.Request.Context(), item)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - update")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
+}
+
+// @Summary     Delete Device Certificate
+// @Description Deletes Pinned Device Certificate
+// @ID          deleteDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [delete]
+func (dr *deviceRoutes) deleteDeviceCertificate(c *gin.Context) {
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - getById")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	item.CertHash = ""
+
+	item, err = dr.t.Update(c.Request.Context(), item)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - update")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
 }

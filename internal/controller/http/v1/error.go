@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
@@ -17,37 +18,85 @@ type response struct {
 	Error string `json:"error" example:"message"`
 }
 
-func errorResponse(c *gin.Context, err error) {
+func ErrorResponse(c *gin.Context, err error) {
 	var (
-		valErr          validator.ValidationErrors
+		validatorErr    validator.ValidationErrors
 		nfErr           sqldb.NotFoundError
-		nuErr           sqldb.NotUniqueError
+		notValidErr     dto.NotValidError
 		dbErr           sqldb.DatabaseError
+		NotUniqueErr    sqldb.NotUniqueError
 		amtErr          devices.AMTError
 		certExpErr      domains.CertExpirationError
 		certPasswordErr domains.CertPasswordError
 	)
 
 	switch {
-	case errors.As(err, &valErr):
-		c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Error()})
+	case errors.As(err, &notValidErr):
+		notValidErrorHandle(c, notValidErr)
+	case errors.As(err, &validatorErr):
+		validatorErrorHandle(c, validatorErr)
+	case errors.As(err, &nfErr):
+		notFoundErrorHandle(c, nfErr)
+	case errors.As(err, &NotUniqueErr):
+		notUniqueErrorHandle(c, NotUniqueErr)
+	case errors.As(err, &dbErr):
+		dbErrorHandle(c, dbErr)
+	case errors.As(err, &amtErr):
+		amtErrorHandle(c, amtErr)
 	case errors.As(err, &certExpErr):
 		c.AbortWithStatusJSON(http.StatusBadRequest, response{certExpErr.Console.FriendlyMessage()})
 	case errors.As(err, &certPasswordErr):
 		c.AbortWithStatusJSON(http.StatusBadRequest, response{certPasswordErr.Console.FriendlyMessage()})
-	case errors.As(err, &nfErr):
-		c.AbortWithStatusJSON(http.StatusNotFound, response{nfErr.Console.FriendlyMessage()})
-	case errors.As(err, &nuErr):
-		c.AbortWithStatusJSON(http.StatusBadRequest, response{nuErr.Console.FriendlyMessage()})
-	case errors.As(err, &dbErr):
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response{dbErr.Console.FriendlyMessage()})
-	case errors.As(err, &amtErr):
-		if strings.Contains(amtErr.Console.Error(), "400 Bad Request") {
-			c.AbortWithStatusJSON(http.StatusBadRequest, response{amtErr.Console.FriendlyMessage()})
-		} else {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response{amtErr.Console.FriendlyMessage()})
-		}
 	default:
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response{"general error"})
 	}
+}
+
+func notValidErrorHandle(c *gin.Context, err dto.NotValidError) {
+	c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Console.FriendlyMessage()})
+}
+
+func validatorErrorHandle(c *gin.Context, err validator.ValidationErrors) {
+	c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Error()})
+}
+
+func notFoundErrorHandle(c *gin.Context, err sqldb.NotFoundError) {
+	message := "Error not found"
+	if err.Console.FriendlyMessage() != "" {
+		message = err.Console.FriendlyMessage()
+	}
+
+	c.AbortWithStatusJSON(http.StatusNotFound, response{message})
+}
+
+func dbErrorHandle(c *gin.Context, err sqldb.DatabaseError) {
+	var notUniqueErr sqldb.NotUniqueError
+
+	var foreignKeyViolationErr sqldb.ForeignKeyViolationError
+
+	if errors.As(err.Console.OriginalError, &notUniqueErr) {
+		notUniqueErrorHandle(c, notUniqueErr)
+
+		return
+	}
+
+	if errors.As(err.Console.OriginalError, &foreignKeyViolationErr) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, response{foreignKeyViolationErr.Console.FriendlyMessage()})
+
+		return
+	}
+
+	c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Console.FriendlyMessage()})
+}
+
+func amtErrorHandle(c *gin.Context, err devices.AMTError) {
+	if strings.Contains(err.Console.Error(), "400 Bad Request") {
+		c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Console.FriendlyMessage()})
+	} else {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response{err.Console.FriendlyMessage()})
+	}
+}
+
+func notUniqueErrorHandle(c *gin.Context, err sqldb.NotUniqueError) {
+	c.AbortWithStatusJSON(http.StatusBadRequest, response{err.Console.FriendlyMessage()})
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
@@ -32,6 +32,23 @@ func (uc *UseCase) Get(ctx context.Context, top, skip int, tenantID string) ([]d
 	data, err := uc.repo.Get(ctx, top, skip, tenantID)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Get", "uc.repo.Get", err)
+	}
+
+	// iterate over the data and convert each entity to dto
+	d1 := make([]dto.Device, len(data))
+
+	for i := range data {
+		tmpEntity := data[i] // create a new variable to avoid memory aliasing
+		d1[i] = *uc.entityToDTO(&tmpEntity)
+	}
+
+	return d1, nil
+}
+
+func (uc *UseCase) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error) {
+	data, err := uc.repo.GetByColumn(ctx, columnName, queryValue, tenantID)
+	if err != nil {
+		return nil, ErrDatabase.Wrap("GetByColumn", "uc.repo.GetByColumn", err)
 	}
 
 	// iterate over the data and convert each entity to dto
@@ -152,6 +169,9 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	d2 := uc.entityToDTO(newDevice)
+	if newDevice.Tags == "" {
+		d2.Tags = []string{}
+	}
 
 	return d2, nil
 }

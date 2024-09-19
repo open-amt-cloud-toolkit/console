@@ -10,12 +10,12 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initConsentTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initConsentTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -24,13 +24,16 @@ func initConsentTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepo
 
 	repo := NewMockRepository(mockCtl)
 
+	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock.EXPECT().Worker().Return().AnyTimes()
+
 	management := NewMockManagement(mockCtl)
 
 	log := logger.New("error")
 
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
 
-	return u, management, repo
+	return u, wsmanMock, management, repo
 }
 
 func TestCancelUserConsent(t *testing.T) {
@@ -48,12 +51,11 @@ func TestCancelUserConsent(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					CancelUserConsentRequest().
 					Return(gomock.Any(), nil)
 			},
@@ -74,7 +76,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -92,12 +94,11 @@ func TestCancelUserConsent(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					CancelUserConsentRequest().
 					Return(nil, ErrGeneral)
 			},
@@ -120,9 +121,9 @@ func TestCancelUserConsent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initConsentTest(t)
+			useCase, wsmanMock, management, repo := initConsentTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -162,12 +163,11 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetUserConsentCode().
 					Return(code, nil)
 			},
@@ -188,7 +188,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -206,12 +206,11 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetUserConsentCode().
 					Return(code, ErrGeneral)
 			},
@@ -234,9 +233,9 @@ func TestGetUserConsentCode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initConsentTest(t)
+			useCase, wsmanMock, management, repo := initConsentTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 
@@ -268,14 +267,13 @@ func TestSendConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					SendConsentCode(123456).
-					Return(gomock.Any(), nil)
+					Return(optin.SendOptInCode_OUTPUT{}, nil)
 			},
 
 			repoMock: func(repo *MockRepository) {
@@ -284,7 +282,7 @@ func TestSendConsentCode(t *testing.T) {
 					Return(device, nil)
 			},
 
-			res: gomock.Any(),
+			res: optin.SendOptInCode_OUTPUT{},
 
 			err: nil,
 		},
@@ -294,7 +292,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockManagement) {},
+			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
 
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -312,14 +310,13 @@ func TestSendConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockManagement) {
+			manMock: func(man *MockWSMAN, man2 *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					SendConsentCode(123456).
-					Return(nil, ErrGeneral)
+					Return(optin.SendOptInCode_OUTPUT{}, ErrGeneral)
 			},
 
 			repoMock: func(repo *MockRepository) {
@@ -340,9 +337,9 @@ func TestSendConsentCode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initConsentTest(t)
+			useCase, wsmanMock, management, repo := initConsentTest(t)
 
-			tc.manMock(management)
+			tc.manMock(wsmanMock, management)
 
 			tc.repoMock(repo)
 

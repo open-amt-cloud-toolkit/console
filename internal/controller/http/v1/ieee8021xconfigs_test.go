@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -29,7 +29,7 @@ func ieee8021xconfigsTest(t *testing.T) (*MockIEEE8021xConfigsFeature, *gin.Engi
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
 
-	newIEEE8021xConfigRoutes(handler, mockIEEE8021xConfigs, log)
+	NewIEEE8021xConfigRoutes(handler, mockIEEE8021xConfigs, log)
 
 	return mockIEEE8021xConfigs, engine
 }
@@ -48,9 +48,11 @@ var pxeTime = 120
 
 var ieee8021xconfigTest = dto.IEEE8021xConfig{
 	ProfileName:            "newprofile",
-	AuthenticationProtocol: 0,
+	AuthenticationProtocol: 2,
 	PXETimeout:             &pxeTime,
 	TenantID:               "tenant1",
+	Version:                "1.0",
+	WiredInterface:         false,
 }
 
 func TestIEEE8021xConfigsRoutes(t *testing.T) {
@@ -90,7 +92,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 				ieeeConfig.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "get ieee8021xconfig by name",
@@ -112,7 +114,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 				ieeeConfig.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "insert ieee8021xconfig",
@@ -134,7 +136,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
 			requestBody:  ieee8021xconfigTest,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "delete ieee8021xconfig",
@@ -154,7 +156,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 				ieeeConfig.EXPECT().Delete(context.Background(), "profile", "").Return(ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:   "update ieee8021xconfig",
@@ -176,7 +178,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
 			requestBody:  ieee8021xconfigTest,
-			expectedCode: http.StatusInternalServerError,
+			expectedCode: http.StatusBadRequest,
 		},
 	}
 

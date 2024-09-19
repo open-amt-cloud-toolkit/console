@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -15,7 +15,7 @@ type ciraConfigRoutes struct {
 	l    logger.Interface
 }
 
-func newCIRAConfigRoutes(handler *gin.RouterGroup, t ciraconfigs.Feature, l logger.Interface) {
+func NewCIRAConfigRoutes(handler *gin.RouterGroup, t ciraconfigs.Feature, l logger.Interface) {
 	r := &ciraConfigRoutes{t, l}
 
 	h := handler.Group("/ciraconfigs")
@@ -37,7 +37,7 @@ func (r *ciraConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - getCount")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -45,7 +45,7 @@ func (r *ciraConfigRoutes) get(c *gin.Context) {
 	configs, err := r.cira.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - getCount")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -54,7 +54,7 @@ func (r *ciraConfigRoutes) get(c *gin.Context) {
 		count, err := r.cira.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - CIRA configs - v1 - getCount")
-			errorResponse(c, err)
+			ErrorResponse(c, err)
 
 			return
 		}
@@ -76,7 +76,7 @@ func (r *ciraConfigRoutes) getByName(c *gin.Context) {
 	foundConfig, err := r.cira.GetByName(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - getByName")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -88,7 +88,7 @@ func (r *ciraConfigRoutes) insert(c *gin.Context) {
 	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - insert")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -96,7 +96,7 @@ func (r *ciraConfigRoutes) insert(c *gin.Context) {
 	newCiraConfig, err := r.cira.Insert(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - insert")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -108,7 +108,7 @@ func (r *ciraConfigRoutes) update(c *gin.Context) {
 	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -116,7 +116,7 @@ func (r *ciraConfigRoutes) update(c *gin.Context) {
 	updatedConfig, err := r.cira.Update(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -130,7 +130,7 @@ func (r *ciraConfigRoutes) delete(c *gin.Context) {
 	err := r.cira.Delete(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - CIRA configs - v1 - delete")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}

@@ -19,7 +19,7 @@ type IEEE8021xRepo struct {
 
 var (
 	ErrIEEE8021xDatabase  = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
-	ErrIEEE8021xNotUnique = DatabaseError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
+	ErrIEEE8021xNotUnique = NotUniqueError{Console: consoleerrors.CreateConsoleError("IEEE8021xRepo")}
 )
 
 // New -.
@@ -30,18 +30,18 @@ func NewIEEE8021xRepo(database *db.SQL, log logger.Interface) *IEEE8021xRepo {
 // CheckProfileExits -.
 func (r *IEEE8021xRepo) CheckProfileExists(_ context.Context, profileName, tenantID string) (bool, error) {
 	sqlQuery, _, err := r.Builder.
-		Select("COUNT(*) OVER() AS total_count").
+		Select("COUNT(*)").
 		From("ieee8021xconfigs").
-		Where("profile_name and tenant_id = ?", profileName, tenantID).
+		Where("profile_name = ? AND tenant_id = ?", profileName, tenantID).
 		ToSql()
 	if err != nil {
 		return false, ErrIEEE8021xDatabase.Wrap("CheckProfileExists", "r.Builder: ", err)
 	}
 
 	var count int
-
-	err = r.Pool.QueryRow(sqlQuery, tenantID).Scan(&count)
+	err = r.Pool.QueryRow(sqlQuery, profileName, tenantID).Scan(&count)
 	if err != nil {
+
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
@@ -49,7 +49,7 @@ func (r *IEEE8021xRepo) CheckProfileExists(_ context.Context, profileName, tenan
 		return false, ErrIEEE8021xDatabase.Wrap("CheckProfileExists", "r.Pool.QueryRow", err)
 	}
 
-	return true, nil
+	return count > 0, nil
 }
 
 // GetCount -.
@@ -248,7 +248,7 @@ func (r *IEEE8021xRepo) Insert(_ context.Context, p *entity.IEEE8021xConfig) (st
 
 	if err != nil {
 		if db.CheckNotUnique(err) {
-			return "", ErrIEEE8021xNotUnique
+			return "", ErrIEEE8021xNotUnique.Wrap(err.Error())
 		}
 
 		return "", ErrIEEE8021xDatabase.Wrap("Insert", "r.Pool.QueryRow", err)

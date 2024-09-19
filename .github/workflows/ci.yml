@@ -1,18 +1,18 @@
 name: CI
-on: 
+on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 permissions:
   contents: read # for actions/checkout to fetch code
 
-jobs: 
+jobs:
   formatting:
     name: runner / formatting
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
@@ -45,12 +45,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: reviewdog/action-yamllint@508148c0d959b166798f9792d1b29dddcac37348 # v1.16.0
+      - uses: reviewdog/action-yamllint@e09f07780388032a624e9eb44a23fd1bbb4052cc # v1.19.0
         with:
           fail_on_error: true
           reporter: github-pr-review
@@ -61,12 +61,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: dotenv-linter/action-dotenv-linter@5c7d44c1ddb097d3ae75f6fbb53caf521b23405c # v2.22.0
+      - uses: dotenv-linter/action-dotenv-linter@9c9a09ba60235ae0b92b2e2ed8f4268ac76d075f # v2.23.0
         with:
           reporter: github-pr-review
 
@@ -75,19 +75,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32
       - name: WriteGoList
         run: go list -json -m all > go.list
       - name: Nancy
         uses: sonatype-nexus-community/nancy-github-action@395e2fb168f674f96502e5652103d112899ea369 # main
         continue-on-error: true
       - name: "Dependency Review"
-        uses: actions/dependency-review-action@72eb03d02c7872a771aacd928f3123ac62ad6d3a # v4.3.3
+        uses: actions/dependency-review-action@5a2ce3f5b92ee19cbb1541a4984c76d921601d7c # v4.3.4
+        with:
+          base-ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
   tests:
     name: runner / build and tests
@@ -98,12 +101,12 @@ jobs:
         os: [windows-2019, windows-2022, ubuntu-22.04, ubuntu-20.04]
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32
         with:
           go-version: ${{ matrix.go-version }}
       - name: build go
@@ -122,7 +125,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: GitHub Upload Release Artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: JUnit Results ${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}
           path: junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml

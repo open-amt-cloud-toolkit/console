@@ -4,19 +4,33 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidationWifiConfig = dto.NotValidError{Console: consoleerrors.CreateConsoleError("WifiConfigsAPI")}
 
 type WirelessConfigRoutes struct {
 	t wificonfigs.Feature
 	l logger.Interface
 }
 
-func newWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l logger.Interface) {
+func NewWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l logger.Interface) {
 	r := &WirelessConfigRoutes{t, l}
+
+	if binding.Validator != nil {
+		if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+			err := v.RegisterValidation("authforieee8021x", dto.ValidateAuthandIEEE)
+			if err != nil {
+				l.Error(err, "failed to register validation")
+			}
+		}
+	}
 
 	h := handler.Group("/wirelessconfigs")
 	{
@@ -31,7 +45,8 @@ func newWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l 
 func (r *WirelessConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationWifiConfig.Wrap("get", "ShouldBindQuery", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -39,7 +54,7 @@ func (r *WirelessConfigRoutes) get(c *gin.Context) {
 	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - getCount")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -48,7 +63,7 @@ func (r *WirelessConfigRoutes) get(c *gin.Context) {
 		count, err := r.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - wireless configs - v1 - getCount")
-			errorResponse(c, err)
+			ErrorResponse(c, err)
 		}
 
 		countResponse := dto.WirelessConfigCountResponse{
@@ -68,7 +83,7 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 	config, err := r.t.GetByName(c.Request.Context(), profileName, "")
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - getByName")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -79,7 +94,8 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationWifiConfig.Wrap("insert", "ShouldBindJSON", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -88,7 +104,7 @@ func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - insert")
 
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -99,7 +115,8 @@ func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 func (r *WirelessConfigRoutes) update(c *gin.Context) {
 	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationWifiConfig.Wrap("update", "ShouldBindJSON", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -107,7 +124,7 @@ func (r *WirelessConfigRoutes) update(c *gin.Context) {
 	updatedWirelessConfig, err := r.t.Update(c.Request.Context(), &config)
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -121,7 +138,7 @@ func (r *WirelessConfigRoutes) delete(c *gin.Context) {
 	err := r.t.Delete(c.Request.Context(), configName, "")
 	if err != nil {
 		r.l.Error(err, "http - wireless configs - v1 - delete")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}

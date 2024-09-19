@@ -12,449 +12,144 @@ package devices_test
 import (
 	context "context"
 	reflect "reflect"
-	time "time"
 
 	websocket "github.com/gorilla/websocket"
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	v1 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	v2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	wsman0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
-	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
-	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
-	boot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
-	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
-	setupandconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
-	boot0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
-	concrete "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
-	credential "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
-	service "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
-	software "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
-	alarmclock0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
-	optin "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockManagement is a mock of Management interface.
-type MockManagement struct {
+// MockWSMAN is a mock of WSMAN interface.
+type MockWSMAN struct {
 	ctrl     *gomock.Controller
-	recorder *MockManagementMockRecorder
+	recorder *MockWSMANMockRecorder
 }
 
-// MockManagementMockRecorder is the mock recorder for MockManagement.
-type MockManagementMockRecorder struct {
-	mock *MockManagement
+// MockWSMANMockRecorder is the mock recorder for MockWSMAN.
+type MockWSMANMockRecorder struct {
+	mock *MockWSMAN
 }
 
-// NewMockManagement creates a new mock instance.
-func NewMockManagement(ctrl *gomock.Controller) *MockManagement {
-	mock := &MockManagement{ctrl: ctrl}
-	mock.recorder = &MockManagementMockRecorder{mock}
+// NewMockWSMAN creates a new mock instance.
+func NewMockWSMAN(ctrl *gomock.Controller) *MockWSMAN {
+	mock := &MockWSMAN{ctrl: ctrl}
+	mock.recorder = &MockWSMANMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockManagement) EXPECT() *MockManagementMockRecorder {
+func (m *MockWSMAN) EXPECT() *MockWSMANMockRecorder {
 	return m.recorder
 }
 
-// CancelUserConsentRequest mocks base method.
-func (m *MockManagement) CancelUserConsentRequest() (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CancelUserConsentRequest")
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CancelUserConsentRequest indicates an expected call of CancelUserConsentRequest.
-func (mr *MockManagementMockRecorder) CancelUserConsentRequest() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelUserConsentRequest", reflect.TypeOf((*MockManagement)(nil).CancelUserConsentRequest))
-}
-
-// ChangeBootOrder mocks base method.
-func (m *MockManagement) ChangeBootOrder(bootSource string) (boot0.ChangeBootOrder_OUTPUT, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangeBootOrder", bootSource)
-	ret0, _ := ret[0].(boot0.ChangeBootOrder_OUTPUT)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ChangeBootOrder indicates an expected call of ChangeBootOrder.
-func (mr *MockManagementMockRecorder) ChangeBootOrder(bootSource any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeBootOrder", reflect.TypeOf((*MockManagement)(nil).ChangeBootOrder), bootSource)
-}
-
-// CreateAlarmOccurrences mocks base method.
-func (m *MockManagement) CreateAlarmOccurrences(name string, startTime time.Time, interval int, deleteOnCompletion bool) (alarmclock.AddAlarmOutput, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAlarmOccurrences", name, startTime, interval, deleteOnCompletion)
-	ret0, _ := ret[0].(alarmclock.AddAlarmOutput)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateAlarmOccurrences indicates an expected call of CreateAlarmOccurrences.
-func (mr *MockManagementMockRecorder) CreateAlarmOccurrences(name, startTime, interval, deleteOnCompletion any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAlarmOccurrences", reflect.TypeOf((*MockManagement)(nil).CreateAlarmOccurrences), name, startTime, interval, deleteOnCompletion)
-}
-
-// DeleteAlarmOccurrences mocks base method.
-func (m *MockManagement) DeleteAlarmOccurrences(instanceID string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAlarmOccurrences", instanceID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteAlarmOccurrences indicates an expected call of DeleteAlarmOccurrences.
-func (mr *MockManagementMockRecorder) DeleteAlarmOccurrences(instanceID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAlarmOccurrences", reflect.TypeOf((*MockManagement)(nil).DeleteAlarmOccurrences), instanceID)
-}
-
 // DestroyWsmanClient mocks base method.
-func (m *MockManagement) DestroyWsmanClient(device dto.Device) {
+func (m *MockWSMAN) DestroyWsmanClient(device v1.Device) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "DestroyWsmanClient", device)
 }
 
 // DestroyWsmanClient indicates an expected call of DestroyWsmanClient.
-func (mr *MockManagementMockRecorder) DestroyWsmanClient(device any) *gomock.Call {
+func (mr *MockWSMANMockRecorder) DestroyWsmanClient(device any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyWsmanClient", reflect.TypeOf((*MockManagement)(nil).DestroyWsmanClient), device)
-}
-
-// GetAMTVersion mocks base method.
-func (m *MockManagement) GetAMTVersion() ([]software.SoftwareIdentity, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAMTVersion")
-	ret0, _ := ret[0].([]software.SoftwareIdentity)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAMTVersion indicates an expected call of GetAMTVersion.
-func (mr *MockManagementMockRecorder) GetAMTVersion() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTVersion", reflect.TypeOf((*MockManagement)(nil).GetAMTVersion))
-}
-
-// GetAlarmOccurrences mocks base method.
-func (m *MockManagement) GetAlarmOccurrences() ([]alarmclock0.AlarmClockOccurrence, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAlarmOccurrences")
-	ret0, _ := ret[0].([]alarmclock0.AlarmClockOccurrence)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAlarmOccurrences indicates an expected call of GetAlarmOccurrences.
-func (mr *MockManagementMockRecorder) GetAlarmOccurrences() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlarmOccurrences", reflect.TypeOf((*MockManagement)(nil).GetAlarmOccurrences))
-}
-
-// GetAuditLog mocks base method.
-func (m *MockManagement) GetAuditLog(startIndex int) (auditlog.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuditLog", startIndex)
-	ret0, _ := ret[0].(auditlog.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAuditLog indicates an expected call of GetAuditLog.
-func (mr *MockManagementMockRecorder) GetAuditLog(startIndex any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuditLog", reflect.TypeOf((*MockManagement)(nil).GetAuditLog), startIndex)
-}
-
-// GetBootData mocks base method.
-func (m *MockManagement) GetBootData() (boot.BootCapabilitiesResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBootData")
-	ret0, _ := ret[0].(boot.BootCapabilitiesResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetBootData indicates an expected call of GetBootData.
-func (mr *MockManagementMockRecorder) GetBootData() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBootData", reflect.TypeOf((*MockManagement)(nil).GetBootData))
-}
-
-// GetCertificates mocks base method.
-func (m *MockManagement) GetCertificates() (wsman.Certificates, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCertificates")
-	ret0, _ := ret[0].(wsman.Certificates)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCertificates indicates an expected call of GetCertificates.
-func (mr *MockManagementMockRecorder) GetCertificates() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificates", reflect.TypeOf((*MockManagement)(nil).GetCertificates))
-}
-
-// GetConcreteDependencies mocks base method.
-func (m *MockManagement) GetConcreteDependencies() ([]concrete.ConcreteDependency, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConcreteDependencies")
-	ret0, _ := ret[0].([]concrete.ConcreteDependency)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetConcreteDependencies indicates an expected call of GetConcreteDependencies.
-func (mr *MockManagementMockRecorder) GetConcreteDependencies() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcreteDependencies", reflect.TypeOf((*MockManagement)(nil).GetConcreteDependencies))
-}
-
-// GetCredentialRelationships mocks base method.
-func (m *MockManagement) GetCredentialRelationships() (credential.Items, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCredentialRelationships")
-	ret0, _ := ret[0].(credential.Items)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCredentialRelationships indicates an expected call of GetCredentialRelationships.
-func (mr *MockManagementMockRecorder) GetCredentialRelationships() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCredentialRelationships", reflect.TypeOf((*MockManagement)(nil).GetCredentialRelationships))
-}
-
-// GetEventLog mocks base method.
-func (m *MockManagement) GetEventLog() (messagelog.GetRecordsResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEventLog")
-	ret0, _ := ret[0].(messagelog.GetRecordsResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetEventLog indicates an expected call of GetEventLog.
-func (mr *MockManagementMockRecorder) GetEventLog() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventLog", reflect.TypeOf((*MockManagement)(nil).GetEventLog))
-}
-
-// GetFeatures mocks base method.
-func (m *MockManagement) GetFeatures() (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFeatures")
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFeatures indicates an expected call of GetFeatures.
-func (mr *MockManagementMockRecorder) GetFeatures() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeatures", reflect.TypeOf((*MockManagement)(nil).GetFeatures))
-}
-
-// GetGeneralSettings mocks base method.
-func (m *MockManagement) GetGeneralSettings() (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGeneralSettings")
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetGeneralSettings indicates an expected call of GetGeneralSettings.
-func (mr *MockManagementMockRecorder) GetGeneralSettings() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGeneralSettings", reflect.TypeOf((*MockManagement)(nil).GetGeneralSettings))
-}
-
-// GetHardwareInfo mocks base method.
-func (m *MockManagement) GetHardwareInfo() (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHardwareInfo")
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetHardwareInfo indicates an expected call of GetHardwareInfo.
-func (mr *MockManagementMockRecorder) GetHardwareInfo() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHardwareInfo", reflect.TypeOf((*MockManagement)(nil).GetHardwareInfo))
-}
-
-// GetNetworkSettings mocks base method.
-func (m *MockManagement) GetNetworkSettings() (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNetworkSettings")
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetNetworkSettings indicates an expected call of GetNetworkSettings.
-func (mr *MockManagementMockRecorder) GetNetworkSettings() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkSettings", reflect.TypeOf((*MockManagement)(nil).GetNetworkSettings))
-}
-
-// GetPowerCapabilities mocks base method.
-func (m *MockManagement) GetPowerCapabilities() (boot.BootCapabilitiesResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPowerCapabilities")
-	ret0, _ := ret[0].(boot.BootCapabilitiesResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPowerCapabilities indicates an expected call of GetPowerCapabilities.
-func (mr *MockManagementMockRecorder) GetPowerCapabilities() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPowerCapabilities", reflect.TypeOf((*MockManagement)(nil).GetPowerCapabilities))
-}
-
-// GetPowerState mocks base method.
-func (m *MockManagement) GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPowerState")
-	ret0, _ := ret[0].([]service.CIM_AssociatedPowerManagementService)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPowerState indicates an expected call of GetPowerState.
-func (mr *MockManagementMockRecorder) GetPowerState() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPowerState", reflect.TypeOf((*MockManagement)(nil).GetPowerState))
-}
-
-// GetSetupAndConfiguration mocks base method.
-func (m *MockManagement) GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSetupAndConfiguration")
-	ret0, _ := ret[0].([]setupandconfiguration.SetupAndConfigurationServiceResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSetupAndConfiguration indicates an expected call of GetSetupAndConfiguration.
-func (mr *MockManagementMockRecorder) GetSetupAndConfiguration() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSetupAndConfiguration", reflect.TypeOf((*MockManagement)(nil).GetSetupAndConfiguration))
-}
-
-// GetUserConsentCode mocks base method.
-func (m *MockManagement) GetUserConsentCode() (optin.StartOptIn_OUTPUT, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserConsentCode")
-	ret0, _ := ret[0].(optin.StartOptIn_OUTPUT)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserConsentCode indicates an expected call of GetUserConsentCode.
-func (mr *MockManagementMockRecorder) GetUserConsentCode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserConsentCode", reflect.TypeOf((*MockManagement)(nil).GetUserConsentCode))
-}
-
-// SendConsentCode mocks base method.
-func (m *MockManagement) SendConsentCode(code int) (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendConsentCode", code)
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SendConsentCode indicates an expected call of SendConsentCode.
-func (mr *MockManagementMockRecorder) SendConsentCode(code any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendConsentCode", reflect.TypeOf((*MockManagement)(nil).SendConsentCode), code)
-}
-
-// SendPowerAction mocks base method.
-func (m *MockManagement) SendPowerAction(action int) (power.PowerActionResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendPowerAction", action)
-	ret0, _ := ret[0].(power.PowerActionResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SendPowerAction indicates an expected call of SendPowerAction.
-func (mr *MockManagementMockRecorder) SendPowerAction(action any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendPowerAction", reflect.TypeOf((*MockManagement)(nil).SendPowerAction), action)
-}
-
-// SetBootConfigRole mocks base method.
-func (m *MockManagement) SetBootConfigRole(role int) (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetBootConfigRole", role)
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SetBootConfigRole indicates an expected call of SetBootConfigRole.
-func (mr *MockManagementMockRecorder) SetBootConfigRole(role any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBootConfigRole", reflect.TypeOf((*MockManagement)(nil).SetBootConfigRole), role)
-}
-
-// SetBootData mocks base method.
-func (m *MockManagement) SetBootData(data boot.BootSettingDataRequest) (any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetBootData", data)
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SetBootData indicates an expected call of SetBootData.
-func (mr *MockManagementMockRecorder) SetBootData(data any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBootData", reflect.TypeOf((*MockManagement)(nil).SetBootData), data)
-}
-
-// SetFeatures mocks base method.
-func (m *MockManagement) SetFeatures(arg0 dto.Features) (dto.Features, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetFeatures", arg0)
-	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SetFeatures indicates an expected call of SetFeatures.
-func (mr *MockManagementMockRecorder) SetFeatures(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFeatures", reflect.TypeOf((*MockManagement)(nil).SetFeatures), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyWsmanClient", reflect.TypeOf((*MockWSMAN)(nil).DestroyWsmanClient), device)
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockManagement) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
+func (m *MockWSMAN) SetupWsmanClient(device v1.Device, isRedirection, logMessages bool) wsman.Management {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
+	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logMessages)
+	ret0, _ := ret[0].(wsman.Management)
+	return ret0
 }
 
 // SetupWsmanClient indicates an expected call of SetupWsmanClient.
-func (mr *MockManagementMockRecorder) SetupWsmanClient(device, isRedirection, logAMTMessages any) *gomock.Call {
+func (mr *MockWSMANMockRecorder) SetupWsmanClient(device, isRedirection, logMessages any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockManagement)(nil).SetupWsmanClient), device, isRedirection, logAMTMessages)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockWSMAN)(nil).SetupWsmanClient), device, isRedirection, logMessages)
+}
+
+// Worker mocks base method.
+func (m *MockWSMAN) Worker() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Worker")
+}
+
+// Worker indicates an expected call of Worker.
+func (mr *MockWSMANMockRecorder) Worker() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Worker", reflect.TypeOf((*MockWSMAN)(nil).Worker))
+}
+
+// MockWebSocketConn is a mock of WebSocketConn interface.
+type MockWebSocketConn struct {
+	ctrl     *gomock.Controller
+	recorder *MockWebSocketConnMockRecorder
+}
+
+// MockWebSocketConnMockRecorder is the mock recorder for MockWebSocketConn.
+type MockWebSocketConnMockRecorder struct {
+	mock *MockWebSocketConn
+}
+
+// NewMockWebSocketConn creates a new mock instance.
+func NewMockWebSocketConn(ctrl *gomock.Controller) *MockWebSocketConn {
+	mock := &MockWebSocketConn{ctrl: ctrl}
+	mock.recorder = &MockWebSocketConnMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockWebSocketConn) EXPECT() *MockWebSocketConnMockRecorder {
+	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockWebSocketConn) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockWebSocketConnMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockWebSocketConn)(nil).Close))
+}
+
+// ReadMessage mocks base method.
+func (m *MockWebSocketConn) ReadMessage() (int, []byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadMessage")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].([]byte)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ReadMessage indicates an expected call of ReadMessage.
+func (mr *MockWebSocketConnMockRecorder) ReadMessage() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadMessage", reflect.TypeOf((*MockWebSocketConn)(nil).ReadMessage))
+}
+
+// WriteMessage mocks base method.
+func (m *MockWebSocketConn) WriteMessage(messageType int, data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WriteMessage", messageType, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteMessage indicates an expected call of WriteMessage.
+func (mr *MockWebSocketConnMockRecorder) WriteMessage(messageType, data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMessage", reflect.TypeOf((*MockWebSocketConn)(nil).WriteMessage), messageType, data)
 }
 
 // MockRedirection is a mock of Redirection interface.
@@ -538,17 +233,17 @@ func (mr *MockRedirectionMockRecorder) RedirectSend(ctx, deviceConnection, messa
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockRedirection) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman0.Messages {
+func (m *MockRedirection) SetupWsmanClient(device v1.Device, isRedirection, logMessages bool) wsman0.Messages {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logAMTMessages)
+	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logMessages)
 	ret0, _ := ret[0].(wsman0.Messages)
 	return ret0
 }
 
 // SetupWsmanClient indicates an expected call of SetupWsmanClient.
-func (mr *MockRedirectionMockRecorder) SetupWsmanClient(device, isRedirection, logAMTMessages any) *gomock.Call {
+func (mr *MockRedirectionMockRecorder) SetupWsmanClient(device, isRedirection, logMessages any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockRedirection)(nil).SetupWsmanClient), device, isRedirection, logAMTMessages)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupWsmanClient", reflect.TypeOf((*MockRedirection)(nil).SetupWsmanClient), device, isRedirection, logMessages)
 }
 
 // MockRepository is a mock of Repository interface.
@@ -602,6 +297,21 @@ func (m *MockRepository) Get(ctx context.Context, top, skip int, tenantID string
 func (mr *MockRepositoryMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), ctx, top, skip, tenantID)
+}
+
+// GetByColumn mocks base method.
+func (m *MockRepository) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]entity.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantID)
+	ret0, _ := ret[0].([]entity.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByColumn indicates an expected call of GetByColumn.
+func (mr *MockRepositoryMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockRepository)(nil).GetByColumn), ctx, columnName, queryValue, tenantID)
 }
 
 // GetByID mocks base method.
@@ -733,10 +443,10 @@ func (mr *MockFeatureMockRecorder) CancelUserConsent(ctx, guid any) *gomock.Call
 }
 
 // CreateAlarmOccurrences mocks base method.
-func (m *MockFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (alarmclock.AddAlarmOutput, error) {
+func (m *MockFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm v1.AlarmClockOccurrence) (v1.AddAlarmOutput, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAlarmOccurrences", ctx, guid, alarm)
-	ret0, _ := ret[0].(alarmclock.AddAlarmOutput)
+	ret0, _ := ret[0].(v1.AddAlarmOutput)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -776,10 +486,10 @@ func (mr *MockFeatureMockRecorder) DeleteAlarmOccurrences(ctx, guid, instanceID 
 }
 
 // Get mocks base method.
-func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Device, error) {
+func (m *MockFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]v1.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, top, skip, tenantID)
-	ret0, _ := ret[0].([]dto.Device)
+	ret0, _ := ret[0].([]v1.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -791,10 +501,10 @@ func (mr *MockFeatureMockRecorder) Get(ctx, top, skip, tenantID any) *gomock.Cal
 }
 
 // GetAlarmOccurrences mocks base method.
-func (m *MockFeature) GetAlarmOccurrences(ctx context.Context, guid string) ([]alarmclock0.AlarmClockOccurrence, error) {
+func (m *MockFeature) GetAlarmOccurrences(ctx context.Context, guid string) ([]v1.AlarmClockOccurrence, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAlarmOccurrences", ctx, guid)
-	ret0, _ := ret[0].([]alarmclock0.AlarmClockOccurrence)
+	ret0, _ := ret[0].([]v1.AlarmClockOccurrence)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -806,10 +516,10 @@ func (mr *MockFeatureMockRecorder) GetAlarmOccurrences(ctx, guid any) *gomock.Ca
 }
 
 // GetAuditLog mocks base method.
-func (m *MockFeature) GetAuditLog(ctx context.Context, startIndex int, guid string) (dto.AuditLog, error) {
+func (m *MockFeature) GetAuditLog(ctx context.Context, startIndex int, guid string) (v1.AuditLog, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAuditLog", ctx, startIndex, guid)
-	ret0, _ := ret[0].(dto.AuditLog)
+	ret0, _ := ret[0].(v1.AuditLog)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -820,11 +530,26 @@ func (mr *MockFeatureMockRecorder) GetAuditLog(ctx, startIndex, guid any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuditLog", reflect.TypeOf((*MockFeature)(nil).GetAuditLog), ctx, startIndex, guid)
 }
 
+// GetByColumn mocks base method.
+func (m *MockFeature) GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]v1.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByColumn", ctx, columnName, queryValue, tenantID)
+	ret0, _ := ret[0].([]v1.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByColumn indicates an expected call of GetByColumn.
+func (mr *MockFeatureMockRecorder) GetByColumn(ctx, columnName, queryValue, tenantID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByColumn", reflect.TypeOf((*MockFeature)(nil).GetByColumn), ctx, columnName, queryValue, tenantID)
+}
+
 // GetByID mocks base method.
-func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*dto.Device, error) {
+func (m *MockFeature) GetByID(ctx context.Context, guid, tenantID string) (*v1.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, guid, tenantID)
-	ret0, _ := ret[0].(*dto.Device)
+	ret0, _ := ret[0].(*v1.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -836,10 +561,10 @@ func (mr *MockFeatureMockRecorder) GetByID(ctx, guid, tenantID any) *gomock.Call
 }
 
 // GetByTags mocks base method.
-func (m *MockFeature) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]dto.Device, error) {
+func (m *MockFeature) GetByTags(ctx context.Context, tags, method string, limit, offset int, tenantID string) ([]v1.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByTags", ctx, tags, method, limit, offset, tenantID)
-	ret0, _ := ret[0].([]dto.Device)
+	ret0, _ := ret[0].([]v1.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -851,10 +576,10 @@ func (mr *MockFeatureMockRecorder) GetByTags(ctx, tags, method, limit, offset, t
 }
 
 // GetCertificates mocks base method.
-func (m *MockFeature) GetCertificates(c context.Context, guid string) (any, error) {
+func (m *MockFeature) GetCertificates(c context.Context, guid string) (v1.SecuritySettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCertificates", c, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(v1.SecuritySettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -880,6 +605,36 @@ func (mr *MockFeatureMockRecorder) GetCount(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCount", reflect.TypeOf((*MockFeature)(nil).GetCount), arg0, arg1)
 }
 
+// GetDeviceCertificate mocks base method.
+func (m *MockFeature) GetDeviceCertificate(c context.Context, guid string) (v1.Certificate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCertificate", c, guid)
+	ret0, _ := ret[0].(v1.Certificate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceCertificate indicates an expected call of GetDeviceCertificate.
+func (mr *MockFeatureMockRecorder) GetDeviceCertificate(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCertificate", reflect.TypeOf((*MockFeature)(nil).GetDeviceCertificate), c, guid)
+}
+
+// GetDiskInfo mocks base method.
+func (m *MockFeature) GetDiskInfo(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDiskInfo", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDiskInfo indicates an expected call of GetDiskInfo.
+func (mr *MockFeatureMockRecorder) GetDiskInfo(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDiskInfo", reflect.TypeOf((*MockFeature)(nil).GetDiskInfo), c, guid)
+}
+
 // GetDistinctTags mocks base method.
 func (m *MockFeature) GetDistinctTags(ctx context.Context, tenantID string) ([]string, error) {
 	m.ctrl.T.Helper()
@@ -896,10 +651,10 @@ func (mr *MockFeatureMockRecorder) GetDistinctTags(ctx, tenantID any) *gomock.Ca
 }
 
 // GetEventLog mocks base method.
-func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error) {
+func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]v1.EventLog, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEventLog", ctx, guid)
-	ret0, _ := ret[0].([]dto.EventLog)
+	ret0, _ := ret[0].([]v1.EventLog)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -911,10 +666,10 @@ func (mr *MockFeatureMockRecorder) GetEventLog(ctx, guid any) *gomock.Call {
 }
 
 // GetFeatures mocks base method.
-func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (any, error) {
+func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (v1.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures", ctx, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(v1.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -956,10 +711,10 @@ func (mr *MockFeatureMockRecorder) GetHardwareInfo(ctx, guid any) *gomock.Call {
 }
 
 // GetNetworkSettings mocks base method.
-func (m *MockFeature) GetNetworkSettings(c context.Context, guid string) (any, error) {
+func (m *MockFeature) GetNetworkSettings(c context.Context, guid string) (v1.NetworkSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetworkSettings", c, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(v1.NetworkSettings)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1000,6 +755,21 @@ func (mr *MockFeatureMockRecorder) GetPowerState(ctx, guid any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPowerState", reflect.TypeOf((*MockFeature)(nil).GetPowerState), ctx, guid)
 }
 
+// GetTLSSettingData mocks base method.
+func (m *MockFeature) GetTLSSettingData(c context.Context, guid string) ([]v1.SettingDataResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTLSSettingData", c, guid)
+	ret0, _ := ret[0].([]v1.SettingDataResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTLSSettingData indicates an expected call of GetTLSSettingData.
+func (mr *MockFeatureMockRecorder) GetTLSSettingData(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTLSSettingData", reflect.TypeOf((*MockFeature)(nil).GetTLSSettingData), c, guid)
+}
+
 // GetUserConsentCode mocks base method.
 func (m *MockFeature) GetUserConsentCode(ctx context.Context, guid string) (map[string]any, error) {
 	m.ctrl.T.Helper()
@@ -1016,12 +786,13 @@ func (mr *MockFeatureMockRecorder) GetUserConsentCode(ctx, guid any) *gomock.Cal
 }
 
 // GetVersion mocks base method.
-func (m *MockFeature) GetVersion(ctx context.Context, guid string) (map[string]any, error) {
+func (m *MockFeature) GetVersion(ctx context.Context, guid string) (v1.Version, v2.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
-	ret0, _ := ret[0].(map[string]any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(v1.Version)
+	ret1, _ := ret[1].(v2.Version)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetVersion indicates an expected call of GetVersion.
@@ -1031,10 +802,10 @@ func (mr *MockFeatureMockRecorder) GetVersion(ctx, guid any) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockFeature) Insert(ctx context.Context, d *dto.Device) (*dto.Device, error) {
+func (m *MockFeature) Insert(ctx context.Context, d *v1.Device) (*v1.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, d)
-	ret0, _ := ret[0].(*dto.Device)
+	ret0, _ := ret[0].(*v1.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1060,7 +831,7 @@ func (mr *MockFeatureMockRecorder) Redirect(ctx, conn, guid, mode any) *gomock.C
 }
 
 // SendConsentCode mocks base method.
-func (m *MockFeature) SendConsentCode(ctx context.Context, code dto.UserConsent, guid string) (any, error) {
+func (m *MockFeature) SendConsentCode(ctx context.Context, code v1.UserConsent, guid string) (any, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendConsentCode", ctx, code, guid)
 	ret0, _ := ret[0].(any)
@@ -1090,7 +861,7 @@ func (mr *MockFeatureMockRecorder) SendPowerAction(ctx, guid, action any) *gomoc
 }
 
 // SetBootOptions mocks base method.
-func (m *MockFeature) SetBootOptions(ctx context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
+func (m *MockFeature) SetBootOptions(ctx context.Context, guid string, bootSetting v1.BootSetting) (power.PowerActionResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetBootOptions", ctx, guid, bootSetting)
 	ret0, _ := ret[0].(power.PowerActionResponse)
@@ -1105,10 +876,10 @@ func (mr *MockFeatureMockRecorder) SetBootOptions(ctx, guid, bootSetting any) *g
 }
 
 // SetFeatures mocks base method.
-func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error) {
+func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features v1.Features) (v1.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFeatures", ctx, guid, features)
-	ret0, _ := ret[0].(dto.Features)
+	ret0, _ := ret[0].(v1.Features)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1120,10 +891,10 @@ func (mr *MockFeatureMockRecorder) SetFeatures(ctx, guid, features any) *gomock.
 }
 
 // Update mocks base method.
-func (m *MockFeature) Update(ctx context.Context, d *dto.Device) (*dto.Device, error) {
+func (m *MockFeature) Update(ctx context.Context, d *v1.Device) (*v1.Device, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, d)
-	ret0, _ := ret[0].(*dto.Device)
+	ret0, _ := ret[0].(*v1.Device)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

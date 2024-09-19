@@ -16,11 +16,13 @@ permissions:
 
 jobs:
   release:
+    permissions:
+      contents: write # for Git to git push
     runs-on: ubuntu-latest
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
 
@@ -32,16 +34,16 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # master
         with:
           repository: open-amt-cloud-toolkit/sample-web-ui
-          ref: enterprise #TODO: pull latest tagged version
+          ref: main
           path: ./temp
       - run: npm ci
         working-directory: ./temp
       - run: npm run build-enterprise
         working-directory: ./temp
       - name: move files
-        run: mv ./temp/ui/* ./internal/controller/http/v1/ui
+        run: mv ./temp/ui/* ./internal/controller/http/ui
       - name: Docker Login
-        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3.2.0
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: vprodemo.azurecr.io
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -58,4 +60,3 @@ jobs:
             @semantic-release/exec@6.0.3
         env:
           GITHUB_TOKEN: ${{ secrets.ROSIE_TOKEN }}
-

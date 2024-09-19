@@ -2,6 +2,7 @@ package devices
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"testing"
 
@@ -53,6 +54,18 @@ func (m *MockClient) Listen() ([]byte, error) {
 	args := m.Called()
 
 	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (m *MockClient) IsAuthenticated() bool {
+	args := m.Called()
+
+	return args.Get(0).(bool)
+}
+
+func (m *MockClient) GetServerCertificate() (*tls.Certificate, error) {
+	args := m.Called()
+
+	return args.Get(0).(*tls.Certificate), args.Error(1)
 }
 
 type wsmanTest struct {

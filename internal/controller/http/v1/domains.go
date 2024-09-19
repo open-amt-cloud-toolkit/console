@@ -5,17 +5,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
+	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
+
+var ErrValidationDomains = dto.NotValidError{Console: consoleerrors.CreateConsoleError("DomainsAPI")}
 
 type domainRoutes struct {
 	t domains.Feature
 	l logger.Interface
 }
 
-func newDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Interface) {
+func NewDomainRoutes(handler *gin.RouterGroup, t domains.Feature, l logger.Interface) {
 	r := &domainRoutes{t, l}
 
 	h := handler.Group("/domains")
@@ -45,7 +48,8 @@ type DomainCountResponse struct {
 func (r *domainRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDomains.Wrap("get", "ShouldBindQuery", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -53,7 +57,7 @@ func (r *domainRoutes) get(c *gin.Context) {
 	items, err := r.t.Get(c.Request.Context(), odata.Top, odata.Skip, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - getCount")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -62,7 +66,7 @@ func (r *domainRoutes) get(c *gin.Context) {
 		count, err := r.t.GetCount(c.Request.Context(), "")
 		if err != nil {
 			r.l.Error(err, "http - v1 - getCount")
-			errorResponse(c, err)
+			ErrorResponse(c, err)
 		}
 
 		countResponse := DomainCountResponse{
@@ -91,7 +95,7 @@ func (r *domainRoutes) getByName(c *gin.Context) {
 	item, err := r.t.GetByName(c.Request.Context(), name, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - getByName")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -111,7 +115,8 @@ func (r *domainRoutes) getByName(c *gin.Context) {
 func (r *domainRoutes) insert(c *gin.Context) {
 	var domain dto.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDomains.Wrap("insert", "ShouldBindJSON", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -119,7 +124,7 @@ func (r *domainRoutes) insert(c *gin.Context) {
 	newDomain, err := r.t.Insert(c.Request.Context(), &domain)
 	if err != nil {
 		r.l.Error(err, "http - v1 - insert")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -139,7 +144,8 @@ func (r *domainRoutes) insert(c *gin.Context) {
 func (r *domainRoutes) update(c *gin.Context) {
 	var domain dto.Domain
 	if err := c.ShouldBindJSON(&domain); err != nil {
-		errorResponse(c, err)
+		validationErr := ErrValidationDomains.Wrap("update", "ShouldBindJSON", err)
+		ErrorResponse(c, validationErr)
 
 		return
 	}
@@ -147,7 +153,7 @@ func (r *domainRoutes) update(c *gin.Context) {
 	updatedDomain, err := r.t.Update(c.Request.Context(), &domain)
 	if err != nil {
 		r.l.Error(err, "http - v1 - update")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
@@ -170,7 +176,7 @@ func (r *domainRoutes) delete(c *gin.Context) {
 	err := r.t.Delete(c.Request.Context(), name, "")
 	if err != nil {
 		r.l.Error(err, "http - v1 - delete")
-		errorResponse(c, err)
+		ErrorResponse(c, err)
 
 		return
 	}
