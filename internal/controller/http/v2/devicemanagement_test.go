@@ -40,6 +40,23 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 func TestGetFeatures(t *testing.T) {
 	t.Parallel()
 
+	featuresInput := dto.Features{
+		UserConsent: "kvm",
+		EnableSOL:   true,
+		EnableIDER:  true,
+		EnableKVM:   true,
+		Redirection: true,
+	}
+
+	featuresOutput := dtov2.Features{
+		UserConsent:  "kvm",
+		EnableSOL:    true,
+		EnableIDER:   true,
+		EnableKVM:    true,
+		Redirection:  true,
+		KVMAvailable: true,
+	}
+
 	tests := []struct {
 		name         string
 		url          string
@@ -66,10 +83,22 @@ func TestGetFeatures(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(dto.Features{}, nil)
+					Return(dto.Features{}, dtov2.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     dto.Features{},
+			response:     dtov2.Features{},
+		},
+		{
+			name:   "setFeatures - successful post",
+			url:    "/api/v2/amt/features/valid-guid",
+			method: http.MethodPost,
+			mock: func(m *MockDeviceManagementFeature) {
+				m.EXPECT().SetFeatures(context.Background(), "valid-guid", featuresInput).
+					Return(dto.Features{}, featuresOutput, nil)
+			},
+			expectedCode: http.StatusOK,
+			requestBody:  featuresInput,
+			response:     featuresOutput,
 		},
 	}
 

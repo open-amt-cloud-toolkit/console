@@ -666,12 +666,13 @@ func (mr *MockFeatureMockRecorder) GetEventLog(ctx, guid any) *gomock.Call {
 }
 
 // GetFeatures mocks base method.
-func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (v1.Features, error) {
+func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (v1.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures", ctx, guid)
 	ret0, _ := ret[0].(v1.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetFeatures indicates an expected call of GetFeatures.
@@ -876,12 +877,13 @@ func (mr *MockFeatureMockRecorder) SetBootOptions(ctx, guid, bootSetting any) *g
 }
 
 // SetFeatures mocks base method.
-func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features v1.Features) (v1.Features, error) {
+func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features v1.Features) (v1.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFeatures", ctx, guid, features)
 	ret0, _ := ret[0].(v1.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // SetFeatures indicates an expected call of SetFeatures.

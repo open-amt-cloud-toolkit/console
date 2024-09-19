@@ -17,7 +17,7 @@ import (
 	gin "github.com/gin-gonic/gin"
 	websocket "github.com/gorilla/websocket"
 	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
-	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+	v2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -359,12 +359,13 @@ func (mr *MockFeatureMockRecorder) GetEventLog(ctx, guid any) *gomock.Call {
 }
 
 // GetFeatures mocks base method.
-func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, error) {
+func (m *MockFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures", ctx, guid)
 	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetFeatures indicates an expected call of GetFeatures.
@@ -479,11 +480,11 @@ func (mr *MockFeatureMockRecorder) GetUserConsentCode(ctx, guid any) *gomock.Cal
 }
 
 // GetVersion mocks base method.
-func (m *MockFeature) GetVersion(ctx context.Context, guid string) (dto.Version, dtov2.Version, error) {
+func (m *MockFeature) GetVersion(ctx context.Context, guid string) (dto.Version, v2.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
 	ret0, _ := ret[0].(dto.Version)
-	ret1, _ := ret[1].(dtov2.Version)
+	ret1, _ := ret[1].(v2.Version)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -569,12 +570,13 @@ func (mr *MockFeatureMockRecorder) SetBootOptions(ctx, guid, bootSetting any) *g
 }
 
 // SetFeatures mocks base method.
-func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error) {
+func (m *MockFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFeatures", ctx, guid, features)
 	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // SetFeatures indicates an expected call of SetFeatures.
