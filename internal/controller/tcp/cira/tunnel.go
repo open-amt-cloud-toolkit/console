@@ -59,8 +59,19 @@ func (s *Server) Notify() <-chan error {
 }
 
 func (s *Server) ListenAndServe() error {
+
 	config := &tls.Config{
-		Certificates: []tls.Certificate{s.certificates},
+		Certificates:       []tls.Certificate{s.certificates},
+		InsecureSkipVerify: true,
+		CipherSuites:       nil,
+		// []uint16{
+		// 	tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		// 	tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+		// 	tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		// 	tls.TLS_AES_256_GCM_SHA384,
+		// 	tls.TLS_AES_128_GCM_SHA256,
+		// },
+		MinVersion: tls.VersionTLS12,
 	}
 	listener, err := tls.Listen("tcp", ":"+port, config)
 	if err != nil {
@@ -104,7 +115,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 		conn.SetDeadline(time.Now().Add(maxIdleTime))
 		buf := make([]byte, 4096)
 		n, err := tlsConn.Read(buf)
-		if err != nil {
+		if err != nil && n == 0 {
 			if errors.Is(err, net.ErrClosed) {
 				log.Printf("Connection closed for device %s\n", deviceID)
 				break
