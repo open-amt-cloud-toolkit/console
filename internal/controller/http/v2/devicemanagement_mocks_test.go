@@ -16,7 +16,7 @@ import (
 	websocket "github.com/gorilla/websocket"
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
 	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
-	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+	v2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	wsman0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
@@ -666,12 +666,13 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetEventLog(ctx, guid any) *g
 }
 
 // GetFeatures mocks base method.
-func (m *MockDeviceManagementFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, error) {
+func (m *MockDeviceManagementFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures", ctx, guid)
 	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetFeatures indicates an expected call of GetFeatures.
@@ -786,11 +787,11 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetUserConsentCode(ctx, guid 
 }
 
 // GetVersion mocks base method.
-func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (dto.Version, dtov2.Version, error) {
+func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (dto.Version, v2.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
 	ret0, _ := ret[0].(dto.Version)
-	ret1, _ := ret[1].(dtov2.Version)
+	ret1, _ := ret[1].(v2.Version)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -876,12 +877,13 @@ func (mr *MockDeviceManagementFeatureMockRecorder) SetBootOptions(ctx, guid, boo
 }
 
 // SetFeatures mocks base method.
-func (m *MockDeviceManagementFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error) {
+func (m *MockDeviceManagementFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFeatures", ctx, guid, features)
 	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // SetFeatures indicates an expected call of SetFeatures.

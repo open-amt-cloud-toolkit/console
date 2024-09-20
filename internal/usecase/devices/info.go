@@ -55,38 +55,6 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v
 	return v1Version, v2Version, nil
 }
 
-func (uc *UseCase) GetFeatures(c context.Context, guid string) (dto.Features, error) {
-	item, err := uc.GetByID(c, guid, "")
-	if err != nil {
-		return dto.Features{}, err
-	}
-
-	device := uc.device.SetupWsmanClient(*item, false, true)
-
-	features, err := device.GetFeatures()
-	if err != nil {
-		return dto.Features{}, err
-	}
-
-	return features, nil
-}
-
-func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Features) (dto.Features, error) {
-	item, err := uc.GetByID(c, guid, "")
-	if err != nil {
-		return features, err
-	}
-
-	device := uc.device.SetupWsmanClient(*item, false, true)
-
-	features, err = device.SetFeatures(features)
-	if err != nil {
-		return features, err
-	}
-
-	return features, nil
-}
-
 func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
@@ -227,13 +195,13 @@ func (uc *UseCase) softwareIdentityEntityToDTOv2(d []software.SoftwareIdentity) 
 		Netstack:            data["Netstack"],
 		AMTApps:             data["AMTApps"],
 		AMT:                 data["AMT"],
-		Sku:                 data["Sku"],
+		SKU:                 data["Sku"],
 		VendorID:            data["VendorID"],
 		BuildNumber:         data["Build Number"],
 		RecoveryVersion:     data["Recovery Version"],
 		RecoveryBuildNumber: data["Recovery Build Num"],
 		LegacyMode:          legacyModePointer,
-		AmtFWCoreVersion:    data["AMT FW Core Version"],
+		AMTFWCoreVersion:    data["AMT FW Core Version"],
 	}
 }
 

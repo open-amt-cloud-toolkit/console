@@ -55,8 +55,20 @@ func (r *DomainRepo) GetCount(_ context.Context, tenantID string) (int, error) {
 
 // Get -.
 func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.Domain, error) {
+	const defaultTop = 100
+
 	if top == 0 {
-		top = 100
+		top = defaultTop
+	}
+
+	limitedTop := uint64(defaultTop)
+	if top > 0 {
+		limitedTop = uint64(top)
+	}
+
+	limitedSkip := uint64(0)
+	if skip > 0 {
+		limitedSkip = uint64(skip)
 	}
 
 	sqlQuery, _, err := r.Builder.
@@ -68,8 +80,8 @@ func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 		From("domains").
 		Where("tenant_id = ?", tenantID).
 		OrderBy("name").
-		Limit(uint64(top)).
-		Offset(uint64(skip)).
+		Limit(limitedTop).
+		Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrDomainDatabase.Wrap("Get", "r.Builder: ", err)

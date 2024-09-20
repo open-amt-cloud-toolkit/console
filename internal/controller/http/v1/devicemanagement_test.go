@@ -52,6 +52,7 @@ func TestDeviceManagement(t *testing.T) {
 		requestBody  interface{}
 		expectedCode int
 		response     interface{}
+		responseV2   interface{}
 	}{
 		{
 			name:   "getVersion - successful retrieval",
@@ -70,10 +71,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(dto.Features{}, nil)
+					Return(dto.Features{}, dtov2.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "redirection": false, "optInState": 0, "userConsent": ""},
+			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "kvmAvailable": false, "redirection": false, "optInState": 0, "userConsent": ""},
 		},
 		{
 			name:        "setFeatures - successful setting",
@@ -81,7 +82,7 @@ func TestDeviceManagement(t *testing.T) {
 			method:      http.MethodPost,
 			requestBody: dto.Features{},
 			mock: func(m *MockDeviceManagementFeature) {
-				m.EXPECT().SetFeatures(context.Background(), "valid-guid", dto.Features{}).Return(dto.Features{}, nil)
+				m.EXPECT().SetFeatures(context.Background(), "valid-guid", dto.Features{}).Return(dto.Features{}, dtov2.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
 			response:     dto.Features{},
