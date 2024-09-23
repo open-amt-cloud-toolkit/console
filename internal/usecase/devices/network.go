@@ -77,10 +77,10 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 	for _, v := range response.WiFiSettingsResult {
 		ns.Wireless.WiFiNetworks = append(ns.Wireless.WiFiNetworks, dto.WiFiNetwork{
 			SSID:                 v.SSID,
-			AuthenticationMethod: int(v.AuthenticationMethod),
-			EncryptionMethod:     int(v.EncryptionMethod),
+			AuthenticationMethod: v.AuthenticationMethod.String(),
+			EncryptionMethod:     v.EncryptionMethod.String(),
 			Priority:             v.Priority,
-			BSSType:              int(v.BSSType),
+			BSSType:              v.BSSType.String(),
 		})
 	}
 
