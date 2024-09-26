@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
@@ -144,9 +144,6 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Device) (*dto.Device, erro
 	}
 
 	d2 := uc.entityToDTO(updateDevice)
-	if updateDevice.Tags == "" {
-		d2.Tags = []string{}
-	}
 
 	// invalidate connection cache
 	uc.device.DestroyWsmanClient(*d2)

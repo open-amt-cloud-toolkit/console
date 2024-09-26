@@ -3,7 +3,7 @@ package devices
 import (
 	"context"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
@@ -34,8 +34,6 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 				SharedMAC:                    response.EthernetPortSettingsResult[0].SharedMAC,
 				MACAddress:                   response.EthernetPortSettingsResult[0].MACAddress,
 				LinkIsUp:                     response.EthernetPortSettingsResult[0].LinkIsUp,
-				LinkPreference:               int(response.EthernetPortSettingsResult[0].LinkPreference),
-				LinkControl:                  int(response.EthernetPortSettingsResult[0].LinkControl),
 				SharedStaticIP:               response.EthernetPortSettingsResult[0].SharedStaticIp,
 				SharedDynamicIP:              response.EthernetPortSettingsResult[0].SharedDynamicIP,
 				IPSyncEnabled:                response.EthernetPortSettingsResult[0].IpSyncEnabled,
@@ -46,9 +44,8 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 				PrimaryDNS:                   response.EthernetPortSettingsResult[0].PrimaryDNS,
 				SecondaryDNS:                 response.EthernetPortSettingsResult[0].SecondaryDNS,
 				ConsoleTCPMaxRetransmissions: response.EthernetPortSettingsResult[0].ConsoleTcpMaxRetransmissions,
-				WLANLinkProtectionLevel:      int(response.EthernetPortSettingsResult[0].WLANLinkProtectionLevel),
-				PhysicalConnectionType:       int(response.EthernetPortSettingsResult[0].PhysicalConnectionType),
-				PhysicalNicMedium:            int(response.EthernetPortSettingsResult[0].PhysicalNicMedium),
+				PhysicalConnectionType:       response.EthernetPortSettingsResult[0].PhysicalConnectionType.String(),
+				PhysicalNicMedium:            response.EthernetPortSettingsResult[0].PhysicalNicMedium.String(),
 			},
 		},
 		Wireless: dto.WirelessNetworkInfo{
@@ -59,11 +56,8 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 				SharedMAC:                    response.EthernetPortSettingsResult[1].SharedMAC,
 				MACAddress:                   response.EthernetPortSettingsResult[1].MACAddress,
 				LinkIsUp:                     response.EthernetPortSettingsResult[1].LinkIsUp,
-				LinkPreference:               int(response.EthernetPortSettingsResult[1].LinkPreference),
-				LinkControl:                  int(response.EthernetPortSettingsResult[1].LinkControl),
-				SharedStaticIP:               response.EthernetPortSettingsResult[1].SharedStaticIp,
-				SharedDynamicIP:              response.EthernetPortSettingsResult[1].SharedDynamicIP,
-				IPSyncEnabled:                response.EthernetPortSettingsResult[1].IpSyncEnabled,
+				LinkPreference:               response.EthernetPortSettingsResult[1].LinkPreference.String(),
+				LinkControl:                  response.EthernetPortSettingsResult[1].LinkControl.String(),
 				DHCPEnabled:                  response.EthernetPortSettingsResult[1].DHCPEnabled,
 				IPAddress:                    response.EthernetPortSettingsResult[1].IPAddress,
 				SubnetMask:                   response.EthernetPortSettingsResult[1].SubnetMask,
@@ -71,9 +65,9 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 				PrimaryDNS:                   response.EthernetPortSettingsResult[1].PrimaryDNS,
 				SecondaryDNS:                 response.EthernetPortSettingsResult[1].SecondaryDNS,
 				ConsoleTCPMaxRetransmissions: response.EthernetPortSettingsResult[1].ConsoleTcpMaxRetransmissions,
-				WLANLinkProtectionLevel:      int(response.EthernetPortSettingsResult[1].WLANLinkProtectionLevel),
-				PhysicalConnectionType:       int(response.EthernetPortSettingsResult[1].PhysicalConnectionType),
-				PhysicalNicMedium:            int(response.EthernetPortSettingsResult[1].PhysicalNicMedium),
+				WLANLinkProtectionLevel:      response.EthernetPortSettingsResult[1].WLANLinkProtectionLevel.String(),
+				PhysicalConnectionType:       response.EthernetPortSettingsResult[1].PhysicalConnectionType.String(),
+				PhysicalNicMedium:            response.EthernetPortSettingsResult[1].PhysicalNicMedium.String(),
 			},
 		},
 	}
@@ -83,10 +77,10 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 	for _, v := range response.WiFiSettingsResult {
 		ns.Wireless.WiFiNetworks = append(ns.Wireless.WiFiNetworks, dto.WiFiNetwork{
 			SSID:                 v.SSID,
-			AuthenticationMethod: int(v.AuthenticationMethod),
-			EncryptionMethod:     int(v.EncryptionMethod),
+			AuthenticationMethod: v.AuthenticationMethod.String(),
+			EncryptionMethod:     v.EncryptionMethod.String(),
 			Priority:             v.Priority,
-			BSSType:              int(v.BSSType),
+			BSSType:              v.BSSType.String(),
 		})
 	}
 
@@ -109,10 +103,10 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 
 func convertLinkPolicy(response wsman.NetworkResults, ns *dto.NetworkSettings) {
 	for _, v := range response.EthernetPortSettingsResult[0].LinkPolicy {
-		ns.Wired.NetworkInfo.LinkPolicy = append(ns.Wired.NetworkInfo.LinkPolicy, int(v))
+		ns.Wired.NetworkInfo.LinkPolicy = append(ns.Wired.NetworkInfo.LinkPolicy, v.String())
 	}
 
 	for _, v := range response.EthernetPortSettingsResult[1].LinkPolicy {
-		ns.Wireless.NetworkInfo.LinkPolicy = append(ns.Wireless.NetworkInfo.LinkPolicy, int(v))
+		ns.Wireless.NetworkInfo.LinkPolicy = append(ns.Wireless.NetworkInfo.LinkPolicy, v.String())
 	}
 }

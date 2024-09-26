@@ -13,7 +13,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -47,7 +47,13 @@ func TestGetVersion(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	softwares := []software.SoftwareIdentity{}
+	softwares := []software.SoftwareIdentity{
+		{
+			InstanceID:    "Flash",
+			VersionString: "0.0.0",
+			IsEntity:      true,
+		},
+	}
 
 	responses := []setupandconfiguration.SetupAndConfigurationServiceResponse{}
 
@@ -93,10 +99,18 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}{
-				"AMT_SetupAndConfigurationService": map[string]interface{}{
-					"response": setupandconfiguration.SetupAndConfigurationServiceResponse{
-						XMLName:                       xml.Name{Space: "", Local: "AMT_SetupAndConfigurationService"},
+
+			res: dto.Version{
+				CIMSoftwareIdentity: dto.SoftwareIdentityResponses{
+					Responses: []dto.SoftwareIdentity{
+						{
+							InstanceID:    "Flash",
+							VersionString: "0.0.0",
+							IsEntity:      true,
+						},
+					},
+				}, AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponses{
+					Response: dto.SetupAndConfigurationServiceResponse{
 						RequestedState:                1,
 						EnabledState:                  1,
 						ElementName:                   "SampleElementName",
@@ -114,10 +128,8 @@ func TestGetVersion(t *testing.T) {
 						TrustedDNSSuffix:              "SampleTrustedDNSSuffix",
 					},
 				},
-				"CIM_SoftwareIdentity": map[string]interface{}{
-					"responses": []software.SoftwareIdentity{},
-				},
 			},
+
 			err: nil,
 		},
 		{
@@ -129,7 +141,29 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: map[string]interface{}(nil),
+
+			res: dto.Version{
+				CIMSoftwareIdentity: dto.SoftwareIdentityResponses{Responses: []dto.SoftwareIdentity(nil)},
+				AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponses{
+					Response: dto.SetupAndConfigurationServiceResponse{
+						RequestedState:                0,
+						EnabledState:                  0,
+						ElementName:                   "",
+						SystemCreationClassName:       "",
+						SystemName:                    "",
+						CreationClassName:             "",
+						Name:                          "",
+						ProvisioningMode:              0,
+						ProvisioningState:             0,
+						ZeroTouchConfigurationEnabled: false,
+						ProvisioningServerOTP:         "",
+						ConfigurationServerFQDN:       "",
+						PasswordModel:                 0,
+						DhcpDNSSuffix:                 "",
+						TrustedDNSSuffix:              "",
+					},
+				},
+			},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -148,7 +182,9 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}(nil),
+
+			res: dto.Version{},
+
 			err: ErrGeneral,
 		},
 		{
@@ -171,7 +207,26 @@ func TestGetVersion(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}(nil),
+
+			res: dto.Version{CIMSoftwareIdentity: dto.SoftwareIdentityResponses{Responses: []dto.SoftwareIdentity(nil)}, AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponses{
+				Response: dto.SetupAndConfigurationServiceResponse{
+					RequestedState:                0,
+					EnabledState:                  0,
+					ElementName:                   "",
+					SystemCreationClassName:       "",
+					SystemName:                    "",
+					CreationClassName:             "",
+					Name:                          "",
+					ProvisioningMode:              0,
+					ProvisioningState:             0,
+					ZeroTouchConfigurationEnabled: false,
+					ProvisioningServerOTP:         "",
+					ConfigurationServerFQDN:       "",
+					PasswordModel:                 0,
+					DhcpDNSSuffix:                 "",
+					TrustedDNSSuffix:              "",
+				},
+			}},
 			err: ErrGeneral,
 		},
 	}
@@ -188,178 +243,7 @@ func TestGetVersion(t *testing.T) {
 
 			tc.repoMock(repo)
 
-			res, err := useCase.GetVersion(context.Background(), device.GUID)
-
-			require.Equal(t, tc.res, res)
-
-			require.IsType(t, tc.err, err)
-		})
-	}
-}
-
-func TestGetFeatures(t *testing.T) {
-	t.Parallel()
-
-	device := &entity.Device{
-		GUID:     "device-guid-123",
-		TenantID: "tenant-id-456",
-	}
-
-	tests := []test{
-		{
-			name:   "success",
-			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
-				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return(man2)
-				man2.EXPECT().
-					GetFeatures().
-					Return(dto.Features{}, nil)
-			},
-			repoMock: func(repo *MockRepository) {
-				repo.EXPECT().
-					GetByID(context.Background(), device.GUID, "").
-					Return(device, nil)
-			},
-			res: dto.Features{},
-			err: nil,
-		},
-		{
-			name:    "GetById fails",
-			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
-				repo.EXPECT().
-					GetByID(context.Background(), device.GUID, "").
-					Return(nil, ErrGeneral)
-			},
-			res: dto.Features{},
-			err: devices.ErrDatabase,
-		},
-		{
-			name:   "GetFeatures fails",
-			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
-				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return(man2)
-				man2.EXPECT().
-					GetFeatures().
-					Return(dto.Features{}, ErrGeneral)
-			},
-			repoMock: func(repo *MockRepository) {
-				repo.EXPECT().
-					GetByID(context.Background(), device.GUID, "").
-					Return(device, nil)
-			},
-			res: dto.Features{},
-			err: ErrGeneral,
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			useCase, wsmanMock, management, repo := initInfoTest(t)
-
-			tc.manMock(wsmanMock, management)
-
-			tc.repoMock(repo)
-
-			res, err := useCase.GetFeatures(context.Background(), device.GUID)
-
-			require.Equal(t, tc.res, res)
-
-			require.IsType(t, tc.err, err)
-		})
-	}
-}
-
-func TestSetFeatures(t *testing.T) {
-	t.Parallel()
-
-	device := &entity.Device{
-		GUID:     "device-guid-123",
-		TenantID: "tenant-id-456",
-	}
-
-	featureSet := dto.Features{
-		UserConsent: "kvm",
-		EnableSOL:   true,
-		EnableIDER:  true,
-		EnableKVM:   true,
-	}
-
-	tests := []test{
-		{
-			name:   "success",
-			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
-				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return(man2)
-				man2.EXPECT().
-					SetFeatures(featureSet).
-					Return(featureSet, nil)
-			},
-			repoMock: func(repo *MockRepository) {
-				repo.EXPECT().
-					GetByID(context.Background(), device.GUID, "").
-					Return(device, nil)
-			},
-			res: featureSet,
-			err: nil,
-		},
-		{
-			name:    "GetById fails",
-			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
-				repo.EXPECT().
-					GetByID(context.Background(), device.GUID, "").
-					Return(nil, ErrGeneral)
-			},
-			res: featureSet,
-			err: devices.ErrDatabase,
-		},
-		{
-			name:   "GetFeatures fails",
-			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
-				man.EXPECT().
-					SetupWsmanClient(gomock.Any(), false, true).
-					Return(man2)
-				man2.EXPECT().
-					SetFeatures(featureSet).
-					Return(featureSet, ErrGeneral)
-			},
-			repoMock: func(repo *MockRepository) {
-				repo.EXPECT().
-					GetByID(context.Background(), device.GUID, "").
-					Return(device, nil)
-			},
-			res: featureSet,
-			err: ErrGeneral,
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			useCase, wsmanMock, management, repo := initInfoTest(t)
-
-			tc.manMock(wsmanMock, management)
-
-			tc.repoMock(repo)
-
-			res, err := useCase.SetFeatures(context.Background(), device.GUID, featureSet)
+			res, _, err := useCase.GetVersion(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
 

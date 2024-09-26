@@ -56,10 +56,21 @@ func (r *ProfileRepo) GetCount(_ context.Context, tenantID string) (int, error) 
 }
 
 // Get -.
-
 func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.Profile, error) {
+	const defaultTop = 100
+
 	if top == 0 {
-		top = 100
+		top = defaultTop
+	}
+
+	limitedTop := uint64(defaultTop)
+	if top > 0 {
+		limitedTop = uint64(top)
+	}
+
+	limitedSkip := uint64(0)
+	if skip > 0 {
+		limitedSkip = uint64(skip)
 	}
 
 	sqlQuery, _, err := r.Builder.
@@ -81,8 +92,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"p.ip_sync_enabled",
 			"p.local_wifi_sync_enabled",
 			"p.ieee8021x_profile_name",
-			// ieee8021xconfigs table
-			"e.auth_Protocol",
+			"p.auth_protocol",
 			"e.pxe_timeout",
 			"e.wired_interface",
 		).
@@ -108,12 +118,13 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"p.ip_sync_enabled",
 			"p.local_wifi_sync_enabled",
 			"p.ieee8021x_profile_name",
-			"e.auth_Protocol",
+			"p.auth_protocol",
 			"e.pxe_timeout",
-			"e.wired_interface").
+			"e.wired_interface",
+		).
 		OrderBy("p.profile_name").
-		Limit(uint64(top)).
-		Offset(uint64(skip)).
+		Limit(limitedTop).
+		Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrProfileDatabase.Wrap("Get", "r.Builder", err)
@@ -156,25 +167,25 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 	sqlQuery, _, err := r.Builder.
 		Select(
 			"p.profile_name",
-			"activation",
-			"generate_random_password",
-			"cira_config_name",
-			"generate_random_mebx_password",
-			"tags",
-			"dhcp_enabled",
+			"p.activation",
+			"p.generate_random_password",
+			"p.cira_config_name",
+			"p.generate_random_mebx_password",
+			"p.tags",
+			"p.dhcp_enabled",
 			"p.tenant_id",
-			"tls_mode",
-			"user_consent",
-			"ider_enabled",
-			"kvm_enabled",
-			"sol_enabled",
-			"tls_signing_authority",
-			"ip_sync_enabled",
-			"local_wifi_sync_enabled",
-			"ieee8021x_profile_name",
-			"auth_Protocol",
-			"pxe_timeout",
-			"wired_interface",
+			"p.tls_mode",
+			"p.user_consent",
+			"p.ider_enabled",
+			"p.kvm_enabled",
+			"p.sol_enabled",
+			"p.tls_signing_authority",
+			"p.ip_sync_enabled",
+			"p.local_wifi_sync_enabled",
+			"p.ieee8021x_profile_name",
+			"p.auth_protocol",
+			"e.pxe_timeout",
+			"e.wired_interface",
 		).
 		From("profiles p").
 		LeftJoin("ieee8021xconfigs e ON p.ieee8021x_profile_name = e.profile_name AND p.tenant_id = e.tenant_id").
@@ -192,7 +203,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 	defer rows.Close()
 
 	if rows.Err() != nil {
-		return nil, ErrDeviceDatabase.Wrap("Get", "rows.Err", rows.Err())
+		return nil, ErrProfileDatabase.Wrap("GetByName", "rows.Err", rows.Err())
 	}
 
 	profiles := make([]*entity.Profile, 0)

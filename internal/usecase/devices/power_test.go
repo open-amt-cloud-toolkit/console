@@ -14,7 +14,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -26,6 +26,7 @@ type test struct {
 	manMock  func(*MockWSMAN, *MockManagement)
 	repoMock func(*MockRepository)
 	res      any
+	resV2    any
 	err      error
 
 	action int

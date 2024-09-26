@@ -2,13 +2,14 @@ package v1
 
 import (
 	"errors"
+	"net"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
@@ -28,9 +29,12 @@ func ErrorResponse(c *gin.Context, err error) {
 		amtErr          devices.AMTError
 		certExpErr      domains.CertExpirationError
 		certPasswordErr domains.CertPasswordError
+		netErr          net.Error
 	)
 
 	switch {
+	case errors.As(err, &netErr):
+		netErrorHandle(c, netErr)
 	case errors.As(err, &notValidErr):
 		notValidErrorHandle(c, notValidErr)
 	case errors.As(err, &validatorErr):
@@ -50,6 +54,10 @@ func ErrorResponse(c *gin.Context, err error) {
 	default:
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response{"general error"})
 	}
+}
+
+func netErrorHandle(c *gin.Context, netErr net.Error) {
+	c.AbortWithStatusJSON(http.StatusGatewayTimeout, response{netErr.Error()})
 }
 
 func notValidErrorHandle(c *gin.Context, err dto.NotValidError) {

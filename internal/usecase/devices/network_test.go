@@ -12,7 +12,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -56,13 +56,26 @@ func TestGetNetworkSettings(t *testing.T) {
 					Return(wsman.NetworkResults{
 						EthernetPortSettingsResult: []ethernetport.SettingsResponse{
 							{
-								LinkPolicy: []ethernetport.LinkPolicy{1, 2},
+								LinkPolicy:             []ethernetport.LinkPolicy{14, 16},
+								PhysicalConnectionType: 0,
+								PhysicalNicMedium:      0,
 							}, {
-								LinkPolicy: []ethernetport.LinkPolicy{1, 2},
+								LinkPolicy:              []ethernetport.LinkPolicy{14, 16},
+								LinkPreference:          1,
+								LinkControl:             1,
+								WLANLinkProtectionLevel: 1,
+								PhysicalConnectionType:  3,
+								PhysicalNicMedium:       1,
 							},
 						},
 						IPSIEEE8021xSettingsResult: ieee8021x.IEEE8021xSettingsResponse{},
-						WiFiSettingsResult:         []wifi.WiFiEndpointSettingsResponse{{}},
+						WiFiSettingsResult: []wifi.WiFiEndpointSettingsResponse{{
+							SSID:                 "test-ssid",
+							AuthenticationMethod: 6,
+							EncryptionMethod:     3,
+							Priority:             1,
+							BSSType:              2,
+						}},
 						CIMIEEE8021xSettingsResult: cimieee8021x.PullResponse{
 							IEEE8021xSettingsItems: []cimieee8021x.IEEE8021xSettingsResponse{{}},
 						},
@@ -77,14 +90,27 @@ func TestGetNetworkSettings(t *testing.T) {
 				Wired: dto.WiredNetworkInfo{
 					IEEE8021x: dto.IEEE8021x{},
 					NetworkInfo: dto.NetworkInfo{
-						LinkPolicy: []int{1, 2},
+						LinkPolicy:             []string{"Sx AC", "S0 DC"},
+						PhysicalConnectionType: "Integrated LAN NIC",
+						PhysicalNicMedium:      "SMBUS",
 					},
 				},
 				Wireless: dto.WirelessNetworkInfo{
-					WiFiNetworks:      []dto.WiFiNetwork{{}},
+					WiFiNetworks: []dto.WiFiNetwork{{
+						SSID:                 "test-ssid",
+						AuthenticationMethod: "WPA2PSK",
+						EncryptionMethod:     "TKIP",
+						Priority:             1,
+						BSSType:              "Independent",
+					}},
 					IEEE8021xSettings: []dto.IEEE8021xSettings{{}},
 					NetworkInfo: dto.NetworkInfo{
-						LinkPolicy: []int{1, 2},
+						LinkPolicy:              []string{"Sx AC", "S0 DC"},
+						LinkPreference:          "Management Engine",
+						LinkControl:             "Management Engine",
+						WLANLinkProtectionLevel: "None",
+						PhysicalConnectionType:  "Wireless LAN",
+						PhysicalNicMedium:       "PCIe",
 					},
 				},
 			},

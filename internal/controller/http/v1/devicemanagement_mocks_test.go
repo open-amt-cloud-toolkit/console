@@ -15,7 +15,8 @@ import (
 
 	websocket "github.com/gorilla/websocket"
 	entity "github.com/open-amt-cloud-toolkit/console/internal/entity"
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	v2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	wsman0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
@@ -82,6 +83,73 @@ func (m *MockWSMAN) Worker() {
 func (mr *MockWSMANMockRecorder) Worker() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Worker", reflect.TypeOf((*MockWSMAN)(nil).Worker))
+}
+
+// MockWebSocketConn is a mock of WebSocketConn interface.
+type MockWebSocketConn struct {
+	ctrl     *gomock.Controller
+	recorder *MockWebSocketConnMockRecorder
+}
+
+// MockWebSocketConnMockRecorder is the mock recorder for MockWebSocketConn.
+type MockWebSocketConnMockRecorder struct {
+	mock *MockWebSocketConn
+}
+
+// NewMockWebSocketConn creates a new mock instance.
+func NewMockWebSocketConn(ctrl *gomock.Controller) *MockWebSocketConn {
+	mock := &MockWebSocketConn{ctrl: ctrl}
+	mock.recorder = &MockWebSocketConnMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockWebSocketConn) EXPECT() *MockWebSocketConnMockRecorder {
+	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockWebSocketConn) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockWebSocketConnMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockWebSocketConn)(nil).Close))
+}
+
+// ReadMessage mocks base method.
+func (m *MockWebSocketConn) ReadMessage() (int, []byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadMessage")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].([]byte)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ReadMessage indicates an expected call of ReadMessage.
+func (mr *MockWebSocketConnMockRecorder) ReadMessage() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadMessage", reflect.TypeOf((*MockWebSocketConn)(nil).ReadMessage))
+}
+
+// WriteMessage mocks base method.
+func (m *MockWebSocketConn) WriteMessage(messageType int, data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WriteMessage", messageType, data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteMessage indicates an expected call of WriteMessage.
+func (mr *MockWebSocketConnMockRecorder) WriteMessage(messageType, data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMessage", reflect.TypeOf((*MockWebSocketConn)(nil).WriteMessage), messageType, data)
 }
 
 // MockRedirection is a mock of Redirection interface.
@@ -598,12 +666,13 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetEventLog(ctx, guid any) *g
 }
 
 // GetFeatures mocks base method.
-func (m *MockDeviceManagementFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, error) {
+func (m *MockDeviceManagementFeature) GetFeatures(ctx context.Context, guid string) (dto.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeatures", ctx, guid)
 	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetFeatures indicates an expected call of GetFeatures.
@@ -718,12 +787,13 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetUserConsentCode(ctx, guid 
 }
 
 // GetVersion mocks base method.
-func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (map[string]any, error) {
+func (m *MockDeviceManagementFeature) GetVersion(ctx context.Context, guid string) (dto.Version, v2.Version, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion", ctx, guid)
-	ret0, _ := ret[0].(map[string]any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(dto.Version)
+	ret1, _ := ret[1].(v2.Version)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetVersion indicates an expected call of GetVersion.
@@ -807,12 +877,13 @@ func (mr *MockDeviceManagementFeatureMockRecorder) SetBootOptions(ctx, guid, boo
 }
 
 // SetFeatures mocks base method.
-func (m *MockDeviceManagementFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error) {
+func (m *MockDeviceManagementFeature) SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, v2.Features, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFeatures", ctx, guid, features)
 	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(v2.Features)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // SetFeatures indicates an expected call of SetFeatures.

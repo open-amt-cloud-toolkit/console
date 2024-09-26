@@ -6,8 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"              //nolint:gci // Import order is intentionally not changed due to project-specific requirements.
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power" //nolint:gci // Import order is intentionally not changed due to project-specific requirements.
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
+
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
 )
 
 // Upgrader defines the interface for upgrading an HTTP connection to a WebSocket connection.
@@ -34,9 +36,9 @@ type Feature interface {
 	Insert(ctx context.Context, d *dto.Device) (*dto.Device, error)
 	GetByColumn(ctx context.Context, columnName, queryValue, tenantID string) ([]dto.Device, error)
 	// Management Calls
-	GetVersion(ctx context.Context, guid string) (map[string]interface{}, error)
-	GetFeatures(ctx context.Context, guid string) (dto.Features, error)
-	SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, error)
+	GetVersion(ctx context.Context, guid string) (dto.Version, dtov2.Version, error)
+	GetFeatures(ctx context.Context, guid string) (dto.Features, dtov2.Features, error)
+	SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, dtov2.Features, error)
 	GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)
 	CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error)
 	DeleteAlarmOccurrences(ctx context.Context, guid, instanceID string) error
