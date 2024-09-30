@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	maxIdleTime = 90 * time.Second
+	maxIdleTime = 300 * time.Second
 	port        = "4433"
 )
 
