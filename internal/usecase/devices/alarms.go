@@ -84,8 +84,8 @@ func (uc *UseCase) addAlarmOutputEntityToDTO(d *amtAlarmClock.AddAlarmOutput) *d
 }
 
 func (uc *UseCase) alarmOccurenceEntityToDTO(d *alarmclock.AlarmClockOccurrence) *dto.AlarmClockOccurrence {
-	startTime, _ := time.Parse(time.RFC3339, d.StartTime)
-	interval, _ := strconv.Atoi(d.Interval)
+	startTime, _ := time.Parse(time.RFC3339, d.StartTime.Datetime.String())
+	interval, _ := strconv.Atoi(d.Interval.Interval)
 	d1 := &dto.AlarmClockOccurrence{
 		ElementName:        d.ElementName,
 		InstanceID:         d.InstanceID,
