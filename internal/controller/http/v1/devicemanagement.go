@@ -161,11 +161,7 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 		return
 	}
 
-	if alarm.InstanceID == nil {
-		alarm.InstanceID = new(string)
-	}
-
-	err := r.d.DeleteAlarmOccurrences(c.Request.Context(), guid, *alarm.InstanceID)
+	err := r.d.DeleteAlarmOccurrences(c.Request.Context(), guid, alarm.Name)
 	if err != nil {
 		r.l.Error(err, "http - v1 - deleteAlarmOccurrences")
 		ErrorResponse(c, err)

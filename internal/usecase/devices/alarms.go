@@ -3,12 +3,18 @@ package devices
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+)
+
+const (
+	minutesPerDay  = 24 * 60
+	minutesPerHour = 60
 )
 
 func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]dto.AlarmClockOccurrence, error) {
@@ -33,7 +39,7 @@ func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]dto.Al
 
 	for i := range alarms {
 		tmpEntity := alarms[i] // create a new variable to avoid memory aliasing
-		d1[i] = *uc.alarmOccurenceEntityToDTO(&tmpEntity)
+		d1[i] = *uc.alarmOccurrenceEntityToDTO(&tmpEntity)
 	}
 
 	return d1, nil
@@ -83,16 +89,53 @@ func (uc *UseCase) addAlarmOutputEntityToDTO(d *amtAlarmClock.AddAlarmOutput) *d
 	return d1
 }
 
-func (uc *UseCase) alarmOccurenceEntityToDTO(d *alarmclock.AlarmClockOccurrence) *dto.AlarmClockOccurrence {
-	startTime, _ := time.Parse(time.RFC3339, d.StartTime)
-	interval, _ := strconv.Atoi(d.Interval)
+func (uc *UseCase) alarmOccurrenceEntityToDTO(d *alarmclock.AlarmClockOccurrence) *dto.AlarmClockOccurrence {
+	intervalInMinutes, _ := ParseInterval(d.Interval.Interval)
+	interval, _ := strconv.Atoi(d.Interval.Interval)
 	d1 := &dto.AlarmClockOccurrence{
 		ElementName:        d.ElementName,
 		InstanceID:         d.InstanceID,
-		StartTime:          startTime,
+		StartTime:          d.StartTime.Datetime,
 		Interval:           interval,
+		IntervalInMinutes:  intervalInMinutes,
 		DeleteOnCompletion: d.DeleteOnCompletion,
 	}
 
 	return d1
+}
+
+func ParseInterval(duration string) (int, error) {
+	if duration == "" {
+		return 0, nil
+	}
+
+	totalMinutes := 0
+
+	// parse days
+	duration = strings.TrimPrefix(duration, "P")
+	indexOfD := strings.Index(duration, "D")
+
+	if indexOfD != -1 {
+		days, err := strconv.Atoi(duration[:indexOfD])
+		if err != nil {
+			return 0, err
+		}
+
+		totalMinutes = days * minutesPerDay
+	}
+
+	// parse time
+	indexOfT := strings.Index(duration, "T")
+	if indexOfT != -1 {
+		duration = strings.ToLower(duration[indexOfT+1:])
+
+		timeDuration, err := time.ParseDuration(duration)
+		if err != nil {
+			return 0, err
+		}
+
+		return totalMinutes + int(timeDuration.Minutes()), nil
+	}
+
+	return totalMinutes, nil
 }
