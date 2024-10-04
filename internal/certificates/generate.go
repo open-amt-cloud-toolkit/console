@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"net/url"
 	"os"
@@ -38,7 +39,7 @@ func GenerateRootCertificate(addThumbPrintToName bool, commonName, country, orga
 	if addThumbPrintToName {
 		hash := sha256.New()
 		hash.Write(privateKey.PublicKey.N.Bytes()) // Simplified approach to get a thumbprint-like result
-		commonName += "-" + string(hash.Sum(nil)[:3])
+		commonName += "-" + fmt.Sprintf("%x", hash.Sum(nil)[:3])
 	}
 
 	if country == "" {
@@ -107,7 +108,7 @@ type CertAndKeyType struct {
 	Key  *rsa.PrivateKey
 }
 
-func IssueWebServerCertificate(rootCert CertAndKeyType, addThumbPrintToName bool, commonName, country, organization string, extKeyUsage x509.ExtKeyUsage, strong bool) (*x509.Certificate, *rsa.PrivateKey, error) {
+func IssueWebServerCertificate(rootCert CertAndKeyType, addThumbPrintToName bool, commonName, country, organization string, strong bool) (*x509.Certificate, *rsa.PrivateKey, error) {
 	keyLength := 2048
 	if strong {
 		keyLength = 3072
@@ -148,16 +149,18 @@ func IssueWebServerCertificate(rootCert CertAndKeyType, addThumbPrintToName bool
 		subject.CommonName += "-" + string(hash.Sum(nil)[:3])
 	}
 
-	template := x509.Certificate{
-		SerialNumber: serialNumber,
-		Subject:      subject,
-		NotBefore:    notBefore,
-		NotAfter:     notAfter,
-		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		ExtKeyUsage:  []x509.ExtKeyUsage{extKeyUsage},
+	hash := sha256.Sum256(keys.PublicKey.N.Bytes())
 
+	template := x509.Certificate{
+		SerialNumber:          serialNumber,
+		Subject:               subject,
+		NotBefore:             notBefore,
+		NotAfter:              notAfter,
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageCertSign | x509.KeyUsageDataEncipherment,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		IsCA:                  false,
+		SubjectKeyId:          hash[:],
 	}
 
 	// Subject Alternative Name

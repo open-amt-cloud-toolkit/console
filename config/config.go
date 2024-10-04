@@ -15,9 +15,10 @@ type (
 
 	// App -.
 	App struct {
-		Name    string `env-required:"false" yaml:"name" env:"APP_NAME"`
-		Repo    string `env-required:"false" yaml:"repo" env:"APP_REPO"`
-		Version string `env-required:"false"`
+		Name       string `env-required:"false" yaml:"name" env:"APP_NAME"`
+		Repo       string `env-required:"false" yaml:"repo" env:"APP_REPO"`
+		Version    string `env-required:"false"`
+		CommonName string `env-required:"false" yaml:"common_name" env:"APP_COMMON_NAME"`
 	}
 
 	// HTTP -.
@@ -45,9 +46,10 @@ func NewConfig() (*Config, error) {
 	// set defaults
 	cfg := &Config{
 		App: App{
-			Name:    "console",
-			Repo:    "open-amt-cloud-toolkit/console",
-			Version: "DEVELOPMENT",
+			Name:       "console",
+			Repo:       "open-amt-cloud-toolkit/console",
+			Version:    "DEVELOPMENT",
+			CommonName: "localhost",
 		},
 		HTTP: HTTP{
 			Host:           "localhost",

@@ -28,6 +28,12 @@ func main() {
 		log.Fatalf("App init error: %s", err)
 	}
 
+	// root, privateKey, err := certificates.GenerateRootCertificate(true, cfg.CommonName, "US", "open-amt-cloud-toolkit", true)
+	// if err != nil {
+	// 	log.Fatalf("Error generating root certificate: %s", err)
+	// }
+	// certificates.IssueWebServerCertificate(certificates.CertAndKeyType{Cert: root, Key: privateKey}, false, cfg.CommonName, "US", "open-amt-cloud-toolkit", true)
+
 	if os.Getenv("GIN_MODE") != "debug" {
 		go func() {
 			browserError := openBrowser("http://localhost:"+cfg.HTTP.Port, runtime.GOOS)
