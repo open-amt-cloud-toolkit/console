@@ -19,7 +19,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.0.0
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.0.0
       - name: Build the Docker image
 
         run: docker build . --file Dockerfile --tag app:${{ github.sha }}
@@ -34,7 +34,7 @@ jobs:
           vuln-type: "os,library"
           severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@294a9d92911152fe08befb9ec03e240add280cb3 # v3.26.8
+        uses: github/codeql-action/upload-sarif@6db8d6351fd0be61f9ed8ebd12ccd35dcec51fea # v3.26.11
         if: always()
         with:
           sarif_file: "trivy-results.sarif"

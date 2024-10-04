@@ -69,7 +69,13 @@ func TestGetNetworkSettings(t *testing.T) {
 							},
 						},
 						IPSIEEE8021xSettingsResult: ieee8021x.IEEE8021xSettingsResponse{},
-						WiFiSettingsResult:         []wifi.WiFiEndpointSettingsResponse{{}},
+						WiFiSettingsResult: []wifi.WiFiEndpointSettingsResponse{{
+							SSID:                 "test-ssid",
+							AuthenticationMethod: 6,
+							EncryptionMethod:     3,
+							Priority:             1,
+							BSSType:              2,
+						}},
 						CIMIEEE8021xSettingsResult: cimieee8021x.PullResponse{
 							IEEE8021xSettingsItems: []cimieee8021x.IEEE8021xSettingsResponse{{}},
 						},
@@ -90,7 +96,13 @@ func TestGetNetworkSettings(t *testing.T) {
 					},
 				},
 				Wireless: dto.WirelessNetworkInfo{
-					WiFiNetworks:      []dto.WiFiNetwork{{}},
+					WiFiNetworks: []dto.WiFiNetwork{{
+						SSID:                 "test-ssid",
+						AuthenticationMethod: "WPA2PSK",
+						EncryptionMethod:     "TKIP",
+						Priority:             1,
+						BSSType:              "Independent",
+					}},
 					IEEE8021xSettings: []dto.IEEE8021xSettings{{}},
 					NetworkInfo: dto.NetworkInfo{
 						LinkPolicy:              []string{"Sx AC", "S0 DC"},

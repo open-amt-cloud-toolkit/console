@@ -14,17 +14,18 @@ import (
 	reflect "reflect"
 	time "time"
 
-	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
 	boot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	messagelog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/messagelog"
+	redirection "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/redirection"
 	setupandconfiguration "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
 	tls0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 	boot0 "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	concrete "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	credential "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
+	kvm "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	service "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	software "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
@@ -113,6 +114,21 @@ func (m *MockManagement) DeleteAlarmOccurrences(instanceID string) error {
 func (mr *MockManagementMockRecorder) DeleteAlarmOccurrences(instanceID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAlarmOccurrences", reflect.TypeOf((*MockManagement)(nil).DeleteAlarmOccurrences), instanceID)
+}
+
+// GetAMTRedirectionService mocks base method.
+func (m *MockManagement) GetAMTRedirectionService() (redirection.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAMTRedirectionService")
+	ret0, _ := ret[0].(redirection.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAMTRedirectionService indicates an expected call of GetAMTRedirectionService.
+func (mr *MockManagementMockRecorder) GetAMTRedirectionService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAMTRedirectionService", reflect.TypeOf((*MockManagement)(nil).GetAMTRedirectionService))
 }
 
 // GetAMTVersion mocks base method.
@@ -265,21 +281,6 @@ func (mr *MockManagementMockRecorder) GetEventLog() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventLog", reflect.TypeOf((*MockManagement)(nil).GetEventLog))
 }
 
-// GetFeatures mocks base method.
-func (m *MockManagement) GetFeatures() (dto.Features, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFeatures")
-	ret0, _ := ret[0].(dto.Features)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFeatures indicates an expected call of GetFeatures.
-func (mr *MockManagementMockRecorder) GetFeatures() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeatures", reflect.TypeOf((*MockManagement)(nil).GetFeatures))
-}
-
 // GetGeneralSettings mocks base method.
 func (m *MockManagement) GetGeneralSettings() (any, error) {
 	m.ctrl.T.Helper()
@@ -308,6 +309,36 @@ func (m *MockManagement) GetHardwareInfo() (any, error) {
 func (mr *MockManagementMockRecorder) GetHardwareInfo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHardwareInfo", reflect.TypeOf((*MockManagement)(nil).GetHardwareInfo))
+}
+
+// GetIPSOptInService mocks base method.
+func (m *MockManagement) GetIPSOptInService() (optin.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIPSOptInService")
+	ret0, _ := ret[0].(optin.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIPSOptInService indicates an expected call of GetIPSOptInService.
+func (mr *MockManagementMockRecorder) GetIPSOptInService() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIPSOptInService", reflect.TypeOf((*MockManagement)(nil).GetIPSOptInService))
+}
+
+// GetKVMRedirection mocks base method.
+func (m *MockManagement) GetKVMRedirection() (kvm.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetKVMRedirection")
+	ret0, _ := ret[0].(kvm.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKVMRedirection indicates an expected call of GetKVMRedirection.
+func (mr *MockManagementMockRecorder) GetKVMRedirection() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKVMRedirection", reflect.TypeOf((*MockManagement)(nil).GetKVMRedirection))
 }
 
 // GetNetworkSettings mocks base method.
@@ -400,6 +431,22 @@ func (mr *MockManagementMockRecorder) GetUserConsentCode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserConsentCode", reflect.TypeOf((*MockManagement)(nil).GetUserConsentCode))
 }
 
+// RequestAMTRedirectionServiceStateChange mocks base method.
+func (m *MockManagement) RequestAMTRedirectionServiceStateChange(ider, sol bool) (redirection.RequestedState, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RequestAMTRedirectionServiceStateChange", ider, sol)
+	ret0, _ := ret[0].(redirection.RequestedState)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// RequestAMTRedirectionServiceStateChange indicates an expected call of RequestAMTRedirectionServiceStateChange.
+func (mr *MockManagementMockRecorder) RequestAMTRedirectionServiceStateChange(ider, sol any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestAMTRedirectionServiceStateChange", reflect.TypeOf((*MockManagement)(nil).RequestAMTRedirectionServiceStateChange), ider, sol)
+}
+
 // SendConsentCode mocks base method.
 func (m *MockManagement) SendConsentCode(code int) (any, error) {
 	m.ctrl.T.Helper()
@@ -428,6 +475,21 @@ func (m *MockManagement) SendPowerAction(action int) (power.PowerActionResponse,
 func (mr *MockManagementMockRecorder) SendPowerAction(action any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendPowerAction", reflect.TypeOf((*MockManagement)(nil).SendPowerAction), action)
+}
+
+// SetAMTRedirectionService mocks base method.
+func (m *MockManagement) SetAMTRedirectionService(arg0 redirection.RedirectionRequest) (redirection.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAMTRedirectionService", arg0)
+	ret0, _ := ret[0].(redirection.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetAMTRedirectionService indicates an expected call of SetAMTRedirectionService.
+func (mr *MockManagementMockRecorder) SetAMTRedirectionService(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAMTRedirectionService", reflect.TypeOf((*MockManagement)(nil).SetAMTRedirectionService), arg0)
 }
 
 // SetBootConfigRole mocks base method.
@@ -460,17 +522,31 @@ func (mr *MockManagementMockRecorder) SetBootData(data any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBootData", reflect.TypeOf((*MockManagement)(nil).SetBootData), data)
 }
 
-// SetFeatures mocks base method.
-func (m *MockManagement) SetFeatures(arg0 dto.Features) (dto.Features, error) {
+// SetIPSOptInService mocks base method.
+func (m *MockManagement) SetIPSOptInService(arg0 optin.OptInServiceRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetFeatures", arg0)
-	ret0, _ := ret[0].(dto.Features)
+	ret := m.ctrl.Call(m, "SetIPSOptInService", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetIPSOptInService indicates an expected call of SetIPSOptInService.
+func (mr *MockManagementMockRecorder) SetIPSOptInService(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetIPSOptInService", reflect.TypeOf((*MockManagement)(nil).SetIPSOptInService), arg0)
+}
+
+// SetKVMRedirection mocks base method.
+func (m *MockManagement) SetKVMRedirection(enable bool) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetKVMRedirection", enable)
+	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SetFeatures indicates an expected call of SetFeatures.
-func (mr *MockManagementMockRecorder) SetFeatures(arg0 any) *gomock.Call {
+// SetKVMRedirection indicates an expected call of SetKVMRedirection.
+func (mr *MockManagementMockRecorder) SetKVMRedirection(enable any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFeatures", reflect.TypeOf((*MockManagement)(nil).SetFeatures), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetKVMRedirection", reflect.TypeOf((*MockManagement)(nil).SetKVMRedirection), enable)
 }

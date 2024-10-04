@@ -81,8 +81,20 @@ func (r *WirelessRepo) GetCount(_ context.Context, tenantID string) (int, error)
 
 // Get -.
 func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.WirelessConfig, error) {
+	const defaultTop = 100
+
 	if top == 0 {
-		top = 100
+		top = defaultTop
+	}
+
+	limitedTop := uint64(defaultTop)
+	if top > 0 {
+		limitedTop = uint64(top)
+	}
+
+	limitedSkip := uint64(0)
+	if skip > 0 {
+		limitedSkip = uint64(skip)
 	}
 
 	sqlQuery, _, err := r.Builder.
@@ -106,8 +118,8 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
 		Where("w.tenant_id = ?", tenantID).
 		OrderBy("w.wireless_profile_name").
-		Limit(uint64(top)).
-		Offset(uint64(skip)).
+		Limit(limitedTop).
+		Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrWiFiDatabase.Wrap("Get", "r.Builder", err)

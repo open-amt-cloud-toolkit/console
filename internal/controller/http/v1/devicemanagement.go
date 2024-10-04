@@ -74,7 +74,7 @@ func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 	guid := c.Param("guid")
 
-	features, err := r.d.GetFeatures(c.Request.Context(), guid)
+	features, _, err := r.d.GetFeatures(c.Request.Context(), guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getFeatures")
 		ErrorResponse(c, err)
@@ -83,12 +83,13 @@ func (r *deviceManagementRoutes) getFeatures(c *gin.Context) {
 	}
 
 	v1Features := map[string]interface{}{
-		"redirection": features.Redirection,
-		"KVM":         features.EnableKVM,
-		"SOL":         features.EnableSOL,
-		"IDER":        features.EnableIDER,
-		"optInState":  features.OptInState,
-		"userConsent": features.UserConsent,
+		"redirection":  features.Redirection,
+		"KVM":          features.EnableKVM,
+		"SOL":          features.EnableSOL,
+		"IDER":         features.EnableIDER,
+		"optInState":   features.OptInState,
+		"userConsent":  features.UserConsent,
+		"kvmAvailable": features.KVMAvailable,
 	}
 
 	c.JSON(http.StatusOK, v1Features)
@@ -98,14 +99,13 @@ func (r *deviceManagementRoutes) setFeatures(c *gin.Context) {
 	guid := c.Param("guid")
 
 	var features dto.Features
-
 	if err := c.ShouldBindJSON(&features); err != nil {
 		ErrorResponse(c, err)
 
 		return
 	}
 
-	features, err := r.d.SetFeatures(c.Request.Context(), guid, features)
+	features, _, err := r.d.SetFeatures(c.Request.Context(), guid, features)
 	if err != nil {
 		r.l.Error(err, "http - v1 - setFeatures")
 		ErrorResponse(c, err)
@@ -161,11 +161,7 @@ func (r *deviceManagementRoutes) deleteAlarmOccurrences(c *gin.Context) {
 		return
 	}
 
-	if alarm.InstanceID == nil {
-		alarm.InstanceID = new(string)
-	}
-
-	err := r.d.DeleteAlarmOccurrences(c.Request.Context(), guid, *alarm.InstanceID)
+	err := r.d.DeleteAlarmOccurrences(c.Request.Context(), guid, alarm.Name)
 	if err != nil {
 		r.l.Error(err, "http - v1 - deleteAlarmOccurrences")
 		ErrorResponse(c, err)

@@ -42,10 +42,10 @@ type WirelessNetworkInfo struct {
 }
 type WiFiNetwork struct {
 	SSID                 string `json:"ssid"`
-	AuthenticationMethod int    `json:"authenticationMethod"`
-	EncryptionMethod     int    `json:"encryptionMethod"`
+	AuthenticationMethod string `json:"authenticationMethod"`
+	EncryptionMethod     string `json:"encryptionMethod"`
 	Priority             int    `json:"priority"`
-	BSSType              int    `json:"bsstype"`
+	BSSType              string `json:"bsstype"`
 }
 type IEEE8021x struct {
 	Enabled       int  `json:"enabled"`

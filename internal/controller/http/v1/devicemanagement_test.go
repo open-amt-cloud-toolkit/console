@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	power "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
@@ -39,8 +38,6 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 	return deviceManagement, engine
 }
 
-var aGoodTime = time.Unix(int64(1073007983), 0)
-
 func TestDeviceManagement(t *testing.T) {
 	t.Parallel()
 
@@ -52,6 +49,7 @@ func TestDeviceManagement(t *testing.T) {
 		requestBody  interface{}
 		expectedCode int
 		response     interface{}
+		responseV2   interface{}
 	}{
 		{
 			name:   "getVersion - successful retrieval",
@@ -70,10 +68,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
-					Return(dto.Features{}, nil)
+					Return(dto.Features{}, dtov2.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "redirection": false, "optInState": 0, "userConsent": ""},
+			response:     map[string]interface{}{"IDER": false, "KVM": false, "SOL": false, "kvmAvailable": false, "redirection": false, "optInState": 0, "userConsent": ""},
 		},
 		{
 			name:        "setFeatures - successful setting",
@@ -81,7 +79,7 @@ func TestDeviceManagement(t *testing.T) {
 			method:      http.MethodPost,
 			requestBody: dto.Features{},
 			mock: func(m *MockDeviceManagementFeature) {
-				m.EXPECT().SetFeatures(context.Background(), "valid-guid", dto.Features{}).Return(dto.Features{}, nil)
+				m.EXPECT().SetFeatures(context.Background(), "valid-guid", dto.Features{}).Return(dto.Features{}, dtov2.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
 			response:     dto.Features{},
@@ -101,15 +99,11 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "deleteAlarmOccurrences - successful deletion",
 			url:    "/api/v1/amt/alarmOccurrences/valid-guid",
 			method: http.MethodDelete,
-			requestBody: dto.AlarmClockOccurrence{
-				ElementName:        "elementName",
-				StartTime:          aGoodTime,
-				Interval:           1,
-				DeleteOnCompletion: true,
-				InstanceID:         "1",
+			requestBody: dto.DeleteAlarmOccurrenceRequest{
+				Name: "instanceID",
 			},
 			mock: func(m *MockDeviceManagementFeature) {
-				m.EXPECT().DeleteAlarmOccurrences(context.Background(), "valid-guid", "1").Return(nil)
+				m.EXPECT().DeleteAlarmOccurrences(context.Background(), "valid-guid", "instanceID").Return(nil)
 			},
 			expectedCode: http.StatusNoContent,
 		},

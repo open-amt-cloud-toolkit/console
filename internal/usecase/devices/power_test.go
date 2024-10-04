@@ -26,6 +26,7 @@ type test struct {
 	manMock  func(*MockWSMAN, *MockManagement)
 	repoMock func(*MockRepository)
 	res      any
+	resV2    any
 	err      error
 
 	action int
