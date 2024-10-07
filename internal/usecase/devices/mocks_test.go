@@ -742,10 +742,10 @@ func (mr *MockFeatureMockRecorder) GetPowerCapabilities(ctx, guid any) *gomock.C
 }
 
 // GetPowerState mocks base method.
-func (m *MockFeature) GetPowerState(ctx context.Context, guid string) (map[string]any, error) {
+func (m *MockFeature) GetPowerState(ctx context.Context, guid string) (v1.PowerState, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPowerState", ctx, guid)
-	ret0, _ := ret[0].(map[string]any)
+	ret0, _ := ret[0].(v1.PowerState)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -156,8 +156,8 @@ func TestGetPowerState(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}{
-				"powerstate": service.PowerState(0),
+			res: dto.PowerState{
+				PowerState: 0,
 			},
 			err: nil,
 		},
@@ -169,7 +169,7 @@ func TestGetPowerState(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: map[string]interface{}(nil),
+			res: dto.PowerState{},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -187,7 +187,7 @@ func TestGetPowerState(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}(nil),
+			res: dto.PowerState{},
 			err: ErrGeneral,
 		},
 	}

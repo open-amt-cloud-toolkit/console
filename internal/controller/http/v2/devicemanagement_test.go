@@ -37,7 +37,7 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 	return deviceManagement, engine
 }
 
-func TestGetFeatures(t *testing.T) {
+func TestDeviceManagement(t *testing.T) {
 	t.Parallel()
 
 	featuresInput := dto.Features{
@@ -60,10 +60,10 @@ func TestGetFeatures(t *testing.T) {
 	tests := []struct {
 		name         string
 		url          string
-		mock         func(m *MockDeviceManagementFeature)
 		method       string
-		requestBody  interface{}
+		mock         func(m *MockDeviceManagementFeature)
 		expectedCode int
+		requestBody  interface{}
 		response     interface{}
 	}{
 		{

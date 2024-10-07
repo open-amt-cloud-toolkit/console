@@ -135,10 +135,10 @@ func TestDeviceManagement(t *testing.T) {
 			method: http.MethodGet,
 			mock: func(m *MockDeviceManagementFeature) {
 				m.EXPECT().GetPowerState(context.Background(), "valid-guid").
-					Return(map[string]interface{}{"state": "on"}, nil)
+					Return(dto.PowerState{PowerState: 2}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     map[string]interface{}{"state": "on"},
+			response:     dto.PowerState{PowerState: 2},
 		},
 		{
 			name:   "powerAction - successful action",
