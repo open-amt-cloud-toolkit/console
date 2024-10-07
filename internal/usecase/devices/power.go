@@ -29,21 +29,21 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 	return response, nil
 }
 
-func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]interface{}, error) {
+func (uc *UseCase) GetPowerState(c context.Context, guid string) (dto.PowerState, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.PowerState{}, err
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	state, err := device.GetPowerState()
 	if err != nil {
-		return nil, err
+		return dto.PowerState{}, err
 	}
 
-	return map[string]interface{}{
-		"powerstate": state[0].PowerState,
+	return dto.PowerState{
+		PowerState: int(state[0].PowerState),
 	}, nil
 }
 
