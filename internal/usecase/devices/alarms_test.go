@@ -158,7 +158,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 		Tags:     nil,
 		TenantID: "tenant-id-456",
 	}
-	occ := dto.AlarmClockOccurrence{
+	occ := dto.AlarmClockOccurrenceInput{
 		ElementName:        "test",
 		InstanceID:         "test",
 		StartTime:          time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),

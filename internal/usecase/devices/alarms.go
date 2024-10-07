@@ -45,7 +45,7 @@ func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]dto.Al
 	return d1, nil
 }
 
-func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error) {
+func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm dto.AlarmClockOccurrenceInput) (dto.AddAlarmOutput, error) {
 	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return dto.AddAlarmOutput{}, err
@@ -95,7 +95,7 @@ func (uc *UseCase) alarmOccurrenceEntityToDTO(d *alarmclock.AlarmClockOccurrence
 	d1 := &dto.AlarmClockOccurrence{
 		ElementName:        d.ElementName,
 		InstanceID:         d.InstanceID,
-		StartTime:          d.StartTime.Datetime,
+		StartTime:          dto.StartTime{Datetime: d.StartTime.Datetime},
 		Interval:           interval,
 		IntervalInMinutes:  intervalInMinutes,
 		DeleteOnCompletion: d.DeleteOnCompletion,

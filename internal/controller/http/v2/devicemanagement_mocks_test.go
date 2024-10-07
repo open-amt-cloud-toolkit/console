@@ -443,7 +443,7 @@ func (mr *MockDeviceManagementFeatureMockRecorder) CancelUserConsent(ctx, guid a
 }
 
 // CreateAlarmOccurrences mocks base method.
-func (m *MockDeviceManagementFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error) {
+func (m *MockDeviceManagementFeature) CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrenceInput) (dto.AddAlarmOutput, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAlarmOccurrences", ctx, guid, alarm)
 	ret0, _ := ret[0].(dto.AddAlarmOutput)
