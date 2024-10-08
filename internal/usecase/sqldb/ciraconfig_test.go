@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
@@ -19,14 +20,6 @@ var (
 	ErrGeneral        = errors.New("general error")
 	ErrDeviceDatabase = errors.New("device database error")
 )
-
-type MockLogger struct{}
-
-func (m *MockLogger) Debug(_ interface{}, _ ...interface{}) {}
-func (m *MockLogger) Info(_ string, _ ...interface{})       {}
-func (m *MockLogger) Warn(_ string, _ ...interface{})       {}
-func (m *MockLogger) Error(_ interface{}, _ ...interface{}) {}
-func (m *MockLogger) Fatal(_ interface{}, _ ...interface{}) {}
 
 var ErrCIRARepoDatabase = errors.New("CIRARepo database error")
 
@@ -133,7 +126,7 @@ func TestCIRARepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -263,7 +256,7 @@ func TestCIRARepo_Get(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			configs, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -366,7 +359,7 @@ func TestCIRARepo_GetByName(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			config, err := repo.GetByName(context.Background(), tc.configName, tc.tenantID)
@@ -480,7 +473,7 @@ func TestCIRARepo_Update(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			updated, err := repo.Update(context.Background(), tc.config)
@@ -573,7 +566,7 @@ func TestCIRARepo_Insert(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			version, err := repo.Insert(context.Background(), tc.config)
@@ -640,7 +633,7 @@ func TestCIRARepo_Delete(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.configName, tc.tenantID)

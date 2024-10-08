@@ -13,18 +13,19 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func ieee8021xconfigsTest(t *testing.T) (*MockIEEE8021xConfigsFeature, *gin.Engine) {
+func ieee8021xconfigsTest(t *testing.T) (*mocks.MockIEEE8021xConfigsFeature, *gin.Engine) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	log := logger.New("error")
-	mockIEEE8021xConfigs := NewMockIEEE8021xConfigsFeature(mockCtl)
+	mockIEEE8021xConfigs := mocks.NewMockIEEE8021xConfigsFeature(mockCtl)
 
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
@@ -38,7 +39,7 @@ type testIEEE8021xConfigs struct {
 	name         string
 	method       string
 	url          string
-	mock         func(repo *MockIEEE8021xConfigsFeature)
+	mock         func(repo *mocks.MockIEEE8021xConfigsFeature)
 	response     interface{}
 	requestBody  dto.IEEE8021xConfig
 	expectedCode int
@@ -63,7 +64,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "get all ieee8021xconfigs",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.IEEE8021xConfig{{
 					ProfileName: "profile",
 				}}, nil)
@@ -75,7 +76,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "get all ieee8021xconfigs - with count",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs?$top=10&$skip=1&$count=true",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.IEEE8021xConfig{{
 					ProfileName: "profile",
 				}}, nil)
@@ -88,7 +89,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "get all ieee8021xconfigs - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
@@ -98,7 +99,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "get ieee8021xconfig by name",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs/profile",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.IEEE8021xConfig{
 					ProfileName: "profile",
 				}, nil)
@@ -110,7 +111,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "get ieee8021xconfig by name - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ieee8021xconfigs/profile",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
@@ -120,7 +121,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "insert ieee8021xconfig",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ieee8021xconfigs",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Insert(context.Background(), &ieee8021xconfigTest).Return(&ieee8021xconfigTest, nil)
 			},
 			response:     ieee8021xconfigTest,
@@ -131,7 +132,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "insert ieee8021xconfig - failed",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ieee8021xconfigs",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Insert(context.Background(), &ieee8021xconfigTest).Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
@@ -142,7 +143,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "delete ieee8021xconfig",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/ieee8021xconfigs/profile",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Delete(context.Background(), "profile", "").Return(nil)
 			},
 			response:     nil,
@@ -152,7 +153,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "delete ieee8021xconfig - failed",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/ieee8021xconfigs/profile",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Delete(context.Background(), "profile", "").Return(ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,
@@ -162,7 +163,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "update ieee8021xconfig",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/ieee8021xconfigs",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Update(context.Background(), &ieee8021xconfigTest).Return(&ieee8021xconfigTest, nil)
 			},
 			response:     ieee8021xconfigTest,
@@ -173,7 +174,7 @@ func TestIEEE8021xConfigsRoutes(t *testing.T) {
 			name:   "update ieee8021xconfig - failed",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/ieee8021xconfigs",
-			mock: func(ieeeConfig *MockIEEE8021xConfigsFeature) {
+			mock: func(ieeeConfig *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeConfig.EXPECT().Update(context.Background(), &ieee8021xconfigTest).Return(nil, ieee8021xconfigs.ErrDatabase)
 			},
 			response:     ieee8021xconfigs.ErrDatabase,

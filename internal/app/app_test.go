@@ -11,6 +11,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/app"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 )
 
 func getFreePort() (string, error) {
@@ -31,8 +32,8 @@ func TestRun(t *testing.T) {
 	t.Cleanup(ctrl.Finish)
 	defer ctrl.Finish()
 
-	mockDB := NewMockDB(ctrl)
-	mockHTTPServer := NewMockHTTPServer(ctrl)
+	mockDB := mocks.NewMockDB(ctrl)
+	mockHTTPServer := mocks.NewMockHTTPServer(ctrl)
 
 	port, err := getFreePort()
 	if err != nil {

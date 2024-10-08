@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
@@ -90,7 +91,7 @@ func TestIEEE8021xRepo_CheckProfileExists(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			exists, err := repo.CheckProfileExists(context.Background(), tc.profileName, tc.tenantID)
@@ -175,7 +176,7 @@ func TestIEEE8021xRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -352,7 +353,7 @@ func TestIEEE8021xRepo_Get(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			configs, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -443,7 +444,7 @@ func TestIEEE8021xRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewIEEE8021xRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			result, err := repo.GetByName(context.Background(), tc.profileName, tc.tenantID)
 
@@ -536,7 +537,7 @@ func TestIEEE8021xRepo_Delete(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.profileName, tc.tenantID)
@@ -654,7 +655,7 @@ func TestIEEE8021xRepo_Update(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			updated, err := repo.Update(context.Background(), tc.config)
@@ -800,7 +801,7 @@ func TestIEEE8021xRepo_Insert(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			version, err := repo.Insert(context.Background(), tc.config)
