@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
@@ -102,7 +103,7 @@ func TestProfileWiFiConfigsRepo_GetByProfileName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileWiFiConfigsRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileWiFiConfigsRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			configs, err := repo.GetByProfileName(context.Background(), tc.profileName, tc.tenantID)
 
@@ -179,7 +180,7 @@ func TestProfileWiFiConfigsRepo_DeleteByProfileName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 
 			repo := sqldb.NewProfileWiFiConfigsRepo(sqlConfig, mockLog)
 
@@ -285,7 +286,7 @@ func TestProfileWiFiConfigsRepo_Insert(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileWiFiConfigsRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileWiFiConfigsRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			_, err = repo.Insert(context.Background(), tc.profile)
 

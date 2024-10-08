@@ -57,6 +57,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/amtexplorer"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -69,7 +70,7 @@ var (
 	}
 )
 
-func initSupportedCallList(m *MockAMTExplorer) []string {
+func initSupportedCallList(m *mocks.MockAMTExplorer) []string {
 	t := reflect.TypeOf(m) // Get the type of the struct
 	methods := []string{}
 	// Iterate through the methods of the struct
@@ -84,15 +85,15 @@ func initSupportedCallList(m *MockAMTExplorer) []string {
 	return methods
 }
 
-func initExplorerTest(t *testing.T) (*amtexplorer.UseCase, *MockRepository, *MockWSMAN, *MockAMTExplorer, dto.Explorer) {
+func initExplorerTest(t *testing.T) (*amtexplorer.UseCase, *mocks.MockDeviceManagementRepository, *mocks.MockAMTExplorerWSMAN, *mocks.MockAMTExplorer, dto.Explorer) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
-	wsmanMock := NewMockWSMAN(mockCtl)
-	amt := NewMockAMTExplorer(mockCtl)
+	repo := mocks.NewMockDeviceManagementRepository(mockCtl)
+	wsmanMock := mocks.NewMockAMTExplorerWSMAN(mockCtl)
+	amt := mocks.NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
 	u := amtexplorer.New(repo, wsmanMock, log)
 
@@ -108,8 +109,8 @@ func formatXML(xml string) string {
 type explorerTest struct {
 	name               string
 	call               string
-	repoMock           func(*MockRepository)
-	amtMock            func(*MockAMTExplorer, *MockWSMAN)
+	repoMock           func(*mocks.MockDeviceManagementRepository)
+	amtMock            func(*mocks.MockAMTExplorer, *mocks.MockAMTExplorerWSMAN)
 	SupportedClassList []string
 	res                any
 	err                error
@@ -153,12 +154,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "ExecuteCall GetById fails",
 			call: "ById",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(nil, ErrExplorerGeneral)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(context.Background(), true).
 					Return(amt)
@@ -169,12 +170,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "ExecuteCall Unsupported Explorer Command",
 			call: "NotSupportedCommand",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -185,12 +186,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMT8021xCredentialContextSuccess",
 			call: "AMT8021xCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -205,12 +206,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMT8021xCredentialContextError",
 			call: "AMT8021xCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -225,12 +226,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMT8021xProfileSuccess",
 			call: "AMT8021xProfile",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -245,12 +246,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMT8021xProfileError",
 			call: "AMT8021xProfile",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -264,12 +265,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTAlarmClockServiceSuccess",
 			call: "AMTAlarmClockService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -286,12 +287,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTAlarmClockServiceError",
 			call: "AMTAlarmClockService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -305,12 +306,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTAuditLogSuccess",
 			call: "AMTAuditLog",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -327,12 +328,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTAuditLogError",
 			call: "AMTAuditLog",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -346,12 +347,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTAuthorizationServiceSuccess",
 			call: "AMTAuthorizationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -368,12 +369,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTAuthorizationServiceError",
 			call: "AMTAuthorizationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -387,12 +388,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTBootCapabilitiesSuccess",
 			call: "AMTBootCapabilities",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -406,12 +407,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTBootCapabilitiesError",
 			call: "AMTBootCapabilities",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -425,12 +426,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTBootSettingDataSuccess",
 			call: "AMTBootSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -444,12 +445,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTBootSettingDataError",
 			call: "AMTBootSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -463,12 +464,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTEnvironmentDetectionSettingDataSuccess",
 			call: "AMTEnvironmentDetectionSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -482,12 +483,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTEnvironmentDetectionSettingDataError",
 			call: "AMTEnvironmentDetectionSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -501,12 +502,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTEthernetPortSettingsSuccess",
 			call: "AMTEthernetPortSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -520,12 +521,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTEthernetPortSettingsError",
 			call: "AMTEthernetPortSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -539,12 +540,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTGeneralSettingsSuccess",
 			call: "AMTGeneralSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -558,12 +559,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTGeneralSettingsError",
 			call: "AMTGeneralSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -577,12 +578,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTKerberosSettingDataSuccess",
 			call: "AMTKerberosSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -596,12 +597,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTKerberosSettingDataError",
 			call: "AMTKerberosSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -615,12 +616,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTManagementPresenceRemoteSAPSuccess",
 			call: "AMTManagementPresenceRemoteSAP",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -634,12 +635,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTManagementPresenceRemoteSAPError",
 			call: "AMTManagementPresenceRemoteSAP",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -653,12 +654,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTMessageLogSuccess",
 			call: "AMTMessageLog",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -672,12 +673,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTMessageLogError",
 			call: "AMTMessageLog",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -691,12 +692,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTMPSUsernamePasswordSuccess",
 			call: "AMTMPSUsernamePassword",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -710,12 +711,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTMPSUsernamePasswordError",
 			call: "AMTMPSUsernamePassword",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -729,12 +730,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTPublicKeyCertificateSuccess",
 			call: "AMTPublicKeyCertificate",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -748,12 +749,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTPublicKeyCertificateError",
 			call: "AMTPublicKeyCertificate",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -767,12 +768,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTPublicKeyManagementServiceSuccess",
 			call: "AMTPublicKeyManagementService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -786,12 +787,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTPublicKeyManagementServiceError",
 			call: "AMTPublicKeyManagementService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -805,12 +806,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTPublicPrivateKeyPairSuccess",
 			call: "AMTPublicPrivateKeyPair",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -824,12 +825,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTPublicPrivateKeyPairError",
 			call: "AMTPublicPrivateKeyPair",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -843,12 +844,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRedirectionServiceSuccess",
 			call: "AMTRedirectionService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -862,12 +863,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRedirectionServiceError",
 			call: "AMTRedirectionService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -881,12 +882,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRemoteAccessPolicyAppliesToMPSSuccess",
 			call: "AMTRemoteAccessPolicyAppliesToMPS",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -900,12 +901,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRemoteAccessPolicyAppliesToMPSError",
 			call: "AMTRemoteAccessPolicyAppliesToMPS",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -919,12 +920,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRemoteAccessPolicyRuleSuccess",
 			call: "AMTRemoteAccessPolicyRule",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -938,12 +939,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRemoteAccessPolicyRuleError",
 			call: "AMTRemoteAccessPolicyRule",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -957,12 +958,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRemoteAccessServiceSuccess",
 			call: "AMTRemoteAccessService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -976,12 +977,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTRemoteAccessServiceError",
 			call: "AMTRemoteAccessService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -995,12 +996,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTSetupAndConfigurationServiceSuccess",
 			call: "AMTSetupAndConfigurationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1014,12 +1015,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTSetupAndConfigurationServiceError",
 			call: "AMTSetupAndConfigurationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1033,12 +1034,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTTimeSynchronizationServiceSuccess",
 			call: "AMTTimeSynchronizationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1052,12 +1053,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTTimeSynchronizationServiceError",
 			call: "AMTTimeSynchronizationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1071,12 +1072,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTTLSCredentialContextSuccess",
 			call: "AMTTLSCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1090,12 +1091,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTTLSCredentialContextError",
 			call: "AMTTLSCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1109,12 +1110,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTTLSProtocolEndpointCollectionSuccess",
 			call: "AMTTLSProtocolEndpointCollection",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1128,12 +1129,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTTLSProtocolEndpointCollectionError",
 			call: "AMTTLSProtocolEndpointCollection",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1147,12 +1148,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTTLSSettingDataSuccess",
 			call: "AMTTLSSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1166,12 +1167,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTAMTTLSSettingDataError",
 			call: "AMTAMTTLSSettingData",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1185,12 +1186,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTUserInitiatedConnectionServiceSuccess",
 			call: "AMTUserInitiatedConnectionService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1204,12 +1205,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getAMTUserInitiatedConnectionServiceError",
 			call: "AMTUserInitiatedConnectionService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1223,12 +1224,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "GetAMTWiFiPortConfigurationServiceSuccess",
 			call: "AMTWiFiPortConfigurationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1243,12 +1244,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "GetAMTWiFiPortConfigurationServiceError",
 			call: "AMTWiFiPortConfigurationService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1262,12 +1263,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBIOSElementSuccess",
 			call: "CIMBIOSElement",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1281,12 +1282,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBIOSElementError",
 			call: "CIMBIOSElement",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1300,12 +1301,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBootConfigSettingSuccess",
 			call: "CIMBootConfigSetting",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1319,12 +1320,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBootConfigSettingError",
 			call: "CIMBootConfigSetting",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1338,12 +1339,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBootServiceSuccess",
 			call: "CIMBootService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1357,12 +1358,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBootServiceError",
 			call: "CIMBootService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1376,12 +1377,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBootSourceSettingSuccess",
 			call: "CIMBootSourceSetting",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1395,12 +1396,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMBootSourceSettingError",
 			call: "CIMBootSourceSetting",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1414,12 +1415,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMCardSuccess",
 			call: "CIMCard",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1433,12 +1434,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMCardError",
 			call: "CIMCard",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1452,12 +1453,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMChassisSuccess",
 			call: "CIMChassis",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1471,12 +1472,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMChassisError",
 			call: "CIMChassis",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1490,12 +1491,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMChipSuccess",
 			call: "CIMChip",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1509,12 +1510,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMChipError",
 			call: "CIMChip",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1528,12 +1529,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMComputerSystemPackageSuccess",
 			call: "CIMComputerSystemPackage",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1547,12 +1548,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMComputerSystemPackageError",
 			call: "CIMComputerSystemPackage",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1566,12 +1567,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMConcreteDependencySuccess",
 			call: "CIMConcreteDependency",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1585,12 +1586,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMConcreteDependencyError",
 			call: "CIMConcreteDependency",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1604,12 +1605,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMCredentialContextSuccess",
 			call: "CIMCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1623,12 +1624,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMCredentialContextError",
 			call: "CIMCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1642,12 +1643,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMIEEE8021xSettingsSuccess",
 			call: "CIMIEEE8021xSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1661,12 +1662,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMIEEE8021xSettingsError",
 			call: "CIMIEEE8021xSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1680,12 +1681,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMKVMRedirectionSAPSuccess",
 			call: "CIMKVMRedirectionSAP",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1699,12 +1700,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMKVMRedirectionSAPError",
 			call: "CIMKVMRedirectionSAP",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1718,12 +1719,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMMediaAccessDeviceSuccess",
 			call: "CIMMediaAccessDevice",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1737,12 +1738,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMMediaAccessDeviceError",
 			call: "CIMMediaAccessDevice",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1756,12 +1757,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMPhysicalMemorySuccess",
 			call: "CIMPhysicalMemory",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1775,12 +1776,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMPhysicalMemoryError",
 			call: "CIMPhysicalMemory",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1794,12 +1795,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMPhysicalPackageSuccess",
 			call: "CIMPhysicalPackage",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1813,12 +1814,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMPhysicalPackageError",
 			call: "CIMPhysicalPackage",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1832,12 +1833,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMPowerManagementServiceSuccess",
 			call: "CIMPowerManagementService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1851,12 +1852,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMPowerManagementServiceError",
 			call: "CIMPowerManagementService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1870,12 +1871,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMProcessorSuccess",
 			call: "CIMProcessor",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1889,12 +1890,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMProcessorError",
 			call: "CIMProcessor",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1908,12 +1909,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMServiceAvailableToElementSuccess",
 			call: "CIMServiceAvailableToElement",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1927,12 +1928,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMServiceAvailableToElementError",
 			call: "CIMServiceAvailableToElement",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1946,12 +1947,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMSoftwareIdentitySuccess",
 			call: "CIMSoftwareIdentity",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1965,12 +1966,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMSoftwareIdentityError",
 			call: "CIMSoftwareIdentity",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -1984,12 +1985,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMSystemPackagingSuccess",
 			call: "CIMSystemPackaging",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2003,12 +2004,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMSystemPackagingError",
 			call: "CIMSystemPackaging",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2022,12 +2023,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMWiFiEndpointSettingsSuccess",
 			call: "CIMWiFiEndpointSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2041,12 +2042,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMWiFiEndpointSettingsError",
 			call: "CIMWiFiEndpointSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2060,12 +2061,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMWiFiPortSuccess",
 			call: "CIMWiFiPort",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2079,12 +2080,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getCIMWiFiPortError",
 			call: "CIMWiFiPort",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2098,12 +2099,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPS8021xCredentialContextSuccess",
 			call: "IPS8021xCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2117,12 +2118,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPS8021xCredentialContextError",
 			call: "IPS8021xCredentialContext",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2136,12 +2137,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSAlarmClockOccurrenceSuccess",
 			call: "IPSAlarmClockOccurrence",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2155,12 +2156,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSAlarmClockOccurrenceError",
 			call: "IPSAlarmClockOccurrence",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2174,12 +2175,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSHostBasedSetupServiceSuccess",
 			call: "IPSHostBasedSetupService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2193,12 +2194,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSHostBasedSetupServiceError",
 			call: "IPSHostBasedSetupService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2212,12 +2213,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSIEEE8021xSettingsSuccess",
 			call: "IPSIEEE8021xSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2231,12 +2232,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSIEEE8021xSettingsError",
 			call: "IPSIEEE8021xSettings",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2250,12 +2251,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSOptInServiceSuccess",
 			call: "IPSOptInService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)
@@ -2269,12 +2270,12 @@ func TestExecuteCall(t *testing.T) {
 		{
 			name: "getIPSOptInServiceError",
 			call: "IPSOptInService",
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, device.TenantID).
 					Return(device, nil)
 			},
-			amtMock: func(amt *MockAMTExplorer, man *MockWSMAN) {
+			amtMock: func(amt *mocks.MockAMTExplorer, man *mocks.MockAMTExplorerWSMAN) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), true).
 					Return(amt)

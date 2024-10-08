@@ -14,27 +14,28 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initInfoTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
+func initInfoTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.MockManagement, *mocks.MockDeviceManagementRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
+	repo := mocks.NewMockDeviceManagementRepository(mockCtl)
 
-	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock := mocks.NewMockWSMAN(mockCtl)
 	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
-	management := NewMockManagement(mockCtl)
+	management := mocks.NewMockManagement(mockCtl)
 
 	log := logger.New("error")
 
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
 
 	return u, wsmanMock, management, repo
 }
@@ -82,7 +83,7 @@ func TestGetVersion(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -94,7 +95,7 @@ func TestGetVersion(t *testing.T) {
 					GetSetupAndConfiguration().
 					Return(responses, nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -135,8 +136,8 @@ func TestGetVersion(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -169,7 +170,7 @@ func TestGetVersion(t *testing.T) {
 		{
 			name:   "GetAMTVersion fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -177,7 +178,7 @@ func TestGetVersion(t *testing.T) {
 					GetAMTVersion().
 					Return(softwares, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -190,7 +191,7 @@ func TestGetVersion(t *testing.T) {
 		{
 			name:   "GetSetupAndConfiguration fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -202,7 +203,7 @@ func TestGetVersion(t *testing.T) {
 					GetSetupAndConfiguration().
 					Return(responses, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -264,7 +265,7 @@ func TestGetHardwareInfo(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -272,7 +273,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					GetHardwareInfo().
 					Return(gomock.Any(), nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -283,8 +284,8 @@ func TestGetHardwareInfo(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -295,7 +296,7 @@ func TestGetHardwareInfo(t *testing.T) {
 		{
 			name:   "GetFeatures fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -303,7 +304,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					GetHardwareInfo().
 					Return(nil, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -344,7 +345,7 @@ func TestGetAuditLog(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -352,7 +353,7 @@ func TestGetAuditLog(t *testing.T) {
 					GetAuditLog(1).
 					Return(auditlog.Response{}, nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -363,8 +364,8 @@ func TestGetAuditLog(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -378,7 +379,7 @@ func TestGetAuditLog(t *testing.T) {
 		{
 			name:   "GetFeatures fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -386,7 +387,7 @@ func TestGetAuditLog(t *testing.T) {
 					GetAuditLog(1).
 					Return(auditlog.Response{}, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -427,7 +428,7 @@ func TestGetEventLog(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -435,7 +436,7 @@ func TestGetEventLog(t *testing.T) {
 					GetEventLog().
 					Return(messagelog.GetRecordsResponse{}, nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -446,8 +447,8 @@ func TestGetEventLog(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -458,7 +459,7 @@ func TestGetEventLog(t *testing.T) {
 		{
 			name:   "GetFeatures fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -466,7 +467,7 @@ func TestGetEventLog(t *testing.T) {
 					GetEventLog().
 					Return(messagelog.GetRecordsResponse{}, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -507,7 +508,7 @@ func TestGetGeneralSettings(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -515,7 +516,7 @@ func TestGetGeneralSettings(t *testing.T) {
 					GetGeneralSettings().
 					Return(gomock.Any(), nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -526,8 +527,8 @@ func TestGetGeneralSettings(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -538,7 +539,7 @@ func TestGetGeneralSettings(t *testing.T) {
 		{
 			name:   "GetFeatures fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -546,7 +547,7 @@ func TestGetGeneralSettings(t *testing.T) {
 					GetGeneralSettings().
 					Return(nil, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -588,7 +589,7 @@ func TestGetDiskInfo(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -596,7 +597,7 @@ func TestGetDiskInfo(t *testing.T) {
 					GetDiskInfo().
 					Return(gomock.Any(), nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -607,8 +608,8 @@ func TestGetDiskInfo(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -619,7 +620,7 @@ func TestGetDiskInfo(t *testing.T) {
 		{
 			name:   "GetDiskInfo fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -627,7 +628,7 @@ func TestGetDiskInfo(t *testing.T) {
 					GetDiskInfo().
 					Return(nil, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)

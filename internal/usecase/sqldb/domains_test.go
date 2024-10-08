@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
@@ -83,7 +84,7 @@ func TestDomainRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -235,7 +236,7 @@ func TestDomainRepo_Get(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			domains, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -366,7 +367,7 @@ func TestDomainRepo_GetDomainByDomainSuffix(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			domain, err := repo.GetDomainByDomainSuffix(context.Background(), tc.domainSuffix, tc.tenantID)
@@ -450,7 +451,7 @@ func TestDomainRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewDomainRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewDomainRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			domain, err := repo.GetByName(context.Background(), tc.domainName, tc.tenantID)
 
@@ -541,7 +542,7 @@ func TestDomainRepo_Delete(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.domainName, tc.tenantID)
@@ -659,7 +660,7 @@ func TestDomainRepo_Update(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			updated, err := repo.Update(context.Background(), tc.domain)
@@ -779,7 +780,7 @@ func TestDomainRepo_Insert(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			version, err := repo.Insert(context.Background(), tc.domain)

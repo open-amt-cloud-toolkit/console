@@ -123,8 +123,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"e.wired_interface",
 		).
 		OrderBy("p.profile_name").
-		Limit(limitedTop).
-		Offset(limitedSkip).
+		Limit(limitedTop).Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrProfileDatabase.Wrap("Get", "r.Builder", err)
@@ -146,8 +145,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 	for rows.Next() {
 		p := entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword,
-			&p.CIRAConfigName,
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword, &p.CIRAConfigName,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
 			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)

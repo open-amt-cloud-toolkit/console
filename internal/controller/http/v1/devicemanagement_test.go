@@ -16,20 +16,21 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var ErrGeneral = errors.New("general error")
 
-func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engine) {
+func deviceManagementTest(t *testing.T) (*mocks.MockDeviceManagementFeature, *gin.Engine) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	log := logger.New("error")
-	deviceManagement := NewMockDeviceManagementFeature(mockCtl)
-	amtExplorerMock := NewMockAMTExplorerFeature(mockCtl)
+	deviceManagement := mocks.NewMockDeviceManagementFeature(mockCtl)
+	amtExplorerMock := mocks.NewMockAMTExplorerFeature(mockCtl)
 	engine := gin.New()
 	handler := engine.Group("/api/v1")
 
@@ -44,7 +45,7 @@ func TestDeviceManagement(t *testing.T) {
 	tests := []struct {
 		name         string
 		url          string
-		mock         func(m *MockDeviceManagementFeature)
+		mock         func(m *mocks.MockDeviceManagementFeature)
 		method       string
 		requestBody  interface{}
 		expectedCode int
@@ -55,7 +56,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getVersion - successful retrieval",
 			url:    "/api/v1/amt/version/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetVersion(context.Background(), "valid-guid").
 					Return(dto.Version{}, dtov2.Version{}, nil)
 			},
@@ -66,7 +67,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getFeatures - successful retrieval",
 			url:    "/api/v1/amt/features/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
 					Return(dto.Features{}, dtov2.Features{}, nil)
 			},
@@ -78,7 +79,7 @@ func TestDeviceManagement(t *testing.T) {
 			url:         "/api/v1/amt/features/valid-guid",
 			method:      http.MethodPost,
 			requestBody: dto.Features{},
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().SetFeatures(context.Background(), "valid-guid", dto.Features{}).Return(dto.Features{}, dtov2.Features{}, nil)
 			},
 			expectedCode: http.StatusOK,
@@ -88,7 +89,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getAlarmOccurrences - successful retrieval",
 			url:    "/api/v1/amt/alarmOccurrences/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetAlarmOccurrences(context.Background(), "valid-guid").
 					Return([]dto.AlarmClockOccurrence{}, nil)
 			},
@@ -102,7 +103,7 @@ func TestDeviceManagement(t *testing.T) {
 			requestBody: dto.DeleteAlarmOccurrenceRequest{
 				Name: "instanceID",
 			},
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().DeleteAlarmOccurrences(context.Background(), "valid-guid", "instanceID").Return(nil)
 			},
 			expectedCode: http.StatusNoContent,
@@ -111,7 +112,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getHardwareInfo - successful retrieval",
 			url:    "/api/v1/amt/hardwareInfo/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetHardwareInfo(context.Background(), "valid-guid").
 					Return(map[string]interface{}{"hardware": "info"}, nil)
 			},
@@ -122,7 +123,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getDiskInfo - successful retrieval",
 			url:    "/api/v1/amt/diskInfo/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetDiskInfo(context.Background(), "valid-guid").
 					Return(map[string]interface{}{"disk": "info"}, nil)
 			},
@@ -133,7 +134,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getPowerState - successful retrieval",
 			url:    "/api/v1/amt/power/state/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetPowerState(context.Background(), "valid-guid").
 					Return(dto.PowerState{PowerState: 2}, nil)
 			},
@@ -147,7 +148,7 @@ func TestDeviceManagement(t *testing.T) {
 			requestBody: dto.PowerAction{
 				Action: 4,
 			},
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().SendPowerAction(context.Background(), "valid-guid", 4).
 					Return(power.PowerActionResponse{ReturnValue: 0}, nil)
 			},
@@ -158,7 +159,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getAuditLog - successful retrieval",
 			url:    "/api/v1/amt/log/audit/valid-guid?startIndex=0",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetAuditLog(context.Background(), 0, "valid-guid").
 					Return(dto.AuditLog{}, nil)
 			},
@@ -169,7 +170,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getEventLog - successful retrieval",
 			url:    "/api/v1/amt/log/event/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetEventLog(context.Background(), "valid-guid").
 					Return([]dto.EventLog{}, nil)
 			},
@@ -183,7 +184,7 @@ func TestDeviceManagement(t *testing.T) {
 			requestBody: dto.BootSetting{
 				Action: 109,
 			},
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().SetBootOptions(context.Background(), "valid-guid", dto.BootSetting{
 					Action: 109,
 				}).Return(power.PowerActionResponse{ReturnValue: 0}, nil)
@@ -195,7 +196,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "successful retrieval",
 			url:    "/api/v1/amt/networkSettings/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetNetworkSettings(context.Background(), "valid-guid").
 					Return(dto.NetworkSettings{}, nil)
 			},
@@ -206,7 +207,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getCertificates - successful retrieval",
 			url:    "/api/v1/amt/certificates/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
 					Return(dto.SecuritySettings{}, nil)
 			},
@@ -217,7 +218,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getCertificates - failed retrieval",
 			url:    "/api/v1/amt/certificates/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetCertificates(context.Background(), "valid-guid").
 					Return(dto.SecuritySettings{}, ErrGeneral)
 			},
@@ -228,7 +229,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getTLSsettingData - successful retrieval",
 			url:    "/api/v1/amt/tls/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
 					Return([]dto.SettingDataResponse{}, nil)
 			},
@@ -239,7 +240,7 @@ func TestDeviceManagement(t *testing.T) {
 			name:   "getTLSsettingData - failed retrieval",
 			url:    "/api/v1/amt/tls/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetTLSSettingData(context.Background(), "valid-guid").
 					Return([]dto.SettingDataResponse{}, ErrGeneral)
 			},

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
@@ -81,7 +82,7 @@ func TestProfileRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewProfileRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -391,7 +392,7 @@ func TestProfileRepo_Get(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewProfileRepo(sqlConfig, mockLog)
 
 			profiles, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -578,7 +579,7 @@ func TestProfileRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			profile, err := repo.GetByName(context.Background(), tc.profileName, tc.tenantID)
 
@@ -672,7 +673,7 @@ func TestProfileRepo_Delete(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewProfileRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.profileName, tc.tenantID)
@@ -845,7 +846,7 @@ func TestProfileRepo_Update(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			updated, err := repo.Update(context.Background(), tc.profile)
 
@@ -1004,7 +1005,7 @@ func TestProfileRepo_Insert(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			_, err = repo.Insert(context.Background(), tc.profile)
 

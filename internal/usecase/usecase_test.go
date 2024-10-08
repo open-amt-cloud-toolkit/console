@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
@@ -16,7 +17,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
-	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 type usecaseTest struct {
@@ -32,19 +32,19 @@ func TestUsecases(t *testing.T) {
 		{
 			name: "NewUseCases initializes correctly",
 			initializeFunc: func() *Usecases {
-				mockDB := NewMockDB()
-				mockLogger := &MockLogger{}
+				mockDB := mocks.NewMockSQLDB()
+				mockLogger := mocks.NewMockLogger(nil)
 
 				return NewUseCases(mockDB, mockLogger)
 			},
 			expectedResult: &Usecases{
-				Domains:            domains.New(sqldb.NewDomainRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}),
-				Devices:            devices.New(sqldb.NewDeviceRepo(&db.SQL{}, &MockLogger{}), wsman.NewGoWSMANMessages(&MockLogger{}), devices.NewRedirector(), &MockLogger{}),
-				Profiles:           profiles.New(sqldb.NewProfileRepo(&db.SQL{}, &MockLogger{}), wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, &MockLogger{}), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}), &MockLogger{}), profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}), &MockLogger{}),
-				IEEE8021xProfiles:  ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}),
-				CIRAConfigs:        ciraconfigs.New(sqldb.NewCIRARepo(&db.SQL{}, &MockLogger{}), &MockLogger{}),
-				WirelessProfiles:   wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, &MockLogger{}), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}), &MockLogger{}),
-				ProfileWiFiConfigs: profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, &MockLogger{}), &MockLogger{}),
+				Domains:            domains.New(sqldb.NewDomainRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+				Devices:            devices.New(sqldb.NewDeviceRepo(&db.SQL{}, mocks.NewMockLogger(nil)), wsman.NewGoWSMANMessages(mocks.NewMockLogger(nil)), devices.NewRedirector(), mocks.NewMockLogger(nil)),
+				Profiles:           profiles.New(sqldb.NewProfileRepo(&db.SQL{}, mocks.NewMockLogger(nil)), wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, mocks.NewMockLogger(nil)), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+				IEEE8021xProfiles:  ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+				CIRAConfigs:        ciraconfigs.New(sqldb.NewCIRARepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+				WirelessProfiles:   wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, mocks.NewMockLogger(nil)), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+				ProfileWiFiConfigs: profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
 			},
 		},
 	}
@@ -77,18 +77,6 @@ func TestUsecases(t *testing.T) {
 	}
 }
 
-type MockDB struct {
-	*db.SQL
-}
-
-func NewMockDB() *db.SQL {
-	return &db.SQL{}
-}
-
-type MockLogger struct {
-	logger.Interface
-}
-
 func TestInitialization(t *testing.T) {
 	t.Parallel()
 
@@ -109,8 +97,8 @@ func TestInitialization(t *testing.T) {
 		t.Run(tc.level, func(t *testing.T) {
 			t.Parallel()
 
-			mockDB := NewMockDB()
-			mockLogger := &MockLogger{}
+			mockDB := mocks.NewMockSQLDB()
+			mockLogger := mocks.NewMockLogger(nil)
 
 			uc := NewUseCases(mockDB, mockLogger)
 
