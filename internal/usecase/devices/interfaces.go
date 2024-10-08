@@ -64,7 +64,7 @@ type (
 		DeleteAlarmOccurrences(ctx context.Context, guid, instanceID string) error
 		GetHardwareInfo(ctx context.Context, guid string) (interface{}, error)
 		GetPowerState(ctx context.Context, guid string) (dto.PowerState, error)
-		GetPowerCapabilities(ctx context.Context, guid string) (map[string]interface{}, error)
+		GetPowerCapabilities(ctx context.Context, guid string) (dto.PowerCapabilities, error)
 		GetGeneralSettings(ctx context.Context, guid string) (interface{}, error)
 		CancelUserConsent(ctx context.Context, guid string) (interface{}, error)
 		GetUserConsentCode(ctx context.Context, guid string) (map[string]interface{}, error)

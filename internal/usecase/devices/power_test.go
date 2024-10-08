@@ -238,17 +238,17 @@ func TestGetPowerCapabilities(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}{
-				"Power cycle":              5,
-				"Power down":               8,
-				"Power on to IDE-R CDROM":  203,
-				"Power on to IDE-R Floppy": 201,
-				"Power on to PXE":          401,
-				"Power up":                 2,
-				"Reset":                    10,
-				"Reset to IDE-R CDROM":     202,
-				"Reset to IDE-R Floppy":    200,
-				"Reset to PXE":             400,
+			res: dto.PowerCapabilities{
+				PowerUp:             2,
+				PowerCycle:          5,
+				PowerDown:           8,
+				Reset:               10,
+				ResetToIDERFloppy:   200,
+				PowerOnToIDERFloppy: 201,
+				ResetToIDERCDROM:    202,
+				PowerOnToIDERCDROM:  203,
+				ResetToPXE:          400,
+				PowerOnToPXE:        401,
 			},
 			err: nil,
 		},
@@ -260,7 +260,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: map[string]interface{}(nil),
+			res: dto.PowerCapabilities{},
 			err: devices.ErrDatabase,
 		},
 		{
@@ -281,7 +281,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}(nil),
+			res: dto.PowerCapabilities{},
 			err: ErrGeneral,
 		},
 	}
