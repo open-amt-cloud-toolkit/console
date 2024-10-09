@@ -168,6 +168,22 @@ func (mr *MockProfilesFeatureMockRecorder) Delete(ctx, profileName, tenantID any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockProfilesFeature)(nil).Delete), ctx, profileName, tenantID)
 }
 
+// Export mocks base method.
+func (m *MockProfilesFeature) Export(ctx context.Context, profileName, tenantID string) (string, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Export", ctx, profileName, tenantID)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// Export indicates an expected call of Export.
+func (mr *MockProfilesFeatureMockRecorder) Export(ctx, profileName, tenantID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Export", reflect.TypeOf((*MockProfilesFeature)(nil).Export), ctx, profileName, tenantID)
+}
+
 // Get mocks base method.
 func (m *MockProfilesFeature) Get(ctx context.Context, top, skip int, tenantID string) ([]dto.Profile, error) {
 	m.ctrl.T.Helper()

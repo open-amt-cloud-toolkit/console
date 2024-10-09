@@ -106,6 +106,11 @@ func setupLocalDB(migrationsSource source.Driver) error {
 		}
 	}
 
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		return err
+	}
+
 	defer m.Close()
 
 	return nil

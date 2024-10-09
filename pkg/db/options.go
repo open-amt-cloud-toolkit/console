@@ -26,7 +26,7 @@ func ConnTimeout(timeout time.Duration) Option {
 	}
 }
 
-// ConnTimeout -.
+// EnableForeignKeys -.
 func EnableForeignKeys(value bool) Option {
 	return func(c *SQL) {
 		c.enableForeignKeys = value

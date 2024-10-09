@@ -74,7 +74,7 @@ func TestCIRARepo_GetCount(t *testing.T) {
 		{
 			name: "Successful count",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO ciraconfigs (tenant_id) VALUES (?)`, "tenant1")
+				_, err := dbConn.Exec(`INSERT INTO ciraconfigs (cira_config_name, tenant_id) VALUES (?,?)`, "cira1", "tenant1")
 				require.NoError(t, err)
 			},
 			tenantID: "tenant1",
@@ -102,17 +102,8 @@ func TestCIRARepo_GetCount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupDatabase(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE ciraconfigs (
-					id INTEGER PRIMARY KEY AUTOINCREMENT,
-					tenant_id TEXT NOT NULL
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -153,21 +144,7 @@ func setupDatabase(t *testing.T) *sql.DB {
 	dbConn, err := sql.Open("sqlite", ":memory:")
 	require.NoError(t, err)
 
-	_, err = dbConn.Exec(`
-		CREATE TABLE ciraconfigs (
-			cira_config_name TEXT NOT NULL,
-			mps_server_address TEXT NOT NULL,
-			mps_port INTEGER NOT NULL,
-			user_name TEXT NOT NULL,
-			password TEXT NOT NULL,
-			common_name TEXT NOT NULL,
-			server_address_format INTEGER NOT NULL,
-			auth_method INTEGER NOT NULL,
-			mps_root_certificate TEXT NOT NULL,
-			proxydetails TEXT NOT NULL,
-			tenant_id TEXT NOT NULL
-		);
-	`)
+	_, err = dbConn.Exec(schema)
 	require.NoError(t, err)
 
 	return dbConn
@@ -351,8 +328,7 @@ func TestCIRARepo_GetByName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := setupTestDB()
-			require.NoError(t, err)
+			dbConn := setupDatabase(t)
 			defer dbConn.Close()
 
 			tc.setup(dbConn)
@@ -367,31 +343,6 @@ func TestCIRARepo_GetByName(t *testing.T) {
 			assertTestResult(t, tc.expected, config, tc.err, err)
 		})
 	}
-}
-
-func setupTestDB() (*sql.DB, error) {
-	dbConn, err := sql.Open("sqlite", ":memory:")
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = dbConn.Exec(`
-		CREATE TABLE ciraconfigs (
-			cira_config_name TEXT PRIMARY KEY,
-			mps_server_address TEXT NOT NULL DEFAULT '',
-			mps_port INTEGER NOT NULL DEFAULT 0,
-			user_name TEXT NOT NULL DEFAULT '',
-			password TEXT NOT NULL DEFAULT '',
-			common_name TEXT NOT NULL DEFAULT '',
-			server_address_format TEXT NOT NULL DEFAULT '',
-			auth_method TEXT NOT NULL DEFAULT '',
-			mps_root_certificate TEXT NOT NULL DEFAULT '',
-			proxydetails TEXT NOT NULL DEFAULT '',
-			tenant_id TEXT NOT NULL
-		);
-	`)
-
-	return dbConn, err
 }
 
 func TestCIRARepo_Update(t *testing.T) {

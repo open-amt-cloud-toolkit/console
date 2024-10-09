@@ -60,7 +60,7 @@ func (mr *MockWSMANMockRecorder) DestroyWsmanClient(device any) *gomock.Call {
 }
 
 // SetupWsmanClient mocks base method.
-func (m *MockWSMAN) SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman.Management {
+func (m *MockWSMAN) SetupWsmanClient(device entity.Device, isRedirection, logMessages bool) wsman.Management {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetupWsmanClient", device, isRedirection, logMessages)
 	ret0, _ := ret[0].(wsman.Management)

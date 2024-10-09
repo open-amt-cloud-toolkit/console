@@ -126,7 +126,7 @@ func TestGetFeatures(t *testing.T) {
 			},
 			res:   dto.Features{},
 			resV2: dtov2.Features{},
-			err:   devices.ErrDatabase,
+			err:   devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -318,7 +318,7 @@ func TestSetFeatures(t *testing.T) {
 			},
 			res:   dto.Features{},
 			resV2: dtov2.Features{},
-			err:   devices.ErrDatabase,
+			err:   devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",

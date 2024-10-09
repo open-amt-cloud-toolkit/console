@@ -3,10 +3,16 @@ package profiles
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
+
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/config"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
+	"gopkg.in/yaml.v2"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profilewificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
@@ -18,10 +24,12 @@ import (
 // UseCase -.
 type UseCase struct {
 	repo              Repository
-	wifiConfig        wificonfigs.Feature
+	wifiConfig        wificonfigs.Repository
 	profileWifiConfig profilewificonfigs.Feature
 	ieee              ieee8021xconfigs.Feature
 	log               logger.Interface
+	domains           domains.Repository
+	safeRequirements  security.Cryptor
 }
 
 var (
@@ -32,13 +40,15 @@ var (
 )
 
 // New -.
-func New(r Repository, wifiConfig wificonfigs.Feature, w profilewificonfigs.Feature, i ieee8021xconfigs.Feature, log logger.Interface) *UseCase {
+func New(r Repository, wifiConfig wificonfigs.Repository, w profilewificonfigs.Feature, i ieee8021xconfigs.Feature, log logger.Interface, d domains.Repository, safeRequirements security.Cryptor) *UseCase {
 	return &UseCase{
 		repo:              r,
 		wifiConfig:        wifiConfig,
 		profileWifiConfig: w,
 		ieee:              i,
 		log:               log,
+		domains:           d,
+		safeRequirements:  safeRequirements,
 	}
 }
 
@@ -97,6 +107,110 @@ func (uc *UseCase) GetByName(ctx context.Context, profileName, tenantID string) 
 	}
 
 	return d2, nil
+}
+
+// Export - will call GetByName and return the profile with the associated wifi configs in YAML format to be downloaded.
+func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (encryptedYaml, ky string, err error) {
+	data, err := uc.repo.GetByName(ctx, profileName, tenantID)
+	if err != nil {
+		return "", "", err
+	}
+
+	data.AMTPassword, _ = uc.safeRequirements.Decrypt(data.AMTPassword)
+	data.MEBXPassword, _ = uc.safeRequirements.Decrypt(data.MEBXPassword)
+
+	domainStuff := entity.Domain{}
+
+	if data.Activation == "acmactivate" {
+		domainsToExport, err := uc.domains.Get(ctx, 1, 0, tenantID)
+		if err != nil {
+			return "", "", err
+		}
+
+		if len(domainsToExport) == 0 {
+			return "", "", ErrNotFound.WrapWithMessage("Export", "uc.domains.Get", "No domains found")
+		}
+
+		domainStuff = domainsToExport[0]
+		domainStuff.ProvisioningCertPassword, _ = uc.safeRequirements.Decrypt(domainStuff.ProvisioningCertPassword)
+	}
+
+	wifiConfigs, err := uc.profileWifiConfig.GetByProfileName(ctx, profileName, tenantID)
+	if err != nil {
+		return "", "", err
+	}
+
+	wifiConfigs2 := []config.WirelessProfile{}
+
+	for i := range wifiConfigs {
+		wifi, _ := uc.wifiConfig.GetByName(ctx, wifiConfigs[i].WirelessProfileName, tenantID)
+
+		wifi.PSKPassphrase, _ = uc.safeRequirements.Decrypt(wifi.PSKPassphrase)
+
+		wifiConfigs2 = append(wifiConfigs2, config.WirelessProfile{
+			SSID:                 wifi.SSID,
+			Priority:             wifiConfigs[i].Priority,
+			Password:             wifi.PSKPassphrase,
+			AuthenticationMethod: strconv.Itoa(wifi.AuthenticationMethod),
+			EncryptionMethod:     strconv.Itoa(wifi.EncryptionMethod),
+		})
+	}
+
+	configuration := config.Configuration{
+		Name: profileName,
+		Configuration: config.RemoteManagement{
+			GeneralSettings: config.GeneralSettings{
+				SharedFQDN:              false,
+				NetworkInterfaceEnabled: 0,
+				PingResponseEnabled:     false,
+			},
+			Network: config.Network{
+				Wired: config.Wired{
+					DHCPEnabled:    data.DHCPEnabled,
+					IPSyncEnabled:  data.IPSyncEnabled,
+					SharedStaticIP: false,
+				},
+				Wireless: config.Wireless{
+					Profiles: wifiConfigs2,
+				},
+			},
+			Redirection: config.Redirection{
+				Services: config.Services{
+					KVM:  data.KVMEnabled,
+					SOL:  data.SOLEnabled,
+					IDER: data.IDEREnabled,
+				},
+				UserConsent: data.UserConsent,
+			},
+			EnterpriseAssistant: config.EnterpriseAssistant{
+				URL:      "http://localhost:8000/",
+				Username: "tbd",
+				Password: "tbd",
+			},
+			AMTSpecific: config.AMTSpecific{
+				ControlMode:         data.Activation,
+				AdminPassword:       data.AMTPassword,
+				MEBXPassword:        data.MEBXPassword,
+				ProvisioningCert:    domainStuff.ProvisioningCert,
+				ProvisioningCertPwd: domainStuff.ProvisioningCertPassword,
+			},
+		},
+	}
+
+	yamlData, err := yaml.Marshal(configuration)
+	if err != nil {
+		return "", "", err
+	}
+
+	safeRequirements := security.Crypto{}
+	safeRequirements.EncryptionKey = safeRequirements.GenerateKey()
+
+	encryptedData, err := safeRequirements.Encrypt(string(yamlData))
+	if err != nil {
+		return "", "", err
+	}
+
+	return encryptedData, safeRequirements.EncryptionKey, nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) error {
@@ -303,6 +417,9 @@ func (uc *UseCase) dtoToEntity(d *dto.Profile) *entity.Profile {
 		Version:                    d.Version,
 	}
 
+	d1.AMTPassword, _ = uc.safeRequirements.Encrypt(d.AMTPassword)
+	d1.MEBXPassword, _ = uc.safeRequirements.Encrypt(d.MEBXPassword)
+
 	return d1
 }
 
@@ -311,14 +428,14 @@ func (uc *UseCase) entityToDTO(d *entity.Profile) *dto.Profile {
 	// convert comma separated string to []string
 	tags := strings.Split(d.Tags, ",")
 	d1 := &dto.Profile{
-		ProfileName:                d.ProfileName,
-		AMTPassword:                d.AMTPassword,
-		CreationDate:               d.CreationDate,
-		CreatedBy:                  d.CreatedBy,
-		GenerateRandomPassword:     d.GenerateRandomPassword,
-		CIRAConfigName:             d.CIRAConfigName,
-		Activation:                 d.Activation,
-		MEBXPassword:               d.MEBXPassword,
+		ProfileName: d.ProfileName,
+		// AMTPassword:                d.AMTPassword,
+		CreationDate:           d.CreationDate,
+		CreatedBy:              d.CreatedBy,
+		GenerateRandomPassword: d.GenerateRandomPassword,
+		CIRAConfigName:         d.CIRAConfigName,
+		Activation:             d.Activation,
+		// MEBXPassword:               d.MEBXPassword,
 		GenerateRandomMEBxPassword: d.GenerateRandomMEBxPassword,
 		Tags:                       tags,
 		DHCPEnabled:                d.DHCPEnabled,
