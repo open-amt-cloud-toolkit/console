@@ -11,6 +11,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -24,12 +25,12 @@ func TestRedirect(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		setup       func(*MockRedirection, *MockRepository, *MockWSMAN, *sync.WaitGroup)
+		setup       func(*mocks.MockRedirection, *mocks.MockDeviceManagementRepository, *mocks.MockWSMAN, *sync.WaitGroup)
 		expectedErr error
 	}{
 		{
 			name: "GetByID fail redirection",
-			setup: func(_ *MockRedirection, mockRepo *MockRepository, mockWSMAN *MockWSMAN, wg *sync.WaitGroup) {
+			setup: func(_ *mocks.MockRedirection, mockRepo *mocks.MockDeviceManagementRepository, mockWSMAN *mocks.MockWSMAN, wg *sync.WaitGroup) {
 				mockWSMAN.EXPECT().Worker().Do(func() {
 					defer wg.Done()
 				}).Times(1)
@@ -39,7 +40,7 @@ func TestRedirect(t *testing.T) {
 		},
 		{
 			name: "RedirectConnect fail redirection",
-			setup: func(mockRedir *MockRedirection, mockRepo *MockRepository, mockWSMAN *MockWSMAN, wg *sync.WaitGroup) {
+			setup: func(mockRedir *mocks.MockRedirection, mockRepo *mocks.MockDeviceManagementRepository, mockWSMAN *mocks.MockWSMAN, wg *sync.WaitGroup) {
 				mockWSMAN.EXPECT().Worker().Do(func() {
 					defer wg.Done()
 				}).Times(1)
@@ -63,9 +64,9 @@ func TestRedirect(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockRedirection := NewMockRedirection(ctrl)
-			mockRepo := NewMockRepository(ctrl)
-			mockWSMAN := NewMockWSMAN(ctrl)
+			mockRedirection := mocks.NewMockRedirection(ctrl)
+			mockRepo := mocks.NewMockDeviceManagementRepository(ctrl)
+			mockWSMAN := mocks.NewMockWSMAN(ctrl)
 
 			var wg sync.WaitGroup
 

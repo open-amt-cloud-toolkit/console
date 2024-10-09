@@ -9,6 +9,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -20,21 +21,21 @@ type test struct {
 	tenantID    string
 	profileName string
 	input       entity.Profile
-	mock        func(*MockRepository, *MockwificonfigsFeature, *MockProfileWiFiConfigsFeature)
+	mock        func(*mocks.MockProfilesRepository, *mocks.MockWiFiConfigsFeature, *mocks.MockProfileWiFiConfigsFeature)
 	res         interface{}
 	err         error
 }
 
-func profilesTest(t *testing.T) (*profiles.UseCase, *MockRepository, *MockwificonfigsFeature, *MockProfileWiFiConfigsFeature) {
+func profilesTest(t *testing.T) (*profiles.UseCase, *mocks.MockProfilesRepository, *mocks.MockWiFiConfigsFeature, *mocks.MockProfileWiFiConfigsFeature) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
-	wificonfigs := NewMockwificonfigsFeature(mockCtl)
-	profilewificonfigs := NewMockProfileWiFiConfigsFeature(mockCtl)
-	ieeeMock := NewMockIEEEFeature(mockCtl)
+	repo := mocks.NewMockProfilesRepository(mockCtl)
+	wificonfigs := mocks.NewMockWiFiConfigsFeature(mockCtl)
+	profilewificonfigs := mocks.NewMockProfileWiFiConfigsFeature(mockCtl)
+	ieeeMock := mocks.NewMockIEEE8021xConfigsFeature(mockCtl)
 	log := logger.New("error")
 	useCase := profiles.New(repo, wificonfigs, profilewificonfigs, ieeeMock, log)
 
@@ -47,7 +48,7 @@ func TestGetCount(t *testing.T) {
 	tests := []test{
 		{
 			name: "empty result",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, nil)
 			},
 			res: 0,
@@ -55,7 +56,7 @@ func TestGetCount(t *testing.T) {
 		},
 		{
 			name: "result with error",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, profiles.ErrDatabase)
 			},
 			res: 0,
@@ -125,7 +126,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profileWifiRepo *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, profileWifiRepo *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testProfiles, nil)
@@ -144,7 +145,7 @@ func TestGet(t *testing.T) {
 			top:      5,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, profiles.ErrDatabase)
@@ -157,7 +158,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     20,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Profile{}, nil)
@@ -212,7 +213,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "test-profile",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					GetByName(context.Background(), "test-profile", "tenant-id-456").
 					Return(profile, nil)
@@ -229,7 +230,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "unknown-profile",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					GetByName(context.Background(), "unknown-profile", "tenant-id-456").
 					Return(nil, nil)
@@ -268,7 +269,7 @@ func TestDelete(t *testing.T) {
 			name:        "successful deletion",
 			profileName: "example-profile",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				profilewificonfigfeat.EXPECT().
 					DeleteByProfileName(context.Background(), "example-profile", "tenant-id-456").
 					Return(nil)
@@ -282,7 +283,7 @@ func TestDelete(t *testing.T) {
 			name:        "deletion fails - profile not found",
 			profileName: "nonexistent-profile",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsFeature, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				profilewificonfigfeat.EXPECT().
 					DeleteByProfileName(context.Background(), "nonexistent-profile", "tenant-id-456").
 					Return(nil)
@@ -339,7 +340,7 @@ func TestUpdate(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful update",
-			mock: func(repo *MockRepository, wifiConfig *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiConfig *mocks.MockWiFiConfigsFeature, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Update(context.Background(), profile).
 					Return(true, nil)
@@ -358,7 +359,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - not found",
-			mock: func(repo *MockRepository, wifiConfig *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiConfig *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Update(context.Background(), profile).
 					Return(false, profiles.ErrNotFound)
@@ -371,7 +372,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - database error",
-			mock: func(repo *MockRepository, wifiConfig *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiConfig *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Update(context.Background(), profile).
 					Return(false, profiles.ErrDatabase)
@@ -428,7 +429,7 @@ func TestInsert(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful insertion",
-			mock: func(repo *MockRepository, wifiRepo *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiRepo *mocks.MockWiFiConfigsFeature, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Insert(context.Background(), profile).
 					Return("unique-profile-id", nil)
@@ -447,7 +448,7 @@ func TestInsert(t *testing.T) {
 		},
 		{
 			name: "insertion fails - database error",
-			mock: func(repo *MockRepository, wifiRepo *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiRepo *mocks.MockWiFiConfigsFeature, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Insert(context.Background(), profile).
 					Return("", profiles.ErrDatabase)

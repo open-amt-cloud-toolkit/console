@@ -8,17 +8,18 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 )
 
-func initRedirectionTest(t *testing.T) (*devices.Redirector, *MockRedirection, *MockRepository) {
+func initRedirectionTest(t *testing.T) (*devices.Redirector, *mocks.MockRedirection, *mocks.MockDeviceManagementRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
-	redirect := NewMockRedirection(mockCtl)
+	repo := mocks.NewMockDeviceManagementRepository(mockCtl)
+	redirect := mocks.NewMockRedirection(mockCtl)
 	u := &devices.Redirector{}
 
 	return u, redirect, repo
@@ -26,7 +27,7 @@ func initRedirectionTest(t *testing.T) (*devices.Redirector, *MockRedirection, *
 
 type redTest struct {
 	name    string
-	redMock func(*MockRedirection)
+	redMock func(*mocks.MockRedirection)
 	res     any
 }
 
@@ -41,7 +42,7 @@ func TestSetupWsmanClient(t *testing.T) {
 	tests := []redTest{
 		{
 			name: "success",
-			redMock: func(redirect *MockRedirection) {
+			redMock: func(redirect *mocks.MockRedirection) {
 				redirect.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(wsman.Messages{})
@@ -50,7 +51,7 @@ func TestSetupWsmanClient(t *testing.T) {
 		},
 		{
 			name: "fail",
-			redMock: func(redirect *MockRedirection) {
+			redMock: func(redirect *mocks.MockRedirection) {
 				redirect.EXPECT().
 					SetupWsmanClient(gomock.Any(), true, true).
 					Return(wsman.Messages{})

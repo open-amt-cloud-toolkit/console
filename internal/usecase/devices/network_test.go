@@ -13,24 +13,25 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initNetworkTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
+func initNetworkTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.MockManagement, *mocks.MockDeviceManagementRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
-	wsmanMock := NewMockWSMAN(mockCtl)
+	repo := mocks.NewMockDeviceManagementRepository(mockCtl)
+	wsmanMock := mocks.NewMockWSMAN(mockCtl)
 	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
-	management := NewMockManagement(mockCtl)
+	management := mocks.NewMockManagement(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
 
 	return u, wsmanMock, management, repo
 }
@@ -47,7 +48,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -90,7 +91,7 @@ func TestGetNetworkSettings(t *testing.T) {
 						},
 					}, nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -137,7 +138,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		{
 			name:   "GetById fails",
 			action: 0,
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -148,7 +149,7 @@ func TestGetNetworkSettings(t *testing.T) {
 		{
 			name:   "GetNetworkSettings fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -156,7 +157,7 @@ func TestGetNetworkSettings(t *testing.T) {
 					GetNetworkSettings().
 					Return(wsman.NetworkResults{}, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)

@@ -11,27 +11,28 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initConsentTest(t *testing.T) (*devices.UseCase, *MockWSMAN, *MockManagement, *MockRepository) {
+func initConsentTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.MockManagement, *mocks.MockDeviceManagementRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
+	repo := mocks.NewMockDeviceManagementRepository(mockCtl)
 
-	wsmanMock := NewMockWSMAN(mockCtl)
+	wsmanMock := mocks.NewMockWSMAN(mockCtl)
 	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
-	management := NewMockManagement(mockCtl)
+	management := mocks.NewMockManagement(mockCtl)
 
 	log := logger.New("error")
 
-	u := devices.New(repo, wsmanMock, NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
 
 	return u, wsmanMock, management, repo
 }
@@ -51,7 +52,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -60,7 +61,7 @@ func TestCancelUserConsent(t *testing.T) {
 					Return(gomock.Any(), nil)
 			},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -76,9 +77,9 @@ func TestCancelUserConsent(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -94,7 +95,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -103,7 +104,7 @@ func TestCancelUserConsent(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -163,7 +164,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -172,7 +173,7 @@ func TestGetUserConsentCode(t *testing.T) {
 					Return(code, nil)
 			},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -188,9 +189,9 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -206,7 +207,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -215,7 +216,7 @@ func TestGetUserConsentCode(t *testing.T) {
 					Return(code, ErrGeneral)
 			},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -267,7 +268,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -276,7 +277,7 @@ func TestSendConsentCode(t *testing.T) {
 					Return(optin.SendOptInCode_OUTPUT{}, nil)
 			},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -292,9 +293,9 @@ func TestSendConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
@@ -310,7 +311,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			action: 0,
 
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -319,7 +320,7 @@ func TestSendConsentCode(t *testing.T) {
 					Return(optin.SendOptInCode_OUTPUT{}, ErrGeneral)
 			},
 
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -89,7 +90,7 @@ func TestWirelessRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewWirelessRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -272,7 +273,7 @@ func TestWirelessRepo_Get(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewWirelessRepo(sqlConfig, mockLog)
 
 			wireless, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -459,7 +460,7 @@ func TestWirelessRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewWirelessRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewWirelessRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			wirelessConfig, err := repo.GetByName(context.Background(), tc.profileName, tc.tenantID)
 
@@ -565,7 +566,7 @@ func TestWirelessRepo_Delete(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewWirelessRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.profileName, tc.tenantID)
@@ -691,7 +692,7 @@ func TestWirelessRepo_Update(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewWirelessRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewWirelessRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			updated, err := repo.Update(context.Background(), tc.config)
 
@@ -808,7 +809,7 @@ func TestWirelessRepo_Insert(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewWirelessRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewWirelessRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			_, err = repo.Insert(context.Background(), tc.wirelessCfg)
 

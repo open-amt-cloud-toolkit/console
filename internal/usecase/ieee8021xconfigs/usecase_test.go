@@ -9,6 +9,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -20,12 +21,12 @@ type test struct {
 	tenantID    string
 	input       entity.IEEE8021xConfig
 	profileName string
-	mock        func(*MockRepository)
+	mock        func(*mocks.MockIEEE8021xConfigsRepository)
 	res         interface{}
 	err         error
 }
 
-func ieee8021xconfigsTest(t *testing.T) (*ieee8021xconfigs.UseCase, *MockRepository) {
+func ieee8021xconfigsTest(t *testing.T) (*ieee8021xconfigs.UseCase, *mocks.MockIEEE8021xConfigsRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -33,7 +34,7 @@ func ieee8021xconfigsTest(t *testing.T) (*ieee8021xconfigs.UseCase, *MockReposit
 
 	log := logger.New("error")
 
-	repo := NewMockRepository(mockCtl)
+	repo := mocks.NewMockIEEE8021xConfigsRepository(mockCtl)
 
 	useCase := ieee8021xconfigs.New(repo, log)
 
@@ -48,7 +49,7 @@ func TestCheckProfileExists(t *testing.T) {
 			name:        "empty result",
 			profileName: "example-ieee8021xconfig",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().CheckProfileExists(context.Background(), "example-ieee8021xconfig", "tenant-id-456").Return(false, nil)
 			},
 			res: false,
@@ -58,7 +59,7 @@ func TestCheckProfileExists(t *testing.T) {
 			name:        "result with error",
 			profileName: "nonexistent-ieee8021xconfig",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().CheckProfileExists(context.Background(), "nonexistent-ieee8021xconfig", "tenant-id-456").Return(false, ieee8021xconfigs.ErrDatabase)
 			},
 			res: false,
@@ -89,7 +90,7 @@ func TestGetCount(t *testing.T) {
 	tests := []test{
 		{
 			name: "empty result",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, nil)
 			},
 			res: 0,
@@ -97,7 +98,7 @@ func TestGetCount(t *testing.T) {
 		},
 		{
 			name: "result with error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, ieee8021xconfigs.ErrDatabase)
 			},
 			res: 0,
@@ -153,7 +154,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(IEEE8021xConfigs, nil)
@@ -166,7 +167,7 @@ func TestGet(t *testing.T) {
 			top:      5,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, ieee8021xconfigs.ErrDatabase)
@@ -179,7 +180,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     20,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.IEEE8021xConfig{}, nil)
@@ -233,7 +234,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "test-ieee8021xconfig",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "test-ieee8021xconfig", "tenant-id-456").
 					Return(ieee8021xconfig, nil)
@@ -247,7 +248,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "unknown-ieee8021xconfig",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "unknown-ieee8021xconfig", "tenant-id-456").
 					Return(nil, nil)
@@ -286,7 +287,7 @@ func TestDelete(t *testing.T) {
 			name:        "successful deletion",
 			profileName: "example-ieee8021xconfig",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "example-ieee8021xconfig", "tenant-id-456").
 					Return(true, nil)
@@ -297,7 +298,7 @@ func TestDelete(t *testing.T) {
 			name:        "deletion fails - ieee8021xconfig not found",
 			profileName: "nonexistent-ieee8021xconfig",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "nonexistent-ieee8021xconfig", "tenant-id-456").
 					Return(false, nil)
@@ -344,7 +345,7 @@ func TestUpdate(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful update",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ieee8021xconfig).
 					Return(true, nil)
@@ -357,7 +358,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - not found",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ieee8021xconfig).
 					Return(false, ieee8021xconfigs.ErrNotFound)
@@ -367,7 +368,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - database error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ieee8021xconfig).
 					Return(false, ieee8021xconfigs.ErrDatabase)
@@ -411,7 +412,7 @@ func TestInsert(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful insertion",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ieee8021xconfig).
 					Return("unique-ieee8021xconfig", nil)
@@ -424,7 +425,7 @@ func TestInsert(t *testing.T) {
 		},
 		{
 			name: "insertion fails - database error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockIEEE8021xConfigsRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ieee8021xconfig).
 					Return("", ieee8021xconfigs.ErrDatabase)

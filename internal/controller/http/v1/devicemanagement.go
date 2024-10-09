@@ -133,7 +133,7 @@ func (r *deviceManagementRoutes) getAlarmOccurrences(c *gin.Context) {
 func (r *deviceManagementRoutes) createAlarmOccurrences(c *gin.Context) {
 	guid := c.Param("guid")
 
-	alarm := &dto.AlarmClockOccurrence{}
+	alarm := &dto.AlarmClockOccurrenceInput{}
 	if err := c.ShouldBindJSON(alarm); err != nil {
 		ErrorResponse(c, err)
 
