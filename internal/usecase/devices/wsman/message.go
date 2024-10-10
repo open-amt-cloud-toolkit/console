@@ -870,6 +870,12 @@ type NetworkResults struct {
 	IPSIEEE8021xSettingsResult ipsIEEE8021x.IEEE8021xSettingsResponse
 	WiFiSettingsResult         []wifi.WiFiEndpointSettingsResponse
 	CIMIEEE8021xSettingsResult cimIEEE8021x.PullResponse
+	NetworkInterfaces          InterfaceTypes
+}
+
+type InterfaceTypes struct {
+	hasWired    bool
+	hasWireless bool
 }
 
 func (g *ConnectionEntry) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Response, err error) {
@@ -896,26 +902,47 @@ func (g *ConnectionEntry) GetNetworkSettings() (NetworkResults, error) {
 		return networkResults, err
 	}
 
-	response, err := g.GetIPSIEEE8021xSettings()
-	if err != nil {
-		return networkResults, err
+	networkResults.NetworkInterfaces = g.determineInterfaceTypes(networkResults.EthernetPortSettingsResult)
+
+	if networkResults.NetworkInterfaces.hasWired {
+		response, err := g.GetIPSIEEE8021xSettings()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
 	}
 
-	networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
+	if networkResults.NetworkInterfaces.hasWireless {
+		networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
+		if err != nil {
+			return networkResults, err
+		}
 
-	networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
-	if err != nil {
-		return networkResults, err
+		cimResponse, err := g.GetCIMIEEE8021xSettings()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 	}
-
-	cimResponse, err := g.GetCIMIEEE8021xSettings()
-	if err != nil {
-		return networkResults, err
-	}
-
-	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 
 	return networkResults, nil
+}
+
+func (g *ConnectionEntry) determineInterfaceTypes(ethernetSettings []ethernetport.SettingsResponse) InterfaceTypes {
+	types := InterfaceTypes{}
+
+	for i := range ethernetSettings {
+		switch ethernetSettings[i].InstanceID {
+		case "Intel(r) AMT Ethernet Port Settings 0":
+			types.hasWired = true
+		case "Intel(r) AMT Ethernet Port Settings 1":
+			types.hasWireless = true
+		}
+	}
+
+	return types
 }
 
 // AMT Explorer Functions.

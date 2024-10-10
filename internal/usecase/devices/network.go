@@ -2,6 +2,9 @@ package devices
 
 import (
 	"context"
+	"strings"
+
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
@@ -20,73 +23,97 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 		return dto.NetworkSettings{}, err
 	}
 
-	ns := dto.NetworkSettings{
-		Wired: dto.WiredNetworkInfo{
-			IEEE8021x: dto.IEEE8021x{
-				Enabled:       int(response.IPSIEEE8021xSettingsResult.Enabled),
-				AvailableInS0: response.IPSIEEE8021xSettingsResult.AvailableInS0,
-				PxeTimeout:    response.IPSIEEE8021xSettingsResult.PxeTimeout,
-			},
-			NetworkInfo: dto.NetworkInfo{
-				ElementName:                  response.EthernetPortSettingsResult[0].ElementName,
-				InstanceID:                   response.EthernetPortSettingsResult[0].InstanceID,
-				VLANTag:                      response.EthernetPortSettingsResult[0].VLANTag,
-				SharedMAC:                    response.EthernetPortSettingsResult[0].SharedMAC,
-				MACAddress:                   response.EthernetPortSettingsResult[0].MACAddress,
-				LinkIsUp:                     response.EthernetPortSettingsResult[0].LinkIsUp,
-				SharedStaticIP:               response.EthernetPortSettingsResult[0].SharedStaticIp,
-				SharedDynamicIP:              response.EthernetPortSettingsResult[0].SharedDynamicIP,
-				IPSyncEnabled:                response.EthernetPortSettingsResult[0].IpSyncEnabled,
-				DHCPEnabled:                  response.EthernetPortSettingsResult[0].DHCPEnabled,
-				IPAddress:                    response.EthernetPortSettingsResult[0].IPAddress,
-				SubnetMask:                   response.EthernetPortSettingsResult[0].SubnetMask,
-				DefaultGateway:               response.EthernetPortSettingsResult[0].DefaultGateway,
-				PrimaryDNS:                   response.EthernetPortSettingsResult[0].PrimaryDNS,
-				SecondaryDNS:                 response.EthernetPortSettingsResult[0].SecondaryDNS,
-				ConsoleTCPMaxRetransmissions: response.EthernetPortSettingsResult[0].ConsoleTcpMaxRetransmissions,
-				PhysicalConnectionType:       response.EthernetPortSettingsResult[0].PhysicalConnectionType.String(),
-				PhysicalNicMedium:            response.EthernetPortSettingsResult[0].PhysicalNicMedium.String(),
-			},
-		},
-		Wireless: dto.WirelessNetworkInfo{
-			NetworkInfo: dto.NetworkInfo{
-				ElementName:                  response.EthernetPortSettingsResult[1].ElementName,
-				InstanceID:                   response.EthernetPortSettingsResult[1].InstanceID,
-				VLANTag:                      response.EthernetPortSettingsResult[1].VLANTag,
-				SharedMAC:                    response.EthernetPortSettingsResult[1].SharedMAC,
-				MACAddress:                   response.EthernetPortSettingsResult[1].MACAddress,
-				LinkIsUp:                     response.EthernetPortSettingsResult[1].LinkIsUp,
-				LinkPreference:               response.EthernetPortSettingsResult[1].LinkPreference.String(),
-				LinkControl:                  response.EthernetPortSettingsResult[1].LinkControl.String(),
-				DHCPEnabled:                  response.EthernetPortSettingsResult[1].DHCPEnabled,
-				IPAddress:                    response.EthernetPortSettingsResult[1].IPAddress,
-				SubnetMask:                   response.EthernetPortSettingsResult[1].SubnetMask,
-				DefaultGateway:               response.EthernetPortSettingsResult[1].DefaultGateway,
-				PrimaryDNS:                   response.EthernetPortSettingsResult[1].PrimaryDNS,
-				SecondaryDNS:                 response.EthernetPortSettingsResult[1].SecondaryDNS,
-				ConsoleTCPMaxRetransmissions: response.EthernetPortSettingsResult[1].ConsoleTcpMaxRetransmissions,
-				WLANLinkProtectionLevel:      response.EthernetPortSettingsResult[1].WLANLinkProtectionLevel.String(),
-				PhysicalConnectionType:       response.EthernetPortSettingsResult[1].PhysicalConnectionType.String(),
-				PhysicalNicMedium:            response.EthernetPortSettingsResult[1].PhysicalNicMedium.String(),
-			},
-		},
+	ns := dto.NetworkSettings{}
+
+	for i := range response.EthernetPortSettingsResult {
+		portSetting := &response.EthernetPortSettingsResult[i]
+
+		if strings.Contains(portSetting.InstanceID, "Intel(r) AMT Ethernet Port Settings 0") {
+			// Wired network
+			ns.Wired = &dto.WiredNetworkInfo{
+				IEEE8021x: dto.IEEE8021x{
+					Enabled:       response.IPSIEEE8021xSettingsResult.Enabled.String(),
+					AvailableInS0: response.IPSIEEE8021xSettingsResult.AvailableInS0,
+					PxeTimeout:    response.IPSIEEE8021xSettingsResult.PxeTimeout,
+				},
+			}
+			ns.Wired.NetworkInfo = convertToNetworkInfo(*portSetting)
+		}
+
+		if strings.Contains(portSetting.InstanceID, "Intel(r) AMT Ethernet Port Settings 1") {
+			// Wireless network
+			ns.Wireless = &dto.WirelessNetworkInfo{}
+			ns.Wireless.NetworkInfo = convertToNetworkInfo(*portSetting)
+			ns.Wireless.NetworkInfo.LinkPreference = portSetting.LinkPreference.String()
+			ns.Wireless.NetworkInfo.LinkControl = portSetting.LinkControl.String()
+			ns.Wireless.NetworkInfo.WLANLinkProtectionLevel = portSetting.WLANLinkProtectionLevel.String()
+			ns.Wireless.WiFiNetworks = uc.processWiFiSettings(response)
+			ns.Wireless.IEEE8021xSettings = uc.processIEEE8021xSettings(response)
+		}
 	}
 
-	convertLinkPolicy(response, &ns)
+	return ns, nil
+}
+
+func convertToNetworkInfo(portSetting ethernetport.SettingsResponse) dto.NetworkInfo {
+	return dto.NetworkInfo{
+		ElementName:                  portSetting.ElementName,
+		InstanceID:                   portSetting.InstanceID,
+		VLANTag:                      portSetting.VLANTag,
+		SharedMAC:                    portSetting.SharedMAC,
+		MACAddress:                   portSetting.MACAddress,
+		LinkIsUp:                     portSetting.LinkIsUp,
+		SharedStaticIP:               portSetting.SharedStaticIp,
+		SharedDynamicIP:              portSetting.SharedDynamicIP,
+		IPSyncEnabled:                portSetting.IpSyncEnabled,
+		DHCPEnabled:                  portSetting.DHCPEnabled,
+		IPAddress:                    portSetting.IPAddress,
+		SubnetMask:                   portSetting.SubnetMask,
+		DefaultGateway:               portSetting.DefaultGateway,
+		PrimaryDNS:                   portSetting.PrimaryDNS,
+		SecondaryDNS:                 portSetting.SecondaryDNS,
+		ConsoleTCPMaxRetransmissions: portSetting.ConsoleTcpMaxRetransmissions,
+		PhysicalConnectionType:       portSetting.PhysicalConnectionType.String(),
+		PhysicalNicMedium:            portSetting.PhysicalNicMedium.String(),
+		LinkPolicy:                   convertLinkPolicy(portSetting.LinkPolicy),
+	}
+}
+
+func convertLinkPolicy(linkPolicy []ethernetport.LinkPolicy) []string {
+	var linkPolicyStr []string
+	for _, v := range linkPolicy {
+		linkPolicyStr = append(linkPolicyStr, v.String())
+	}
+
+	return linkPolicyStr
+}
+
+func (uc *UseCase) processWiFiSettings(response wsman.NetworkResults) []dto.WiFiNetwork {
+	var wifiNetworks []dto.WiFiNetwork
 
 	for _, v := range response.WiFiSettingsResult {
-		ns.Wireless.WiFiNetworks = append(ns.Wireless.WiFiNetworks, dto.WiFiNetwork{
-			SSID:                 v.SSID,
-			AuthenticationMethod: v.AuthenticationMethod.String(),
-			EncryptionMethod:     v.EncryptionMethod.String(),
-			Priority:             v.Priority,
-			BSSType:              v.BSSType.String(),
-		})
+		// Skip Endpoint User Settings and show only Admin Endpoint Settings
+		if v.ElementName != "Endpoint User Settings" {
+			wifiNetworks = append(wifiNetworks, dto.WiFiNetwork{
+				ElementName:          v.ElementName,
+				SSID:                 v.SSID,
+				AuthenticationMethod: v.AuthenticationMethod.String(),
+				EncryptionMethod:     v.EncryptionMethod.String(),
+				Priority:             v.Priority,
+				BSSType:              v.BSSType.String(),
+			})
+		}
 	}
+
+	return wifiNetworks
+}
+
+func (uc *UseCase) processIEEE8021xSettings(response wsman.NetworkResults) []dto.IEEE8021xSettings {
+	var ieee8021xSettings []dto.IEEE8021xSettings
 
 	for i := range response.CIMIEEE8021xSettingsResult.IEEE8021xSettingsItems {
 		v := &response.CIMIEEE8021xSettingsResult.IEEE8021xSettingsItems[i]
-		ns.Wireless.IEEE8021xSettings = append(ns.Wireless.IEEE8021xSettings, dto.IEEE8021xSettings{
+		ieee8021xSettings = append(ieee8021xSettings, dto.IEEE8021xSettings{
 			AuthenticationProtocol:          v.AuthenticationProtocol,
 			RoamingIdentity:                 v.RoamingIdentity,
 			ServerCertificateName:           v.ServerCertificateName,
@@ -98,15 +125,5 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 		})
 	}
 
-	return ns, nil
-}
-
-func convertLinkPolicy(response wsman.NetworkResults, ns *dto.NetworkSettings) {
-	for _, v := range response.EthernetPortSettingsResult[0].LinkPolicy {
-		ns.Wired.NetworkInfo.LinkPolicy = append(ns.Wired.NetworkInfo.LinkPolicy, v.String())
-	}
-
-	for _, v := range response.EthernetPortSettingsResult[1].LinkPolicy {
-		ns.Wireless.NetworkInfo.LinkPolicy = append(ns.Wireless.NetworkInfo.LinkPolicy, v.String())
-	}
+	return ieee8021xSettings
 }
