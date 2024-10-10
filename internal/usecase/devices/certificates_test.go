@@ -30,7 +30,7 @@ func initCertificateTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *moc
 
 	management := mocks.NewMockManagement(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log, mocks.MockCrypto{})
 
 	return u, wsmanMock, management, repo
 }
@@ -186,7 +186,7 @@ func TestGetCertificates(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: dto.SecuritySettings{},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetCertificates fails",

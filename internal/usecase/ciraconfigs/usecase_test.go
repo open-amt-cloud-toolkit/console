@@ -33,8 +33,9 @@ func ciraconfigsTest(t *testing.T) (*ciraconfigs.UseCase, *mocks.MockCIRAConfigs
 	defer mockCtl.Finish()
 
 	repo := mocks.NewMockCIRAConfigsRepository(mockCtl)
+	crypto := mocks.MockCrypto{}
 	log := logger.New("error")
-	useCase := ciraconfigs.New(repo, log)
+	useCase := ciraconfigs.New(repo, log, crypto)
 
 	return useCase, repo
 }
@@ -293,6 +294,7 @@ func TestUpdate(t *testing.T) {
 	ciraconfig := &entity.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
+		Password:   "encrypted",
 		Version:    "1.0.0",
 	}
 
@@ -361,6 +363,7 @@ func TestInsert(t *testing.T) {
 	ciraconfig := &entity.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
+		Password:   "encrypted",
 		Version:    "1.0.0",
 	}
 

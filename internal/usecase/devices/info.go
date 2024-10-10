@@ -12,7 +12,7 @@ import (
 )
 
 func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v2 dtov2.Version, err error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.Version{}, dtov2.Version{}, err
 	}
@@ -56,7 +56,7 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v
 }
 
 func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 }
 
 func (uc *UseCase) GetDiskInfo(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (uc *UseCase) GetDiskInfo(c context.Context, guid string) (interface{}, err
 }
 
 func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dto.AuditLog, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.AuditLog{}, err
 	}
@@ -108,7 +108,7 @@ func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (
 }
 
 func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, 
 }
 
 func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
 	}

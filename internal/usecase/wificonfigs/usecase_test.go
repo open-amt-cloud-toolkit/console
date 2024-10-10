@@ -64,7 +64,8 @@ func wificonfigsTest(t *testing.T) (*wificonfigs.UseCase, *mocks.MockWiFiConfigs
 	repo := mocks.NewMockWiFiConfigsRepository(mockCtl)
 	log := logger.New("error")
 	ieeeMock := MockIEEE8021x{}
-	useCase := wificonfigs.New(repo, ieeeMock, log)
+	cryptoMock := mocks.MockCrypto{}
+	useCase := wificonfigs.New(repo, ieeeMock, log, cryptoMock)
 
 	return useCase, repo
 }
@@ -373,10 +374,11 @@ func TestUpdate(t *testing.T) {
 	t.Parallel()
 
 	wirelessConfig := &entity.WirelessConfig{
-		ProfileName: "test-WirelessConfig",
-		TenantID:    "tenant-id-456",
-		Version:     "123",
-		LinkPolicy:  new(string),
+		ProfileName:   "test-WirelessConfig",
+		TenantID:      "tenant-id-456",
+		Version:       "123",
+		PSKPassphrase: "encrypted",
+		LinkPolicy:    new(string),
 	}
 
 	wirelessConfigDTO := &dto.WirelessConfig{
@@ -443,10 +445,11 @@ func TestInsert(t *testing.T) {
 	t.Parallel()
 
 	wirelessConfig := &entity.WirelessConfig{
-		ProfileName: "test-WirelessConfig",
-		TenantID:    "tenant-id-456",
-		Version:     "123",
-		LinkPolicy:  new(string),
+		ProfileName:   "test-WirelessConfig",
+		TenantID:      "tenant-id-456",
+		Version:       "123",
+		PSKPassphrase: "encrypted",
+		LinkPolicy:    new(string),
 	}
 
 	wirelessConfigDTO := &dto.WirelessConfig{

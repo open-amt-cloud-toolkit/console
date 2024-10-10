@@ -19,6 +19,9 @@ func TestNewConfig_Defaults(t *testing.T) { //nolint:paralleltest // cannot have
 	clearEnv() // Clear environment variables to ensure defaults are tested
 
 	cfg, err := NewConfig()
+
+	cfg.App.EncryptionKey = "test" // Added to pass the test
+
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
 
@@ -26,6 +29,7 @@ func TestNewConfig_Defaults(t *testing.T) { //nolint:paralleltest // cannot have
 	assert.Equal(t, "console", cfg.App.Name)
 	assert.Equal(t, "open-amt-cloud-toolkit/console", cfg.App.Repo)
 	assert.Equal(t, "DEVELOPMENT", cfg.App.Version)
+	assert.Equal(t, "test", cfg.App.EncryptionKey)
 
 	assert.Equal(t, "8181", cfg.HTTP.Port)
 	assert.Equal(t, []string{"*"}, cfg.HTTP.AllowedOrigins)

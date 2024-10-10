@@ -16,3 +16,10 @@ func (e NotFoundError) Wrap(call, function string, err error) error {
 
 	return e
 }
+
+func (e NotFoundError) WrapWithMessage(call, function, message string) error {
+	_ = e.Console.Wrap(call, function, nil)
+	e.Console.Message = message
+
+	return e
+}

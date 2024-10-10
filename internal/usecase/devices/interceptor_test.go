@@ -74,7 +74,7 @@ func TestRedirect(t *testing.T) {
 
 			tc.setup(mockRedirection, mockRepo, mockWSMAN, &wg)
 
-			uc := devices.New(mockRepo, mockWSMAN, mockRedirection, logger.New("test"))
+			uc := devices.New(mockRepo, mockWSMAN, mockRedirection, logger.New("test"), mocks.MockCrypto{})
 
 			wg.Wait()
 

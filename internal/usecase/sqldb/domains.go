@@ -74,7 +74,9 @@ func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 	sqlQuery, _, err := r.Builder.
 		Select("name",
 			"domain_suffix",
+			"provisioning_cert",
 			"provisioning_cert_storage_format",
+			"provisioning_cert_key",
 			"expiration_date",
 			"tenant_id").
 		From("domains").
@@ -103,7 +105,7 @@ func (r *DomainRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 	for rows.Next() {
 		d := entity.Domain{}
 
-		err = rows.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCertStorageFormat, &d.ExpirationDate, &d.TenantID)
+		err = rows.Scan(&d.ProfileName, &d.DomainSuffix, &d.ProvisioningCert, &d.ProvisioningCertStorageFormat, &d.ProvisioningCertPassword, &d.ExpirationDate, &d.TenantID)
 		if err != nil {
 			return nil, ErrDomainDatabase.Wrap("Get", "rows.Scan: ", err)
 		}

@@ -3,6 +3,8 @@ package amtexplorer
 import (
 	"strings"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
+
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
@@ -14,19 +16,21 @@ var ErrDatabase = sqldb.DatabaseError{Console: consoleerrors.CreateConsoleError(
 
 // UseCase -.
 type UseCase struct {
-	repo   Repository
-	device WSMAN
-	log    logger.Interface
+	repo             Repository
+	device           WSMAN
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
 var ErrAMT = AMTError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
 
 // New -.
-func New(r Repository, d WSMAN, log logger.Interface) *UseCase {
+func New(r Repository, d WSMAN, log logger.Interface, safeRequirements security.Cryptor) *UseCase {
 	return &UseCase{
-		repo:   r,
-		device: d,
-		log:    log,
+		repo:             r,
+		device:           d,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -53,6 +57,10 @@ func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 		Password:        d.Password,
 		UseTLS:          d.UseTLS,
 		AllowSelfSigned: d.AllowSelfSigned,
+	}
+
+	if d.CertHash != nil {
+		d1.CertHash = *d.CertHash
 	}
 
 	return d1

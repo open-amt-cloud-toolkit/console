@@ -32,7 +32,7 @@ func initConsentTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.M
 
 	log := logger.New("error")
 
-	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log, mocks.MockCrypto{})
 
 	return u, wsmanMock, management, repo
 }
@@ -87,7 +87,7 @@ func TestCancelUserConsent(t *testing.T) {
 
 			res: nil,
 
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 
 		{
@@ -199,7 +199,7 @@ func TestGetUserConsentCode(t *testing.T) {
 
 			res: map[string]interface{}(nil),
 
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 
 		{
@@ -303,7 +303,7 @@ func TestSendConsentCode(t *testing.T) {
 
 			res: nil,
 
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 
 		{
