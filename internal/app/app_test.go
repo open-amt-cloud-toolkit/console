@@ -1,9 +1,6 @@
 package app_test
 
 import (
-	"crypto/rand"
-	"fmt"
-	"math/big"
 	"os"
 	"testing"
 
@@ -13,17 +10,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/app"
 	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 )
-
-func getFreePort() (string, error) {
-	port, err := rand.Int(rand.Reader, big.NewInt(1000))
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf(":%d", 8000+port.Int64()), nil
-}
-
-func teardown() {}
 
 func TestRun(t *testing.T) {
 	t.Parallel()
@@ -35,28 +21,8 @@ func TestRun(t *testing.T) {
 	mockDB := mocks.NewMockDB(ctrl)
 	mockHTTPServer := mocks.NewMockHTTPServer(ctrl)
 
-	port, err := getFreePort()
-	if err != nil {
-		t.Fatalf("Failed to get a free port: %v", err)
-	}
-
-	cfg := &config.Config{
-		Log: config.Log{
-			Level: "info",
-		},
-		DB: config.DB{
-			URL:     "postgres://testuser:testpass@localhost/testdb",
-			PoolMax: 10,
-		},
-		HTTP: config.HTTP{
-			Port:           port,
-			AllowedOrigins: []string{"*"},
-			AllowedHeaders: []string{"Content-Type"},
-		},
-		App: config.App{
-			Version: "DEVELOPMENT",
-		},
-	}
+	cfg, _ := config.NewConfig()
+	cfg.URL = "postgres://testuser:testpass@localhost/testdb"
 
 	tests := []struct {
 		name       string
@@ -78,7 +44,6 @@ func TestRun(t *testing.T) {
 			cfg: cfg,
 			expectFunc: func(_ *testing.T) {
 				go func() {
-					defer teardown()
 					app.Run(cfg)
 				}()
 			},

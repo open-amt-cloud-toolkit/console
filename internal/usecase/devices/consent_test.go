@@ -32,7 +32,7 @@ func initConsentTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.M
 
 	log := logger.New("error")
 
-	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log, mocks.MockCrypto{})
 
 	return u, wsmanMock, management, repo
 }
@@ -48,10 +48,8 @@ func TestCancelUserConsent(t *testing.T) {
 
 	tests := []test{
 		{
-			name: "success",
-
+			name:   "success",
 			action: 0,
-
 			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
@@ -60,41 +58,31 @@ func TestCancelUserConsent(t *testing.T) {
 					CancelUserConsentRequest().
 					Return(gomock.Any(), nil)
 			},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: gomock.Any(),
-
 			err: nil,
 		},
 
 		{
-			name: "GetById fails",
-
-			action: 0,
-
+			name:    "GetById fails",
+			action:  0,
 			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-
 			res: nil,
-
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 
 		{
-			name: "CancelUserConsentRequest fails",
-
+			name:   "CancelUserConsentRequest fails",
 			action: 0,
-
 			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
@@ -103,15 +91,12 @@ func TestCancelUserConsent(t *testing.T) {
 					CancelUserConsentRequest().
 					Return(nil, ErrGeneral)
 			},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: nil,
-
 			err: ErrGeneral,
 		},
 	}
@@ -141,8 +126,7 @@ func TestGetUserConsentCode(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
-		GUID: "device-guid-123",
-
+		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
 
@@ -150,7 +134,6 @@ func TestGetUserConsentCode(t *testing.T) {
 		XMLName: xml.Name{
 			Local: "StartOptIn_OUTPUT",
 		},
-
 		ReturnValue: 10,
 	}
 
@@ -160,10 +143,8 @@ func TestGetUserConsentCode(t *testing.T) {
 
 	tests := []test{
 		{
-			name: "success",
-
+			name:   "success",
 			action: 0,
-
 			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
@@ -172,41 +153,31 @@ func TestGetUserConsentCode(t *testing.T) {
 					GetUserConsentCode().
 					Return(code, nil)
 			},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: response,
-
 			err: nil,
 		},
 
 		{
-			name: "GetById fails",
-
-			action: 0,
-
+			name:    "GetById fails",
+			action:  0,
 			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-
 			res: map[string]interface{}(nil),
-
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 
 		{
-			name: "GetUserConsentCode fails",
-
+			name:   "GetUserConsentCode fails",
 			action: 0,
-
 			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
@@ -215,15 +186,12 @@ func TestGetUserConsentCode(t *testing.T) {
 					GetUserConsentCode().
 					Return(code, ErrGeneral)
 			},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: map[string]interface{}(nil),
-
 			err: ErrGeneral,
 		},
 	}
@@ -253,8 +221,7 @@ func TestSendConsentCode(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
-		GUID: "device-guid-123",
-
+		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
 
@@ -264,10 +231,8 @@ func TestSendConsentCode(t *testing.T) {
 
 	tests := []test{
 		{
-			name: "success",
-
+			name:   "success",
 			action: 0,
-
 			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
@@ -276,41 +241,29 @@ func TestSendConsentCode(t *testing.T) {
 					SendConsentCode(123456).
 					Return(optin.SendOptInCode_OUTPUT{}, nil)
 			},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: optin.SendOptInCode_OUTPUT{},
-
 			err: nil,
 		},
-
 		{
-			name: "GetById fails",
-
-			action: 0,
-
+			name:    "GetById fails",
+			action:  0,
 			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-
 			res: nil,
-
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
-
 		{
-			name: "SendConsentCode fails",
-
+			name:   "SendConsentCode fails",
 			action: 0,
-
 			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
@@ -319,15 +272,12 @@ func TestSendConsentCode(t *testing.T) {
 					SendConsentCode(123456).
 					Return(optin.SendOptInCode_OUTPUT{}, ErrGeneral)
 			},
-
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-
 			res: nil,
-
 			err: ErrGeneral,
 		},
 	}

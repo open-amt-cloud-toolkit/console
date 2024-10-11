@@ -15,7 +15,7 @@ import (
 
 type (
 	WSMAN interface {
-		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsmanAPI.Management
+		SetupWsmanClient(device entity.Device, isRedirection, logMessages bool) wsmanAPI.Management
 		DestroyWsmanClient(device dto.Device)
 		Worker()
 	}
@@ -27,7 +27,7 @@ type (
 	}
 
 	Redirection interface {
-		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman.Messages
+		SetupWsmanClient(device entity.Device, isRedirection, logMessages bool) wsman.Messages
 		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectClose(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)

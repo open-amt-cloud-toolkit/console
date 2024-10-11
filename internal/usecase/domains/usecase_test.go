@@ -37,7 +37,8 @@ func domainsTest(t *testing.T) (*domains.UseCase, *mocks.MockDomainsRepository) 
 
 	repo := mocks.NewMockDomainsRepository(mockCtl)
 	log := logger.New("error")
-	useCase := domains.New(repo, log)
+	crypto := mocks.MockCrypto{}
+	useCase := domains.New(repo, log, crypto)
 
 	return useCase, repo
 }
@@ -188,9 +189,9 @@ func TestGetDomainByDomainSuffix(t *testing.T) {
 	domainDTO := dto.Domain{
 		ProfileName:                   "test-domain",
 		DomainSuffix:                  "test.com",
-		ProvisioningCert:              "test-cert",
+		ProvisioningCert:              "",
 		ProvisioningCertStorageFormat: "test-format",
-		ProvisioningCertPassword:      "test-password",
+		ProvisioningCertPassword:      "",
 		TenantID:                      "tenant-id-456",
 		Version:                       "1.0.0",
 	}
@@ -266,9 +267,9 @@ func TestGetByName(t *testing.T) {
 	domainDTO := &dto.Domain{
 		ProfileName:                   "test-domain",
 		DomainSuffix:                  "test-domain",
-		ProvisioningCert:              "test-cert",
+		ProvisioningCert:              "",
 		ProvisioningCertStorageFormat: "test-format",
-		ProvisioningCertPassword:      "test-password",
+		ProvisioningCertPassword:      "",
 		TenantID:                      "tenant-id-456",
 		Version:                       "1.0.0",
 	}
@@ -379,9 +380,10 @@ func TestUpdate(t *testing.T) {
 	t.Parallel()
 
 	domain := &entity.Domain{
-		ProfileName: "example-domain",
-		TenantID:    "tenant-id-456",
-		Version:     "1.0.0",
+		ProfileName:              "example-domain",
+		TenantID:                 "tenant-id-456",
+		ProvisioningCertPassword: "encrypted",
+		Version:                  "1.0.0",
 	}
 	domainDTO := &dto.Domain{
 		ProfileName: "example-domain",
@@ -450,7 +452,7 @@ func TestInsert(t *testing.T) {
 		DomainSuffix:                  "newdomain.com",
 		ProvisioningCert:              generateTestPFX(),
 		ProvisioningCertStorageFormat: "PEM",
-		ProvisioningCertPassword:      "P@ssw0rd",
+		ProvisioningCertPassword:      "encrypted",
 		TenantID:                      "tenant-id-789",
 		ExpirationDate:                "2033-08-01T07:12:09Z",
 		Version:                       "1.0.0",
@@ -465,7 +467,14 @@ func TestInsert(t *testing.T) {
 		TenantID:                      "tenant-id-789",
 		Version:                       "1.0.0",
 	}
-
+	returnDomainDTO := &dto.Domain{
+		ProfileName:                   "new-domain",
+		DomainSuffix:                  "newdomain.com",
+		ProvisioningCertStorageFormat: "PEM",
+		ExpirationDate:                time.Date(2033, time.August, 1, 7, 12, 9, 0, time.UTC),
+		TenantID:                      "tenant-id-789",
+		Version:                       "1.0.0",
+	}
 	tests := []test{
 		{
 			name: "successful insertion",
@@ -477,7 +486,7 @@ func TestInsert(t *testing.T) {
 					GetByName(context.Background(), domain.ProfileName, domain.TenantID).
 					Return(domain, nil)
 			},
-			res: domainDTO,
+			res: returnDomainDTO,
 			err: nil,
 		},
 		{

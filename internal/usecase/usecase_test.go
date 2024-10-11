@@ -1,11 +1,15 @@
 package usecase
 
 import (
+	"sync"
 	"testing"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
+	"github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
@@ -25,8 +29,24 @@ type usecaseTest struct {
 	expectedResult *Usecases
 }
 
+var once sync.Once
+
+func setupConfig() {
+	once.Do(func() {
+		config.ConsoleConfig = &config.Config{
+			App: config.App{
+				EncryptionKey: "test",
+			},
+		}
+	})
+}
+
 func TestUsecases(t *testing.T) {
 	t.Parallel()
+
+	safeRequirements := security.Crypto{
+		EncryptionKey: "test",
+	}
 
 	tests := []usecaseTest{
 		{
@@ -34,16 +54,24 @@ func TestUsecases(t *testing.T) {
 			initializeFunc: func() *Usecases {
 				mockDB := mocks.NewMockSQLDB()
 				mockLogger := mocks.NewMockLogger(nil)
+				setupConfig()
 
 				return NewUseCases(mockDB, mockLogger)
 			},
 			expectedResult: &Usecases{
-				Domains:            domains.New(sqldb.NewDomainRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
-				Devices:            devices.New(sqldb.NewDeviceRepo(&db.SQL{}, mocks.NewMockLogger(nil)), wsman.NewGoWSMANMessages(mocks.NewMockLogger(nil)), devices.NewRedirector(), mocks.NewMockLogger(nil)),
-				Profiles:           profiles.New(sqldb.NewProfileRepo(&db.SQL{}, mocks.NewMockLogger(nil)), wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, mocks.NewMockLogger(nil)), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+				Domains: domains.New(sqldb.NewDomainRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil), safeRequirements),
+				Devices: devices.New(sqldb.NewDeviceRepo(&db.SQL{}, mocks.NewMockLogger(nil)), wsman.NewGoWSMANMessages(mocks.NewMockLogger(nil), safeRequirements), devices.NewRedirector(safeRequirements), mocks.NewMockLogger(nil), safeRequirements),
+				Profiles: profiles.New(
+					sqldb.NewProfileRepo(&db.SQL{}, mocks.NewMockLogger(nil)),
+					sqldb.NewWirelessRepo(&db.SQL{}, mocks.NewMockLogger(nil)),
+					profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+					ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil),
+					sqldb.NewDomainRepo(&db.SQL{}, mocks.NewMockLogger(nil)),
+					safeRequirements,
+				),
 				IEEE8021xProfiles:  ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
-				CIRAConfigs:        ciraconfigs.New(sqldb.NewCIRARepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
-				WirelessProfiles:   wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, mocks.NewMockLogger(nil)), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
+				CIRAConfigs:        ciraconfigs.New(sqldb.NewCIRARepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil), safeRequirements),
+				WirelessProfiles:   wificonfigs.New(sqldb.NewWirelessRepo(&db.SQL{}, mocks.NewMockLogger(nil)), ieee8021xconfigs.New(sqldb.NewIEEE8021xRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil), safeRequirements),
 				ProfileWiFiConfigs: profilewificonfigs.New(sqldb.NewProfileWiFiConfigsRepo(&db.SQL{}, mocks.NewMockLogger(nil)), mocks.NewMockLogger(nil)),
 			},
 		},
@@ -96,9 +124,14 @@ func TestInitialization(t *testing.T) {
 
 		t.Run(tc.level, func(t *testing.T) {
 			t.Parallel()
+			setupConfig()
+
+			mockCtl := gomock.NewController(t)
+			defer mockCtl.Finish()
 
 			mockDB := mocks.NewMockSQLDB()
-			mockLogger := mocks.NewMockLogger(nil)
+
+			mockLogger := mocks.NewMockLogger(mockCtl)
 
 			uc := NewUseCases(mockDB, mockLogger)
 

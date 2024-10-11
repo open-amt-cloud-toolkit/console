@@ -35,7 +35,7 @@ func initInfoTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.Mock
 
 	log := logger.New("error")
 
-	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log, mocks.MockCrypto{})
 
 	return u, wsmanMock, management, repo
 }
@@ -165,7 +165,7 @@ func TestGetVersion(t *testing.T) {
 					},
 				},
 			},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetAMTVersion fails",
@@ -291,7 +291,7 @@ func TestGetHardwareInfo(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -374,7 +374,7 @@ func TestGetAuditLog(t *testing.T) {
 				TotalCount: 0,
 				Records:    nil,
 			},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -454,7 +454,7 @@ func TestGetEventLog(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: []dto.EventLog(nil),
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -534,7 +534,7 @@ func TestGetGeneralSettings(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",
@@ -615,7 +615,7 @@ func TestGetDiskInfo(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetDiskInfo fails",
