@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
@@ -45,7 +46,7 @@ func initPowerTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.Moc
 
 	managementMock := mocks.NewMockManagement(mockCtl)
 	log := logger.New("error")
-	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log, mocks.MockCrypto{})
 
 	return u, wsmanMock, managementMock, repo
 }
@@ -55,6 +56,7 @@ func TestSendPowerAction(t *testing.T) {
 
 	device := &entity.Device{
 		GUID:     "device-guid-123",
+		Password: "encrypted",
 		TenantID: "tenant-id-456",
 	}
 
@@ -92,7 +94,7 @@ func TestSendPowerAction(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: power.PowerActionResponse{},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "SendPowerAction fails",
@@ -128,7 +130,10 @@ func TestSendPowerAction(t *testing.T) {
 			res, err := useCase.SendPowerAction(context.Background(), device.GUID, tc.action)
 
 			require.Equal(t, tc.res, res)
-			require.IsType(t, tc.err, err)
+
+			if tc.err != nil {
+				assert.Equal(t, err, tc.err)
+			}
 		})
 	}
 }
@@ -171,7 +176,7 @@ func TestGetPowerState(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: dto.PowerState{},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name: "GetPowerState fails",
@@ -261,7 +266,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: dto.PowerCapabilities{},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name: "GetPowerCapabilities fails",
@@ -393,7 +398,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: power.PowerActionResponse{},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name: "GetBootData fails",

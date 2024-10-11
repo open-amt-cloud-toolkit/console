@@ -12,21 +12,25 @@ import (
 )
 
 func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v2 dtov2.Version, err error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return dto.Version{}, dtov2.Version{}, err
+		return v1, v2, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return v1, v2, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	softwareIdentity, err := device.GetAMTVersion()
 	if err != nil {
-		return dto.Version{}, dtov2.Version{}, err
+		return v1, v2, err
 	}
 
 	data, err := device.GetSetupAndConfiguration()
 	if err != nil {
-		return dto.Version{}, dtov2.Version{}, err
+		return v1, v2, err
 	}
 
 	// iterate over the data and convert each entity to dto
@@ -45,20 +49,24 @@ func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v
 		d3[i] = *uc.setupAndConfigurationServiceResponseEntityToDTO(&tmpEntity)
 	}
 
-	v1Version := dto.Version{
+	v1 = dto.Version{
 		CIMSoftwareIdentity:             dto.SoftwareIdentityResponses{Responses: d1},
 		AMTSetupAndConfigurationService: dto.SetupAndConfigurationServiceResponses{Response: d3[0]},
 	}
 
-	v2Version := *uc.softwareIdentityEntityToDTOv2(softwareIdentity)
+	v2 = *uc.softwareIdentityEntityToDTOv2(softwareIdentity)
 
-	return v1Version, v2Version, nil
+	return v1, v2, nil
 }
 
 func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -72,9 +80,13 @@ func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (interface{},
 }
 
 func (uc *UseCase) GetDiskInfo(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -88,9 +100,13 @@ func (uc *UseCase) GetDiskInfo(c context.Context, guid string) (interface{}, err
 }
 
 func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (dto.AuditLog, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.AuditLog{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.AuditLog{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -108,9 +124,13 @@ func (uc *UseCase) GetAuditLog(c context.Context, startIndex int, guid string) (
 }
 
 func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -148,9 +168,13 @@ func (uc *UseCase) GetEventLog(c context.Context, guid string) ([]dto.EventLog, 
 }
 
 func (uc *UseCase) GetGeneralSettings(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)

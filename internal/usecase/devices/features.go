@@ -16,9 +16,13 @@ import (
 )
 
 func (uc *UseCase) GetFeatures(c context.Context, guid string) (settingsResults dto.Features, settingsResultsV2 dtov2.Features, err error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.Features{}, dtov2.Features{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return settingsResults, settingsResultsV2, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -58,9 +62,13 @@ func (uc *UseCase) GetFeatures(c context.Context, guid string) (settingsResults 
 }
 
 func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Features) (settingsResults dto.Features, settingsResultsV2 dtov2.Features, err error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return dto.Features{}, dtov2.Features{}, err
+		return settingsResults, settingsResultsV2, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return settingsResults, settingsResultsV2, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)

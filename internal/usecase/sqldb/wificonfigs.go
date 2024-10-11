@@ -99,25 +99,23 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 
 	sqlQuery, _, err := r.Builder.
 		Select(
-			"w.wireless_profile_name",
-			"w.authentication_method",
-			"w.encryption_method",
-			"w.ssid",
-			"w.psk_value",
-			"w.psk_passphrase",
-			"w.link_policy",
+			"wireless_profile_name",
+			"authentication_method",
+			"encryption_method",
+			"ssid",
+			"psk_value",
+			"psk_passphrase",
+			"link_policy",
 			"w.tenant_id",
-			"w.ieee8021x_profile_name",
-			"w.auth_protocol",
-			"w.pxe_timeout",
-			"w.wired_interface",
-			"e.pxe_timeout AS e_pxe_timeout",
-			"e.wired_interface AS e_wired_interface",
+			"ieee8021x_profile_name",
+			"auth_protocol",
+			"pxe_timeout",
+			"wired_interface",
 		).
 		From("wirelessconfigs w").
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
 		Where("w.tenant_id = ?", tenantID).
-		OrderBy("w.wireless_profile_name").
+		OrderBy("wireless_profile_name").
 		Limit(limitedTop).
 		Offset(limitedSkip).
 		ToSql()
@@ -162,13 +160,13 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 			"encryption_method",
 			"ssid",
 			"psk_value",
-			// "psk_passphrase",
+			"psk_passphrase",
 			"link_policy",
 			"w.tenant_id",
 			"ieee8021x_profile_name",
-			"w.auth_protocol",
-			"w.pxe_timeout",
-			"w.wired_interface",
+			"auth_protocol",
+			"pxe_timeout",
+			"wired_interface",
 		).
 		From("wirelessconfigs w").
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
@@ -194,7 +192,7 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 	for rows.Next() {
 		p := &entity.WirelessConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.PSKPassphrase, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
 			&p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return p, ErrWiFiDatabase.Wrap("GetByName", "rows.Scan", err)

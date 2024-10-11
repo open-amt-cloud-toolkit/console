@@ -36,7 +36,7 @@ func devicesTest(t *testing.T) (*devices.UseCase, *mocks.MockDeviceManagementRep
 	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
 	log := logger.New("error")
-	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log)
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log, mocks.MockCrypto{})
 
 	return u, repo, wsmanMock
 }
@@ -290,6 +290,7 @@ func TestUpdate(t *testing.T) {
 	device := &entity.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
+		Password: "encrypted",
 		Tags:     "hello,test",
 	}
 
@@ -363,6 +364,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *mocks.MockDeviceManagementRepository, _ *mocks.MockWSMAN) {
 				device := &entity.Device{
 					GUID:     "device-guid-123",
+					Password: "encrypted",
 					TenantID: "tenant-id-456",
 				}
 
@@ -381,6 +383,7 @@ func TestInsert(t *testing.T) {
 			mock: func(repo *mocks.MockDeviceManagementRepository, _ *mocks.MockWSMAN) {
 				device := &entity.Device{
 					GUID:     "device-guid-123",
+					Password: "encrypted",
 					TenantID: "tenant-id-456",
 				}
 

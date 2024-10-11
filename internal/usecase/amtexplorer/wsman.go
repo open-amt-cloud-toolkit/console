@@ -4,9 +4,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -19,12 +21,14 @@ var (
 )
 
 type GoWSMANMessages struct {
-	log logger.Interface
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
-func NewGoWSMANMessages(log logger.Interface) *GoWSMANMessages {
+func NewGoWSMANMessages(log logger.Interface, safeRequirements security.Cryptor) *GoWSMANMessages {
 	return &GoWSMANMessages{
-		log: log,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -35,11 +39,10 @@ func (g GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
 	}
 }
 
-func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, logAMTMessages bool) AMTExplorer {
+func (g GoWSMANMessages) SetupWsmanClient(device entity.Device, logAMTMessages bool) AMTExplorer {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
-		Password:          device.Password,
 		UseDigest:         true,
 		UseTLS:            device.UseTLS,
 		SelfSignedAllowed: device.AllowSelfSigned,
@@ -47,9 +50,11 @@ func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, logAMTMessages bool
 		IsRedirection:     false,
 	}
 
-	if device.CertHash != "" {
-		clientParams.PinnedCert = device.CertHash
+	if device.CertHash != nil {
+		clientParams.PinnedCert = *device.CertHash
 	}
+
+	clientParams.Password, _ = g.safeRequirements.Decrypt(device.Password)
 
 	connectionsMu.Lock()
 	defer connectionsMu.Unlock()
