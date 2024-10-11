@@ -9,6 +9,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -20,20 +21,21 @@ type test struct {
 	configName string
 	tenantID   string
 	input      dto.CIRAConfig
-	mock       func(*MockRepository)
+	mock       func(*mocks.MockCIRAConfigsRepository)
 	res        interface{}
 	err        error
 }
 
-func ciraconfigsTest(t *testing.T) (*ciraconfigs.UseCase, *MockRepository) {
+func ciraconfigsTest(t *testing.T) (*ciraconfigs.UseCase, *mocks.MockCIRAConfigsRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
+	repo := mocks.NewMockCIRAConfigsRepository(mockCtl)
+	crypto := mocks.MockCrypto{}
 	log := logger.New("error")
-	useCase := ciraconfigs.New(repo, log)
+	useCase := ciraconfigs.New(repo, log, crypto)
 
 	return useCase, repo
 }
@@ -44,7 +46,7 @@ func TestGetCount(t *testing.T) {
 	tests := []test{
 		{
 			name: "empty result",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, nil)
 			},
 			res: 0,
@@ -52,7 +54,7 @@ func TestGetCount(t *testing.T) {
 		},
 		{
 			name: "result with error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, ciraconfigs.ErrDatabase.Wrap("", "", nil))
 			},
 			res: 0,
@@ -109,7 +111,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testCIRAConfigs, nil)
@@ -122,7 +124,7 @@ func TestGet(t *testing.T) {
 			top:      5,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, ciraconfigs.ErrDatabase)
@@ -135,7 +137,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     20,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.CIRAConfig{}, nil)
@@ -190,7 +192,7 @@ func TestGetByName(t *testing.T) {
 				ConfigName: "test-config",
 				TenantID:   "tenant-id-456",
 			},
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "test-config", "tenant-id-456").
 					Return(ciraconfig, nil)
@@ -204,7 +206,7 @@ func TestGetByName(t *testing.T) {
 				ConfigName: "unknown-ciraconfig",
 				TenantID:   "tenant-id-456",
 			},
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "unknown-ciraconfig", "tenant-id-456").
 					Return(nil, nil)
@@ -245,7 +247,7 @@ func TestDelete(t *testing.T) {
 			name:       "successful deletion",
 			configName: "example-ciraconfig",
 			tenantID:   "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "example-ciraconfig", "tenant-id-456").
 					Return(true, nil)
@@ -256,7 +258,7 @@ func TestDelete(t *testing.T) {
 			name:       "deletion fails - ciraconfig not found",
 			configName: "nonexistent-ciraconfig",
 			tenantID:   "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "nonexistent-ciraconfig", "tenant-id-456").
 					Return(false, nil)
@@ -292,6 +294,7 @@ func TestUpdate(t *testing.T) {
 	ciraconfig := &entity.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
+		Password:   "encrypted",
 		Version:    "1.0.0",
 	}
 
@@ -304,7 +307,7 @@ func TestUpdate(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful update",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ciraconfig).
 					Return(true, nil)
@@ -317,7 +320,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - not found",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ciraconfig).
 					Return(false, nil)
@@ -327,7 +330,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - database error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), ciraconfig).
 					Return(false, ciraconfigs.ErrDatabase)
@@ -360,6 +363,7 @@ func TestInsert(t *testing.T) {
 	ciraconfig := &entity.CIRAConfig{
 		ConfigName: "test-config",
 		TenantID:   "tenant-id-456",
+		Password:   "encrypted",
 		Version:    "1.0.0",
 	}
 
@@ -372,7 +376,7 @@ func TestInsert(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful insertion",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ciraconfig).
 					Return("unique-ciraconfig-id", nil)
@@ -385,7 +389,7 @@ func TestInsert(t *testing.T) {
 		},
 		{
 			name: "insertion fails - database error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockCIRAConfigsRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), ciraconfig).
 					Return("", ciraconfigs.ErrDatabase)

@@ -15,7 +15,7 @@ import (
 
 type (
 	WSMAN interface {
-		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsmanAPI.Management
+		SetupWsmanClient(device entity.Device, isRedirection, logMessages bool) wsmanAPI.Management
 		DestroyWsmanClient(device dto.Device)
 		Worker()
 	}
@@ -27,7 +27,7 @@ type (
 	}
 
 	Redirection interface {
-		SetupWsmanClient(device dto.Device, isRedirection, logMessages bool) wsman.Messages
+		SetupWsmanClient(device entity.Device, isRedirection, logMessages bool) wsman.Messages
 		RedirectConnect(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectClose(ctx context.Context, deviceConnection *DeviceConnection) error
 		RedirectListen(ctx context.Context, deviceConnection *DeviceConnection) ([]byte, error)
@@ -60,11 +60,11 @@ type (
 		GetFeatures(ctx context.Context, guid string) (dto.Features, dtov2.Features, error)
 		SetFeatures(ctx context.Context, guid string, features dto.Features) (dto.Features, dtov2.Features, error)
 		GetAlarmOccurrences(ctx context.Context, guid string) ([]dto.AlarmClockOccurrence, error)
-		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error)
+		CreateAlarmOccurrences(ctx context.Context, guid string, alarm dto.AlarmClockOccurrenceInput) (dto.AddAlarmOutput, error)
 		DeleteAlarmOccurrences(ctx context.Context, guid, instanceID string) error
 		GetHardwareInfo(ctx context.Context, guid string) (interface{}, error)
-		GetPowerState(ctx context.Context, guid string) (map[string]interface{}, error)
-		GetPowerCapabilities(ctx context.Context, guid string) (map[string]interface{}, error)
+		GetPowerState(ctx context.Context, guid string) (dto.PowerState, error)
+		GetPowerCapabilities(ctx context.Context, guid string) (dto.PowerCapabilities, error)
 		GetGeneralSettings(ctx context.Context, guid string) (interface{}, error)
 		CancelUserConsent(ctx context.Context, guid string) (interface{}, error)
 		GetUserConsentCode(ctx context.Context, guid string) (map[string]interface{}, error)

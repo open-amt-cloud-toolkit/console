@@ -9,6 +9,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profilewificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -17,12 +18,12 @@ type test struct {
 	name        string
 	tenantID    string
 	profileName string
-	mock        func(*MockRepository)
+	mock        func(*mocks.MockProfileWiFiConfigsRepository)
 	res         interface{}
 	err         error
 }
 
-func profilewificonfigsTest(t *testing.T) (*profilewificonfigs.UseCase, *MockRepository) {
+func profilewificonfigsTest(t *testing.T) (*profilewificonfigs.UseCase, *mocks.MockProfileWiFiConfigsRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -30,7 +31,7 @@ func profilewificonfigsTest(t *testing.T) (*profilewificonfigs.UseCase, *MockRep
 
 	log := logger.New("error")
 
-	repo := NewMockRepository(mockCtl)
+	repo := mocks.NewMockProfileWiFiConfigsRepository(mockCtl)
 
 	useCase := profilewificonfigs.New(repo, log)
 
@@ -45,7 +46,7 @@ func TestGetByProfileName(t *testing.T) {
 			name:        "success",
 			profileName: "profile1",
 			tenantID:    "tenant1",
-			mock: func(m *MockRepository) {
+			mock: func(m *mocks.MockProfileWiFiConfigsRepository) {
 				m.EXPECT().GetByProfileName(context.Background(), "profile1", "tenant1").Return([]entity.ProfileWiFiConfigs{
 					{
 						ProfileName: "profile1",
@@ -68,7 +69,7 @@ func TestGetByProfileName(t *testing.T) {
 			name:        "error",
 			profileName: "profile1",
 			tenantID:    "tenant1",
-			mock: func(m *MockRepository) {
+			mock: func(m *mocks.MockProfileWiFiConfigsRepository) {
 				m.EXPECT().GetByProfileName(context.Background(), "profile1", "tenant1").Return(nil, profilewificonfigs.ErrDatabase)
 			},
 			err: profilewificonfigs.ErrDatabase.Wrap("Get", "uc.repo.Get", profilewificonfigs.ErrDatabase),
@@ -97,7 +98,7 @@ func TestDeleteByProfileName(t *testing.T) {
 			name:        "success",
 			profileName: "profile1",
 			tenantID:    "tenant1",
-			mock: func(m *MockRepository) {
+			mock: func(m *mocks.MockProfileWiFiConfigsRepository) {
 				m.EXPECT().DeleteByProfileName(context.Background(), "profile1", "tenant1").Return(true, nil)
 			},
 		},
@@ -105,7 +106,7 @@ func TestDeleteByProfileName(t *testing.T) {
 			name:        "error",
 			profileName: "profile1",
 			tenantID:    "tenant1",
-			mock: func(m *MockRepository) {
+			mock: func(m *mocks.MockProfileWiFiConfigsRepository) {
 				m.EXPECT().DeleteByProfileName(context.Background(), "profile1", "tenant1").Return(false, profilewificonfigs.ErrDatabase)
 			},
 			err: profilewificonfigs.ErrDatabase.Wrap("Delete", "uc.repo.Delete", profilewificonfigs.ErrDatabase),

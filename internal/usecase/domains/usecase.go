@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"software.sslmate.com/src/go-pkcs12"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
@@ -17,15 +18,17 @@ import (
 
 // UseCase -.
 type UseCase struct {
-	repo Repository
-	log  logger.Interface
+	repo             Repository
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
 // New -.
-func New(r Repository, log logger.Interface) *UseCase {
+func New(r Repository, log logger.Interface, safeRequirements security.Cryptor) *UseCase {
 	return &UseCase{
-		repo: r,
-		log:  log,
+		repo:             r,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -130,12 +133,12 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 }
 
 func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
-	d1 := uc.dtoToEntity(d)
-
 	cert, err := DecryptAndCheckCertExpiration(*d)
 	if err != nil {
 		return nil, err
 	}
+
+	d1 := uc.dtoToEntity(d)
 
 	d1.ExpirationDate = cert.NotAfter.Format(time.RFC3339)
 
@@ -187,6 +190,8 @@ func (uc *UseCase) dtoToEntity(d *dto.Domain) *entity.Domain {
 		Version:                       d.Version,
 	}
 
+	d1.ProvisioningCertPassword, _ = uc.safeRequirements.Encrypt(d.ProvisioningCertPassword)
+
 	return d1
 }
 
@@ -205,10 +210,10 @@ func (uc *UseCase) entityToDTO(d *entity.Domain) *dto.Domain {
 	}
 
 	d1 := &dto.Domain{
-		ProfileName:                   d.ProfileName,
-		DomainSuffix:                  d.DomainSuffix,
-		ProvisioningCert:              d.ProvisioningCert,
-		ProvisioningCertPassword:      d.ProvisioningCertPassword,
+		ProfileName:  d.ProfileName,
+		DomainSuffix: d.DomainSuffix,
+		// ProvisioningCert:              d.ProvisioningCert,
+		// ProvisioningCertPassword:      d.ProvisioningCertPassword,
 		ProvisioningCertStorageFormat: d.ProvisioningCertStorageFormat,
 		ExpirationDate:                expirationDate,
 		TenantID:                      d.TenantID,

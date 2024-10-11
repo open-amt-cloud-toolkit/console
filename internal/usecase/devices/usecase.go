@@ -3,6 +3,8 @@ package devices
 import (
 	"strings"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
+
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -40,18 +42,20 @@ type UseCase struct {
 	redirection      Redirection
 	redirConnections map[string]*DeviceConnection
 	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
 var ErrAMT = AMTError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
 
 // New -.
-func New(r Repository, d WSMAN, redirection Redirection, log logger.Interface) *UseCase {
+func New(r Repository, d WSMAN, redirection Redirection, log logger.Interface, safeRequirements security.Cryptor) *UseCase {
 	uc := &UseCase{
 		repo:             r,
 		device:           d,
 		redirection:      redirection,
 		redirConnections: make(map[string]*DeviceConnection),
 		log:              log,
+		safeRequirements: safeRequirements,
 	}
 	// start up the worker
 	go d.Worker()
@@ -88,6 +92,13 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 		AllowSelfSigned: d.AllowSelfSigned,
 	}
 
+	var err error
+
+	d1.Password, err = uc.safeRequirements.Encrypt(d1.Password)
+	if err != nil {
+		uc.log.Error("Error encrypting password")
+	}
+
 	if d.CertHash == "" {
 		d1.CertHash = nil
 	} else {
@@ -119,8 +130,8 @@ func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 		LastSeen:         d.LastSeen,
 		LastDisconnected: d.LastDisconnected,
 		// DeviceInfo:       d.DeviceInfo,
-		Username:        d.Username,
-		Password:        d.Password,
+		Username: d.Username,
+		// Password:        d.Password,
 		UseTLS:          d.UseTLS,
 		AllowSelfSigned: d.AllowSelfSigned,
 	}

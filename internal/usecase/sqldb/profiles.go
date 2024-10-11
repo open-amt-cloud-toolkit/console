@@ -92,7 +92,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"p.ip_sync_enabled",
 			"p.local_wifi_sync_enabled",
 			"p.ieee8021x_profile_name",
-			"p.auth_protocol",
+			"e.auth_protocol",
 			"e.pxe_timeout",
 			"e.wired_interface",
 		).
@@ -118,13 +118,12 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 			"p.ip_sync_enabled",
 			"p.local_wifi_sync_enabled",
 			"p.ieee8021x_profile_name",
-			"p.auth_protocol",
+			"e.auth_protocol",
 			"e.pxe_timeout",
 			"e.wired_interface",
 		).
 		OrderBy("p.profile_name").
-		Limit(limitedTop).
-		Offset(limitedSkip).
+		Limit(limitedTop).Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrProfileDatabase.Wrap("Get", "r.Builder", err)
@@ -146,8 +145,7 @@ func (r *ProfileRepo) Get(_ context.Context, top, skip int, tenantID string) ([]
 	for rows.Next() {
 		p := entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword,
-			&p.CIRAConfigName,
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword, &p.CIRAConfigName,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,
 			&p.IPSyncEnabled, &p.LocalWiFiSyncEnabled, &p.IEEE8021xProfileName, &p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
@@ -169,6 +167,8 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 			"p.profile_name",
 			"p.activation",
 			"p.generate_random_password",
+			"p.amt_password",
+			"p.mebx_password",
 			"p.cira_config_name",
 			"p.generate_random_mebx_password",
 			"p.tags",
@@ -183,7 +183,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 			"p.ip_sync_enabled",
 			"p.local_wifi_sync_enabled",
 			"p.ieee8021x_profile_name",
-			"p.auth_protocol",
+			"e.auth_protocol",
 			"e.pxe_timeout",
 			"e.wired_interface",
 		).
@@ -211,7 +211,7 @@ func (r *ProfileRepo) GetByName(_ context.Context, profileName, tenantID string)
 	for rows.Next() {
 		p := &entity.Profile{}
 
-		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword,
+		err = rows.Scan(&p.ProfileName, &p.Activation, &p.GenerateRandomPassword, &p.AMTPassword, &p.MEBXPassword,
 			&p.CIRAConfigName,
 			&p.GenerateRandomMEBxPassword, &p.Tags, &p.DHCPEnabled, &p.TenantID, &p.TLSMode,
 			&p.UserConsent, &p.IDEREnabled, &p.KVMEnabled, &p.SOLEnabled, &p.TLSSigningAuthority,

@@ -13,18 +13,19 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ciraconfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func ciraconfigsTest(t *testing.T) (*MockCIRAConfigsFeature, *gin.Engine) {
+func ciraconfigsTest(t *testing.T) (*mocks.MockCIRAConfigsFeature, *gin.Engine) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	log := logger.New("error")
-	ciraconfig := NewMockCIRAConfigsFeature(mockCtl)
+	ciraconfig := mocks.NewMockCIRAConfigsFeature(mockCtl)
 
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
@@ -38,7 +39,7 @@ type ciraconfigTest struct {
 	name         string
 	method       string
 	url          string
-	mock         func(repo *MockCIRAConfigsFeature)
+	mock         func(repo *mocks.MockCIRAConfigsFeature)
 	response     interface{}
 	requestBody  dto.CIRAConfig
 	expectedCode int
@@ -57,7 +58,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "get all ciraconfigs",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.CIRAConfig{{
 					ConfigName: "config",
 				}}, nil)
@@ -69,7 +70,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "get all ciraconfigs - with count",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs?$top=10&$skip=1&$count=true",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.CIRAConfig{{
 					ConfigName: "config",
 				}}, nil)
@@ -82,7 +83,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "get all ciraconfigs - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, ciraconfigs.ErrDatabase)
 			},
 			response:     ciraconfigs.ErrDatabase,
@@ -92,7 +93,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "get ciraconfig by name",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs/profile",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.CIRAConfig{
 					ConfigName: "config",
 				}, nil)
@@ -104,7 +105,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "get ciraconfig by name - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/ciraconfigs/profile",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, ciraconfigs.ErrDatabase)
 			},
 			response:     ciraconfigs.ErrDatabase,
@@ -114,7 +115,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "insert ciraconfig",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ciraconfigs",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfigTest := &dto.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",
@@ -140,7 +141,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "insert ciraconfig - failed",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ciraconfigs",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfigTest := &dto.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",
@@ -166,7 +167,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "insert ciraconfig validation - failed",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/ciraconfigs",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig400Test := &dto.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					ServerAddressFormat: 201,
@@ -187,7 +188,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "delete ciraconfig",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/ciraconfigs/profile",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig.EXPECT().Delete(context.Background(), "profile", "").Return(nil)
 			},
 			response:     nil,
@@ -197,7 +198,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "delete ciraconfig - failed",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/ciraconfigs/profile",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfig.EXPECT().Delete(context.Background(), "profile", "").Return(ciraconfigs.ErrDatabase)
 			},
 			response:     ciraconfigs.ErrDatabase,
@@ -207,7 +208,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "update ciraconfig",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/ciraconfigs",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfigTest := &dto.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",
@@ -233,7 +234,7 @@ func TestCIRAConfigRoutes(t *testing.T) {
 			name:   "update ciraconfig - failed",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/ciraconfigs",
-			mock: func(ciraconfig *MockCIRAConfigsFeature) {
+			mock: func(ciraconfig *mocks.MockCIRAConfigsFeature) {
 				ciraconfigTest := &dto.CIRAConfig{
 					ConfigName:          "ciraconfig",
 					MPSAddress:          "https://example.com",

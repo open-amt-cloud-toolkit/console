@@ -18,9 +18,13 @@ const (
 )
 
 func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]dto.AlarmClockOccurrence, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -45,10 +49,14 @@ func (uc *UseCase) GetAlarmOccurrences(c context.Context, guid string) ([]dto.Al
 	return d1, nil
 }
 
-func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm dto.AlarmClockOccurrence) (dto.AddAlarmOutput, error) {
-	item, err := uc.GetByID(c, guid, "")
+func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm dto.AlarmClockOccurrenceInput) (dto.AddAlarmOutput, error) {
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.AddAlarmOutput{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.AddAlarmOutput{}, ErrNotFound
 	}
 
 	alarm.InstanceID = alarm.ElementName
@@ -66,9 +74,13 @@ func (uc *UseCase) CreateAlarmOccurrences(c context.Context, guid string, alarm 
 }
 
 func (uc *UseCase) DeleteAlarmOccurrences(c context.Context, guid, instanceID string) error {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return err
+	}
+
+	if item == nil || item.GUID == "" {
+		return ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -95,7 +107,7 @@ func (uc *UseCase) alarmOccurrenceEntityToDTO(d *alarmclock.AlarmClockOccurrence
 	d1 := &dto.AlarmClockOccurrence{
 		ElementName:        d.ElementName,
 		InstanceID:         d.InstanceID,
-		StartTime:          d.StartTime.Datetime,
+		StartTime:          dto.StartTime{Datetime: d.StartTime.Datetime},
 		Interval:           interval,
 		IntervalInMinutes:  intervalInMinutes,
 		DeleteOnCompletion: d.DeleteOnCompletion,

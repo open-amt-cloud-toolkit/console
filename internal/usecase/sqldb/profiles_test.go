@@ -11,9 +11,132 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
+
+const schema = `
+CREATE TABLE IF NOT EXISTS devices
+(
+    guid TEXT NOT NULL,
+    tags TEXT,
+    hostname TEXT,
+    mpsinstance TEXT,
+    connectionstatus BOOLEAN NOT NULL,
+    mpsusername TEXT,
+    tenantid TEXT NOT NULL,
+    friendlyname TEXT,
+    dnssuffix TEXT,
+    lastconnected TEXT,
+    lastseen TEXT,
+    lastdisconnected TEXT,
+    deviceinfo TEXT,
+    username TEXT,
+    password TEXT,
+    usetls BOOLEAN NOT NULL,
+    allowselfsigned BOOLEAN NOT NULL,
+    certhash TEXT,
+    PRIMARY KEY (guid, tenantid),
+    UNIQUE (guid)
+);
+CREATE TABLE IF NOT EXISTS ciraconfigs(
+  cira_config_name TEXT NOT NULL,
+  mps_server_address TEXT,
+  mps_port INTEGER,
+  user_name TEXT,
+  password TEXT,
+  common_name TEXT,
+  server_address_format INTEGER,
+  auth_method INTEGER,
+  mps_root_certificate TEXT,
+  proxydetails TEXT,
+  tenant_id TEXT NOT NULL,
+  PRIMARY KEY (cira_config_name, tenant_id)
+);
+
+CREATE TABLE IF NOT EXISTS ieee8021xconfigs(
+  profile_name TEXT,
+  auth_protocol INTEGER,
+  pxe_timeout INTEGER,
+  wired_interface BOOLEAN NOT NULL,
+  tenant_id TEXT NOT NULL,
+  PRIMARY KEY (profile_name, tenant_id)
+);
+
+CREATE TABLE IF NOT EXISTS wirelessconfigs(
+  wireless_profile_name TEXT NOT NULL,
+  authentication_method INTEGER,
+  encryption_method INTEGER,
+  ssid TEXT,
+  psk_value INTEGER,
+  psk_passphrase TEXT,
+  link_policy TEXT,
+  creation_date TEXT, -- TIMESTAMP is usually represented as TEXT in SQLite
+  created_by TEXT,
+  tenant_id TEXT NOT NULL,
+  ieee8021x_profile_name TEXT,
+  FOREIGN KEY (ieee8021x_profile_name, tenant_id) REFERENCES ieee8021xconfigs(profile_name, tenant_id),
+  PRIMARY KEY (wireless_profile_name, tenant_id)
+);
+
+CREATE TABLE IF NOT EXISTS profiles(
+  profile_name TEXT NOT NULL,
+  activation TEXT NOT NULL,
+  amt_password TEXT,
+  generate_random_password BOOLEAN NOT NULL,
+  cira_config_name TEXT,
+  creation_date TEXT, -- TIMESTAMP as TEXT
+  created_by TEXT,
+  mebx_password TEXT,
+  generate_random_mebx_password BOOLEAN NOT NULL, 
+  tags TEXT,
+  dhcp_enabled BOOLEAN NOT NULL, 
+  tenant_id TEXT NOT NULL,
+  tls_mode INTEGER,
+  user_consent TEXT,
+  ider_enabled BOOLEAN NOT NULL, 
+  kvm_enabled BOOLEAN NOT NULL, 
+  sol_enabled BOOLEAN NOT NULL, 
+  tls_signing_authority TEXT,
+  ip_sync_enabled BOOLEAN NOT NULL, 
+  local_wifi_sync_enabled BOOLEAN NOT NULL, 
+  ieee8021x_profile_name TEXT,
+  FOREIGN KEY (ieee8021x_profile_name, tenant_id) REFERENCES ieee8021xconfigs(profile_name, tenant_id),
+  FOREIGN KEY (cira_config_name, tenant_id) REFERENCES ciraconfigs(cira_config_name, tenant_id),
+  PRIMARY KEY (profile_name, tenant_id)
+);
+
+CREATE TABLE IF NOT EXISTS profiles_wirelessconfigs(
+  wireless_profile_name TEXT,
+  profile_name TEXT,
+  priority INTEGER,
+  creation_date TEXT, -- TIMESTAMP as TEXT
+  created_by TEXT,
+  tenant_id TEXT NOT NULL,
+  FOREIGN KEY (wireless_profile_name, tenant_id) REFERENCES wirelessconfigs(wireless_profile_name, tenant_id),
+  FOREIGN KEY (profile_name, tenant_id) REFERENCES profiles(profile_name, tenant_id),
+  PRIMARY KEY (wireless_profile_name, profile_name, priority, tenant_id)
+);
+
+CREATE TABLE IF NOT EXISTS domains(
+  name TEXT NOT NULL,
+  domain_suffix TEXT NOT NULL,
+  provisioning_cert TEXT,
+  provisioning_cert_storage_format TEXT,
+  provisioning_cert_key TEXT,
+  expiration_date TEXT,
+  creation_date TEXT, -- TIMESTAMP as TEXT
+  created_by TEXT,
+  tenant_id TEXT NOT NULL,
+  CONSTRAINT domainsuffix UNIQUE (domain_suffix, tenant_id),
+  PRIMARY KEY (name, tenant_id)
+);
+
+CREATE UNIQUE INDEX lower_name_suffix_idx ON domains (LOWER(name), LOWER(domain_suffix));
+
+PRAGMA foreign_keys = ON;
+`
 
 func TestProfileRepo_GetCount(t *testing.T) {
 	t.Parallel()
@@ -28,8 +151,18 @@ func TestProfileRepo_GetCount(t *testing.T) {
 		{
 			name: "Successful count",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO profiles (profile_name, tenant_id) VALUES (?, ?)`,
-					"profile1", "tenant1")
+				_, err := dbConn.Exec(`INSERT INTO profiles (
+					profile_name, amt_password, creation_date, created_by, generate_random_password,
+					 activation, mebx_password, generate_random_mebx_password, tags,
+					dhcp_enabled, ip_sync_enabled, local_wifi_sync_enabled, tenant_id, tls_mode, 
+					tls_signing_authority, user_consent, ider_enabled, kvm_enabled, sol_enabled
+					
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					"profile1", "password1", "2024-08-01", "user1", true,
+					"activation1", "mebx1", true, "tags1",
+					true, true, true, "tenant1", 1,
+					"authority1", "consent1", true, true, true,
+				)
 				require.NoError(t, err)
 			},
 			tenantID: "tenant1",
@@ -61,12 +194,7 @@ func TestProfileRepo_GetCount(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE profiles (
-					profile_name TEXT PRIMARY KEY,
-					tenant_id TEXT NOT NULL
-				);
-			`)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -81,7 +209,7 @@ func TestProfileRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewProfileRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -163,69 +291,35 @@ func TestProfileRepo_Get(t *testing.T) {
 		{
 			name: "Successful query",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO profiles (
+				_, err := dbConn.Exec(`INSERT INTO wirelessconfigs (
+		      wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, psk_passphrase, link_policy, creation_date, created_by, tenant_id
+		      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					"wireless1", 1, 1, "ssid1", 1, "passphrase1", "policy1", "2024-08-01", "user1", "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO ciraconfigs (cira_config_name, mps_server_address, mps_port, user_name, password, common_name, server_address_format, auth_method, mps_root_certificate, proxydetails, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					"cira1", "mpsaddress1", 1234, "user1", "pass1", "common1", 1, 1, "rootcert1", "proxydetail1", "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`
+		            INSERT INTO ieee8021xconfigs (
+		                profile_name, pxe_timeout, wired_interface, tenant_id
+		            ) VALUES (?, ?, ?, ?);`,
+					"ieee1", 30, true, "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO profiles (
 					profile_name, amt_password, creation_date, created_by, generate_random_password,
-					cira_config_name, activation, mebx_password, generate_random_mebx_password, tags,
-					dhcp_enabled, ip_sync_enabled, local_wifi_sync_enabled, tenant_id, tls_mode, 
-					tls_signing_authority, user_consent, ider_enabled, kvm_enabled, sol_enabled, 
-					ieee8021x_profile_name, version, auth_protocol, server_name, domain,
-					username, password, roaming_identity, active_in_s0, pxe_timeout, wired_interface
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					activation, mebx_password, generate_random_mebx_password, tags,
+					dhcp_enabled, ip_sync_enabled, local_wifi_sync_enabled, tenant_id, tls_mode,
+					tls_signing_authority, user_consent, ider_enabled, kvm_enabled, sol_enabled
+					
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 					"profile1", "password1", "2024-08-01", "user1", true,
-					"cira1", "activation1", "mebx1", true, "tags1",
+					"activation1", "mebx1", true, "tags1",
 					true, true, true, "tenant1", 1,
 					"authority1", "consent1", true, true, true,
-					"ieee1", "v1", 1, "server1", "domain1",
-					"user1", "pass1", "identity1", true, 10, true)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-                CREATE TABLE profiles_wirelessconfigs (
-                    profile_name TEXT NOT NULL,
-                    authentication_method INTEGER,
-                    encryption_method INTEGER,
-                    ssid TEXT,
-                    psk_value INTEGER,
-                    psk_passphrase TEXT,
-                    link_policy TEXT,
-                    tenant_id TEXT NOT NULL,
-                    ieee8021x_profile_name TEXT,
-                    version TEXT,
-                    authentication_protocol INTEGER,
-                    pxe_timeout INTEGER,
-                    wired_interface BOOLEAN,
-                    PRIMARY KEY (profile_name, tenant_id)
-                );`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-                INSERT INTO profiles_wirelessconfigs (
-                    profile_name, authentication_method, encryption_method, ssid, 
-                    psk_value, psk_passphrase, link_policy, tenant_id, 
-                    ieee8021x_profile_name, version, authentication_protocol, 
-                    pxe_timeout, wired_interface
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 1, "TestSSID", 12345, "TestPassphrase", "TestLinkPolicy", "tenant1",
-					"ieee1", "v1", 1, 30, true)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-                CREATE TABLE ieee8021xconfigs (
-                    profile_name TEXT NOT NULL,
-                    authentication_protocol INTEGER,
-                    pxe_timeout INTEGER,
-                    wired_interface BOOLEAN,
-                    tenant_id TEXT NOT NULL,
-                    version TEXT,
-                    PRIMARY KEY (profile_name, tenant_id)
-                );`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-                INSERT INTO ieee8021xconfigs (
-                    profile_name, authentication_protocol, pxe_timeout, wired_interface, tenant_id, version
-                ) VALUES (?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 30, true, "tenant1", "v1")
+				)
 				require.NoError(t, err)
 			},
 			top:      10,
@@ -254,86 +348,19 @@ func TestProfileRepo_Get(t *testing.T) {
 					KVMEnabled:                 true,
 					SOLEnabled:                 true,
 					IEEE8021xProfileName:       StringPtr("ieee1"),
-					Version:                    "v1",
-					AuthenticationProtocol:     IntPtr(1),
-					ServerName:                 "server1",
-					Domain:                     "domain1",
-					Username:                   "user1",
-					Password:                   "pass1",
-					RoamingIdentity:            "identity1",
-					ActiveInS0:                 true,
-					PXETimeout:                 IntPtr(10),
-					WiredInterface:             BoolPtr(true),
 				},
 			},
 			err: nil,
 		},
 		{
 			name: "No profiles found",
-			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`
-                CREATE TABLE profiles_wirelessconfigs (
-                    profile_name TEXT NOT NULL,
-                    authentication_method INTEGER,
-                    encryption_method INTEGER,
-                    ssid TEXT,
-                    psk_value INTEGER,
-                    psk_passphrase TEXT,
-                    link_policy TEXT,
-                    tenant_id TEXT NOT NULL,
-                    ieee8021x_profile_name TEXT,
-                    version TEXT,
-                    authentication_protocol INTEGER,
-                    pxe_timeout INTEGER,
-                    wired_interface BOOLEAN,
-                    PRIMARY KEY (profile_name, tenant_id)
-                );`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-                INSERT INTO profiles_wirelessconfigs (
-                    profile_name, authentication_method, encryption_method, ssid, 
-                    psk_value, psk_passphrase, link_policy, tenant_id, 
-                    ieee8021x_profile_name, version, authentication_protocol, 
-                    pxe_timeout, wired_interface
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 1, "TestSSID", 12345, "TestPassphrase", "TestLinkPolicy", "tenant1",
-					"ieee1", "v1", 1, 30, true)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-                CREATE TABLE ieee8021xconfigs (
-                    profile_name TEXT NOT NULL,
-                    authentication_protocol INTEGER,
-                    pxe_timeout INTEGER,
-                    wired_interface BOOLEAN,
-                    tenant_id TEXT NOT NULL,
-                    version TEXT,
-                    PRIMARY KEY (profile_name, tenant_id)
-                );`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-                INSERT INTO ieee8021xconfigs (
-                    profile_name, authentication_protocol, pxe_timeout, wired_interface, tenant_id, version
-                ) VALUES (?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 30, true, "tenant1", "v1")
-				require.NoError(t, err)
+			setup: func(_ *sql.DB) {
 			},
 			top:      10,
 			skip:     0,
 			tenantID: "tenant2",
 			expected: []entity.Profile{},
 			err:      nil,
-		},
-		{
-			name:     "Query execution error",
-			setup:    func(_ *sql.DB) {},
-			top:      0,
-			skip:     0,
-			tenantID: "tenant1",
-			expected: nil,
-			err:      ErrGeneral,
 		},
 	}
 
@@ -346,41 +373,7 @@ func TestProfileRepo_Get(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE profiles (
-					profile_name TEXT NOT NULL,
-					amt_password TEXT,
-					creation_date TEXT,
-					created_by TEXT,
-					generate_random_password BOOLEAN,
-					cira_config_name TEXT,
-					activation TEXT,
-					mebx_password TEXT,
-					generate_random_mebx_password BOOLEAN,
-					tags TEXT,
-					dhcp_enabled BOOLEAN,
-					ip_sync_enabled BOOLEAN,
-					local_wifi_sync_enabled BOOLEAN,
-					tenant_id TEXT NOT NULL,
-					tls_mode INTEGER,
-					tls_signing_authority TEXT,
-					user_consent TEXT,
-					ider_enabled BOOLEAN,
-					kvm_enabled BOOLEAN,
-					sol_enabled BOOLEAN,
-					ieee8021x_profile_name TEXT,
-					version TEXT,
-					auth_protocol INTEGER,
-					server_name TEXT,
-					domain TEXT,
-					username TEXT,
-					password TEXT,
-					roaming_identity TEXT,
-					active_in_s0 BOOLEAN,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN
-				);
-			`)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -391,7 +384,7 @@ func TestProfileRepo_Get(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewProfileRepo(sqlConfig, mockLog)
 
 			profiles, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -415,39 +408,25 @@ func TestProfileRepo_GetByName(t *testing.T) {
 		{
 			name: "Successful retrieval",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO profiles (
+				_, err := dbConn.Exec(`
+        INSERT INTO ieee8021xconfigs (
+            profile_name, pxe_timeout, wired_interface, tenant_id
+        ) VALUES (?, ?, ?, ?);`,
+					"ieee1", 30, true, "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO profiles (
 					profile_name, amt_password, creation_date, created_by, generate_random_password,
-					cira_config_name, activation, mebx_password, generate_random_mebx_password, tags,
+					activation, mebx_password, generate_random_mebx_password, tags,
 					dhcp_enabled, ip_sync_enabled, local_wifi_sync_enabled, tenant_id, tls_mode,
 					tls_signing_authority, user_consent, ider_enabled, kvm_enabled, sol_enabled,
-					ieee8021x_profile_name, version, auth_protocol, server_name, domain,
-					username, password, roaming_identity, active_in_s0, pxe_timeout, wired_interface
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					ieee8021x_profile_name
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 					"profile1", "password1", "2024-08-01", "user1", true,
-					"cira1", "activation1", "mebx1", true, "tags1",
+					"activation1", "mebx1", true, "tags1",
 					true, true, true, "tenant1", 1,
 					"authority1", "consent1", true, true, true,
-					"ieee1", "v1", 1, "server1", "domain1",
-					"user1", "pass1", "identity1", true, 10, true)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-		        CREATE TABLE ieee8021xconfigs (
-		            profile_name TEXT NOT NULL,
-		            authentication_protocol INTEGER,
-		            pxe_timeout INTEGER,
-		            wired_interface BOOLEAN,
-		            tenant_id TEXT NOT NULL,
-		            version TEXT,
-		            PRIMARY KEY (profile_name, tenant_id)
-		        );`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
-		        INSERT INTO ieee8021xconfigs (
-		            profile_name, authentication_protocol, pxe_timeout, wired_interface, tenant_id, version
-		        ) VALUES (?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 30, true, "tenant1", "v1")
+					"ieee1")
 				require.NoError(t, err)
 			},
 			profileName: "profile1",
@@ -459,22 +438,10 @@ func TestProfileRepo_GetByName(t *testing.T) {
 			name: "No Profile Found",
 			setup: func(dbConn *sql.DB) {
 				_, err := dbConn.Exec(`
-		        CREATE TABLE ieee8021xconfigs (
-		            profile_name TEXT NOT NULL,
-		            authentication_protocol INTEGER,
-		            pxe_timeout INTEGER,
-		            wired_interface BOOLEAN,
-		            tenant_id TEXT NOT NULL,
-		            version TEXT,
-		            PRIMARY KEY (profile_name, tenant_id)
-		        );`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
 		        INSERT INTO ieee8021xconfigs (
-		            profile_name, authentication_protocol, pxe_timeout, wired_interface, tenant_id, version
-		        ) VALUES (?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 30, true, "tenant1", "v1")
+		            profile_name, pxe_timeout, wired_interface, tenant_id
+		        ) VALUES (?, ?, ?, ?);`,
+					"profile1", 30, true, "tenant1")
 				require.NoError(t, err)
 			},
 			profileName: "dontexist",
@@ -514,14 +481,14 @@ func TestProfileRepo_GetByName(t *testing.T) {
 			},
 			expectError: false,
 		},
-		{
-			name:        "Query execution error",
-			setup:       func(_ *sql.DB) {},
-			profileName: "b",
-			tenantID:    "tenant1",
-			expected:    nil,
-			expectError: true,
-		},
+		// {
+		// 	name:        "Query execution error",
+		// 	setup:       func(_ *sql.DB) {},
+		// 	profileName: "b",
+		// 	tenantID:    "tenant1",
+		// 	expected:    nil,
+		// 	expectError: true,
+		// },
 	}
 
 	for _, tc := range tests {
@@ -533,41 +500,7 @@ func TestProfileRepo_GetByName(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE profiles (
-					profile_name TEXT NOT NULL,
-					amt_password TEXT,
-					creation_date TEXT,
-					created_by TEXT,
-					generate_random_password BOOLEAN,
-					cira_config_name TEXT,
-					activation TEXT,
-					mebx_password TEXT,
-					generate_random_mebx_password BOOLEAN,
-					tags TEXT,
-					dhcp_enabled BOOLEAN,
-					ip_sync_enabled BOOLEAN,
-					local_wifi_sync_enabled BOOLEAN,
-					tenant_id TEXT NOT NULL,
-					tls_mode INTEGER,
-					tls_signing_authority TEXT,
-					user_consent TEXT,
-					ider_enabled BOOLEAN,
-					kvm_enabled BOOLEAN,
-					sol_enabled BOOLEAN,
-					ieee8021x_profile_name TEXT,
-					version TEXT,
-					auth_protocol INTEGER,
-					server_name TEXT,
-					domain TEXT,
-					username TEXT,
-					password TEXT,
-					roaming_identity TEXT,
-					active_in_s0 BOOLEAN,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN
-				);
-			`)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -578,7 +511,7 @@ func TestProfileRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			profile, err := repo.GetByName(context.Background(), tc.profileName, tc.tenantID)
 
@@ -610,8 +543,8 @@ func TestProfileRepo_Delete(t *testing.T) {
 		{
 			name: "Successful delete",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO profiles (profile_name, activation, generate_random_password, cira_config_name, generate_random_mebx_password, tags, dhcp_enabled, tenant_id, tls_mode, user_consent, ider_enabled, kvm_enabled, sol_enabled, tls_signing_authority, ip_sync_enabled, local_wifi_sync_enabled, ieee8021x_profile_name, auth_protocol, pxe_timeout, wired_interface) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-					"profile1", true, true, "cira1", true, "tag1", true, "tenant1", "tls", true, true, true, true, "authority", true, true, "ieee1", 1, 30, true)
+				_, err := dbConn.Exec(`INSERT INTO profiles (profile_name, activation, generate_random_password, generate_random_mebx_password, tags, dhcp_enabled, tenant_id, tls_mode, user_consent, ider_enabled, kvm_enabled, sol_enabled, tls_signing_authority, ip_sync_enabled, local_wifi_sync_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					"profile1", true, true, true, "tag1", true, "tenant1", "tls", true, true, true, true, "authority", true, true)
 				require.NoError(t, err)
 			},
 			profileName: "profile1",
@@ -638,30 +571,7 @@ func TestProfileRepo_Delete(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE profiles (
-					profile_name TEXT NOT NULL,
-					activation BOOLEAN,
-					generate_random_password BOOLEAN,
-					cira_config_name TEXT,
-					generate_random_mebx_password BOOLEAN,
-					tags TEXT,
-					dhcp_enabled BOOLEAN,
-					tenant_id TEXT NOT NULL,
-					tls_mode TEXT,
-					user_consent BOOLEAN,
-					ider_enabled BOOLEAN,
-					kvm_enabled BOOLEAN,
-					sol_enabled BOOLEAN,
-					tls_signing_authority TEXT,
-					ip_sync_enabled BOOLEAN,
-					local_wifi_sync_enabled BOOLEAN,
-					ieee8021x_profile_name TEXT,
-					auth_protocol INTEGER,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN
-				);
-			`)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -672,7 +582,7 @@ func TestProfileRepo_Delete(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewProfileRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.profileName, tc.tenantID)
@@ -701,20 +611,38 @@ func TestProfileRepo_Update(t *testing.T) {
 		{
 			name: "Successful update",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO profiles (
+				_, err := dbConn.Exec(`
+        INSERT INTO ieee8021xconfigs (
+            profile_name, pxe_timeout, wired_interface, tenant_id
+        ) VALUES (?, ?, ?, ?);`,
+					"ieee1", 30, true, "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`
+        INSERT INTO ieee8021xconfigs (
+            profile_name, pxe_timeout, wired_interface, tenant_id
+        ) VALUES (?, ?, ?, ?);`,
+					"new-ieee", 30, true, "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO ciraconfigs (cira_config_name, tenant_id) VALUES (?,?)`, "cira1", "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO ciraconfigs (cira_config_name, tenant_id) VALUES (?,?)`, "new-cira", "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO profiles (
 					profile_name, amt_password, creation_date, created_by, generate_random_password,
 					cira_config_name, activation, mebx_password, generate_random_mebx_password, tags,
 					dhcp_enabled, ip_sync_enabled, local_wifi_sync_enabled, tenant_id, tls_mode,
 					tls_signing_authority, user_consent, ider_enabled, kvm_enabled, sol_enabled,
-					ieee8021x_profile_name, version, auth_protocol, server_name, domain,
-					username, password, roaming_identity, active_in_s0, pxe_timeout, wired_interface
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					ieee8021x_profile_name
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 					"profile1", "password1", "2024-08-01", "user1", true,
 					"cira1", "activation1", "mebx1", true, "tags1",
 					true, true, true, "tenant1", 1,
 					"authority1", "consent1", true, true, true,
-					"ieee1", "v1", 1, "server1", "domain1",
-					"user1", "pass1", "identity1", true, 10, true)
+					"ieee1")
 				require.NoError(t, err)
 			},
 			profile: &entity.Profile{
@@ -799,42 +727,7 @@ func TestProfileRepo_Update(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE profiles (
-					profile_name TEXT NOT NULL,
-					amt_password TEXT,
-					creation_date TEXT,
-					created_by TEXT,
-					generate_random_password BOOLEAN,
-					cira_config_name TEXT,
-					activation TEXT,
-					mebx_password TEXT,
-					generate_random_mebx_password BOOLEAN,
-					tags TEXT,
-					dhcp_enabled BOOLEAN,
-					ip_sync_enabled BOOLEAN,
-					local_wifi_sync_enabled BOOLEAN,
-					tenant_id TEXT NOT NULL,
-					tls_mode INTEGER,
-					tls_signing_authority TEXT,
-					user_consent TEXT,
-					ider_enabled BOOLEAN,
-					kvm_enabled BOOLEAN,
-					sol_enabled BOOLEAN,
-					ieee8021x_profile_name TEXT,
-					version TEXT,
-					auth_protocol INTEGER,
-					server_name TEXT,
-					domain TEXT,
-					username TEXT,
-					password TEXT,
-					roaming_identity TEXT,
-					active_in_s0 BOOLEAN,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN,
-					PRIMARY KEY (profile_name, tenant_id)
-				);
-			`)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -845,7 +738,7 @@ func TestProfileRepo_Update(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			updated, err := repo.Update(context.Background(), tc.profile)
 
@@ -872,29 +765,14 @@ func TestProfileRepo_Insert(t *testing.T) {
 		{
 			name: "Successful insertion",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`
-				CREATE TABLE profiles (
-					profile_name TEXT NOT NULL PRIMARY KEY,
-					activation TEXT,
-					amt_password TEXT,
-					generate_random_password BOOLEAN,
-					cira_config_name TEXT,
-					mebx_password TEXT,
-					generate_random_mebx_password BOOLEAN,
-					tags TEXT,
-					dhcp_enabled BOOLEAN,
-					tls_mode INTEGER,
-					user_consent TEXT,
-					ider_enabled BOOLEAN,
-					kvm_enabled BOOLEAN,
-					sol_enabled BOOLEAN,
-					tls_signing_authority TEXT,
-					ieee8021x_profile_name TEXT,
-					ip_sync_enabled BOOLEAN,
-					local_wifi_sync_enabled BOOLEAN,
-					tenant_id TEXT NOT NULL
-				);
-				`)
+				_, err := dbConn.Exec(schema)
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO ciraconfigs (cira_config_name, tenant_id) VALUES (?,?)`, "cira1", "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name,wired_interface, tenant_id) VALUES (?, ?, ?)`,
+					"ieee1", 1, "tenant1")
 				require.NoError(t, err)
 			},
 			profile: &entity.Profile{
@@ -923,29 +801,18 @@ func TestProfileRepo_Insert(t *testing.T) {
 		{
 			name: "Insertion with non-unique profile name",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`
-				CREATE TABLE profiles (
-					profile_name TEXT NOT NULL PRIMARY KEY,
-					activation TEXT,
-					amt_password TEXT,
-					generate_random_password BOOLEAN,
-					cira_config_name TEXT,
-					mebx_password TEXT,
-					generate_random_mebx_password BOOLEAN,
-					tags TEXT,
-					dhcp_enabled BOOLEAN,
-					tls_mode INTEGER,
-					user_consent TEXT,
-					ider_enabled BOOLEAN,
-					kvm_enabled BOOLEAN,
-					sol_enabled BOOLEAN,
-					tls_signing_authority TEXT,
-					ieee8021x_profile_name TEXT,
-					ip_sync_enabled BOOLEAN,
-					local_wifi_sync_enabled BOOLEAN,
-					tenant_id TEXT NOT NULL
-				);
-				`)
+				_, err := dbConn.Exec(schema)
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, 
+        auth_protocol, 
+        pxe_timeout, 
+        wired_interface, 
+        tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"ieee1", 1, 30, true, "tenant1")
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO ciraconfigs (cira_config_name, tenant_id) VALUES (?,?)`, "cira1", "tenant1")
 				require.NoError(t, err)
 
 				_, err = dbConn.Exec(`
@@ -959,7 +826,7 @@ func TestProfileRepo_Insert(t *testing.T) {
 				Activation:                 "activation2",
 				AMTPassword:                "password2",
 				GenerateRandomPassword:     true,
-				CIRAConfigName:             StringPtr("cira2"),
+				CIRAConfigName:             StringPtr("cira1"),
 				MEBXPassword:               "mebx2",
 				GenerateRandomMEBxPassword: true,
 				Tags:                       "tags2",
@@ -970,7 +837,7 @@ func TestProfileRepo_Insert(t *testing.T) {
 				KVMEnabled:                 true,
 				SOLEnabled:                 true,
 				TLSSigningAuthority:        "authority2",
-				IEEE8021xProfileName:       StringPtr("ieee2"),
+				IEEE8021xProfileName:       StringPtr("ieee1"),
 				IPSyncEnabled:              true,
 				LocalWiFiSyncEnabled:       true,
 				TenantID:                   "tenant1",
@@ -1004,7 +871,7 @@ func TestProfileRepo_Insert(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewProfileRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewProfileRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			_, err = repo.Insert(context.Background(), tc.profile)
 

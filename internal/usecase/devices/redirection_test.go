@@ -3,22 +3,24 @@ package devices_test
 import (
 	"testing"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 )
 
-func initRedirectionTest(t *testing.T) (*devices.Redirector, *MockRedirection, *MockRepository) {
+func initRedirectionTest(t *testing.T) (*devices.Redirector, *mocks.MockRedirection, *mocks.MockDeviceManagementRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
-	redirect := NewMockRedirection(mockCtl)
+	repo := mocks.NewMockDeviceManagementRepository(mockCtl)
+	redirect := mocks.NewMockRedirection(mockCtl)
 	u := &devices.Redirector{}
 
 	return u, redirect, repo
@@ -26,14 +28,14 @@ func initRedirectionTest(t *testing.T) (*devices.Redirector, *MockRedirection, *
 
 type redTest struct {
 	name    string
-	redMock func(*MockRedirection)
+	redMock func(*mocks.MockRedirection)
 	res     any
 }
 
 func TestSetupWsmanClient(t *testing.T) {
 	t.Parallel()
 
-	device := &dto.Device{
+	device := &entity.Device{
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
@@ -41,7 +43,7 @@ func TestSetupWsmanClient(t *testing.T) {
 	tests := []redTest{
 		{
 			name: "success",
-			redMock: func(redirect *MockRedirection) {
+			redMock: func(redirect *mocks.MockRedirection) {
 				redirect.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(wsman.Messages{})
@@ -50,7 +52,7 @@ func TestSetupWsmanClient(t *testing.T) {
 		},
 		{
 			name: "fail",
-			redMock: func(redirect *MockRedirection) {
+			redMock: func(redirect *mocks.MockRedirection) {
 				redirect.EXPECT().
 					SetupWsmanClient(gomock.Any(), true, true).
 					Return(wsman.Messages{})
@@ -67,6 +69,10 @@ func TestSetupWsmanClient(t *testing.T) {
 			redirector, redirect, _ := initRedirectionTest(t)
 
 			tc.redMock(redirect)
+
+			redirector.SafeRequirements = security.Crypto{
+				EncryptionKey: "test",
+			}
 
 			res := redirector.SetupWsmanClient(*device, true, true)
 
@@ -91,8 +97,11 @@ func TestNewRedirector(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
+			safeRequirements := security.Crypto{
+				EncryptionKey: "test",
+			}
 			// Call the function under test
-			redirector := devices.NewRedirector()
+			redirector := devices.NewRedirector(safeRequirements)
 
 			// Assert that the returned redirector is not nil
 			require.NotNil(t, redirector)

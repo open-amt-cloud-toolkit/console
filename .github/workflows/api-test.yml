@@ -19,10 +19,9 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+    - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
     - run: cp .env.example .env
-    - run: docker compose up -d --build
-    
+    - run: docker compose up -d --build    
     - name: Let Docker Spin up
       run: sleep 5
     - name: Run Console API Tests
@@ -31,7 +30,7 @@ jobs:
       if: failure()
       uses: jwalton/gh-docker-logs@2741064ab9d7af54b0b1ffb6076cf64c16f0220e # v2.2.2
     - name: Upload Postman Results
-      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
       with:
         name: rps-api
         path: /home/runner/work/console/console/integration-test/results

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
@@ -19,14 +20,6 @@ var (
 	ErrGeneral        = errors.New("general error")
 	ErrDeviceDatabase = errors.New("device database error")
 )
-
-type MockLogger struct{}
-
-func (m *MockLogger) Debug(_ interface{}, _ ...interface{}) {}
-func (m *MockLogger) Info(_ string, _ ...interface{})       {}
-func (m *MockLogger) Warn(_ string, _ ...interface{})       {}
-func (m *MockLogger) Error(_ interface{}, _ ...interface{}) {}
-func (m *MockLogger) Fatal(_ interface{}, _ ...interface{}) {}
 
 var ErrCIRARepoDatabase = errors.New("CIRARepo database error")
 
@@ -81,7 +74,7 @@ func TestCIRARepo_GetCount(t *testing.T) {
 		{
 			name: "Successful count",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO ciraconfigs (tenant_id) VALUES (?)`, "tenant1")
+				_, err := dbConn.Exec(`INSERT INTO ciraconfigs (cira_config_name, tenant_id) VALUES (?,?)`, "cira1", "tenant1")
 				require.NoError(t, err)
 			},
 			tenantID: "tenant1",
@@ -109,17 +102,8 @@ func TestCIRARepo_GetCount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupDatabase(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE ciraconfigs (
-					id INTEGER PRIMARY KEY AUTOINCREMENT,
-					tenant_id TEXT NOT NULL
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -133,7 +117,7 @@ func TestCIRARepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -160,21 +144,7 @@ func setupDatabase(t *testing.T) *sql.DB {
 	dbConn, err := sql.Open("sqlite", ":memory:")
 	require.NoError(t, err)
 
-	_, err = dbConn.Exec(`
-		CREATE TABLE ciraconfigs (
-			cira_config_name TEXT NOT NULL,
-			mps_server_address TEXT NOT NULL,
-			mps_port INTEGER NOT NULL,
-			user_name TEXT NOT NULL,
-			password TEXT NOT NULL,
-			common_name TEXT NOT NULL,
-			server_address_format INTEGER NOT NULL,
-			auth_method INTEGER NOT NULL,
-			mps_root_certificate TEXT NOT NULL,
-			proxydetails TEXT NOT NULL,
-			tenant_id TEXT NOT NULL
-		);
-	`)
+	_, err = dbConn.Exec(schema)
 	require.NoError(t, err)
 
 	return dbConn
@@ -263,7 +233,7 @@ func TestCIRARepo_Get(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			configs, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -358,15 +328,14 @@ func TestCIRARepo_GetByName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := setupTestDB()
-			require.NoError(t, err)
+			dbConn := setupDatabase(t)
 			defer dbConn.Close()
 
 			tc.setup(dbConn)
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			config, err := repo.GetByName(context.Background(), tc.configName, tc.tenantID)
@@ -374,31 +343,6 @@ func TestCIRARepo_GetByName(t *testing.T) {
 			assertTestResult(t, tc.expected, config, tc.err, err)
 		})
 	}
-}
-
-func setupTestDB() (*sql.DB, error) {
-	dbConn, err := sql.Open("sqlite", ":memory:")
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = dbConn.Exec(`
-		CREATE TABLE ciraconfigs (
-			cira_config_name TEXT PRIMARY KEY,
-			mps_server_address TEXT NOT NULL DEFAULT '',
-			mps_port INTEGER NOT NULL DEFAULT 0,
-			user_name TEXT NOT NULL DEFAULT '',
-			password TEXT NOT NULL DEFAULT '',
-			common_name TEXT NOT NULL DEFAULT '',
-			server_address_format TEXT NOT NULL DEFAULT '',
-			auth_method TEXT NOT NULL DEFAULT '',
-			mps_root_certificate TEXT NOT NULL DEFAULT '',
-			proxydetails TEXT NOT NULL DEFAULT '',
-			tenant_id TEXT NOT NULL
-		);
-	`)
-
-	return dbConn, err
 }
 
 func TestCIRARepo_Update(t *testing.T) {
@@ -480,7 +424,7 @@ func TestCIRARepo_Update(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			updated, err := repo.Update(context.Background(), tc.config)
@@ -573,7 +517,7 @@ func TestCIRARepo_Insert(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			version, err := repo.Insert(context.Background(), tc.config)
@@ -640,7 +584,7 @@ func TestCIRARepo_Delete(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewCIRARepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.configName, tc.tenantID)

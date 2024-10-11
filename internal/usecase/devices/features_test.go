@@ -14,6 +14,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 )
 
@@ -71,7 +72,7 @@ func TestGetFeatures(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -105,7 +106,7 @@ func TestGetFeatures(t *testing.T) {
 						},
 					}, nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -117,20 +118,20 @@ func TestGetFeatures(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 			res:   dto.Features{},
 			resV2: dtov2.Features{},
-			err:   devices.ErrDatabase,
+			err:   devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -144,7 +145,7 @@ func TestGetFeatures(t *testing.T) {
 					GetKVMRedirection().
 					Return(kvm.Response{}, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -156,7 +157,7 @@ func TestGetFeatures(t *testing.T) {
 		{
 			name:   "GetFeatures on ISM",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -184,7 +185,7 @@ func TestGetFeatures(t *testing.T) {
 					GetKVMRedirection().
 					Return(kvm.Response{}, amterror.DecodeAMTErrorString(DestinationUnreachable))
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -247,7 +248,7 @@ func TestSetFeatures(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -297,7 +298,7 @@ func TestSetFeatures(t *testing.T) {
 					}).
 					Return(nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -309,20 +310,20 @@ func TestSetFeatures(t *testing.T) {
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(_ *MockWSMAN, _ *MockManagement) {},
-			repoMock: func(repo *MockRepository) {
+			manMock: func(_ *mocks.MockWSMAN, _ *mocks.MockManagement) {},
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 			res:   dto.Features{},
 			resV2: dtov2.Features{},
-			err:   devices.ErrDatabase,
+			err:   devices.ErrGeneral,
 		},
 		{
 			name:   "GetFeatures fails",
 			action: 0,
-			manMock: func(man *MockWSMAN, man2 *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return(man2)
@@ -342,7 +343,7 @@ func TestSetFeatures(t *testing.T) {
 					SetIPSOptInService(optin.OptInServiceRequest{}).
 					Return(ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)

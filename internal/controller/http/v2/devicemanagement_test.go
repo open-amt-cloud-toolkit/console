@@ -15,19 +15,20 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
 var ErrGeneral = errors.New("general error")
 
-func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engine) {
+func deviceManagementTest(t *testing.T) (*mocks.MockDeviceManagementFeature, *gin.Engine) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	log := logger.New("error")
-	deviceManagement := NewMockDeviceManagementFeature(mockCtl)
+	deviceManagement := mocks.NewMockDeviceManagementFeature(mockCtl)
 
 	engine := gin.New()
 	handler := engine.Group("/api/v2")
@@ -37,7 +38,7 @@ func deviceManagementTest(t *testing.T) (*MockDeviceManagementFeature, *gin.Engi
 	return deviceManagement, engine
 }
 
-func TestGetFeatures(t *testing.T) {
+func TestDeviceManagement(t *testing.T) {
 	t.Parallel()
 
 	featuresInput := dto.Features{
@@ -60,17 +61,17 @@ func TestGetFeatures(t *testing.T) {
 	tests := []struct {
 		name         string
 		url          string
-		mock         func(m *MockDeviceManagementFeature)
 		method       string
-		requestBody  interface{}
+		mock         func(m *mocks.MockDeviceManagementFeature)
 		expectedCode int
+		requestBody  interface{}
 		response     interface{}
 	}{
 		{
 			name:   "getVersion - successful retrieval",
 			url:    "/api/v2/amt/version/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetVersion(context.Background(), "valid-guid").
 					Return(dto.Version{}, dtov2.Version{}, nil)
 			},
@@ -81,7 +82,7 @@ func TestGetFeatures(t *testing.T) {
 			name:   "getFeatures - successful retrieval",
 			url:    "/api/v2/amt/features/valid-guid",
 			method: http.MethodGet,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetFeatures(context.Background(), "valid-guid").
 					Return(dto.Features{}, dtov2.Features{}, nil)
 			},
@@ -92,7 +93,7 @@ func TestGetFeatures(t *testing.T) {
 			name:   "setFeatures - successful post",
 			url:    "/api/v2/amt/features/valid-guid",
 			method: http.MethodPost,
-			mock: func(m *MockDeviceManagementFeature) {
+			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().SetFeatures(context.Background(), "valid-guid", featuresInput).
 					Return(dto.Features{}, featuresOutput, nil)
 			},

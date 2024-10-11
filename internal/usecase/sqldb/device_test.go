@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
@@ -99,7 +100,7 @@ func TestDeviceRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDeviceRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -281,7 +282,7 @@ func TestDeviceRepo_Get(t *testing.T) {
 
 			sqlConfig := CreateSQLConfig(dbConn, tc.name == QueryExecutionErrorTestName)
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDeviceRepo(sqlConfig, mockLog)
 
 			devices, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -381,7 +382,7 @@ func TestDeviceRepo_GetByID(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDeviceRepo(sqlConfig, mockLog)
 
 			device, err := repo.GetByID(context.Background(), tc.guid, tc.tenantID)
@@ -457,7 +458,7 @@ func TestDeviceRepo_GetDistinctTags(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDeviceRepo(sqlConfig, mockLog)
 
 			tags, err := repo.GetDistinctTags(context.Background(), tc.tenantID)
@@ -608,7 +609,7 @@ func TestDeviceRepo_GetByTags(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewDeviceRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewDeviceRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			devices, err := repo.GetByTags(context.Background(), tc.tags, tc.method, tc.limit, tc.offset, tc.tenantID)
 
@@ -707,7 +708,7 @@ func TestDeviceRepo_Delete(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDeviceRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.guid, tc.tenantID)
@@ -855,7 +856,7 @@ func TestDeviceRepo_Update(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDeviceRepo(sqlConfig, mockLog)
 
 			updated, err := repo.Update(context.Background(), tc.device)
@@ -979,7 +980,7 @@ func TestDeviceRepo_Insert(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDeviceRepo(sqlConfig, mockLog)
 
 			version, err := repo.Insert(context.Background(), tc.device)
@@ -1105,7 +1106,7 @@ func TestDeviceRepo_GetByColumn(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewDeviceRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewDeviceRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			devices, err := repo.GetByColumn(context.Background(), tc.columnName, tc.queryValue, tc.tenantID)
 
