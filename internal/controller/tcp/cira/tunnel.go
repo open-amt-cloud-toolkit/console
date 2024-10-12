@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/apf"
 )
 
@@ -18,7 +19,6 @@ const (
 	port        = "4433"
 )
 
-var devices = make(map[string]*ConnectedDevice)
 var mu sync.Mutex
 
 type ConnectedDevice struct {
@@ -99,15 +99,19 @@ func (s *Server) handleConnection(conn net.Conn) {
 
 	// Initialize a new ConnectedDevice and handle the connection
 	deviceID := generateDeviceID()
-	device := &ConnectedDevice{}
+	device := &wsman.ConnectionEntry{
+		IsCIRA: true,
+		Conny:  conn,
+		Timer:  time.NewTimer(maxIdleTime),
+	}
 	session := apf.Session{}
 	mu.Lock()
-	devices[deviceID] = device
+	wsman.Connections[deviceID] = device
 	mu.Unlock()
 
 	defer func() {
 		mu.Lock()
-		delete(devices, deviceID)
+		delete(wsman.Connections, deviceID)
 		mu.Unlock()
 	}()
 
