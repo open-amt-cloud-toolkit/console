@@ -56,14 +56,16 @@ func TestCancelUserConsent(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					CancelUserConsentRequest().
-					Return(gomock.Any(), nil)
+					Return(dto.UserConsentMessage{}, nil)
 			},
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: gomock.Any(),
+
+			res: dto.UserConsentMessage{},
+
 			err: nil,
 		},
 
@@ -76,7 +78,7 @@ func TestCancelUserConsent(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: nil,
+			res: dto.UserConsentMessage{},
 			err: devices.ErrGeneral,
 		},
 
@@ -89,14 +91,14 @@ func TestCancelUserConsent(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					CancelUserConsentRequest().
-					Return(nil, ErrGeneral)
+					Return(dto.UserConsentMessage{}, ErrGeneral)
 			},
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: nil,
+			res: dto.UserConsentMessage{},
 			err: ErrGeneral,
 		},
 	}
@@ -137,8 +139,11 @@ func TestGetUserConsentCode(t *testing.T) {
 		ReturnValue: 10,
 	}
 
-	response := map[string]interface{}{
-		"Body": code,
+	response := dto.GetUserConsentMessage{
+		Body: dto.UserConsentMessage{
+			Name:        code.XMLName,
+			ReturnValue: code.ReturnValue,
+		},
 	}
 
 	tests := []test{
@@ -171,7 +176,7 @@ func TestGetUserConsentCode(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: map[string]interface{}(nil),
+			res: dto.GetUserConsentMessage{},
 			err: devices.ErrGeneral,
 		},
 
@@ -191,7 +196,9 @@ func TestGetUserConsentCode(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: map[string]interface{}(nil),
+
+			res: dto.GetUserConsentMessage{},
+
 			err: ErrGeneral,
 		},
 	}
@@ -225,7 +232,7 @@ func TestSendConsentCode(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	consent := dto.UserConsent{
+	consent := dto.UserConsentCode{
 		ConsentCode: "123456",
 	}
 
@@ -239,14 +246,16 @@ func TestSendConsentCode(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					SendConsentCode(123456).
-					Return(optin.SendOptInCode_OUTPUT{}, nil)
+					Return(dto.UserConsentMessage{}, nil)
 			},
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: optin.SendOptInCode_OUTPUT{},
+
+			res: dto.UserConsentMessage{},
+
 			err: nil,
 		},
 		{
@@ -258,7 +267,7 @@ func TestSendConsentCode(t *testing.T) {
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: nil,
+			res: dto.UserConsentMessage{},
 			err: devices.ErrGeneral,
 		},
 		{
@@ -270,14 +279,16 @@ func TestSendConsentCode(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					SendConsentCode(123456).
-					Return(optin.SendOptInCode_OUTPUT{}, ErrGeneral)
+					Return(dto.UserConsentMessage{}, ErrGeneral)
 			},
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: nil,
+
+			res: dto.UserConsentMessage{},
+
 			err: ErrGeneral,
 		},
 	}
