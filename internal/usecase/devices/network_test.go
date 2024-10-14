@@ -57,10 +57,14 @@ func TestGetNetworkSettings(t *testing.T) {
 					Return(wsman.NetworkResults{
 						EthernetPortSettingsResult: []ethernetport.SettingsResponse{
 							{
+								ElementName:            "Intel(r) AMT Ethernet Port Settings",
+								InstanceID:             "Intel(r) AMT Ethernet Port Settings 0",
 								LinkPolicy:             []ethernetport.LinkPolicy{14, 16},
 								PhysicalConnectionType: 0,
 								PhysicalNicMedium:      0,
 							}, {
+								ElementName:             "Intel(r) AMT Ethernet Port Settings",
+								InstanceID:              "Intel(r) AMT Ethernet Port Settings 1",
 								LinkPolicy:              []ethernetport.LinkPolicy{14, 16},
 								LinkPreference:          1,
 								LinkControl:             1,
@@ -69,8 +73,13 @@ func TestGetNetworkSettings(t *testing.T) {
 								PhysicalNicMedium:       1,
 							},
 						},
-						IPSIEEE8021xSettingsResult: ieee8021x.IEEE8021xSettingsResponse{},
+						IPSIEEE8021xSettingsResult: ieee8021x.IEEE8021xSettingsResponse{
+							Enabled:       3,
+							AvailableInS0: false,
+							PxeTimeout:    0,
+						},
 						WiFiSettingsResult: []wifi.WiFiEndpointSettingsResponse{{
+							ElementName:          "test-ssid",
 							SSID:                 "test-ssid",
 							AuthenticationMethod: 6,
 							EncryptionMethod:     3,
@@ -88,16 +97,23 @@ func TestGetNetworkSettings(t *testing.T) {
 					Return(device, nil)
 			},
 			res: dto.NetworkSettings{
-				Wired: dto.WiredNetworkInfo{
-					IEEE8021x: dto.IEEE8021x{},
+				Wired: &dto.WiredNetworkInfo{
+					IEEE8021x: dto.IEEE8021x{
+						Enabled:       "Disabled",
+						AvailableInS0: false,
+						PxeTimeout:    0,
+					},
 					NetworkInfo: dto.NetworkInfo{
+						ElementName:            "Intel(r) AMT Ethernet Port Settings",
+						InstanceID:             "Intel(r) AMT Ethernet Port Settings 0",
 						LinkPolicy:             []string{"Sx AC", "S0 DC"},
 						PhysicalConnectionType: "Integrated LAN NIC",
 						PhysicalNicMedium:      "SMBUS",
 					},
 				},
-				Wireless: dto.WirelessNetworkInfo{
+				Wireless: &dto.WirelessNetworkInfo{
 					WiFiNetworks: []dto.WiFiNetwork{{
+						ElementName:          "test-ssid",
 						SSID:                 "test-ssid",
 						AuthenticationMethod: "WPA2PSK",
 						EncryptionMethod:     "TKIP",
@@ -106,6 +122,8 @@ func TestGetNetworkSettings(t *testing.T) {
 					}},
 					IEEE8021xSettings: []dto.IEEE8021xSettings{{}},
 					NetworkInfo: dto.NetworkInfo{
+						ElementName:             "Intel(r) AMT Ethernet Port Settings",
+						InstanceID:              "Intel(r) AMT Ethernet Port Settings 1",
 						LinkPolicy:              []string{"Sx AC", "S0 DC"},
 						LinkPreference:          "Management Engine",
 						LinkControl:             "Management Engine",
