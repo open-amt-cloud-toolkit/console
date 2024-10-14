@@ -95,7 +95,8 @@ func initExplorerTest(t *testing.T) (*amtexplorer.UseCase, *mocks.MockDeviceMana
 	wsmanMock := mocks.NewMockAMTExplorerWSMAN(mockCtl)
 	amt := mocks.NewMockAMTExplorer(mockCtl)
 	log := logger.New("error")
-	u := amtexplorer.New(repo, wsmanMock, log)
+	crypto := mocks.MockCrypto{}
+	u := amtexplorer.New(repo, wsmanMock, log, crypto)
 
 	return u, repo, wsmanMock, amt, executeResponse
 }
@@ -165,7 +166,7 @@ func TestExecuteCall(t *testing.T) {
 					Return(amt)
 			},
 			res: &dto.Explorer{},
-			err: amtexplorer.ErrDatabase,
+			err: amtexplorer.ErrDatabase.Wrap("ExecuteCall", "uc.repo.GetByID", ErrExplorerGeneral),
 		},
 		{
 			name: "ExecuteCall Unsupported Explorer Command",

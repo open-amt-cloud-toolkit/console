@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
@@ -52,6 +53,7 @@ import (
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -75,12 +77,14 @@ type ConnectionEntry struct {
 }
 
 type GoWSMANMessages struct {
-	log logger.Interface
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
-func NewGoWSMANMessages(log logger.Interface) *GoWSMANMessages {
+func NewGoWSMANMessages(log logger.Interface, safeRequirements security.Cryptor) *GoWSMANMessages {
 	return &GoWSMANMessages{
-		log: log,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -103,18 +107,18 @@ func (g GoWSMANMessages) Worker() {
 	}
 }
 
-func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) Management {
+func (g GoWSMANMessages) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) Management {
 	resultChan := make(chan *ConnectionEntry)
-
 	// Queue the request
 	requestQueue <- func() {
+		device.Password, _ = g.safeRequirements.Decrypt(device.Password)
 		resultChan <- g.setupWsmanClientInternal(device, isRedirection, logAMTMessages)
 	}
 
 	return <-resultChan
 }
 
-func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
+func (g GoWSMANMessages) setupWsmanClientInternal(device entity.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
@@ -126,8 +130,8 @@ func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirecti
 		IsRedirection:     isRedirection,
 	}
 
-	if device.CertHash != "" {
-		clientParams.PinnedCert = device.CertHash
+	if device.CertHash != nil && *device.CertHash != "" {
+		clientParams.PinnedCert = *device.CertHash
 	}
 
 	timer := time.AfterFunc(expireAfter, func() {

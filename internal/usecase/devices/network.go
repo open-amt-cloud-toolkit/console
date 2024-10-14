@@ -11,9 +11,13 @@ import (
 )
 
 func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.NetworkSettings, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.NetworkSettings{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.NetworkSettings{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
