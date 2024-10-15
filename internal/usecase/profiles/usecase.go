@@ -136,7 +136,7 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 	}
 
 	wifiConfigs, err := uc.profileWifiConfig.GetByProfileName(ctx, profileName, tenantID)
-	if err != nil {
+	if err != nil && !errors.Is(err, profilewificonfigs.ErrNotFound) {
 		return "", "", err
 	}
 
