@@ -4,6 +4,7 @@
 # Config
 .env
 .DS_store
+*.pem
 
 # Binaries for programs and plugins
 *.exe
@@ -14,6 +15,7 @@
 bin/
 *.db
 *.db-journal
+
 
 
 # Test binary, built with `go test -c`
