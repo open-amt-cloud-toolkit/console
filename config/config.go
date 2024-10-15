@@ -21,6 +21,10 @@ type (
 		Repo          string `env-required:"true" yaml:"repo" env:"APP_REPO"`
 		Version       string `env-required:"true"`
 		EncryptionKey string `yaml:"encryption_key" env:"APP_ENCRYPTION_KEY"`
+		JWTKey        string `env-required:"true" yaml:"jwtKey" env:"APP_JWT_KEY"`
+		AuthDisabled  bool   `yaml:"authDisabled" env:"APP_AUTH_DISABLED"`
+		AdminUsername string `yaml:"adminUsername" env:"APP_ADMIN_USERNAME"`
+		AdminPassword string `yaml:"adminPassword" env:"APP_ADMIN_PASSWORD"`
 	}
 
 	// HTTP -.
@@ -52,6 +56,9 @@ func NewConfig() (*Config, error) {
 			Repo:          "open-amt-cloud-toolkit/console",
 			Version:       "DEVELOPMENT",
 			EncryptionKey: "",
+			JWTKey:        "your_secret_jwt_key",
+			AdminUsername: "standalone",
+			AdminPassword: "G@ppm0ym",
 		},
 		HTTP: HTTP{
 			Host:           "localhost",
