@@ -14,7 +14,6 @@ import (
 	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
-	// "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chassis"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chip"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
@@ -98,7 +97,7 @@ func (uc *UseCase) SetFeatures(c context.Context, guid string, features dto.Feat
 }
 
 func (uc *UseCase) GetHardwareInfo(c context.Context, guid string) (v1 dto.HardwareInfoResults, v2 dtov2.HardwareInfoResults, err error) {
-		item, err := uc.GetByID(c, guid, "")
+	item, err := uc.GetByID(c, guid, "")
 	if err != nil {
 		return dto.HardwareInfoResults{}, dtov2.HardwareInfoResults{}, err
 	}
@@ -276,56 +275,39 @@ func (uc *UseCase) setupAndConfigurationServiceResponseEntityToDTO(d *setupandco
 func (uc *UseCase) getHardwareInfoEntityToDTO(d *wsmanAPI.HWResults) *dto.HardwareInfoResults {
 	d1 := &dto.HardwareInfoResults{
 		CIM_ComputerSystemPackage: dto.CIM_ComputerSystemPackage{
-			Response: d.CSPResult.Body.GetResponse.PlatformGUID,
+			Response:  d.CSPResult.Body.GetResponse.PlatformGUID,
 			Responses: d.CSPResult.Body.GetResponse.PlatformGUID,
 		},
 		CIM_SystemPackage: dto.CIM_SystemPackage{},
 		CIM_Chassis: dto.CIM_Chassis{
 			Response: dto.CIMChassisResponse{
-				Version:           d.ChassisResult.Body.PackageResponse.Version,
-				SerialNumber:      d.ChassisResult.Body.PackageResponse.SerialNumber,
-				Model:             d.ChassisResult.Body.PackageResponse.Model,
-				Manufacturer:      d.ChassisResult.Body.PackageResponse.Manufacturer,
-				ElementName:       d.ChassisResult.Body.PackageResponse.ElementName,
-				CreationClassName: d.ChassisResult.Body.PackageResponse.CreationClassName,
-				Tag:               d.ChassisResult.Body.PackageResponse.Tag,
-				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChassisResult.Body.PackageResponse.OperationalStatus)),
-				// OperationalStatus:  operationalStatusToDTOv2(d.ChassisResult.Body.PackageResponse.OperationalStatus),
+				Version:            d.ChassisResult.Body.PackageResponse.Version,
+				SerialNumber:       d.ChassisResult.Body.PackageResponse.SerialNumber,
+				Model:              d.ChassisResult.Body.PackageResponse.Model,
+				Manufacturer:       d.ChassisResult.Body.PackageResponse.Manufacturer,
+				ElementName:        d.ChassisResult.Body.PackageResponse.ElementName,
+				CreationClassName:  d.ChassisResult.Body.PackageResponse.CreationClassName,
+				Tag:                d.ChassisResult.Body.PackageResponse.Tag,
+				OperationalStatus:  *(*[]int)(unsafe.Pointer(&d.ChassisResult.Body.PackageResponse.OperationalStatus)),
 				PackageType:        int(d.ChassisResult.Body.PackageResponse.PackageType),
 				ChassisPackageType: int(d.ChassisResult.Body.PackageResponse.ChassisPackageType),
 			},
 		},
-		// CIM_Chip: dto.CIM_Chip{
-		// 	Responses: []dto.CIMChip{
-		// 		Get: dto.CIMChipGet{
-		// 			CanBeFRUed:        d.ChipResult.Body.PackageResponse.CanBeFRUed,
-		// 			CreationClassName: d.ChipResult.Body.PackageResponse.CreationClassName,
-		// 			ElementName:       d.ChipResult.Body.PackageResponse.ElementName,
-		// 			Manufacturer:      d.ChipResult.Body.PackageResponse.Manufacturer,
-		// 			OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChipResult.Body.PackageResponse.OperationalStatus)),
-		// 			// OperationalStatus: d.ChipResult.Body.PackageResponse.OperationalStatus,
-		// 			Tag:     d.ChipResult.Body.PackageResponse.Tag,
-		// 			Version: d.ChipResult.Body.PackageResponse.Version,
-		// 		},
-		// 	},
-		// 	Pull: chipItemsToDTOv2(d.ChipResult.Body.PullResponse.ChipItems),
-		// },
+		CIM_Chip: dto.CIM_Chip{
+			Responses: cimChipArray(d),
+		},
 		CIM_Card: dto.CIM_Card{
-			Response: dto.CIMCardResponse{
-				Get: dto.CIMCardResponseGet{
-					CanBeFRUed:        d.CardResult.Body.PackageResponse.CanBeFRUed,
-					CreationClassName: d.CardResult.Body.PackageResponse.CreationClassName,
-					ElementName:       d.CardResult.Body.PackageResponse.ElementName,
-					Manufacturer:      d.CardResult.Body.PackageResponse.Manufacturer,
-					Model:             d.CardResult.Body.PackageResponse.Model,
-					OperationalStatus: *(*[]int)(unsafe.Pointer(&d.CardResult.Body.PackageResponse.OperationalStatus)),
-					// OperationalStatus: d.CardResult.Body.PackageResponse.OperationalStatus,
-					PackageType:  int(d.CardResult.Body.PackageResponse.PackageType),
-					SerialNumber: d.CardResult.Body.PackageResponse.SerialNumber,
-					Tag:          d.CardResult.Body.PackageResponse.Tag,
-					Version:      d.CardResult.Body.PackageResponse.Version,
-				},
-				//Pull: cardItemsToDTOv2(d.CardResult.Body.PullResponse.CardItems),
+			Response: dto.CIMCardResponseGet{
+				CanBeFRUed:        d.CardResult.Body.PackageResponse.CanBeFRUed,
+				CreationClassName: d.CardResult.Body.PackageResponse.CreationClassName,
+				ElementName:       d.CardResult.Body.PackageResponse.ElementName,
+				Manufacturer:      d.CardResult.Body.PackageResponse.Manufacturer,
+				Model:             d.CardResult.Body.PackageResponse.Model,
+				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.CardResult.Body.PackageResponse.OperationalStatus)),
+				PackageType:       int(d.CardResult.Body.PackageResponse.PackageType),
+				SerialNumber:      d.CardResult.Body.PackageResponse.SerialNumber,
+				Tag:               d.CardResult.Body.PackageResponse.Tag,
+				Version:           d.CardResult.Body.PackageResponse.Version,
 			},
 		},
 		CIM_BIOSElement: dto.CIM_BIOSElement{
@@ -335,60 +317,19 @@ func (uc *UseCase) getHardwareInfoEntityToDTO(d *wsmanAPI.HWResults) *dto.Hardwa
 				SoftwareElementState:  dto.SoftwareElementState(d.BiosResult.Body.GetResponse.SoftwareElementState),
 				Name:                  d.BiosResult.Body.GetResponse.Name,
 				OperationalStatus:     *(*[]int)(unsafe.Pointer(&d.BiosResult.Body.GetResponse.OperationalStatus)),
-				// OperationalStatus:     d.BiosResult.Body.GetResponse.OperationalStatus,
-				ElementName:  d.BiosResult.Body.GetResponse.ElementName,
-				Version:      d.BiosResult.Body.GetResponse.Version,
-				Manufacturer: d.BiosResult.Body.GetResponse.Manufacturer,
-				PrimaryBIOS:  d.BiosResult.Body.GetResponse.PrimaryBIOS,
-				ReleaseDate:  dto.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
+				ElementName:           d.BiosResult.Body.GetResponse.ElementName,
+				Version:               d.BiosResult.Body.GetResponse.Version,
+				Manufacturer:          d.BiosResult.Body.GetResponse.Manufacturer,
+				PrimaryBIOS:           d.BiosResult.Body.GetResponse.PrimaryBIOS,
+				ReleaseDate:           dto.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
 			},
-			// Pull: biosItemsToDTOv2(d.BiosResult.Body.PullResponse.BiosElementItems),
 		},
-		// CIM_Processor: dto.CIM_Processor{
-		// 	Get: dto.CIMProcessorResponsesGet{
-		// 		DeviceID:                d.ProcessorResult.Body.PackageResponse.DeviceID,
-		// 		CreationClassName:       d.ProcessorResult.Body.PackageResponse.CreationClassName,
-		// 		SystemName:              d.ProcessorResult.Body.PackageResponse.SystemName,
-		// 		SystemCreationClassName: d.ProcessorResult.Body.PackageResponse.SystemCreationClassName,
-		// 		ElementName:             d.ProcessorResult.Body.PackageResponse.ElementName,
-		// 		OperationalStatus:       *(*[]int)(unsafe.Pointer(&d.ProcessorResult.Body.PackageResponse.OperationalStatus)),
-		// 		// OperationalStatus:       d.ProcessorResult.Body.PackageResponse.OperationalStatus,
-		// 		HealthState:            dtov2.HealthState(d.ProcessorResult.Body.PackageResponse.HealthState),
-		// 		EnabledState:           dtov2.EnabledState(d.ProcessorResult.Body.PackageResponse.EnabledState),
-		// 		RequestedState:         dtov2.RequestedState(d.ProcessorResult.Body.PackageResponse.RequestedState),
-		// 		Role:                   d.ProcessorResult.Body.PackageResponse.Role,
-		// 		Family:                 d.ProcessorResult.Body.PackageResponse.Family,
-		// 		OtherFamilyDescription: d.ProcessorResult.Body.PackageResponse.OtherFamilyDescription,
-		// 		UpgradeMethod:          dtov2.UpgradeMethod(d.ProcessorResult.Body.PackageResponse.UpgradeMethod),
-		// 		MaxClockSpeed:          d.ProcessorResult.Body.PackageResponse.MaxClockSpeed,
-		// 		CurrentClockSpeed:      d.ProcessorResult.Body.PackageResponse.CurrentClockSpeed,
-		// 		Stepping:               d.ProcessorResult.Body.PackageResponse.Stepping,
-		// 		CPUStatus:              dtov2.CPUStatus(d.ProcessorResult.Body.PackageResponse.CPUStatus),
-		// 		ExternalBusClockSpeed:  d.ProcessorResult.Body.PackageResponse.ExternalBusClockSpeed,
-		// 	},
-		// 	Pull: processorItemsToDTOv2(d.ProcessorResult.Body.PullResponse.PackageItems),
-		// },
-		// CIM_PhysicalMemory: dto.CIM_PhysicalMemory{
-		// 	Get: dtov2.PhysicalMemory{
-		// 		PartNumber:        d.PhysicalMemoryResult.Body.MemoryResponse.PartNumber,
-		// 		SerialNumber:      d.PhysicalMemoryResult.Body.MemoryResponse.SerialNumber,
-		// 		Manufacturer:      d.PhysicalMemoryResult.Body.MemoryResponse.Manufacturer,
-		// 		ElementName:       d.PhysicalMemoryResult.Body.MemoryResponse.ElementName,
-		// 		CreationClassName: d.PhysicalMemoryResult.Body.MemoryResponse.CreationClassName,
-		// 		Tag:               d.PhysicalMemoryResult.Body.MemoryResponse.Tag,
-		// 		OperationalStatus: *(*[]int)(unsafe.Pointer(&d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus)),
-		// 		// OperationalStatus:          d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus,
-		// 		FormFactor:                 d.PhysicalMemoryResult.Body.MemoryResponse.FormFactor,
-		// 		MemoryType:                 dtov2.MemoryType(d.PhysicalMemoryResult.Body.MemoryResponse.MemoryType),
-		// 		Speed:                      d.PhysicalMemoryResult.Body.MemoryResponse.Speed,
-		// 		Capacity:                   d.PhysicalMemoryResult.Body.MemoryResponse.Capacity,
-		// 		BankLabel:                  d.PhysicalMemoryResult.Body.MemoryResponse.BankLabel,
-		// 		ConfiguredMemoryClockSpeed: d.PhysicalMemoryResult.Body.MemoryResponse.ConfiguredMemoryClockSpeed,
-		// 		IsSpeedInMhz:               d.PhysicalMemoryResult.Body.MemoryResponse.IsSpeedInMhz,
-		// 		MaxMemorySpeed:             d.PhysicalMemoryResult.Body.MemoryResponse.MaxMemorySpeed,
-		// 	},
-		// 	Pull: physicalMemoryToDTOv2(d.PhysicalMemoryResult.Body.PullResponse.MemoryItems),
-		// },
+		CIM_Processor: dto.CIM_Processor{
+			Responses: cimProcessorArray(d),
+		},
+		CIM_PhysicalMemory: dto.CIM_PhysicalMemory{
+			Responses: cimPhysicalMemoryArray(d),
+		},
 		// CIM_MediaAccessDevices: dto.CIMMediaAccessDevice{
 		// 	Pull: mediaAccessDeviceToDTO(d.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices),
 		// },
@@ -408,15 +349,14 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 		},
 		SystemPackage: dtov2.CIMSystemPackage{},
 		Chassis: dtov2.CIMChassis{
-			Version:           d.ChassisResult.Body.PackageResponse.Version,
-			SerialNumber:      d.ChassisResult.Body.PackageResponse.SerialNumber,
-			Model:             d.ChassisResult.Body.PackageResponse.Model,
-			Manufacturer:      d.ChassisResult.Body.PackageResponse.Manufacturer,
-			ElementName:       d.ChassisResult.Body.PackageResponse.ElementName,
-			CreationClassName: d.ChassisResult.Body.PackageResponse.CreationClassName,
-			Tag:               d.ChassisResult.Body.PackageResponse.Tag,
-			OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChassisResult.Body.PackageResponse.OperationalStatus)),
-			// OperationalStatus:  operationalStatusToDTOv2(d.ChassisResult.Body.PackageResponse.OperationalStatus),
+			Version:            d.ChassisResult.Body.PackageResponse.Version,
+			SerialNumber:       d.ChassisResult.Body.PackageResponse.SerialNumber,
+			Model:              d.ChassisResult.Body.PackageResponse.Model,
+			Manufacturer:       d.ChassisResult.Body.PackageResponse.Manufacturer,
+			ElementName:        d.ChassisResult.Body.PackageResponse.ElementName,
+			CreationClassName:  d.ChassisResult.Body.PackageResponse.CreationClassName,
+			Tag:                d.ChassisResult.Body.PackageResponse.Tag,
+			OperationalStatus:  *(*[]int)(unsafe.Pointer(&d.ChassisResult.Body.PackageResponse.OperationalStatus)),
 			PackageType:        dtov2.PackageType(d.ChassisResult.Body.PackageResponse.PackageType),
 			ChassisPackageType: dtov2.ChassisPackageType(d.ChassisResult.Body.PackageResponse.ChassisPackageType),
 		},
@@ -427,9 +367,8 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 				ElementName:       d.ChipResult.Body.PackageResponse.ElementName,
 				Manufacturer:      d.ChipResult.Body.PackageResponse.Manufacturer,
 				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChipResult.Body.PackageResponse.OperationalStatus)),
-				// OperationalStatus: d.ChipResult.Body.PackageResponse.OperationalStatus,
-				Tag:     d.ChipResult.Body.PackageResponse.Tag,
-				Version: d.ChipResult.Body.PackageResponse.Version,
+				Tag:               d.ChipResult.Body.PackageResponse.Tag,
+				Version:           d.ChipResult.Body.PackageResponse.Version,
 			},
 			Pull: chipItemsToDTOv2(d.ChipResult.Body.PullResponse.ChipItems),
 		},
@@ -441,7 +380,6 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 				Manufacturer:      d.CardResult.Body.PackageResponse.Manufacturer,
 				Model:             d.CardResult.Body.PackageResponse.Model,
 				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.CardResult.Body.PackageResponse.OperationalStatus)),
-				// OperationalStatus: d.CardResult.Body.PackageResponse.OperationalStatus,
 				PackageType:  dtov2.PackageType(d.CardResult.Body.PackageResponse.PackageType),
 				SerialNumber: d.CardResult.Body.PackageResponse.SerialNumber,
 				Tag:          d.CardResult.Body.PackageResponse.Tag,
@@ -456,12 +394,11 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 			SoftwareElementState:  dtov2.SoftwareElementState(d.BiosResult.Body.GetResponse.SoftwareElementState),
 			Name:                  d.BiosResult.Body.GetResponse.Name,
 			OperationalStatus:     *(*[]int)(unsafe.Pointer(&d.BiosResult.Body.GetResponse.OperationalStatus)),
-			// OperationalStatus:     d.BiosResult.Body.GetResponse.OperationalStatus,
-			ElementName:  d.BiosResult.Body.GetResponse.ElementName,
-			Version:      d.BiosResult.Body.GetResponse.Version,
-			Manufacturer: d.BiosResult.Body.GetResponse.Manufacturer,
-			PrimaryBIOS:  d.BiosResult.Body.GetResponse.PrimaryBIOS,
-			ReleaseDate:  dtov2.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
+			ElementName:           d.BiosResult.Body.GetResponse.ElementName,
+			Version:               d.BiosResult.Body.GetResponse.Version,
+			Manufacturer:          d.BiosResult.Body.GetResponse.Manufacturer,
+			PrimaryBIOS:           d.BiosResult.Body.GetResponse.PrimaryBIOS,
+			ReleaseDate:           dtov2.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
 			// },
 			// Pull: biosItemsToDTOv2(d.BiosResult.Body.PullResponse.BiosElementItems),
 		},
@@ -473,32 +410,30 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 				SystemCreationClassName: d.ProcessorResult.Body.PackageResponse.SystemCreationClassName,
 				ElementName:             d.ProcessorResult.Body.PackageResponse.ElementName,
 				OperationalStatus:       *(*[]int)(unsafe.Pointer(&d.ProcessorResult.Body.PackageResponse.OperationalStatus)),
-				// OperationalStatus:       d.ProcessorResult.Body.PackageResponse.OperationalStatus,
-				HealthState:            dtov2.HealthState(d.ProcessorResult.Body.PackageResponse.HealthState),
-				EnabledState:           dtov2.EnabledState(d.ProcessorResult.Body.PackageResponse.EnabledState),
-				RequestedState:         dtov2.RequestedState(d.ProcessorResult.Body.PackageResponse.RequestedState),
-				Role:                   d.ProcessorResult.Body.PackageResponse.Role,
-				Family:                 d.ProcessorResult.Body.PackageResponse.Family,
-				OtherFamilyDescription: d.ProcessorResult.Body.PackageResponse.OtherFamilyDescription,
-				UpgradeMethod:          dtov2.UpgradeMethod(d.ProcessorResult.Body.PackageResponse.UpgradeMethod),
-				MaxClockSpeed:          d.ProcessorResult.Body.PackageResponse.MaxClockSpeed,
-				CurrentClockSpeed:      d.ProcessorResult.Body.PackageResponse.CurrentClockSpeed,
-				Stepping:               d.ProcessorResult.Body.PackageResponse.Stepping,
-				CPUStatus:              dtov2.CPUStatus(d.ProcessorResult.Body.PackageResponse.CPUStatus),
-				ExternalBusClockSpeed:  d.ProcessorResult.Body.PackageResponse.ExternalBusClockSpeed,
+				HealthState:             dtov2.HealthState(d.ProcessorResult.Body.PackageResponse.HealthState),
+				EnabledState:            dtov2.EnabledState(d.ProcessorResult.Body.PackageResponse.EnabledState),
+				RequestedState:          dtov2.RequestedState(d.ProcessorResult.Body.PackageResponse.RequestedState),
+				Role:                    d.ProcessorResult.Body.PackageResponse.Role,
+				Family:                  d.ProcessorResult.Body.PackageResponse.Family,
+				OtherFamilyDescription:  d.ProcessorResult.Body.PackageResponse.OtherFamilyDescription,
+				UpgradeMethod:           dtov2.UpgradeMethod(d.ProcessorResult.Body.PackageResponse.UpgradeMethod),
+				MaxClockSpeed:           d.ProcessorResult.Body.PackageResponse.MaxClockSpeed,
+				CurrentClockSpeed:       d.ProcessorResult.Body.PackageResponse.CurrentClockSpeed,
+				Stepping:                d.ProcessorResult.Body.PackageResponse.Stepping,
+				CPUStatus:               dtov2.CPUStatus(d.ProcessorResult.Body.PackageResponse.CPUStatus),
+				ExternalBusClockSpeed:   d.ProcessorResult.Body.PackageResponse.ExternalBusClockSpeed,
 			},
 			Pull: processorItemsToDTOv2(d.ProcessorResult.Body.PullResponse.PackageItems),
 		},
 		PhysicalMemory: dtov2.CIMPhysicalMemory{
 			Get: dtov2.PhysicalMemory{
-				PartNumber:        d.PhysicalMemoryResult.Body.MemoryResponse.PartNumber,
-				SerialNumber:      d.PhysicalMemoryResult.Body.MemoryResponse.SerialNumber,
-				Manufacturer:      d.PhysicalMemoryResult.Body.MemoryResponse.Manufacturer,
-				ElementName:       d.PhysicalMemoryResult.Body.MemoryResponse.ElementName,
-				CreationClassName: d.PhysicalMemoryResult.Body.MemoryResponse.CreationClassName,
-				Tag:               d.PhysicalMemoryResult.Body.MemoryResponse.Tag,
-				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus)),
-				// OperationalStatus:          d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus,
+				PartNumber:                 d.PhysicalMemoryResult.Body.MemoryResponse.PartNumber,
+				SerialNumber:               d.PhysicalMemoryResult.Body.MemoryResponse.SerialNumber,
+				Manufacturer:               d.PhysicalMemoryResult.Body.MemoryResponse.Manufacturer,
+				ElementName:                d.PhysicalMemoryResult.Body.MemoryResponse.ElementName,
+				CreationClassName:          d.PhysicalMemoryResult.Body.MemoryResponse.CreationClassName,
+				Tag:                        d.PhysicalMemoryResult.Body.MemoryResponse.Tag,
+				OperationalStatus:          *(*[]int)(unsafe.Pointer(&d.PhysicalMemoryResult.Body.MemoryResponse.OperationalStatus)),
 				FormFactor:                 d.PhysicalMemoryResult.Body.MemoryResponse.FormFactor,
 				MemoryType:                 dtov2.MemoryType(d.PhysicalMemoryResult.Body.MemoryResponse.MemoryType),
 				Speed:                      d.PhysicalMemoryResult.Body.MemoryResponse.Speed,
@@ -713,39 +648,72 @@ func ppPullResponseCardToDTOv2(d physical.PullResponse) []dtov2.CardItems {
 	return d2
 }
 
-// func operationalStatusToDTO[T int](d []T) []int {
-// 	// iterate over the data and convert each entity to dto
-// 	d2 := make([]int, len(d))
+func cimChipArray(d *wsmanAPI.HWResults) []dto.CIMChipGet {
+	var y []dto.CIMChipGet
+	var z = dto.CIMChipGet{
+		CanBeFRUed:        d.ChipResult.Body.PackageResponse.CanBeFRUed,
+		CreationClassName: d.ChipResult.Body.PackageResponse.CreationClassName,
+		ElementName:       d.ChipResult.Body.PackageResponse.ElementName,
+		Manufacturer:      d.ChipResult.Body.PackageResponse.Manufacturer,
+		OperationalStatus: *(*[]int)(unsafe.Pointer(&d.ChipResult.Body.PackageResponse.OperationalStatus)),
+		Tag:               d.ChipResult.Body.PackageResponse.Tag,
+		Version:           d.ChipResult.Body.PackageResponse.Version,
+	}
+	y = append(y, z)
 
-// 	for i := range d {
-// 		d2[i] = int(d[i])
-// 	}
-// 	return d2
-// }
+	return y
+}
 
-// func operationalStatusToDTO[T IntBase](d []T) []int {
-// 	d2 := make([]int, len(d))
-// 	for i, v := range d {
-// 		d2[i] = int(v) // Explicit conversion to int
-// 	}
-// 	return d2
-// }
+func cimPhysicalMemoryArray(d *wsmanAPI.HWResults) []dto.CIMPhysicalMemoryResponse {
+	var y []dto.CIMPhysicalMemoryResponse
 
-// Define an interface for types that can convert to int
-// type IntConvertible interface {
-// 	ToInt() int
-// }
+	for i, _ := range d.PhysicalMemoryResult.Body.PullResponse.MemoryItems {
+		z := dto.CIMPhysicalMemoryResponse{
+			PartNumber:                 d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].PartNumber,
+			SerialNumber:               d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].SerialNumber,
+			Manufacturer:               d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].Manufacturer,
+			ElementName:                d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].ElementName,
+			CreationClassName:          d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].CreationClassName,
+			Tag:                        d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].Tag,
+			OperationalStatus:          *(*[]int)(unsafe.Pointer(&d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[0].OperationalStatus)),
+			FormFactor:                 d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].FormFactor,
+			MemoryType:                 int(d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].MemoryType),
+			Speed:                      d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].Speed,
+			Capacity:                   d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].Capacity,
+			BankLabel:                  d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].BankLabel,
+			ConfiguredMemoryClockSpeed: d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].ConfiguredMemoryClockSpeed,
+			IsSpeedInMhz:               d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].IsSpeedInMhz,
+			MaxMemorySpeed:             d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].MaxMemorySpeed,
+		}
+		y = append(y, z)
+	}
 
-// // Implement the interface for custom types
-// func (v chassis.OperationalStatus) ToInt() int {
-// 	return int(v)
-// }
+	return y
+}
 
-// // Generic function to convert slices of any custom int-based type to slices of int
-// func operationalStatus[T IntConvertible](d []T) []int {
-// 	d2 := make([]int, len(d))
-// 	for i, v := range d {
-// 		d2[i] = v.ToInt() // Use the interface method to convert to int
-// 	}
-// 	return d2
-// }
+func cimProcessorArray(d *wsmanAPI.HWResults) []dto.CIMProcessorResponse {
+	var y []dto.CIMProcessorResponse
+	var z = dto.CIMProcessorResponse{
+		DeviceID:                d.ProcessorResult.Body.PackageResponse.DeviceID,
+		CreationClassName:       d.ProcessorResult.Body.PackageResponse.CreationClassName,
+		SystemName:              d.ProcessorResult.Body.PackageResponse.SystemName,
+		SystemCreationClassName: d.ProcessorResult.Body.PackageResponse.SystemCreationClassName,
+		ElementName:             d.ProcessorResult.Body.PackageResponse.ElementName,
+		OperationalStatus:       *(*[]int)(unsafe.Pointer(&d.ProcessorResult.Body.PackageResponse.OperationalStatus)),
+		HealthState:             int(d.ProcessorResult.Body.PackageResponse.HealthState),
+		EnabledState:            int(d.ProcessorResult.Body.PackageResponse.EnabledState),
+		RequestedState:          int(d.ProcessorResult.Body.PackageResponse.RequestedState),
+		Role:                    d.ProcessorResult.Body.PackageResponse.Role,
+		Family:                  d.ProcessorResult.Body.PackageResponse.Family,
+		OtherFamilyDescription:  d.ProcessorResult.Body.PackageResponse.OtherFamilyDescription,
+		UpgradeMethod:           int(d.ProcessorResult.Body.PackageResponse.UpgradeMethod),
+		MaxClockSpeed:           d.ProcessorResult.Body.PackageResponse.MaxClockSpeed,
+		CurrentClockSpeed:       d.ProcessorResult.Body.PackageResponse.CurrentClockSpeed,
+		Stepping:                d.ProcessorResult.Body.PackageResponse.Stepping,
+		CPUStatus:               int(d.ProcessorResult.Body.PackageResponse.CPUStatus),
+		ExternalBusClockSpeed:   d.ProcessorResult.Body.PackageResponse.ExternalBusClockSpeed,
+	}
+	y = append(y, z)
+
+	return y
+}

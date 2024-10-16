@@ -15,39 +15,36 @@ type (
 	}
 
 	CIM_BIOSElement struct {
-		Response  CIMBIOSElementResponse
-		Responses []any
+		Response  CIMBIOSElementResponse `json:"response"`
+		Responses []any                  `json:"responses"`
 	}
 
 	CIM_Card struct {
-		Response  CIMCardResponse
-		Responses []any
+		Response  CIMCardResponseGet `json:"response"`
+		Responses []any `json:"responses"`
 	}
 
 	CIM_Chassis struct {
-		Response  CIMChassisResponse
-		Responses []any
+		Response  CIMChassisResponse `json:"response"`
+		Responses []any `json:"responses"`
 	}
 
 	CIM_Chip struct {
-		Responses []CIMChip
+		Responses []CIMChipGet `json:"responses"`
 	}
 
 	CIM_ComputerSystemPackage struct {
 		// PlatformGUID string
-		Response  string
-		Responses string
+		Response  string `json:"response"`
+		Responses string `json:"responses"`
 	}
 
 	CIM_MediaAccessDevice struct {
-		responses []CIMMediaAccessDevice
+		Responses []CIMMediaAccessDevice `json:"responses"`
 	}
 
 	CIM_PhysicalMemory struct {
-		responses struct {
-			Pull []CIMPhysicalMemoryResponse
-			Get  CIMPhysicalMemoryResponse
-		}
+		Responses []CIMPhysicalMemoryResponse `json:"responses"`
 	}
 
 	CIM_PhysicalPackage struct {
@@ -55,7 +52,7 @@ type (
 	}
 
 	CIM_Processor struct {
-		Responses []CIMProcessorResponses
+		Responses []CIMProcessorResponse `json:"responses"`
 	}
 
 	CIM_SystemPackage struct {
@@ -92,12 +89,7 @@ type (
 		ReleaseDate           Time
 	}
 
-	CIMProcessorResponses struct {
-		Pull []any
-		Get  CIMProcessorResponsesGet
-	}
-
-	CIMChip struct {
+		CIMChip struct {
 		Pull []any
 		Get  CIMChipGet
 	}
@@ -112,25 +104,25 @@ type (
 		Version           string
 	}
 
-	CIMProcessorResponsesGet struct {
-			DeviceID                string
-			CreationClassName       string
-			SystemName              string
-			SystemCreationClassName string
-			ElementName             string
-			OperationalStatus       []int
-			HealthState             int
-			EnabledState            int
-			RequestedState          int
-			Role                    string
-			Family                  int
-			OtherFamilyDescription  string
-			UpgradeMethod           int
-			MaxClockSpeed           int
-			CurrentClockSpeed       int
-			Stepping                string
-			CPUStatus               int
-			ExternalBusClockSpeed   int
+	CIMProcessorResponse struct {
+		DeviceID                string
+		CreationClassName       string
+		SystemName              string
+		SystemCreationClassName string
+		ElementName             string
+		OperationalStatus       []int
+		HealthState             int
+		EnabledState            int
+		RequestedState          int
+		Role                    string
+		Family                  int
+		OtherFamilyDescription  string
+		UpgradeMethod           int
+		MaxClockSpeed           int
+		CurrentClockSpeed       int
+		Stepping                string
+		CPUStatus               int
+		ExternalBusClockSpeed   int
 	}
 
 	CIMMediaAccessDevice struct {
@@ -190,7 +182,6 @@ type (
 		SerialNumber      string
 		Tag               string
 		Version           string
-		onses             []any
 	}
 
 	// CIMComputerSystemPackage struct {
