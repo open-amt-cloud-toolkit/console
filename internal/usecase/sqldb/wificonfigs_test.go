@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -37,7 +38,7 @@ func TestWirelessRepo_GetCount(t *testing.T) {
 		{
 			name: "Successful count",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO wirelessconfigs (tenant_id) VALUES (?)`, "tenant1")
+				_, err := dbConn.Exec(`INSERT INTO wirelessconfigs (wireless_profile_name, tenant_id) VALUES (?, ?)`, "profile1", "tenant1")
 				require.NoError(t, err)
 			},
 			tenantID: "tenant1",
@@ -69,12 +70,7 @@ func TestWirelessRepo_GetCount(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-                CREATE TABLE wirelessconfigs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    tenant_id TEXT NOT NULL
-                );
-            `)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -89,7 +85,7 @@ func TestWirelessRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewWirelessRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -156,40 +152,10 @@ func TestWirelessRepo_Get(t *testing.T) {
 
 	tests := []GetWirelessConfigTestCase{
 		{
-			name: "Error in Builder.ToSql",
-			top:  10,
-			setup: func(_ *sql.DB) {
-			},
-			skip:     4,
-			tenantID: "tenant2",
-			expected: nil,
-			err:      ErrGeneral,
-		},
-		{
 			name: "Error in Pool.Query",
 			top:  10,
 			setup: func(dbConn *sql.DB) {
 				_, err := dbConn.Exec(`
-					CREATE TABLE wirelessconfigs (
-						id INTEGER PRIMARY KEY AUTOINCREMENT,
-						wireless_profile_name TEXT NOT NULL,
-						authentication_method INTEGER NOT NULL,
-						encryption_method INTEGER NOT NULL,
-						ssid TEXT NOT NULL,
-						psk_value INTEGER,
-						psk_passphrase TEXT,
-						link_policy TEXT,
-						tenant_id TEXT NOT NULL,
-						ieee8021x_profile_name TEXT,
-						version TEXT,
-						auth_protocol INTEGER,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN
-					);
-				`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
 					INSERT INTO wirelessconfigs
 					(wireless_profile_name, authentication_method, encryption_method, ssid, tenant_id)
 					VALUES
@@ -209,26 +175,6 @@ func TestWirelessRepo_Get(t *testing.T) {
 			top:  10,
 			setup: func(dbConn *sql.DB) {
 				_, err := dbConn.Exec(`
-					CREATE TABLE wirelessconfigs (
-						id INTEGER PRIMARY KEY AUTOINCREMENT,
-						wireless_profile_name TEXT NOT NULL,
-						authentication_method INTEGER NOT NULL,
-						encryption_method INTEGER NOT NULL,
-						ssid TEXT NOT NULL,
-						psk_value TEXT, -- Use TEXT to force a type mismatch in Scan
-						psk_passphrase TEXT,
-						link_policy TEXT,
-						tenant_id TEXT NOT NULL,
-						ieee8021x_profile_name TEXT,
-						version TEXT,
-						auth_protocol INTEGER,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN
-					);
-				`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
 					INSERT INTO wirelessconfigs
 					(wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, tenant_id)
 					VALUES
@@ -252,16 +198,7 @@ func TestWirelessRepo_Get(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					authentication_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					version TEXT NOT NULL
-				);
-			`)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -272,7 +209,7 @@ func TestWirelessRepo_Get(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewWirelessRepo(sqlConfig, mockLog)
 
 			wireless, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -296,33 +233,27 @@ func TestWirelessRepo_GetByName(t *testing.T) {
 		{
 			name: "Successful retrieval",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`
-					CREATE TABLE wirelessconfigs (
-						wireless_profile_name TEXT NOT NULL,
-						authentication_method INTEGER NOT NULL,
-						encryption_method INTEGER NOT NULL,
-						ssid TEXT NOT NULL,
-						psk_value TEXT,
-						link_policy TEXT,
-						tenant_id TEXT NOT NULL,
-						ieee8021x_profile_name TEXT,
-						auth_protocol INTEGER,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN
-					);
-				`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id, version) VALUES (?, ?, ?, ?, ?, ?)`,
-					"profile1", 1, 30, true, "tenant1", "v1.0")
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, 
+        auth_protocol, 
+        pxe_timeout, 
+        wired_interface, 
+        tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"ieee1", 1, 30, true, "tenant1")
 				require.NoError(t, err)
 
 				_, err = dbConn.Exec(`
 					INSERT INTO wirelessconfigs (
-						wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, link_policy, tenant_id,
-						ieee8021x_profile_name, auth_protocol, pxe_timeout, wired_interface
-					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 2, "SSID1", "5", "policy1", "tenant1", "ieee1", 1, 30, true)
+						wireless_profile_name, 
+            authentication_method, 
+            encryption_method, 
+            ssid, 
+            psk_value, 
+            psk_passphrase,
+            link_policy, 
+            tenant_id,
+						ieee8021x_profile_name
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+					"profile1", 1, 2, "SSID1", "5", "encrypted", "policy1", "tenant1", "ieee1")
 				require.NoError(t, err)
 			},
 			profileName: "profile1",
@@ -337,23 +268,7 @@ func TestWirelessRepo_GetByName(t *testing.T) {
 		},
 		{
 			name: "No Profile Found",
-			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`
-					CREATE TABLE wirelessconfigs (
-						wireless_profile_name TEXT NOT NULL,
-						authentication_method INTEGER NOT NULL,
-						encryption_method INTEGER NOT NULL,
-						ssid TEXT NOT NULL,
-						psk_value TEXT,
-						link_policy TEXT,
-						tenant_id TEXT NOT NULL,
-						ieee8021x_profile_name TEXT,
-						auth_protocol INTEGER,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN
-					);
-				`)
-				require.NoError(t, err)
+			setup: func(_ *sql.DB) {
 			},
 			profileName: "dontexist",
 			tenantID:    "tenant1",
@@ -363,29 +278,20 @@ func TestWirelessRepo_GetByName(t *testing.T) {
 		{
 			name: "Error in Pool.Query",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`
-					CREATE TABLE wirelessconfigs (
-						wireless_profile_name TEXT NOT NULL,
-						authentication_method INTEGER NOT NULL,
-						encryption_method INTEGER NOT NULL,
-						ssid TEXT NOT NULL,
-						psk_value TEXT,
-						link_policy TEXT,
-						tenant_id TEXT NOT NULL,
-						ieee8021x_profile_name TEXT,
-						auth_protocol INTEGER,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN
-					);
-				`)
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, 
+        auth_protocol, 
+        pxe_timeout, 
+        wired_interface, 
+        tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"ieee1", 1, 30, true, "tenant1")
 				require.NoError(t, err)
 
 				_, err = dbConn.Exec(`
 					INSERT INTO wirelessconfigs (
 						wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, link_policy, tenant_id,
-						ieee8021x_profile_name, auth_protocol, pxe_timeout, wired_interface
-					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 2, "SSID1", "psk123", "policy1", "tenant1", "ieee1", 1, 30, true)
+						ieee8021x_profile_name
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+					"profile1", 1, 2, "SSID1", "psk123", "policy1", "tenant1", "ieee1")
 				require.NoError(t, err)
 
 				dbConn.Close()
@@ -398,29 +304,20 @@ func TestWirelessRepo_GetByName(t *testing.T) {
 		{
 			name: "Error in rows.Scan",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`
-					CREATE TABLE wirelessconfigs (
-						wireless_profile_name TEXT NOT NULL,
-						authentication_method INTEGER NOT NULL,
-						encryption_method INTEGER NOT NULL,
-						ssid TEXT NOT NULL,
-						psk_value TEXT,
-						link_policy TEXT,
-						tenant_id TEXT NOT NULL,
-						ieee8021x_profile_name TEXT,
-						auth_protocol INTEGER,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN
-					);
-				`)
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, 
+        auth_protocol, 
+        pxe_timeout, 
+        wired_interface, 
+        tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"ieee1", 1, 30, true, "tenant1")
 				require.NoError(t, err)
 
 				_, err = dbConn.Exec(`
 					INSERT INTO wirelessconfigs (
 						wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, link_policy, tenant_id,
-						ieee8021x_profile_name, auth_protocol, pxe_timeout, wired_interface
-					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 2, "SSID1", "psk123", "policy1", "tenant1", "ieee1", 1, 30, true)
+						ieee8021x_profile_name
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+					"profile1", 1, 2, "SSID1", "psk123", "policy1", "tenant1", "ieee1")
 				require.NoError(t, err)
 			},
 			profileName: "profile1",
@@ -439,16 +336,7 @@ func TestWirelessRepo_GetByName(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					version TEXT NOT NULL
-				);
-			`)
+			_, err = dbConn.Exec(schema)
 			require.NoError(t, err)
 
 			tc.setup(dbConn)
@@ -459,12 +347,14 @@ func TestWirelessRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewWirelessRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewWirelessRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			wirelessConfig, err := repo.GetByName(context.Background(), tc.profileName, tc.tenantID)
 
-			if (err != nil) != tc.expectError {
-				t.Errorf("Expected error status %v, got %v", tc.expectError, err != nil)
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 
 			if wirelessConfig == nil && tc.expected == nil {
@@ -491,28 +381,11 @@ func TestWirelessRepo_Delete(t *testing.T) {
 			name: "Successful delete",
 			setup: func(dbConn *sql.DB) {
 				_, err := dbConn.Exec(`
-					CREATE TABLE wirelessconfigs (
-						wireless_profile_name TEXT NOT NULL,
-						authentication_method INTEGER NOT NULL,
-						encryption_method INTEGER NOT NULL,
-						ssid TEXT NOT NULL,
-						psk_value TEXT,
-						link_policy TEXT,
-						tenant_id TEXT NOT NULL,
-						ieee8021x_profile_name TEXT,
-						auth_protocol INTEGER,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN
-					);
-				`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`
 					INSERT INTO wirelessconfigs (
-						wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, link_policy, tenant_id,
-						ieee8021x_profile_name, auth_protocol, pxe_timeout, wired_interface
-					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 2, "SSID1", "psk123", "policy1", "tenant1", "ieee1", 1, 30, true)
+						wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, link_policy, tenant_id
+						
+					) VALUES (?, ?, ?, ?, ?, ?, ?);`,
+					"profile1", 1, 2, "SSID1", "psk123", "policy1", "tenant1")
 				require.NoError(t, err)
 			},
 			profileName: "profile1",
@@ -524,24 +397,32 @@ func TestWirelessRepo_Delete(t *testing.T) {
 			name: "Foreign key violation",
 			setup: func(dbConn *sql.DB) {
 				_, err := dbConn.Exec(`
-					CREATE TABLE ieee8021xconfigs (
-						profile_name TEXT NOT NULL,
-						auth_protocol INTEGER NOT NULL,
-						pxe_timeout INTEGER,
-						wired_interface BOOLEAN NOT NULL,
-						tenant_id TEXT NOT NULL,
-						version TEXT NOT NULL
-					);
-				`)
+					INSERT INTO wirelessconfigs (
+						wireless_profile_name, authentication_method, encryption_method, ssid, psk_value, link_policy, tenant_id
+					) VALUES (?, ?, ?, ?, ?, ?, ?);`,
+					"wirelessProfile1", 1, 2, "SSID1", "psk123", "policy1", "tenant1")
 				require.NoError(t, err)
 
-				_, err = dbConn.Exec(`
-					INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id, version)
-					VALUES (?, ?, ?, ?, ?, ?);`,
-					"profile1", 1, 30, true, "tenant1", "v1.0")
+				_, err = dbConn.Exec(`INSERT INTO profiles (
+					profile_name, amt_password, creation_date, created_by, generate_random_password,
+					activation, mebx_password, generate_random_mebx_password, tags,
+					dhcp_enabled, ip_sync_enabled, local_wifi_sync_enabled, tenant_id, tls_mode, 
+					tls_signing_authority, user_consent, ider_enabled, kvm_enabled, sol_enabled
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					"profile1", "password1", "2024-08-01", "user1", true,
+					"activation1", "mebx1", true, "tags1",
+					true, true, true, "tenant1", 1,
+					"authority1", "consent1", true, true, true,
+				)
+				require.NoError(t, err)
+
+				_, err = dbConn.Exec(`INSERT INTO profiles_wirelessconfigs (
+          profile_name, wireless_profile_name, priority, tenant_id
+        ) VALUES (?, ?, ?, ?)`,
+					"profile1", "wirelessProfile1", 1, "tenant1")
 				require.NoError(t, err)
 			},
-			profileName: "profile1",
+			profileName: "wirelessProfile1",
 			tenantID:    "tenant1",
 			expected:    false,
 			expectError: true,
@@ -557,6 +438,9 @@ func TestWirelessRepo_Delete(t *testing.T) {
 			require.NoError(t, err)
 			defer dbConn.Close()
 
+			_, err = dbConn.Exec(schema)
+			require.NoError(t, err)
+
 			tc.setup(dbConn)
 
 			sqlConfig := &db.SQL{
@@ -565,7 +449,7 @@ func TestWirelessRepo_Delete(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewWirelessRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.profileName, tc.tenantID)
@@ -691,7 +575,7 @@ func TestWirelessRepo_Update(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewWirelessRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewWirelessRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			updated, err := repo.Update(context.Background(), tc.config)
 
@@ -808,7 +692,7 @@ func TestWirelessRepo_Insert(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewWirelessRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewWirelessRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			_, err = repo.Insert(context.Background(), tc.wirelessCfg)
 

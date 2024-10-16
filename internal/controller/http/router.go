@@ -34,6 +34,10 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
+	// Public routes
+	login := v1.NewLoginRoute(cfg)
+	handler.POST("/api/v1/authorize", login.Login)
+
 	// Static files
 	// Serve static assets (js, css, images, etc.)
 	// Create subdirectory view of the embedded file system
@@ -75,14 +79,22 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	vr := v1.NewVersionRoute(cfg)
 	handler.GET("/version", vr.LatestReleaseHandler)
 
+	// Protected routes using JWT middleware
+	var protected *gin.RouterGroup
+	if cfg.App.AuthDisabled {
+		protected = handler.Group("/api")
+	} else {
+		protected = handler.Group("/api", login.JWTAuthMiddleware())
+	}
+
 	// Routers
-	h2 := handler.Group("/api/v1")
+	h2 := protected.Group("/v1")
 	{
 		v1.NewDeviceRoutes(h2, t.Devices, l)
 		v1.NewAmtRoutes(h2, t.Devices, t.AMTExplorer, l)
 	}
 
-	h := handler.Group("/api/v1/admin")
+	h := protected.Group("/v1/admin")
 	{
 		v1.NewDomainRoutes(h, t.Domains, l)
 		v1.NewCIRAConfigRoutes(h, t.CIRAConfigs, l)
@@ -91,7 +103,7 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 		v1.NewIEEE8021xConfigRoutes(h, t.IEEE8021xProfiles, l)
 	}
 
-	h3 := handler.Group("/api/v2")
+	h3 := protected.Group("/v2")
 	{
 		v2.NewAmtRoutes(h3, t.Devices, l)
 	}

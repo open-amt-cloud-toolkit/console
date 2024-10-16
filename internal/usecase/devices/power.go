@@ -14,9 +14,13 @@ import (
 )
 
 func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (power.PowerActionResponse, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return power.PowerActionResponse{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return power.PowerActionResponse{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -29,45 +33,53 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 	return response, nil
 }
 
-func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+func (uc *UseCase) GetPowerState(c context.Context, guid string) (dto.PowerState, error) {
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.PowerState{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.PowerState{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	state, err := device.GetPowerState()
 	if err != nil {
-		return nil, err
+		return dto.PowerState{}, err
 	}
 
-	return map[string]interface{}{
-		"powerstate": state[0].PowerState,
+	return dto.PowerState{
+		PowerState: int(state[0].PowerState),
 	}, nil
 }
 
-func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (dto.PowerCapabilities, error) {
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.PowerCapabilities{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.PowerCapabilities{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	version, err := device.GetAMTVersion()
 	if err != nil {
-		return nil, err
+		return dto.PowerCapabilities{}, err
 	}
 
 	capabilities, err := device.GetPowerCapabilities()
 	if err != nil {
-		return nil, err
+		return dto.PowerCapabilities{}, err
 	}
 
 	amtversion, err := parseVersion(version)
 	if err != nil {
-		return nil, err
+		return dto.PowerCapabilities{}, err
 	}
 
 	response := determinePowerCapabilities(amtversion, capabilities)
@@ -75,50 +87,54 @@ func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[str
 	return response, nil
 }
 
-func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabilitiesResponse) map[string]interface{} {
-	response := map[string]interface{}{
-		"Power up":    2,
-		"Power cycle": 5,
-		"Power down":  8,
-		"Reset":       10,
+func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabilitiesResponse) dto.PowerCapabilities {
+	response := dto.PowerCapabilities{
+		PowerUp:    2,
+		PowerCycle: 5,
+		PowerDown:  8,
+		Reset:      10,
 	}
 
 	if amtversion > MinAMTVersion {
-		response["Soft-off"] = 12
-		response["Soft-reset"] = 14
-		response["Sleep"] = 4
-		response["Hibernate"] = 7
+		response.SoftOff = 12
+		response.SoftReset = 14
+		response.Sleep = 4
+		response.Hibernate = 7
 	}
 
 	if capabilities.BIOSSetup {
-		response["Power up to BIOS"] = 100
-		response["Reset to BIOS"] = 101
+		response.PowerOnToBIOS = 100
+		response.ResetToBIOS = 101
 	}
 
 	if capabilities.SecureErase {
-		response["Reset to Secure Erase"] = 104
+		response.ResetToSecureErase = 104
 	}
 
-	response["Reset to IDE-R Floppy"] = 200
-	response["Power on to IDE-R Floppy"] = 201
-	response["Reset to IDE-R CDROM"] = 202
-	response["Power on to IDE-R CDROM"] = 203
+	response.ResetToIDERFloppy = 200
+	response.PowerOnToIDERFloppy = 201
+	response.ResetToIDERCDROM = 202
+	response.PowerOnToIDERCDROM = 203
 
 	if capabilities.ForceDiagnosticBoot {
-		response["Power on to diagnostic"] = 300
-		response["Reset to diagnostic"] = 301
+		response.PowerOnToDiagnostic = 300
+		response.ResetToDiagnostic = 301
 	}
 
-	response["Reset to PXE"] = 400
-	response["Power on to PXE"] = 401
+	response.ResetToPXE = 400
+	response.PowerOnToPXE = 401
 
 	return response
 }
 
 func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return power.PowerActionResponse{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return power.PowerActionResponse{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)

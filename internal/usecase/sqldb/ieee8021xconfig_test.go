@@ -12,9 +12,22 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
+
+func setupIEEE8021xTable(t *testing.T) *sql.DB {
+	t.Helper()
+
+	dbConn, err := sql.Open("sqlite", ":memory:")
+	require.NoError(t, err)
+
+	_, err = dbConn.Exec(schema)
+	require.NoError(t, err)
+
+	return dbConn
+}
 
 func TestIEEE8021xRepo_CheckProfileExists(t *testing.T) {
 	t.Parallel()
@@ -49,8 +62,8 @@ func TestIEEE8021xRepo_CheckProfileExists(t *testing.T) {
 		{
 			name: "Profile exists",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, tenant_id) VALUES (?, ?)`,
-					"profile1", "tenant1")
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name,wired_interface, tenant_id) VALUES (?, ?, ?)`,
+					"profile1", 1, "tenant1")
 				require.NoError(t, err)
 
 				var count int
@@ -70,17 +83,8 @@ func TestIEEE8021xRepo_CheckProfileExists(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupIEEE8021xTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					tenant_id TEXT NOT NULL
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -90,7 +94,7 @@ func TestIEEE8021xRepo_CheckProfileExists(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			exists, err := repo.CheckProfileExists(context.Background(), tc.profileName, tc.tenantID)
@@ -148,20 +152,8 @@ func TestIEEE8021xRepo_GetCount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupIEEE8021xTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol TEXT NOT NULL,
-					pxe_timeout INTEGER NOT NULL,
-					wired_interface TEXT NOT NULL,
-					tenant_id TEXT NOT NULL
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -175,7 +167,7 @@ func TestIEEE8021xRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -268,8 +260,8 @@ func TestIEEE8021xRepo_Get(t *testing.T) {
 			name: "Successful query",
 			setup: func(dbConn *sql.DB) {
 				pxeTimeout := 30
-				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id, version) VALUES (?, ?, ?, ?, ?, ?)`,
-					"profile1", 1, pxeTimeout, true, "tenant1", "v1.0")
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"profile1", 1, pxeTimeout, true, "tenant1")
 				require.NoError(t, err)
 			},
 			top:      10,
@@ -308,8 +300,8 @@ func TestIEEE8021xRepo_Get(t *testing.T) {
 		{
 			name: "Rows scan error",
 			setup: func(dbConn *sql.DB) {
-				_, _ = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id, version) VALUES (?, ?, ?, ?, ?, ?)`,
-					"profile1", "not-an-int", "not-an-int", "not-a-bool", "tenant1", "v1.0")
+				_, _ = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"profile1", "not-an-int", "not-an-int", "not-a-bool", "tenant1")
 			},
 			top:      10,
 			skip:     0,
@@ -324,21 +316,8 @@ func TestIEEE8021xRepo_Get(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupIEEE8021xTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					version TEXT
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -352,7 +331,7 @@ func TestIEEE8021xRepo_Get(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			configs, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
@@ -377,8 +356,8 @@ func TestIEEE8021xRepo_GetByName(t *testing.T) {
 			name: "Successful retrieval",
 			setup: func(dbConn *sql.DB) {
 				pxeTimeout := 30
-				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id, version) VALUES (?, ?, ?, ?, ?, ?)`,
-					"profile1", 1, pxeTimeout, true, "tenant1", "v1.0")
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"profile1", 1, pxeTimeout, true, "tenant1")
 				require.NoError(t, err)
 			},
 			profileName: "profile1",
@@ -404,8 +383,8 @@ func TestIEEE8021xRepo_GetByName(t *testing.T) {
 		{
 			name: "Rows scan error",
 			setup: func(dbConn *sql.DB) {
-				_, _ = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id, version) VALUES (?, ?, ?, ?, ?, ?)`,
-					"profile1", "not-an-int", "not-an-int", "not-a-bool", "tenant1", "v1.0")
+				_, _ = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
+					"profile1", "not-an-int", "not-an-int", "not-a-bool", "tenant1")
 			},
 			profileName: "profile1",
 			tenantID:    "tenant1",
@@ -419,21 +398,8 @@ func TestIEEE8021xRepo_GetByName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupIEEE8021xTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					version TEXT
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -443,7 +409,7 @@ func TestIEEE8021xRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewIEEE8021xRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			result, err := repo.GetByName(context.Background(), tc.profileName, tc.tenantID)
 
@@ -509,20 +475,8 @@ func TestIEEE8021xRepo_Delete(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupIEEE8021xTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -536,7 +490,7 @@ func TestIEEE8021xRepo_Delete(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.profileName, tc.tenantID)
@@ -565,17 +519,7 @@ func TestIEEE8021xRepo_Update(t *testing.T) {
 		{
 			name: "Successful update",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					PRIMARY KEY (profile_name, tenant_id)
-				);`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
 					"profile1", 1, 30, true, "tenant1")
 				require.NoError(t, err)
 			},
@@ -590,16 +534,7 @@ func TestIEEE8021xRepo_Update(t *testing.T) {
 		},
 		{
 			name: "Update non-existent profile",
-			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					PRIMARY KEY (profile_name, tenant_id)
-				);`)
-				require.NoError(t, err)
+			setup: func(_ *sql.DB) {
 			},
 			config: &entity.IEEE8021xConfig{
 				ProfileName:            "nonexistent-profile",
@@ -612,15 +547,7 @@ func TestIEEE8021xRepo_Update(t *testing.T) {
 		},
 		{
 			name: "Query execution error",
-			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL
-				);`)
-				require.NoError(t, err)
+			setup: func(_ *sql.DB) {
 			},
 			config: &entity.IEEE8021xConfig{
 				ProfileName:            "test-domain",
@@ -638,8 +565,7 @@ func TestIEEE8021xRepo_Update(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupIEEE8021xTable(t)
 			defer dbConn.Close()
 
 			tc.setup(dbConn)
@@ -654,7 +580,7 @@ func TestIEEE8021xRepo_Update(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			updated, err := repo.Update(context.Background(), tc.config)
@@ -709,18 +635,8 @@ func TestIEEE8021xRepo_Insert(t *testing.T) {
 
 	tests := []InsertIEEETestCase{
 		{
-			name: "Successful insert",
-			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					PRIMARY KEY (profile_name, tenant_id)
-				);`)
-				require.NoError(t, err)
-			},
+			name:  "Successful insert",
+			setup: func(_ *sql.DB) {},
 			config: &entity.IEEE8021xConfig{
 				ProfileName:            "profile1",
 				AuthenticationProtocol: 1,
@@ -733,17 +649,7 @@ func TestIEEE8021xRepo_Insert(t *testing.T) {
 		{
 			name: "Insert with not unique error",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL,
-					PRIMARY KEY (profile_name, tenant_id)
-				);`)
-				require.NoError(t, err)
-
-				_, err = dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
+				_, err := dbConn.Exec(`INSERT INTO ieee8021xconfigs (profile_name, auth_protocol, pxe_timeout, wired_interface, tenant_id) VALUES (?, ?, ?, ?, ?)`,
 					"profile1", 1, 30, true, "tenant1")
 				require.NoError(t, err)
 			},
@@ -757,17 +663,8 @@ func TestIEEE8021xRepo_Insert(t *testing.T) {
 			err:      sqldb.NotUniqueError{},
 		},
 		{
-			name: "Query execution error",
-			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`CREATE TABLE ieee8021xconfigs (
-					profile_name TEXT NOT NULL,
-					auth_protocol INTEGER NOT NULL,
-					pxe_timeout INTEGER,
-					wired_interface BOOLEAN NOT NULL,
-					tenant_id TEXT NOT NULL
-				);`)
-				require.NoError(t, err)
-			},
+			name:  "Query execution error",
+			setup: func(_ *sql.DB) {},
 			config: &entity.IEEE8021xConfig{
 				ProfileName:            "profile1",
 				AuthenticationProtocol: 1,
@@ -784,8 +681,7 @@ func TestIEEE8021xRepo_Insert(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupIEEE8021xTable(t)
 			defer dbConn.Close()
 
 			tc.setup(dbConn)
@@ -800,7 +696,7 @@ func TestIEEE8021xRepo_Insert(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewIEEE8021xRepo(sqlConfig, mockLog)
 
 			version, err := repo.Insert(context.Background(), tc.config)

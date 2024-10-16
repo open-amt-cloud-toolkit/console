@@ -25,7 +25,7 @@ func TestMainFunction(_ *testing.T) { //nolint:paralleltest // cannot have simul
 
 	// Mock functions
 	initializeConfigFunc = func() (*config.Config, error) {
-		return &config.Config{HTTP: config.HTTP{Port: "8080"}}, nil
+		return &config.Config{HTTP: config.HTTP{Port: "8080"}, App: config.App{EncryptionKey: "test"}}, nil
 	}
 
 	initializeAppFunc = func() error {

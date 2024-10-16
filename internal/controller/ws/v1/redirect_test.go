@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 )
 
 var (
@@ -21,9 +23,9 @@ func TestWebSocketHandler(t *testing.T) { //nolint:paralleltest // logging libra
 	ctrl := gomock.NewController(t)
 	t.Cleanup(ctrl.Finish)
 
-	mockFeature := NewMockFeature(ctrl)
-	mockUpgrader := NewMockUpgrader(ctrl)
-	mockLogger := &MockLogger{}
+	mockFeature := mocks.NewMockFeature(ctrl)
+	mockUpgrader := mocks.NewMockUpgrader(ctrl)
+	mockLogger := mocks.NewMockLogger(ctrl)
 
 	tests := []struct {
 		name           string
@@ -62,6 +64,12 @@ func TestWebSocketHandler(t *testing.T) { //nolint:paralleltest // logging libra
 				mockUpgrader.EXPECT().
 					Upgrade(gomock.Any(), gomock.Any(), nil).
 					Return(&websocket.Conn{}, nil)
+
+				mockLogger.EXPECT().Info("Websocket connection opened")
+
+				if tc.redirectError != nil {
+					mockLogger.EXPECT().Error(tc.redirectError, "http - devices - v1 - redirect")
+				}
 
 				mockFeature.EXPECT().
 					Redirect(gomock.Any(), gomock.Any(), "someHost", "someMode").

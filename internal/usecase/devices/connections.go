@@ -9,9 +9,13 @@ import (
 )
 
 func (uc *UseCase) GetTLSSettingData(c context.Context, guid string) ([]dto.SettingDataResponse, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)

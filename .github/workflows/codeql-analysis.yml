@@ -47,11 +47,11 @@ jobs:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.0.0
+      uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.0.0
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@8214744c546c1e5c8f03dde8fab3a7353211988d # v3.26.7
+      uses: github/codeql-action/init@f779452ac5af1c261dce0346a8f964149f49322b # v3.26.13
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -62,7 +62,7 @@ jobs:
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      uses: github/codeql-action/autobuild@8214744c546c1e5c8f03dde8fab3a7353211988d # v3.26.7
+      uses: github/codeql-action/autobuild@f779452ac5af1c261dce0346a8f964149f49322b # v3.26.13
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
@@ -76,7 +76,7 @@ jobs:
     #   make release
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@8214744c546c1e5c8f03dde8fab3a7353211988d # v3.26.7
+      uses: github/codeql-action/analyze@f779452ac5af1c261dce0346a8f964149f49322b # v3.26.13
     - name: Generate Security Report
       continue-on-error: true
       uses: rsdmike/github-security-report-action@544ffd6318f4982cb6fe21197e93bebae5ec217e # v3.0.4
@@ -91,7 +91,7 @@ jobs:
         mv "report.pdf" "console-security-report-$DATE.pdf"
     - name: GitHub Upload Release Artifacts
       continue-on-error: true
-      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
       with:
         name: report
         path: ./*.pdf

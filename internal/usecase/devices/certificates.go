@@ -150,9 +150,13 @@ func processCertificates(contextItems []credential.CredentialContext, response w
 }
 
 func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.SecuritySettings{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.SecuritySettings{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -240,9 +244,13 @@ func KeysToDTO(r *publicprivate.RefinedPullResponse) dto.KeyPullResponse {
 }
 
 func (uc *UseCase) GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.Certificate{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.Certificate{}, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)

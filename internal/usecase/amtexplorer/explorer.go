@@ -8,6 +8,7 @@ import (
 	"github.com/go-xmlfmt/xmlfmt"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 )
 
@@ -16,6 +17,7 @@ var (
 	ErrExplorerAMT       = ExplorerError{Console: consoleerrors.CreateConsoleError("AMT Error")}
 	ErrExplorerNoResults = ExplorerError{Console: consoleerrors.CreateConsoleError("No results returned")}
 	ErrExplorerInResult  = ExplorerError{Console: consoleerrors.CreateConsoleError("Error in result")}
+	ErrNotFound          = sqldb.NotFoundError{Console: consoleerrors.CreateConsoleError("ProfilesUseCase")}
 )
 
 func (uc *UseCase) GetExplorerSupportedCalls() []string {
@@ -42,7 +44,11 @@ func (uc *UseCase) ExecuteCall(ctx context.Context, guid, call, tenantID string)
 		return &dto.Explorer{}, ErrDatabase.Wrap("ExecuteCall", "uc.repo.GetByID", err)
 	}
 
-	device := uc.device.SetupWsmanClient(*uc.entityToDTO(item), true)
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
+	}
+
+	device := uc.device.SetupWsmanClient(*item, true)
 	// Get the reflect.Value of the object
 	objValue := reflect.ValueOf(device)
 

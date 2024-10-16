@@ -55,8 +55,20 @@ func (r *DeviceRepo) GetCount(_ context.Context, tenantID string) (int, error) {
 
 // Get -.
 func (r *DeviceRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.Device, error) {
+	const defaultTop = 100
+
 	if top == 0 {
-		top = 100
+		top = defaultTop
+	}
+
+	limitedTop := uint64(defaultTop)
+	if top > 0 {
+		limitedTop = uint64(top)
+	}
+
+	limitedSkip := uint64(0)
+	if skip > 0 {
+		limitedSkip = uint64(skip)
 	}
 
 	sqlQuery, _, err := r.Builder.
@@ -78,8 +90,8 @@ func (r *DeviceRepo) Get(_ context.Context, top, skip int, tenantID string) ([]e
 		From("devices").
 		Where("tenantid = ?", tenantID).
 		OrderBy("guid").
-		Limit(uint64(top)).
-		Offset(uint64(skip)).
+		Limit(limitedTop).
+		Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrDeviceDatabase.Wrap("Get", "r.Builder: ", err)
@@ -245,9 +257,19 @@ func (r *DeviceRepo) GetByTags(_ context.Context, tags []string, method string, 
 		builder = builder.Where("("+tagsCondition+") AND tenantId = ?", append(params, tenantID)...)
 	}
 
+	limitedLimit := uint64(0)
+	if limit > 0 {
+		limitedLimit = uint64(limit)
+	}
+
+	limitedOffset := uint64(0)
+	if offset > 0 {
+		limitedOffset = uint64(offset)
+	}
+
 	sqlQuery, args, err := builder.OrderBy("guid").
-		Limit(uint64(limit)).
-		Offset(uint64(offset)).
+		Limit(limitedLimit).
+		Offset(limitedOffset).
 		ToSql()
 	if err != nil {
 		return nil, ErrDeviceDatabase.Wrap("GetByTags", "r.Builder: ", err)

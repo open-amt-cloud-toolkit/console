@@ -2,10 +2,10 @@ package wsman
 
 import (
 	gotls "crypto/tls"
-	"strings"
 	"sync"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
@@ -53,6 +53,7 @@ import (
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -76,12 +77,14 @@ type ConnectionEntry struct {
 }
 
 type GoWSMANMessages struct {
-	log logger.Interface
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
-func NewGoWSMANMessages(log logger.Interface) *GoWSMANMessages {
+func NewGoWSMANMessages(log logger.Interface, safeRequirements security.Cryptor) *GoWSMANMessages {
 	return &GoWSMANMessages{
-		log: log,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -104,18 +107,18 @@ func (g GoWSMANMessages) Worker() {
 	}
 }
 
-func (g GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) Management {
+func (g GoWSMANMessages) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) Management {
 	resultChan := make(chan *ConnectionEntry)
-
 	// Queue the request
 	requestQueue <- func() {
+		device.Password, _ = g.safeRequirements.Decrypt(device.Password)
 		resultChan <- g.setupWsmanClientInternal(device, isRedirection, logAMTMessages)
 	}
 
 	return <-resultChan
 }
 
-func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
+func (g GoWSMANMessages) setupWsmanClientInternal(device entity.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
@@ -127,8 +130,8 @@ func (g GoWSMANMessages) setupWsmanClientInternal(device dto.Device, isRedirecti
 		IsRedirection:     isRedirection,
 	}
 
-	if device.CertHash != "" {
-		clientParams.PinnedCert = device.CertHash
+	if device.CertHash != nil && *device.CertHash != "" {
+		clientParams.PinnedCert = *device.CertHash
 	}
 
 	timer := time.AfterFunc(expireAfter, func() {
@@ -222,147 +225,16 @@ func (g *ConnectionEntry) GetDeviceCertificate() (*gotls.Certificate, error) {
 	return g.WsmanMessages.Client.GetServerCertificate()
 }
 
-var UserConsentOptions = map[int]string{
-	0:          "none",
-	1:          "kvm",
-	4294967295: "all",
-}
-
-func (g *ConnectionEntry) GetFeatures() (dto.Features, error) {
-	redirectionResult, err := g.WsmanMessages.AMT.RedirectionService.Get()
-	if err != nil {
-		return dto.Features{}, err
-	}
-
-	optServiceResult, err := g.WsmanMessages.IPS.OptInService.Get()
-	if err != nil {
-		return dto.Features{}, err
-	}
-
-	kvmResult, err := g.WsmanMessages.CIM.KVMRedirectionSAP.Get()
-	if err != nil {
-		return dto.Features{}, err
-	}
-
-	iderEnabled, solEnabled := getSOLAndIDERState(redirectionResult.Body.GetAndPutResponse.EnabledState)
-
-	settingsResults := dto.Features{
-		UserConsent: UserConsentOptions[int(optServiceResult.Body.GetAndPutResponse.OptInRequired)],
-		EnableSOL:   solEnabled,
-		EnableIDER:  iderEnabled,
-		EnableKVM:   kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.Enabled) || kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.EnabledButOffline),
-		Redirection: redirectionResult.Body.GetAndPutResponse.ListenerEnabled,
-		OptInState:  optServiceResult.Body.GetAndPutResponse.OptInState,
-	}
-
-	return settingsResults, nil
-}
-
-func getSOLAndIDERState(enabledState redirection.EnabledState) (iderEnabled, solEnabled bool) {
-	//nolint:exhaustive // we only care about IDER and SOL states. Other scenarios are handled by the default case.
-	switch enabledState {
-	case redirection.IDERAndSOLAreDisabled:
-		return false, false
-	case redirection.IDERIsEnabledAndSOLIsDisabled:
-		return true, false
-	case redirection.SOLIsEnabledAndIDERIsDisabled:
-		return false, true
-	case redirection.IDERAndSOLAreEnabled:
-		return true, true
-	default:
-		return false, false // default case if state is invalid
-	}
-}
-
-func (g *ConnectionEntry) SetFeatures(features dto.Features) (dto.Features, error) {
-	// redirection
-	requestedState, listenerEnabled, err := configureRedirection(features, g)
-	if err != nil {
-		return features, err
-	}
-
-	// kvm
-	kvmListenerEnabled, err := configureKVM(features, g)
-	if err != nil {
-		return features, err
-	}
-
-	// get and put redirection
-	currentRedirection, err := g.WsmanMessages.AMT.RedirectionService.Get()
-	if err != nil {
-		return features, err
-	}
-
-	request := redirection.RedirectionRequest{
-		CreationClassName:       currentRedirection.Body.GetAndPutResponse.CreationClassName,
-		ElementName:             currentRedirection.Body.GetAndPutResponse.ElementName,
-		EnabledState:            redirection.EnabledState(requestedState),
-		ListenerEnabled:         listenerEnabled == 1 || kvmListenerEnabled == 1,
-		Name:                    currentRedirection.Body.GetAndPutResponse.Name,
-		SystemCreationClassName: currentRedirection.Body.GetAndPutResponse.SystemCreationClassName,
-		SystemName:              currentRedirection.Body.GetAndPutResponse.SystemName,
-	}
-
-	_, err = g.WsmanMessages.AMT.RedirectionService.Put(request)
-	if err != nil {
-		return features, err
-	}
-
-	// Update Redirection, this is important when KVM, IDER and SOL are all false
-	features.Redirection = listenerEnabled == 1 || kvmListenerEnabled == 1
-
-	// user consent
-	optInResponse, err := g.WsmanMessages.IPS.OptInService.Get()
-	if err != nil {
-		return features, err
-	}
-
-	optinRequest := optin.OptInServiceRequest{
-		CreationClassName:       optInResponse.Body.GetAndPutResponse.CreationClassName,
-		ElementName:             optInResponse.Body.GetAndPutResponse.ElementName,
-		Name:                    optInResponse.Body.GetAndPutResponse.Name,
-		OptInCodeTimeout:        optInResponse.Body.GetAndPutResponse.OptInCodeTimeout,
-		OptInDisplayTimeout:     optInResponse.Body.GetAndPutResponse.OptInDisplayTimeout,
-		OptInRequired:           determineConsentCode(features.UserConsent),
-		SystemName:              optInResponse.Body.GetAndPutResponse.SystemName,
-		SystemCreationClassName: optInResponse.Body.GetAndPutResponse.SystemCreationClassName,
-	}
-
-	_, err = g.WsmanMessages.IPS.OptInService.Put(optinRequest)
-	if err != nil {
-		return features, err
-	}
-
-	return features, nil
-}
-
-func configureKVM(features dto.Features, g *ConnectionEntry) (int, error) {
-	kvmRequestedState := kvm.RedirectionSAPDisable
-	listenerEnabled := 0
-
-	if features.EnableKVM {
-		kvmRequestedState = kvm.RedirectionSAPEnable
-		listenerEnabled = 1
-	}
-
-	_, err := g.WsmanMessages.CIM.KVMRedirectionSAP.RequestStateChange(kvmRequestedState)
-	if err != nil {
-		return 0, err
-	}
-
-	return listenerEnabled, nil
-}
-
-func configureRedirection(features dto.Features, g *ConnectionEntry) (redirection.RequestedState, int, error) {
+func (g *ConnectionEntry) RequestAMTRedirectionServiceStateChange(ider, sol bool) (redirection.RequestedState, int, error) {
 	requestedState := redirection.DisableIDERAndSOL
 	listenerEnabled := 0
 
-	if features.EnableIDER {
+	if ider {
 		requestedState++
 		listenerEnabled = 1
 	}
 
-	if features.EnableSOL {
+	if sol {
 		requestedState += 2
 		listenerEnabled = 1
 	}
@@ -372,24 +244,33 @@ func configureRedirection(features dto.Features, g *ConnectionEntry) (redirectio
 		return 0, 0, err
 	}
 
-	return requestedState, listenerEnabled, err
+	return requestedState, listenerEnabled, nil
 }
 
-func determineConsentCode(consent string) int {
-	consentCode := optin.OptInRequiredAll // default to all if not valid user consent
-
-	consent = strings.ToLower(consent)
-
-	switch consent {
-	case "kvm":
-		consentCode = optin.OptInRequiredKVM
-	case "all":
-		consentCode = optin.OptInRequiredAll
-	case "none":
-		consentCode = optin.OptInRequiredNone
+func (g *ConnectionEntry) GetKVMRedirection() (kvm.Response, error) {
+	response, err := g.WsmanMessages.CIM.KVMRedirectionSAP.Get()
+	if err != nil {
+		return kvm.Response{}, err
 	}
 
-	return int(consentCode)
+	return response, nil
+}
+
+func (g *ConnectionEntry) SetKVMRedirection(enable bool) (int, error) {
+	requestedState := kvm.RedirectionSAPDisable
+	listenerEnabled := 0
+
+	if enable {
+		requestedState = kvm.RedirectionSAPEnable
+		listenerEnabled = 1
+	}
+
+	_, err := g.WsmanMessages.CIM.KVMRedirectionSAP.RequestStateChange(requestedState)
+	if err != nil {
+		return 0, err
+	}
+
+	return listenerEnabled, nil
 }
 
 func (g *ConnectionEntry) GetAlarmOccurrences() ([]ipsAlarmClock.AlarmClockOccurrence, error) {
@@ -1000,6 +881,12 @@ type NetworkResults struct {
 	IPSIEEE8021xSettingsResult ipsIEEE8021x.IEEE8021xSettingsResponse
 	WiFiSettingsResult         []wifi.WiFiEndpointSettingsResponse
 	CIMIEEE8021xSettingsResult cimIEEE8021x.PullResponse
+	NetworkInterfaces          InterfaceTypes
+}
+
+type InterfaceTypes struct {
+	hasWired    bool
+	hasWireless bool
 }
 
 func (g *ConnectionEntry) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Response, err error) {
@@ -1026,26 +913,47 @@ func (g *ConnectionEntry) GetNetworkSettings() (NetworkResults, error) {
 		return networkResults, err
 	}
 
-	response, err := g.GetIPSIEEE8021xSettings()
-	if err != nil {
-		return networkResults, err
+	networkResults.NetworkInterfaces = g.determineInterfaceTypes(networkResults.EthernetPortSettingsResult)
+
+	if networkResults.NetworkInterfaces.hasWired {
+		response, err := g.GetIPSIEEE8021xSettings()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
 	}
 
-	networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
+	if networkResults.NetworkInterfaces.hasWireless {
+		networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
+		if err != nil {
+			return networkResults, err
+		}
 
-	networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
-	if err != nil {
-		return networkResults, err
+		cimResponse, err := g.GetCIMIEEE8021xSettings()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 	}
-
-	cimResponse, err := g.GetCIMIEEE8021xSettings()
-	if err != nil {
-		return networkResults, err
-	}
-
-	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 
 	return networkResults, nil
+}
+
+func (g *ConnectionEntry) determineInterfaceTypes(ethernetSettings []ethernetport.SettingsResponse) InterfaceTypes {
+	types := InterfaceTypes{}
+
+	for i := range ethernetSettings {
+		switch ethernetSettings[i].InstanceID {
+		case "Intel(r) AMT Ethernet Port Settings 0":
+			types.hasWired = true
+		case "Intel(r) AMT Ethernet Port Settings 1":
+			types.hasWireless = true
+		}
+	}
+
+	return types
 }
 
 // AMT Explorer Functions.
@@ -1274,6 +1182,15 @@ func (g *ConnectionEntry) GetAMTRedirectionService() (redirection.Response, erro
 	}
 
 	return get, nil
+}
+
+func (g *ConnectionEntry) SetAMTRedirectionService(request redirection.RedirectionRequest) (redirection.Response, error) {
+	response, err := g.WsmanMessages.AMT.RedirectionService.Put(request)
+	if err != nil {
+		return redirection.Response{}, err
+	}
+
+	return response, nil
 }
 
 func (g *ConnectionEntry) GetAMTRemoteAccessPolicyAppliesToMPS() (remoteaccess.Response, error) {
@@ -1729,6 +1646,15 @@ func (g *ConnectionEntry) GetIPSOptInService() (optin.Response, error) {
 	}
 
 	return get, nil
+}
+
+func (g *ConnectionEntry) SetIPSOptInService(request optin.OptInServiceRequest) error {
+	_, err := g.WsmanMessages.IPS.OptInService.Put(request)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type Certificates struct {

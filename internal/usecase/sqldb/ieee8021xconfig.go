@@ -39,9 +39,9 @@ func (r *IEEE8021xRepo) CheckProfileExists(_ context.Context, profileName, tenan
 	}
 
 	var count int
+
 	err = r.Pool.QueryRow(sqlQuery, profileName, tenantID).Scan(&count)
 	if err != nil {
-
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
@@ -79,8 +79,20 @@ func (r *IEEE8021xRepo) GetCount(_ context.Context, tenantID string) (int, error
 
 // Get -.
 func (r *IEEE8021xRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.IEEE8021xConfig, error) {
+	const defaultTop = 100
+
 	if top == 0 {
-		top = 100
+		top = defaultTop
+	}
+
+	limitedTop := uint64(defaultTop)
+	if top > 0 {
+		limitedTop = uint64(top)
+	}
+
+	limitedSkip := uint64(0)
+	if skip > 0 {
+		limitedSkip = uint64(skip)
 	}
 
 	sqlQuery, _, err := r.Builder.
@@ -92,8 +104,8 @@ func (r *IEEE8021xRepo) Get(_ context.Context, top, skip int, tenantID string) (
 		).
 		From("ieee8021xconfigs").
 		Where("tenant_id = ?", tenantID).
-		Limit(uint64(top)).
-		Offset(uint64(skip)).
+		Limit(limitedTop).
+		Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrIEEE8021xDatabase.Wrap("Get", "r.Builder: ", err)

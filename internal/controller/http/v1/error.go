@@ -2,6 +2,7 @@ package v1
 
 import (
 	"errors"
+	"net"
 	"net/http"
 	"strings"
 
@@ -28,9 +29,12 @@ func ErrorResponse(c *gin.Context, err error) {
 		amtErr          devices.AMTError
 		certExpErr      domains.CertExpirationError
 		certPasswordErr domains.CertPasswordError
+		netErr          net.Error
 	)
 
 	switch {
+	case errors.As(err, &netErr):
+		netErrorHandle(c, netErr)
 	case errors.As(err, &notValidErr):
 		notValidErrorHandle(c, notValidErr)
 	case errors.As(err, &validatorErr):
@@ -50,6 +54,10 @@ func ErrorResponse(c *gin.Context, err error) {
 	default:
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response{"general error"})
 	}
+}
+
+func netErrorHandle(c *gin.Context, netErr net.Error) {
+	c.AbortWithStatusJSON(http.StatusGatewayTimeout, response{netErr.Error()})
 }
 
 func notValidErrorHandle(c *gin.Context, err dto.NotValidError) {

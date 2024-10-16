@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"runtime"
+
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 
 	"github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/app"
@@ -37,7 +40,60 @@ func main() {
 		}()
 	}
 
+	handleEncryptionKey(cfg)
+
 	runAppFunc(cfg)
+}
+
+func handleEncryptionKey(cfg *config.Config) {
+	toolkitCrypto := security.Crypto{}
+
+	if cfg.EncryptionKey != "" {
+		return
+	}
+
+	secureStorage := security.NewKeyRingStorage("device-management-toolkit")
+
+	var err error
+
+	cfg.EncryptionKey, err = secureStorage.GetKeyValue("default-security-key")
+	if err == nil {
+		return
+	}
+
+	if err.Error() != "The specified item could not be found in the keyring" {
+		log.Fatal(err)
+
+		return
+	}
+
+	handleKeyNotFound(cfg, toolkitCrypto, secureStorage)
+}
+
+func handleKeyNotFound(cfg *config.Config, toolkitCrypto security.Crypto, secureStorage security.Storage) {
+	log.Print("\033[31mWarning: Key Not Found, Generate new key? -- This will prevent access to existing data? Y/N: \033[0m")
+
+	var response string
+
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		log.Fatal(err)
+
+		return
+	}
+
+	if response != "Y" && response != "y" {
+		log.Fatal("Exiting without generating a new key.")
+
+		return
+	}
+
+	cfg.EncryptionKey = toolkitCrypto.GenerateKey()
+
+	err = secureStorage.SetKeyValue("default-security-key", cfg.EncryptionKey)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // CommandExecutor is an interface to allow for mocking exec.Command in tests.

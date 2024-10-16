@@ -118,7 +118,7 @@ type (
 		GetByID(ctx context.Context, guid, tenantID string) (*entity.Device, error)
 	}
 	WSMAN interface {
-		SetupWsmanClient(device dto.Device, logMessages bool) AMTExplorer
+		SetupWsmanClient(device entity.Device, logMessages bool) AMTExplorer
 		DestroyWsmanClient(device dto.Device)
 	}
 )

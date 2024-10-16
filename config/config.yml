@@ -1,7 +1,9 @@
 app:
   name: "console"
   repo: "open-amt-cloud-toolkit/console"
-
+  jwtKey: "your_secret_jwt_key"
+  adminUsername: "standalone"
+  adminPassword: "G@ppm0ym"
 http:
   host: "localhost"
   port: "8181"

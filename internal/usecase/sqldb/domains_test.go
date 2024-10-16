@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
@@ -13,9 +12,22 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/db"
 )
+
+func setupDomainTable(t *testing.T) *sql.DB {
+	t.Helper()
+
+	dbConn, err := sql.Open("sqlite", ":memory:")
+	require.NoError(t, err)
+
+	_, err = dbConn.Exec(schema)
+	require.NoError(t, err)
+
+	return dbConn
+}
 
 func TestDomainRepo_GetCount(t *testing.T) {
 	t.Parallel()
@@ -30,8 +42,8 @@ func TestDomainRepo_GetCount(t *testing.T) {
 		{
 			name: "Successful count",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO domains (domain_name, tenant_id) VALUES (?, ?)`,
-					"domain1", "tenant1")
+				_, err := dbConn.Exec(`INSERT INTO domains (name,domain_suffix, tenant_id) VALUES (?,?,?)`,
+					"domain1", "suffix.com", "tenant1")
 				require.NoError(t, err)
 			},
 			tenantID: "tenant1",
@@ -59,17 +71,10 @@ func TestDomainRepo_GetCount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupDomainTable(t)
 			defer dbConn.Close()
 
-			_, err = dbConn.Exec(`
-				CREATE TABLE domains (
-					domain_name TEXT PRIMARY KEY,
-					tenant_id TEXT NOT NULL
-				);
-			`)
-			require.NoError(t, err)
+			setupDomainTable(t)
 
 			tc.setup(dbConn)
 
@@ -83,7 +88,7 @@ func TestDomainRepo_GetCount(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			count, err := repo.GetCount(context.Background(), tc.tenantID)
@@ -105,74 +110,6 @@ func TestDomainRepo_GetCount(t *testing.T) {
 	}
 }
 
-func setupDomainTable(t *testing.T) *sql.DB {
-	t.Helper()
-
-	dbConn, err := sql.Open("sqlite", ":memory:")
-	require.NoError(t, err)
-
-	_, err = dbConn.Exec(`
-		CREATE TABLE domains (
-			name TEXT NOT NULL,
-			domain_suffix TEXT PRIMARY KEY,
-			provisioning_cert TEXT,
-			provisioning_cert_storage_format TEXT,
-			provisioning_cert_key TEXT,
-			expiration_date TEXT,
-			tenant_id TEXT NOT NULL
-		);
-	`)
-	require.NoError(t, err)
-
-	return dbConn
-}
-
-func assertDomainResults(t *testing.T, expected, actual []entity.Domain) {
-	t.Helper()
-
-	if len(actual) != len(expected) {
-		t.Errorf("Expected %d domains, got %d", len(expected), len(actual))
-
-		return
-	}
-
-	for i := range expected {
-		if i >= len(actual) {
-			t.Errorf("Expected domain %d, but got none", i)
-
-			break
-		}
-
-		expectedDomain := &expected[i]
-		actualDomain := &actual[i]
-
-		if *expectedDomain != *actualDomain {
-			t.Errorf("Domain at index %d differs. Expected %+v, got %+v", i, *expectedDomain, *actualDomain)
-		}
-	}
-}
-
-func checkDomainError(t *testing.T, err, expectedErr error) {
-	t.Helper()
-
-	if err == nil && expectedErr != nil {
-		t.Errorf("Expected error of type %T, got nil", expectedErr)
-	} else if err != nil {
-		if expectedErr == nil {
-			t.Errorf("Expected no error, got %T", err)
-
-			return
-		}
-
-		expectedErrorType := reflect.TypeOf(expectedErr)
-		actualErrorType := reflect.TypeOf(err)
-
-		if expectedErrorType != actualErrorType {
-			t.Errorf("Expected error of type %T, got %T", expectedErr, err)
-		}
-	}
-}
-
 func TestDomainRepo_Get(t *testing.T) {
 	t.Parallel()
 
@@ -188,8 +125,8 @@ func TestDomainRepo_Get(t *testing.T) {
 		{
 			name: "Successful query",
 			setup: func(dbConn *sql.DB) {
-				_, err := dbConn.Exec(`INSERT INTO domains (name, domain_suffix, provisioning_cert_storage_format, expiration_date, tenant_id) VALUES (?, ?, ?, ?, ?)`,
-					"domain1", "suffix1", "cert_format1", "2024-12-31", "tenant1")
+				_, err := dbConn.Exec(`INSERT INTO domains (name, domain_suffix, provisioning_cert_storage_format, provisioning_cert, provisioning_cert_key, expiration_date, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+					"domain1", "suffix1", "cert_format1", "cert", "cert-key", "2024-12-31", "tenant1")
 				require.NoError(t, err)
 			},
 			top:      10,
@@ -199,7 +136,9 @@ func TestDomainRepo_Get(t *testing.T) {
 				{
 					ProfileName:                   "domain1",
 					DomainSuffix:                  "suffix1",
+					ProvisioningCert:              "cert",
 					ProvisioningCertStorageFormat: "cert_format1",
+					ProvisioningCertPassword:      "cert-key",
 					ExpirationDate:                "2024-12-31",
 					TenantID:                      "tenant1",
 				},
@@ -235,13 +174,18 @@ func TestDomainRepo_Get(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			domains, err := repo.Get(context.Background(), tc.top, tc.skip, tc.tenantID)
 
-			checkDomainError(t, err, tc.err)
-			assertDomainResults(t, tc.expected, domains)
+			if tc.err != nil {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.Len(t, domains, len(tc.expected))
 		})
 	}
 }
@@ -337,22 +281,8 @@ func TestDomainRepo_GetDomainByDomainSuffix(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupDomainTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-                CREATE TABLE domains (
-                    name TEXT NOT NULL,
-                    domain_suffix TEXT PRIMARY KEY,
-                    provisioning_cert TEXT,
-                    provisioning_cert_storage_format TEXT,
-                    provisioning_cert_key TEXT,
-                    expiration_date TEXT,
-                    tenant_id TEXT NOT NULL
-                );
-            `)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -366,7 +296,7 @@ func TestDomainRepo_GetDomainByDomainSuffix(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			domain, err := repo.GetDomainByDomainSuffix(context.Background(), tc.domainSuffix, tc.tenantID)
@@ -427,20 +357,8 @@ func TestDomainRepo_GetByName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupDomainTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-                CREATE TABLE domains (
-                    name TEXT NOT NULL,
-                    domain_suffix TEXT NOT NULL,
-                    provisioning_cert_storage_format TEXT NOT NULL,
-                    expiration_date TEXT NOT NULL,
-                    tenant_id TEXT NOT NULL
-                );
-            `)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -450,7 +368,7 @@ func TestDomainRepo_GetByName(t *testing.T) {
 				IsEmbedded: true,
 			}
 
-			repo := sqldb.NewDomainRepo(sqlConfig, new(MockLogger))
+			repo := sqldb.NewDomainRepo(sqlConfig, mocks.NewMockLogger(nil))
 
 			domain, err := repo.GetByName(context.Background(), tc.domainName, tc.tenantID)
 
@@ -514,20 +432,8 @@ func TestDomainRepo_Delete(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupDomainTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE domains (
-					name TEXT NOT NULL,
-					domain_suffix TEXT NOT NULL,
-					provisioning_cert_storage_format TEXT NOT NULL,
-					expiration_date TEXT NOT NULL,
-					tenant_id TEXT NOT NULL
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -541,7 +447,7 @@ func TestDomainRepo_Delete(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			deleted, err := repo.Delete(context.Background(), tc.domainName, tc.tenantID)
@@ -629,23 +535,8 @@ func TestDomainRepo_Update(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			dbConn, err := sql.Open("sqlite", ":memory:")
-			require.NoError(t, err)
+			dbConn := setupDomainTable(t)
 			defer dbConn.Close()
-
-			_, err = dbConn.Exec(`
-				CREATE TABLE domains (
-					name TEXT NOT NULL,
-					domain_suffix TEXT NOT NULL,
-					provisioning_cert TEXT NOT NULL,
-					provisioning_cert_storage_format TEXT NOT NULL,
-					provisioning_cert_key TEXT NOT NULL,
-					expiration_date TEXT NOT NULL,
-					tenant_id TEXT NOT NULL,
-					PRIMARY KEY (name, tenant_id)
-				);
-			`)
-			require.NoError(t, err)
 
 			tc.setup(dbConn)
 
@@ -659,7 +550,7 @@ func TestDomainRepo_Update(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			updated, err := repo.Update(context.Background(), tc.domain)
@@ -779,7 +670,7 @@ func TestDomainRepo_Insert(t *testing.T) {
 				sqlConfig.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.AtP)
 			}
 
-			mockLog := new(MockLogger)
+			mockLog := mocks.NewMockLogger(nil)
 			repo := sqldb.NewDomainRepo(sqlConfig, mockLog)
 
 			version, err := repo.Insert(context.Background(), tc.domain)

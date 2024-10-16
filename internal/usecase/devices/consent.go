@@ -8,9 +8,13 @@ import (
 )
 
 func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -24,9 +28,13 @@ func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{
 }
 
 func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)
@@ -44,9 +52,13 @@ func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[strin
 }
 
 func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsent, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return nil, ErrNotFound
 	}
 
 	device := uc.device.SetupWsmanClient(*item, false, true)

@@ -13,18 +13,19 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/wificonfigs"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func wifiTest(t *testing.T) (*MockWiFiConfigsFeature, *gin.Engine) {
+func wifiTest(t *testing.T) (*mocks.MockWiFiConfigsFeature, *gin.Engine) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	log := logger.New("error")
-	wificonfig := NewMockWiFiConfigsFeature(mockCtl)
+	wificonfig := mocks.NewMockWiFiConfigsFeature(mockCtl)
 
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
@@ -38,7 +39,7 @@ type wifiConfigTest struct {
 	name         string
 	method       string
 	url          string
-	mock         func(repo *MockWiFiConfigsFeature)
+	mock         func(repo *mocks.MockWiFiConfigsFeature)
 	response     interface{}
 	requestBody  dto.WirelessConfig
 	expectedCode int
@@ -57,7 +58,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "get all wificonfigs",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfig.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.WirelessConfig{{
 					ProfileName: "profile",
 				}}, nil)
@@ -69,7 +70,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "get all wificonfigs - with count",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs?$top=10&$skip=1&$count=true",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfig.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.WirelessConfig{{
 					ProfileName: "profile",
 				}}, nil)
@@ -82,7 +83,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "get all wifi - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfig.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
@@ -92,7 +93,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "get wificonfig by name",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs/profile",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfig.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.WirelessConfig{
 					ProfileName: "profile",
 				}, nil)
@@ -104,7 +105,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "get wificonfig by name - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/wirelessconfigs/profile",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfig.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
@@ -114,7 +115,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "insert wificonfig",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/wirelessconfigs",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfigTest := &dto.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
@@ -136,7 +137,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "insert wificonfig - failed",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/wirelessconfigs",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfigTest := &dto.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
@@ -158,7 +159,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "insert wificonfig validation - failed",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/wirelessconfigs",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfigTest := &dto.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
@@ -180,7 +181,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "delete wificonfig",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/wirelessconfigs/profile",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfig.EXPECT().Delete(context.Background(), "profile", "").Return(nil)
 			},
 			response:     nil,
@@ -190,7 +191,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "delete wificonfig - failed",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/wirelessconfigs/profile",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfig.EXPECT().Delete(context.Background(), "profile", "").Return(wificonfigs.ErrDatabase)
 			},
 			response:     wificonfigs.ErrDatabase,
@@ -200,7 +201,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "update wificonfig",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/wirelessconfigs",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfigTest := &dto.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,
@@ -222,7 +223,7 @@ func TestWiFiConfigRoutes(t *testing.T) {
 			name:   "update wificonfig - failed",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/wirelessconfigs",
-			mock: func(wificonfig *MockWiFiConfigsFeature) {
+			mock: func(wificonfig *mocks.MockWiFiConfigsFeature) {
 				wificonfigTest := &dto.WirelessConfig{
 					AuthenticationMethod: 4,
 					EncryptionMethod:     3,

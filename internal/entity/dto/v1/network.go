@@ -2,8 +2,8 @@ package dto
 
 // NetworkSettings defines the network settings for a device.
 type NetworkSettings struct {
-	Wired    WiredNetworkInfo    `json:"wired"`
-	Wireless WirelessNetworkInfo `json:"wireless"`
+	Wired    *WiredNetworkInfo    `json:"wired"`
+	Wireless *WirelessNetworkInfo `json:"wireless"`
 }
 
 // NetworkResults defines the network results for a device.
@@ -41,16 +41,17 @@ type WirelessNetworkInfo struct {
 	IEEE8021xSettings []IEEE8021xSettings `json:"ieee8021xSettings"`
 }
 type WiFiNetwork struct {
+	ElementName          string `json:"elementName"`
 	SSID                 string `json:"ssid"`
-	AuthenticationMethod int    `json:"authenticationMethod"`
-	EncryptionMethod     int    `json:"encryptionMethod"`
+	AuthenticationMethod string `json:"authenticationMethod"`
+	EncryptionMethod     string `json:"encryptionMethod"`
 	Priority             int    `json:"priority"`
-	BSSType              int    `json:"bsstype"`
+	BSSType              string `json:"bsstype"`
 }
 type IEEE8021x struct {
-	Enabled       int  `json:"enabled"`
-	AvailableInS0 bool `json:"availableInS0"`
-	PxeTimeout    int  `json:"pxeTimeout"`
+	Enabled       string `json:"enabled"`
+	AvailableInS0 bool   `json:"availableInS0"`
+	PxeTimeout    int    `json:"pxeTimeout"`
 }
 type IEEE8021xSettings struct {
 	AuthenticationProtocol          int    `json:"authenticationProtocol"`
