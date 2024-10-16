@@ -24,7 +24,7 @@ jobs:
 
         run: docker build . --file Dockerfile --tag app:${{ github.sha }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@5681af892cd0f4997658e2bacc62bd0a894cf564 # master
+        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # master
         with:
           image-ref: "app:${{ github.sha }}"
           format: "sarif"
@@ -34,7 +34,7 @@ jobs:
           vuln-type: "os,library"
           severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@c36620d31ac7c881962c3d9dd939c40ec9434f2b # v3.26.12
+        uses: github/codeql-action/upload-sarif@f779452ac5af1c261dce0346a8f964149f49322b # v3.26.13
         if: always()
         with:
           sarif_file: "trivy-results.sarif"
