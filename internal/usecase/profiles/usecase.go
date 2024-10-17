@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"gopkg.in/yaml.v2"
 
+	consoleConfig "github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
@@ -187,11 +188,7 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 				Enabled:              data.TLSMode >= 1,
 				AllowNonTLS:          data.TLSMode == 2 || data.TLSMode == 4,
 			},
-			EnterpriseAssistant: config.EnterpriseAssistant{
-				URL:      "http://localhost:8000/",
-				Username: "tbd",
-				Password: "tbd",
-			},
+
 			AMTSpecific: config.AMTSpecific{
 				ControlMode:         data.Activation,
 				AdminPassword:       data.AMTPassword,
@@ -200,6 +197,14 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 				ProvisioningCertPwd: domainStuff.ProvisioningCertPassword,
 			},
 		},
+	}
+
+	if data.TLSSigningAuthority == "MicrosoftCA" {
+		configuration.Configuration.EnterpriseAssistant = config.EnterpriseAssistant{
+			URL:      consoleConfig.ConsoleConfig.EA.URL,
+			Username: consoleConfig.ConsoleConfig.EA.Username,
+			Password: consoleConfig.ConsoleConfig.EA.Password,
+		}
 	}
 
 	yamlData, err := yaml.Marshal(configuration)
