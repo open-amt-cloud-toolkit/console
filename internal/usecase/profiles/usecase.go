@@ -136,7 +136,7 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 	}
 
 	wifiConfigs, err := uc.profileWifiConfig.GetByProfileName(ctx, profileName, tenantID)
-	if err != nil {
+	if err != nil && !errors.Is(err, profilewificonfigs.ErrNotFound) {
 		return "", "", err
 	}
 
@@ -181,6 +181,11 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 					IDER: data.IDEREnabled,
 				},
 				UserConsent: data.UserConsent,
+			},
+			TLS: config.TLS{
+				MutualAuthentication: data.TLSMode == 3 || data.TLSMode == 4,
+				Enabled:              data.TLSMode >= 1,
+				AllowNonTLS:          data.TLSMode == 2 || data.TLSMode == 4,
 			},
 			EnterpriseAssistant: config.EnterpriseAssistant{
 				URL:      "http://localhost:8000/",
