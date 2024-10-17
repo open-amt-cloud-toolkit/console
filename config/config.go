@@ -13,6 +13,7 @@ type (
 		HTTP `yaml:"http"`
 		Log  `yaml:"logger"`
 		DB   `yaml:"postgres"`
+		EA   `yaml:"ea"`
 	}
 
 	// App -.
@@ -45,6 +46,13 @@ type (
 		PoolMax int    `env-required:"true" yaml:"pool_max" env:"DB_POOL_MAX"`
 		URL     string `env:"DB_URL"`
 	}
+
+	// EA -.
+	EA struct {
+		URL      string `yaml:"url" env:"EA_URL"`
+		Username string `yaml:"username" env:"EA_USERNAME"`
+		Password string `yaml:"password" env:"EA_PASSWORD"`
+	}
 )
 
 // NewConfig returns app config.
@@ -71,6 +79,11 @@ func NewConfig() (*Config, error) {
 		},
 		DB: DB{
 			PoolMax: 2,
+		},
+		EA: EA{
+			URL:      "http://localhost:8000",
+			Username: "",
+			Password: "",
 		},
 	}
 
