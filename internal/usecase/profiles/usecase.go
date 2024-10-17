@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"gopkg.in/yaml.v2"
 
+	consoleConfig "github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
@@ -146,14 +147,26 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 		wifi, _ := uc.wifiConfig.GetByName(ctx, wifiConfigs[i].WirelessProfileName, tenantID)
 
 		wifi.PSKPassphrase, _ = uc.safeRequirements.Decrypt(wifi.PSKPassphrase)
-
-		wifiConfigs2 = append(wifiConfigs2, config.WirelessProfile{
+		wc := config.WirelessProfile{
 			SSID:                 wifi.SSID,
 			Priority:             wifiConfigs[i].Priority,
 			Password:             wifi.PSKPassphrase,
 			AuthenticationMethod: strconv.Itoa(wifi.AuthenticationMethod),
 			EncryptionMethod:     strconv.Itoa(wifi.EncryptionMethod),
-		})
+		}
+
+		if wifi.IEEE8021xProfileName != nil {
+			ieee8021xconfig, err := uc.ieee.GetByName(ctx, *wifi.IEEE8021xProfileName, tenantID)
+			if err != nil {
+				return "", "", err
+			}
+			wc.IEEE8021x = &config.IEEE8021x{
+				AuthenticationProtocol: ieee8021xconfig.AuthenticationProtocol,
+				PXETimeout:             *ieee8021xconfig.PXETimeout,
+			}
+		}
+
+		wifiConfigs2 = append(wifiConfigs2, wc)
 	}
 
 	configuration := config.Configuration{
@@ -187,11 +200,7 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 				Enabled:              data.TLSMode >= 1,
 				AllowNonTLS:          data.TLSMode == 2 || data.TLSMode == 4,
 			},
-			EnterpriseAssistant: config.EnterpriseAssistant{
-				URL:      "http://localhost:8000/",
-				Username: "tbd",
-				Password: "tbd",
-			},
+
 			AMTSpecific: config.AMTSpecific{
 				ControlMode:         data.Activation,
 				AdminPassword:       data.AMTPassword,
@@ -200,6 +209,23 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (en
 				ProvisioningCertPwd: domainStuff.ProvisioningCertPassword,
 			},
 		},
+	}
+
+	if data.IEEE8021xProfileName != nil {
+		ieee8021xconfig, err := uc.ieee.GetByName(ctx, *data.IEEE8021xProfileName, tenantID)
+		if err != nil {
+			return "", "", err
+		}
+		configuration.Configuration.Network.Wired.IEEE8021x = &config.IEEE8021x{
+			AuthenticationProtocol: ieee8021xconfig.AuthenticationProtocol,
+			PXETimeout:             *ieee8021xconfig.PXETimeout,
+		}
+	}
+
+	configuration.Configuration.EnterpriseAssistant = config.EnterpriseAssistant{
+		URL:      consoleConfig.ConsoleConfig.EA.URL,
+		Username: consoleConfig.ConsoleConfig.EA.Username,
+		Password: consoleConfig.ConsoleConfig.EA.Password,
 	}
 
 	yamlData, err := yaml.Marshal(configuration)
