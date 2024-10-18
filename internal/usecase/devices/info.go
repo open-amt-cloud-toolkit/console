@@ -372,10 +372,10 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 				Manufacturer:      d.CardResult.Body.PackageResponse.Manufacturer,
 				Model:             d.CardResult.Body.PackageResponse.Model,
 				OperationalStatus: *(*[]int)(unsafe.Pointer(&d.CardResult.Body.PackageResponse.OperationalStatus)),
-				PackageType:  dtov2.PackageType(d.CardResult.Body.PackageResponse.PackageType),
-				SerialNumber: d.CardResult.Body.PackageResponse.SerialNumber,
-				Tag:          d.CardResult.Body.PackageResponse.Tag,
-				Version:      d.CardResult.Body.PackageResponse.Version,
+				PackageType:       dtov2.PackageType(d.CardResult.Body.PackageResponse.PackageType),
+				SerialNumber:      d.CardResult.Body.PackageResponse.SerialNumber,
+				Tag:               d.CardResult.Body.PackageResponse.Tag,
+				Version:           d.CardResult.Body.PackageResponse.Version,
 			},
 			Pull: cardItemsToDTOv2(d.CardResult.Body.PullResponse.CardItems),
 		},
@@ -586,7 +586,8 @@ func mediaAccessDeviceToDTOv2(d []mediaaccess.MediaAccessDevice) []dtov2.MediaAc
 			RequestedState:          dtov2.RequestedState(d[1].RequestedState),
 			Security:                dtov2.Security(d[1].Security),
 			SystemCreationClassName: d[1].SystemCreationClassName,
-			SystemName:              d[1].SystemName}
+			SystemName:              d[1].SystemName,
+		}
 	}
 
 	return d2
@@ -642,7 +643,7 @@ func ppPullResponseCardToDTOv2(d physical.PullResponse) []dtov2.CardItems {
 
 func cimChipArray(d *wsmanAPI.HWResults) []dto.CIMChipGet {
 	var y []dto.CIMChipGet
-	var z = dto.CIMChipGet{
+	z := dto.CIMChipGet{
 		CanBeFRUed:        d.ChipResult.Body.PackageResponse.CanBeFRUed,
 		CreationClassName: d.ChipResult.Body.PackageResponse.CreationClassName,
 		ElementName:       d.ChipResult.Body.PackageResponse.ElementName,
@@ -659,7 +660,7 @@ func cimChipArray(d *wsmanAPI.HWResults) []dto.CIMChipGet {
 func cimPhysicalMemoryArray(d *wsmanAPI.HWResults) []dto.CIMPhysicalMemoryResponse {
 	var y []dto.CIMPhysicalMemoryResponse
 
-	for i, _ := range d.PhysicalMemoryResult.Body.PullResponse.MemoryItems {
+	for i := range d.PhysicalMemoryResult.Body.PullResponse.MemoryItems {
 		z := dto.CIMPhysicalMemoryResponse{
 			PartNumber:                 d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].PartNumber,
 			SerialNumber:               d.PhysicalMemoryResult.Body.PullResponse.MemoryItems[i].SerialNumber,
@@ -685,7 +686,7 @@ func cimPhysicalMemoryArray(d *wsmanAPI.HWResults) []dto.CIMPhysicalMemoryRespon
 
 func cimProcessorArray(d *wsmanAPI.HWResults) []dto.CIMProcessorResponse {
 	var y []dto.CIMProcessorResponse
-	var z = dto.CIMProcessorResponse{
+	z := dto.CIMProcessorResponse{
 		DeviceID:                d.ProcessorResult.Body.PackageResponse.DeviceID,
 		CreationClassName:       d.ProcessorResult.Body.PackageResponse.CreationClassName,
 		SystemName:              d.ProcessorResult.Body.PackageResponse.SystemName,

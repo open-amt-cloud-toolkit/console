@@ -21,12 +21,12 @@ type (
 
 	CIM_Card struct {
 		Response  CIMCardResponseGet `json:"response"`
-		Responses []any `json:"responses"`
+		Responses []any              `json:"responses"`
 	}
 
 	CIM_Chassis struct {
 		Response  CIMChassisResponse `json:"response"`
-		Responses []any `json:"responses"`
+		Responses []any              `json:"responses"`
 	}
 
 	CIM_Chip struct {
@@ -89,7 +89,7 @@ type (
 		ReleaseDate           Time
 	}
 
-		CIMChip struct {
+	CIMChip struct {
 		Pull []any
 		Get  CIMChipGet
 	}

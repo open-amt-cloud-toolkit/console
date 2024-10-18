@@ -402,15 +402,15 @@ type PullHWResults struct {
 	PPPullResult          physical.Response
 }
 type HWResults struct {
-	CSPResult            computer.Response
-	ChassisResult        chassis.Response
-	ChipResult           chip.Response
-	CardResult           card.Response
-	PhysicalMemoryResult physical.Response
+	CSPResult             computer.Response
+	ChassisResult         chassis.Response
+	ChipResult            chip.Response
+	CardResult            card.Response
+	PhysicalMemoryResult  physical.Response
 	MediaAccessPullResult mediaaccess.Response
 	PPPullResult          physical.Response
-	BiosResult           bios.Response
-	ProcessorResult      processor.Response
+	BiosResult            bios.Response
+	ProcessorResult       processor.Response
 }
 
 // func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
