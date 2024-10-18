@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
+	dto "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	alarmclock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	auditlog "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
@@ -58,10 +59,10 @@ func (m *MockManagement) EXPECT() *MockManagementMockRecorder {
 }
 
 // CancelUserConsentRequest mocks base method.
-func (m *MockManagement) CancelUserConsentRequest() (any, error) {
+func (m *MockManagement) CancelUserConsentRequest() (dto.UserConsentMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CancelUserConsentRequest")
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.UserConsentMessage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -448,10 +449,10 @@ func (mr *MockManagementMockRecorder) RequestAMTRedirectionServiceStateChange(id
 }
 
 // SendConsentCode mocks base method.
-func (m *MockManagement) SendConsentCode(code int) (any, error) {
+func (m *MockManagement) SendConsentCode(code int) (dto.UserConsentMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendConsentCode", code)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.UserConsentMessage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
