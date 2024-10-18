@@ -2,61 +2,61 @@ package dto
 
 type (
 	HardwareInfoResults struct {
-		CIM_ComputerSystemPackage CIM_ComputerSystemPackage
-		CIM_SystemPackage         CIM_SystemPackage
-		CIM_Chassis               CIM_Chassis
-		CIM_Chip                  CIM_Chip
-		CIM_Card                  CIM_Card
-		CIM_BIOSElement           CIM_BIOSElement
-		CIM_Processor             CIM_Processor
-		CIM_PhysicalPackage       CIM_PhysicalPackage
-		CIM_PhysicalMemory        CIM_PhysicalMemory
-		CIM_MediaAccessDevice     CIM_MediaAccessDevice
+		CIMComputerSystemPackage CIMComputerSystemPackage
+		CIMSystemPackage         CIMSystemPackage
+		CIMChassis               CIMChassis
+		CIMChip                  CIMChips
+		CIMCard                  CIMCard
+		CIMBIOSElement           CIMBIOSElement
+		CIMProcessor             CIMProcessor
+		CIMPhysicalPackage       CIMPhysicalPackage
+		CIMPhysicalMemory        CIMPhysicalMemory
+		CIMMediaAccessDevice     CIMMediaAccessDevice
 	}
 
-	CIM_BIOSElement struct {
+	CIMBIOSElement struct {
 		Response  CIMBIOSElementResponse `json:"response"`
 		Responses []any                  `json:"responses"`
 	}
 
-	CIM_Card struct {
+	CIMCard struct {
 		Response  CIMCardResponseGet `json:"response"`
 		Responses []any              `json:"responses"`
 	}
 
-	CIM_Chassis struct {
+	CIMChassis struct {
 		Response  CIMChassisResponse `json:"response"`
 		Responses []any              `json:"responses"`
 	}
 
-	CIM_Chip struct {
+	CIMChips struct {
 		Responses []CIMChipGet `json:"responses"`
 	}
 
-	CIM_ComputerSystemPackage struct {
+	CIMComputerSystemPackage struct {
 		// PlatformGUID string
 		Response  string `json:"response"`
 		Responses string `json:"responses"`
 	}
 
-	CIM_MediaAccessDevice struct {
+	CIMMediaAccessDevices struct {
 		Responses []CIMMediaAccessDevice `json:"responses"`
 	}
 
-	CIM_PhysicalMemory struct {
+	CIMPhysicalMemory struct {
 		Responses []CIMPhysicalMemoryResponse `json:"responses"`
 	}
 
-	CIM_PhysicalPackage struct {
-		Responses []CIMPhysicalPackageResponses
+	CIMPhysicalPackage struct {
+		Responses []CIMPhysicalPackageResponses `json:"responses"`
 	}
 
-	CIM_Processor struct {
+	CIMProcessor struct {
 		Responses []CIMProcessorResponse `json:"responses"`
 	}
 
-	CIM_SystemPackage struct {
-		responses []CIMSystemPackagingResponses
+	CIMSystemPackage struct {
+		Responses []CIMSystemPackagingResponses `json:"responses"`
 	}
 
 	CIMSystemPackagingResponses struct {
@@ -183,60 +183,6 @@ type (
 		Tag               string
 		Version           string
 	}
-
-	// CIMComputerSystemPackage struct {
-	// 	PlatformGUID string
-	// }
-
-	// CIMSystemPackage struct {
-	// 	responses []SystemPackageItems
-	// }
-
-	// CIMChassis struct {
-	// 	Version            string
-	// 	SerialNumber       string
-	// 	Model              string
-	// 	Manufacturer       string
-	// 	ElementName        string
-	// 	CreationClassName  string
-	// 	Tag                string
-	// 	OperationalStatus  []int
-	// 	PackageType        PackageType
-	// 	ChassisPackageType ChassisPackageType
-	// }
-
-	// CIMChip struct {
-	// 	responses []interface{}
-	// }
-
-	// CIMCard struct {
-	// 	response  hwInfo.Card
-	// 	responses []interface{}
-	// }
-	// CIMBIOSElement struct {
-	// 	response  hwInfo.BIOSElement
-	// 	responses []interface{}
-	// }
-
-	// CIMProcessor struct {
-	// 	responses []interface{}
-	// }
-
-	// CIMPhysicalMemory struct {
-	// 	responses hwInfo.PhysicalMemory
-	// }
-
-	// CIMMediaAccessDevice struct {
-	// 	responses []interface{}
-	// }
-
-	// CIMPhysicalPackage struct {
-	// 	responses []interface{}
-	// }
-
-	// SystemPackageItems struct {
-	// 	PlatformGUID string
-	// }
 
 	Time struct {
 		DateTime string `xml:"Datetime"`

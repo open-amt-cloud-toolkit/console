@@ -6,18 +6,16 @@ import (
 	"unsafe"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
-
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
-	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
-
-	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chip"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
+
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	dtov2 "github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v2"
+	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
 func (uc *UseCase) GetVersion(c context.Context, guid string) (v1 dto.Version, v2 dtov2.Version, err error) {
@@ -266,12 +264,12 @@ func (uc *UseCase) setupAndConfigurationServiceResponseEntityToDTO(d *setupandco
 
 func (uc *UseCase) getHardwareInfoEntityToDTO(d *wsmanAPI.HWResults) *dto.HardwareInfoResults {
 	d1 := &dto.HardwareInfoResults{
-		CIM_ComputerSystemPackage: dto.CIM_ComputerSystemPackage{
+		CIMComputerSystemPackage: dto.CIMComputerSystemPackage{
 			Response:  d.CSPResult.Body.GetResponse.PlatformGUID,
 			Responses: d.CSPResult.Body.GetResponse.PlatformGUID,
 		},
-		CIM_SystemPackage: dto.CIM_SystemPackage{},
-		CIM_Chassis: dto.CIM_Chassis{
+		CIMSystemPackage: dto.CIMSystemPackage{},
+		CIMChassis: dto.CIMChassis{
 			Response: dto.CIMChassisResponse{
 				Version:            d.ChassisResult.Body.PackageResponse.Version,
 				SerialNumber:       d.ChassisResult.Body.PackageResponse.SerialNumber,
@@ -285,10 +283,10 @@ func (uc *UseCase) getHardwareInfoEntityToDTO(d *wsmanAPI.HWResults) *dto.Hardwa
 				ChassisPackageType: int(d.ChassisResult.Body.PackageResponse.ChassisPackageType),
 			},
 		},
-		CIM_Chip: dto.CIM_Chip{
+		CIMChip: dto.CIMChips{
 			Responses: cimChipArray(d),
 		},
-		CIM_Card: dto.CIM_Card{
+		CIMCard: dto.CIMCard{
 			Response: dto.CIMCardResponseGet{
 				CanBeFRUed:        d.CardResult.Body.PackageResponse.CanBeFRUed,
 				CreationClassName: d.CardResult.Body.PackageResponse.CreationClassName,
@@ -302,7 +300,7 @@ func (uc *UseCase) getHardwareInfoEntityToDTO(d *wsmanAPI.HWResults) *dto.Hardwa
 				Version:           d.CardResult.Body.PackageResponse.Version,
 			},
 		},
-		CIM_BIOSElement: dto.CIM_BIOSElement{
+		CIMBIOSElement: dto.CIMBIOSElement{
 			Response: dto.CIMBIOSElementResponse{
 				TargetOperatingSystem: dto.TargetOperatingSystem(d.BiosResult.Body.GetResponse.TargetOperatingSystem),
 				SoftwareElementID:     d.BiosResult.Body.GetResponse.SoftwareElementID,
@@ -316,10 +314,10 @@ func (uc *UseCase) getHardwareInfoEntityToDTO(d *wsmanAPI.HWResults) *dto.Hardwa
 				ReleaseDate:           dto.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
 			},
 		},
-		CIM_Processor: dto.CIM_Processor{
+		CIMProcessor: dto.CIMProcessor{
 			Responses: cimProcessorArray(d),
 		},
-		CIM_PhysicalMemory: dto.CIM_PhysicalMemory{
+		CIMPhysicalMemory: dto.CIMPhysicalMemory{
 			Responses: cimPhysicalMemoryArray(d),
 		},
 		// CIM_MediaAccessDevices: dto.CIMMediaAccessDevice{
@@ -380,7 +378,6 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 			Pull: cardItemsToDTOv2(d.CardResult.Body.PullResponse.CardItems),
 		},
 		BIOSElement: dtov2.CIMBIOSElement{
-			// Get: dto.BiosElement{
 			TargetOperatingSystem: dtov2.TargetOperatingSystem(d.BiosResult.Body.GetResponse.TargetOperatingSystem),
 			SoftwareElementID:     d.BiosResult.Body.GetResponse.SoftwareElementID,
 			SoftwareElementState:  dtov2.SoftwareElementState(d.BiosResult.Body.GetResponse.SoftwareElementState),
@@ -391,8 +388,6 @@ func (uc *UseCase) getHardwareInfoEntityToDTOv2(d *wsmanAPI.HWResults) *dtov2.Ha
 			Manufacturer:          d.BiosResult.Body.GetResponse.Manufacturer,
 			PrimaryBIOS:           d.BiosResult.Body.GetResponse.PrimaryBIOS,
 			ReleaseDate:           dtov2.Time(d.BiosResult.Body.GetResponse.ReleaseDate),
-			// },
-			// Pull: biosItemsToDTOv2(d.BiosResult.Body.PullResponse.BiosElementItems),
 		},
 		Processor: dtov2.CIMProcessor{
 			Get: dtov2.ProcessorItems{
@@ -484,28 +479,6 @@ func cardItemsToDTOv2(d []card.PackageResponse) []dtov2.CardItems {
 			SerialNumber:      d[i].SerialNumber,
 			Tag:               d[i].Tag,
 			Version:           d[i].Version,
-		}
-	}
-
-	return d2
-}
-
-func biosItemsToDTOv2(d []bios.BiosElement) []dtov2.CIMBIOSElement {
-	// iterate over the data and convert each entity to dto
-	d2 := make([]dtov2.CIMBIOSElement, len(d))
-
-	for i := range d {
-		d2[i] = dtov2.CIMBIOSElement{
-			TargetOperatingSystem: dtov2.TargetOperatingSystem(d[i].TargetOperatingSystem),
-			SoftwareElementID:     d[i].SoftwareElementID,
-			SoftwareElementState:  dtov2.SoftwareElementState(d[i].SoftwareElementState),
-			Name:                  d[i].Name,
-			OperationalStatus:     *(*[]int)(unsafe.Pointer(&d[i].OperationalStatus)),
-			ElementName:           d[i].ElementName,
-			Version:               d[i].Version,
-			Manufacturer:          d[i].Manufacturer,
-			PrimaryBIOS:           d[i].PrimaryBIOS,
-			ReleaseDate:           dtov2.Time(d[i].ReleaseDate),
 		}
 	}
 
@@ -643,6 +616,7 @@ func ppPullResponseCardToDTOv2(d physical.PullResponse) []dtov2.CardItems {
 
 func cimChipArray(d *wsmanAPI.HWResults) []dto.CIMChipGet {
 	var y []dto.CIMChipGet
+
 	z := dto.CIMChipGet{
 		CanBeFRUed:        d.ChipResult.Body.PackageResponse.CanBeFRUed,
 		CreationClassName: d.ChipResult.Body.PackageResponse.CreationClassName,
@@ -686,6 +660,7 @@ func cimPhysicalMemoryArray(d *wsmanAPI.HWResults) []dto.CIMPhysicalMemoryRespon
 
 func cimProcessorArray(d *wsmanAPI.HWResults) []dto.CIMProcessorResponse {
 	var y []dto.CIMProcessorResponse
+
 	z := dto.CIMProcessorResponse{
 		DeviceID:                d.ProcessorResult.Body.PackageResponse.DeviceID,
 		CreationClassName:       d.ProcessorResult.Body.PackageResponse.CreationClassName,

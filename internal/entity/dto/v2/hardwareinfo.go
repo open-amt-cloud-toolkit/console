@@ -42,7 +42,7 @@ type (
 	// CIMBIOSElement struct {
 	// 	Pull []BiosElement
 	// 	Get  BiosElement
-	// }
+	// }.
 	CIMBIOSElement struct {
 		TargetOperatingSystem TargetOperatingSystem
 		SoftwareElementID     string
@@ -86,7 +86,7 @@ type (
 	// 	OperationalStatus  []int
 	// 	PackageType        PackageType
 	// 	ChassisPackageType ChassisPackageType
-	// }
+	// }.
 
 	ChipItems struct {
 		CanBeFRUed        bool   `xml:"CanBeFRUed"`        // Boolean that indicates whether this PhysicalElement can be FRUed (TRUE) or not (FALSE).
@@ -122,7 +122,7 @@ type (
 	// 	Manufacturer          string                `xml:"Manufacturer"`          // The manufacturer of the BIOS software image.
 	// 	PrimaryBIOS           bool                  `xml:"PrimaryBIOS"`           // If true, this is the primary BIOS of the ComputerSystem.
 	// 	ReleaseDate           Time                  `xml:"ReleaseDate"`           // Date that this BIOS was released.
-	// }
+	// }.
 
 	ProcessorItems struct {
 		DeviceID                string         `xml:"DeviceID,omitempty"`                // An address or other identifying information to uniquely name the LogicalDevice.
