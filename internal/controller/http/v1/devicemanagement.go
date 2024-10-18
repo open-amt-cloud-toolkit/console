@@ -273,7 +273,7 @@ func (r *deviceManagementRoutes) getUserConsentCode(c *gin.Context) {
 func (r *deviceManagementRoutes) sendConsentCode(c *gin.Context) {
 	guid := c.Param("guid")
 
-	var userConsent dto.UserConsent
+	var userConsent dto.UserConsentCode
 	if err := c.ShouldBindJSON(&userConsent); err != nil {
 		ErrorResponse(c, err)
 
