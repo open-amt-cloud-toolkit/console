@@ -326,7 +326,7 @@ func TestGetHardwareInfo(t *testing.T) {
 
 			tc.repoMock(repo)
 
-			res, err := useCase.GetHardwareInfo(context.Background(), device.GUID)
+			res, _, err := useCase.GetHardwareInfo(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
 			require.IsType(t, tc.err, err)
