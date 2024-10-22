@@ -194,6 +194,7 @@ func (uc *UseCase) BuildWirelessProfiles(ctx context.Context, wifiConfigs []dto.
 		}
 
 		wc := config.WirelessProfile{
+			ProfileName:          wifiConfig.WirelessProfileName,
 			SSID:                 wifi.SSID,
 			Priority:             wifiConfig.Priority,
 			Password:             wifi.PSKPassphrase,
@@ -262,24 +263,24 @@ func (uc *UseCase) BuildConfigurationObject(profileName string, data *entity.Pro
 	}
 }
 
-func (uc *UseCase) SerializeAndEncryptYAML(configuration config.Configuration) (string, string, error) {
+func (uc *UseCase) SerializeAndEncryptYAML(configuration config.Configuration) (encryptedYAML, key string, err error) {
 	yamlData, err := yaml.Marshal(configuration)
 	if err != nil {
 		return "", "", err
 	}
 
-	key := uc.safeRequirements.GenerateKey()
+	key = uc.safeRequirements.GenerateKey()
 
-	encryptedData, err := uc.safeRequirements.Encrypt(string(yamlData))
+	encryptedYAML, err = uc.safeRequirements.EncryptWithKey(string(yamlData), key)
 	if err != nil {
 		return "", "", err
 	}
 
-	return encryptedData, key, nil
+	return encryptedYAML, key, nil
 }
 
 // Export - will call GetByName and return the profile with the associated wifi configs in YAML format to be downloaded.
-func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (string, string, error) {
+func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (encryptedYAML, encryptionKey string, err error) {
 	data, err := uc.GetProfileData(ctx, profileName, tenantID)
 	if err != nil {
 		return "", "", err
@@ -312,12 +313,12 @@ func (uc *UseCase) Export(ctx context.Context, profileName, tenantID string) (st
 		return "", "", err
 	}
 
-	encryptedYaml, encryptionKey, err := uc.SerializeAndEncryptYAML(configuration)
+	encryptedYAML, encryptionKey, err = uc.SerializeAndEncryptYAML(configuration)
 	if err != nil {
 		return "", "", err
 	}
 
-	return encryptedYaml, encryptionKey, nil
+	return encryptedYAML, encryptionKey, nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, profileName, tenantID string) error {

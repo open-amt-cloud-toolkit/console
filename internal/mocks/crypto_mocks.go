@@ -7,9 +7,16 @@ import (
 
 type MockCrypto struct{}
 
+const encryptedData = "encrypted"
+
 // Encrypt encrypts a string.
 func (c MockCrypto) Encrypt(_ string) (string, error) {
-	return "encrypted", nil
+	return encryptedData, nil
+}
+
+// Encrypt encrypts a string.
+func (c MockCrypto) EncryptWithKey(_, _ string) (string, error) {
+	return encryptedData, nil
 }
 
 func (c MockCrypto) GenerateKey() string {

@@ -2,7 +2,6 @@ package profiles_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/config"
@@ -539,15 +538,17 @@ func TestHandleIEEE8021xSettings(t *testing.T) {
 			mock: func(ieeeMock *mocks.MockIEEE8021xConfigsFeature) {
 				ieeeMock.EXPECT().
 					GetByName(ctx, ieeeProfileName, tenantID).
-					Return(nil, errors.New("database error"))
+					Return(nil, profiles.ErrDatabase)
 			},
 			expected: nil,
-			err:      errors.New("database error"),
+			err:      profiles.ErrDatabase,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			ieeeMock := mocks.NewMockIEEE8021xConfigsFeature(gomock.NewController(t))
 			configuration := &config.Configuration{}
 
@@ -611,6 +612,8 @@ func TestGetProfileData(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			repoMock := mocks.NewMockProfilesRepository(gomock.NewController(t))
 
 			tc.mock(repoMock)
@@ -746,7 +749,7 @@ func TestBuildWirelessProfiles(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	tenantID := "tenant-id-456"
+	tenantID := "tenant-id-457"
 
 	wifiConfigs := []dto.ProfileWiFiConfigs{
 		{
@@ -767,6 +770,7 @@ func TestBuildWirelessProfiles(t *testing.T) {
 				wifiMock.EXPECT().
 					GetByName(ctx, "wifi-profile-1", tenantID).
 					Return(&entity.WirelessConfig{
+						ProfileName:          "wifi-profile-1",
 						SSID:                 "wifi-ssid",
 						AuthenticationMethod: 1,
 						EncryptionMethod:     2,
@@ -775,6 +779,7 @@ func TestBuildWirelessProfiles(t *testing.T) {
 			},
 			expected: []config.WirelessProfile{
 				{
+					ProfileName:          "wifi-profile-1",
 					SSID:                 "wifi-ssid",
 					Priority:             1,
 					Password:             "decrypted",
@@ -897,6 +902,8 @@ func TestBuildConfigurationObject(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			useCase := profiles.New(nil, nil, nil, nil, nil, nil, nil)
 
 			result := useCase.BuildConfigurationObject(tc.profile.ProfileName, tc.profile, tc.domain, tc.wifi)
@@ -942,10 +949,10 @@ func TestGetWiFiConfigurations(t *testing.T) {
 			mock: func(profileWiFiMock *mocks.MockProfileWiFiConfigsFeature) {
 				profileWiFiMock.EXPECT().
 					GetByProfileName(ctx, profileName, tenantID).
-					Return(nil, errors.New("database error"))
+					Return(nil, profiles.ErrDatabase)
 			},
 			expected: nil,
-			err:      errors.New("database error"),
+			err:      profiles.ErrDatabase,
 		},
 	}
 
