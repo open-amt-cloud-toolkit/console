@@ -22,7 +22,7 @@ func TestRun(t *testing.T) {
 	mockHTTPServer := mocks.NewMockHTTPServer(ctrl)
 
 	cfg, _ := config.NewConfig()
-	cfg.URL = "postgres://testuser:testpass@localhost/testdb"
+	cfg.DB.URL = "postgres://testuser:testpass@localhost/testdb"
 
 	tests := []struct {
 		name       string
