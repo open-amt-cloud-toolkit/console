@@ -53,10 +53,28 @@ func (uc *UseCase) GetNetworkSettings(c context.Context, guid string) (dto.Netwo
 			ns.Wireless.NetworkInfo.WLANLinkProtectionLevel = portSetting.WLANLinkProtectionLevel.String()
 			ns.Wireless.WiFiNetworks = uc.processWiFiSettings(response)
 			ns.Wireless.IEEE8021xSettings = uc.processIEEE8021xSettings(response)
+			ns.Wireless.WiFiPortConfigService = uc.processWiFiPortConfigService(response)
 		}
 	}
 
 	return ns, nil
+}
+
+func (uc *UseCase) processWiFiPortConfigService(response wsman.NetworkResults) dto.WiFiPortConfigService {
+	return dto.WiFiPortConfigService{
+		RequestedState:                     int(response.WiFiPortConfigServiceResult.RequestedState),
+		EnabledState:                       int(response.WiFiPortConfigServiceResult.EnabledState),
+		HealthState:                        int(response.WiFiPortConfigServiceResult.HealthState),
+		ElementName:                        response.WiFiPortConfigServiceResult.ElementName,
+		SystemCreationClassName:            response.WiFiPortConfigServiceResult.SystemCreationClassName,
+		SystemName:                         response.WiFiPortConfigServiceResult.SystemName,
+		CreationClassName:                  response.WiFiPortConfigServiceResult.CreationClassName,
+		Name:                               response.WiFiPortConfigServiceResult.Name,
+		LocalProfileSynchronizationEnabled: int(response.WiFiPortConfigServiceResult.LocalProfileSynchronizationEnabled),
+		LastConnectedSsidUnderMeControl:    response.WiFiPortConfigServiceResult.LastConnectedSsidUnderMeControl,
+		NoHostCsmeSoftwarePolicy:           int(response.WiFiPortConfigServiceResult.NoHostCsmeSoftwarePolicy),
+		UEFIWiFiProfileShareEnabled:        response.WiFiPortConfigServiceResult.UEFIWiFiProfileShareEnabled,
+	}
 }
 
 func convertToNetworkInfo(portSetting ethernetport.SettingsResponse) dto.NetworkInfo {
