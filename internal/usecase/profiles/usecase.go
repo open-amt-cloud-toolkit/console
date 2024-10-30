@@ -3,7 +3,6 @@ package profiles
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/config"
@@ -51,6 +50,43 @@ func New(r Repository, wifiConfig wificonfigs.Repository, w profilewificonfigs.F
 		domains:           d,
 		safeRequirements:  safeRequirements,
 	}
+}
+
+type (
+	AuthMethod    int
+	EncryptMethod int
+)
+
+const (
+	WPAPSK        AuthMethod = 4
+	WPAIEEE8021x  AuthMethod = 5
+	WPA2PSK       AuthMethod = 6
+	WPA2IEEE8021x AuthMethod = 7
+)
+
+const (
+	TKIP EncryptMethod = 3
+	CCMP EncryptMethod = 4
+)
+
+var authenticationMethod = map[AuthMethod]string{
+	WPAPSK:        "WPAPSK",
+	WPAIEEE8021x:  "WPAIEEE8021x",
+	WPA2PSK:       "WPA2PSK",
+	WPA2IEEE8021x: "WPA2IEEE8021x",
+}
+
+var encryptionMethod = map[EncryptMethod]string{
+	TKIP: "TKIP",
+	CCMP: "CCMP",
+}
+
+func (uc *UseCase) getAuthMethodName(method AuthMethod) string {
+	return authenticationMethod[method]
+}
+
+func (uc *UseCase) getEncryptMethodName(method EncryptMethod) string {
+	return encryptionMethod[method]
 }
 
 // History - getting translate history from store.
@@ -121,7 +157,6 @@ func (uc *UseCase) HandleIEEE8021xSettings(ctx context.Context, data *entity.Pro
 			AuthenticationProtocol: ieee8021xconfig.AuthenticationProtocol,
 			PXETimeout:             *ieee8021xconfig.PXETimeout,
 		}
-
 	}
 
 	return nil
@@ -200,8 +235,8 @@ func (uc *UseCase) BuildWirelessProfiles(ctx context.Context, wifiConfigs []dto.
 			SSID:                 wifi.SSID,
 			Priority:             wifiConfig.Priority,
 			Password:             wifi.PSKPassphrase,
-			AuthenticationMethod: strconv.Itoa(wifi.AuthenticationMethod),
-			EncryptionMethod:     strconv.Itoa(wifi.EncryptionMethod),
+			AuthenticationMethod: uc.getAuthMethodName(AuthMethod(wifi.AuthenticationMethod)),
+			EncryptionMethod:     uc.getEncryptMethodName(EncryptMethod(wifi.EncryptionMethod)),
 		}
 
 		if wifi.IEEE8021xProfileName != nil {
