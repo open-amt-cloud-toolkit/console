@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"gopkg.in/yaml.v2"
 
+	local "github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
@@ -120,6 +121,7 @@ func (uc *UseCase) HandleIEEE8021xSettings(ctx context.Context, data *entity.Pro
 			AuthenticationProtocol: ieee8021xconfig.AuthenticationProtocol,
 			PXETimeout:             *ieee8021xconfig.PXETimeout,
 		}
+
 	}
 
 	return nil
@@ -221,6 +223,16 @@ func (uc *UseCase) BuildWirelessProfiles(ctx context.Context, wifiConfigs []dto.
 }
 
 func (uc *UseCase) BuildConfigurationObject(profileName string, data *entity.Profile, domainStuff entity.Domain, wifiConfigs []config.WirelessProfile) config.Configuration {
+	if local.ConsoleConfig == nil {
+		local.ConsoleConfig = &local.Config{
+			EA: local.EA{
+				URL:      "",
+				Username: "",
+				Password: "",
+			},
+		}
+	}
+
 	return config.Configuration{
 		Name: profileName,
 		Configuration: config.RemoteManagement{
@@ -251,6 +263,11 @@ func (uc *UseCase) BuildConfigurationObject(profileName string, data *entity.Pro
 				MutualAuthentication: data.TLSMode == 3 || data.TLSMode == 4,
 				Enabled:              data.TLSMode >= 1,
 				AllowNonTLS:          data.TLSMode == 2 || data.TLSMode == 4,
+			},
+			EnterpriseAssistant: config.EnterpriseAssistant{
+				URL:      local.ConsoleConfig.EA.URL,
+				Username: local.ConsoleConfig.EA.Username,
+				Password: local.ConsoleConfig.EA.Password,
 			},
 			AMTSpecific: config.AMTSpecific{
 				ControlMode:         data.Activation,

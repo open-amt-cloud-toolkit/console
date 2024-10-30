@@ -37,8 +37,9 @@ type WiredNetworkInfo struct {
 }
 type WirelessNetworkInfo struct {
 	NetworkInfo
-	WiFiNetworks      []WiFiNetwork       `json:"wifiNetworks"`
-	IEEE8021xSettings []IEEE8021xSettings `json:"ieee8021xSettings"`
+	WiFiNetworks          []WiFiNetwork         `json:"wifiNetworks"`
+	IEEE8021xSettings     []IEEE8021xSettings   `json:"ieee8021xSettings"`
+	WiFiPortConfigService WiFiPortConfigService `json:"wifiPortConfigService"`
 }
 type WiFiNetwork struct {
 	ElementName          string `json:"elementName"`
@@ -64,4 +65,19 @@ type IEEE8021xSettings struct {
 	ProtectedAccessCredential       string `json:"protectedAccessCredential"`
 	PACPassword                     string `json:"pacPassword"`
 	PSK                             string `json:"psk"`
+}
+
+type WiFiPortConfigService struct {
+	RequestedState                     int    `json:"requestedState"`
+	EnabledState                       int    `json:"enabledState"`
+	HealthState                        int    `json:"healthState"`
+	ElementName                        string `json:"elementName"`
+	SystemCreationClassName            string `json:"systemCreationClassName"`
+	SystemName                         string `json:"systemName"`
+	CreationClassName                  string `json:"creationClassName"`
+	Name                               string `json:"name"`
+	LocalProfileSynchronizationEnabled int    `json:"localProfileSynchronizationEnabled"`
+	LastConnectedSsidUnderMeControl    string `json:"lastConnectedSsidUnderMeControl"`
+	NoHostCsmeSoftwarePolicy           int    `json:"noHostCsmeSoftwarePolicy"`
+	UEFIWiFiProfileShareEnabled        bool   `json:"uefiWiFiProfileShareEnabled"`
 }
