@@ -773,8 +773,8 @@ func TestBuildWirelessProfiles(t *testing.T) {
 					Return(&entity.WirelessConfig{
 						ProfileName:          "wifi-profile-1",
 						SSID:                 "wifi-ssid",
-						AuthenticationMethod: 1,
-						EncryptionMethod:     2,
+						AuthenticationMethod: 4,
+						EncryptionMethod:     4,
 						PSKPassphrase:        "encryptedPassphrase",
 					}, nil)
 			},
@@ -784,8 +784,8 @@ func TestBuildWirelessProfiles(t *testing.T) {
 					SSID:                 "wifi-ssid",
 					Priority:             1,
 					Password:             "decrypted",
-					AuthenticationMethod: "1",
-					EncryptionMethod:     "2",
+					AuthenticationMethod: "WPAPSK",
+					EncryptionMethod:     "CCMP",
 				},
 			},
 			err: nil,
@@ -822,9 +822,10 @@ func TestBuildConfigurationObject(t *testing.T) {
 	t.Parallel()
 
 	originalConfig := local.ConsoleConfig
-	defer func() {
+
+	t.Cleanup(func() {
 		local.ConsoleConfig = originalConfig
-	}()
+	})
 
 	local.ConsoleConfig = &local.Config{
 		EA: local.EA{
@@ -901,6 +902,11 @@ func TestBuildConfigurationObject(t *testing.T) {
 						MutualAuthentication: false,
 						Enabled:              true,
 						AllowNonTLS:          true,
+					},
+					EnterpriseAssistant: config.EnterpriseAssistant{
+						URL:      "http://test.com:8080",
+						Username: "username",
+						Password: "password",
 					},
 					AMTSpecific: config.AMTSpecific{
 						ControlMode:         "acmactivate",
