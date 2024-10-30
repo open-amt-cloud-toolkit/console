@@ -21,8 +21,6 @@ type deviceRoutes struct {
 
 var ErrValidationDevices = dto.NotValidError{Console: consoleerrors.CreateConsoleError("ProfileAPI")}
 
-const fiveMinutes = 5
-
 func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
 
@@ -99,7 +97,7 @@ func (dr *deviceRoutes) LoginRedirection(c *gin.Context) {
 		return
 	}
 	// Create JWT token
-	expirationTime := time.Now().Add(fiveMinutes * time.Minute)
+	expirationTime := time.Now().Add(config.ConsoleConfig.JWTExpiration)
 	claims := jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(expirationTime),
 	}
