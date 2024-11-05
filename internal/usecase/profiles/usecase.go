@@ -283,7 +283,8 @@ func (uc *UseCase) BuildConfigurationObject(profileName string, data *entity.Pro
 					SharedStaticIP: false,
 				},
 				Wireless: config.Wireless{
-					Profiles: wifiConfigs,
+					WiFiSyncEnabled: data.LocalWiFiSyncEnabled,
+					Profiles:        wifiConfigs,
 				},
 			},
 			Redirection: config.Redirection{
