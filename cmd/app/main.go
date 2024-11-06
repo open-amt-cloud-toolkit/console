@@ -31,6 +31,8 @@ func main() {
 		log.Fatalf("App init error: %s", err)
 	}
 
+	handleEncryptionKey(cfg)
+
 	if os.Getenv("GIN_MODE") != "debug" {
 		go func() {
 			browserError := openBrowser("http://localhost:"+cfg.HTTP.Port, runtime.GOOS)
@@ -39,8 +41,6 @@ func main() {
 			}
 		}()
 	}
-
-	handleEncryptionKey(cfg)
 
 	runAppFunc(cfg)
 }
