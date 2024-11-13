@@ -37,6 +37,8 @@ func main() {
 	// }
 	// certificates.IssueWebServerCertificate(certificates.CertAndKeyType{Cert: root, Key: privateKey}, false, cfg.CommonName, "US", "open-amt-cloud-toolkit", true)
 
+	handleEncryptionKey(cfg)
+
 	if os.Getenv("GIN_MODE") != "debug" {
 		go func() {
 			browserError := openBrowser("http://localhost:"+cfg.HTTP.Port, runtime.GOOS)
@@ -45,8 +47,6 @@ func main() {
 			}
 		}()
 	}
-
-	handleEncryptionKey(cfg)
 
 	runAppFunc(cfg)
 }

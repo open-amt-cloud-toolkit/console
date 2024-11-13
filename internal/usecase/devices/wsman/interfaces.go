@@ -20,6 +20,8 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	ipsAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
+
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type Management interface {
@@ -39,9 +41,9 @@ type Management interface {
 	GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error)
 	GetPowerCapabilities() (boot.BootCapabilitiesResponse, error)
 	GetGeneralSettings() (interface{}, error)
-	CancelUserConsentRequest() (interface{}, error)
+	CancelUserConsentRequest() (dto.UserConsentMessage, error)
 	GetUserConsentCode() (optin.StartOptIn_OUTPUT, error)
-	SendConsentCode(code int) (interface{}, error)
+	SendConsentCode(code int) (dto.UserConsentMessage, error)
 	SendPowerAction(action int) (power.PowerActionResponse, error)
 	GetBootData() (boot.BootSettingDataResponse, error)
 	SetBootData(data boot.BootSettingDataRequest) (interface{}, error)

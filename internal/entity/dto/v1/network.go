@@ -2,8 +2,8 @@ package dto
 
 // NetworkSettings defines the network settings for a device.
 type NetworkSettings struct {
-	Wired    WiredNetworkInfo    `json:"wired"`
-	Wireless WirelessNetworkInfo `json:"wireless"`
+	Wired    *WiredNetworkInfo    `json:"wired"`
+	Wireless *WirelessNetworkInfo `json:"wireless"`
 }
 
 // NetworkResults defines the network results for a device.
@@ -37,10 +37,12 @@ type WiredNetworkInfo struct {
 }
 type WirelessNetworkInfo struct {
 	NetworkInfo
-	WiFiNetworks      []WiFiNetwork       `json:"wifiNetworks"`
-	IEEE8021xSettings []IEEE8021xSettings `json:"ieee8021xSettings"`
+	WiFiNetworks          []WiFiNetwork         `json:"wifiNetworks"`
+	IEEE8021xSettings     []IEEE8021xSettings   `json:"ieee8021xSettings"`
+	WiFiPortConfigService WiFiPortConfigService `json:"wifiPortConfigService"`
 }
 type WiFiNetwork struct {
+	ElementName          string `json:"elementName"`
 	SSID                 string `json:"ssid"`
 	AuthenticationMethod string `json:"authenticationMethod"`
 	EncryptionMethod     string `json:"encryptionMethod"`
@@ -48,9 +50,9 @@ type WiFiNetwork struct {
 	BSSType              string `json:"bsstype"`
 }
 type IEEE8021x struct {
-	Enabled       int  `json:"enabled"`
-	AvailableInS0 bool `json:"availableInS0"`
-	PxeTimeout    int  `json:"pxeTimeout"`
+	Enabled       string `json:"enabled"`
+	AvailableInS0 bool   `json:"availableInS0"`
+	PxeTimeout    int    `json:"pxeTimeout"`
 }
 type IEEE8021xSettings struct {
 	AuthenticationProtocol          int    `json:"authenticationProtocol"`
@@ -63,4 +65,19 @@ type IEEE8021xSettings struct {
 	ProtectedAccessCredential       string `json:"protectedAccessCredential"`
 	PACPassword                     string `json:"pacPassword"`
 	PSK                             string `json:"psk"`
+}
+
+type WiFiPortConfigService struct {
+	RequestedState                     int    `json:"requestedState"`
+	EnabledState                       int    `json:"enabledState"`
+	HealthState                        int    `json:"healthState"`
+	ElementName                        string `json:"elementName"`
+	SystemCreationClassName            string `json:"systemCreationClassName"`
+	SystemName                         string `json:"systemName"`
+	CreationClassName                  string `json:"creationClassName"`
+	Name                               string `json:"name"`
+	LocalProfileSynchronizationEnabled int    `json:"localProfileSynchronizationEnabled"`
+	LastConnectedSsidUnderMeControl    string `json:"lastConnectedSsidUnderMeControl"`
+	NoHostCsmeSoftwarePolicy           int    `json:"noHostCsmeSoftwarePolicy"`
+	UEFIWiFiProfileShareEnabled        bool   `json:"uefiWiFiProfileShareEnabled"`
 }

@@ -1,7 +1,11 @@
 app:
   name: "console"
   repo: "open-amt-cloud-toolkit/console"
-
+  jwtKey: "your_secret_jwt_key"
+  adminUsername: "standalone"
+  adminPassword: "G@ppm0ym"
+  jwtExpiration: 24h
+  redirectionJWTExpiration: 5m
 http:
   host: "localhost"
   port: "8181"
@@ -15,3 +19,9 @@ logger:
 
 postgres:
   pool_max: 5
+
+ea:
+  url: "http://localhost:8000"
+  username: ""
+  password: ""
+ 

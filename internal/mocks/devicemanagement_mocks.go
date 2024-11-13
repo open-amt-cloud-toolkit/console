@@ -428,10 +428,10 @@ func (m *MockDeviceManagementFeature) EXPECT() *MockDeviceManagementFeatureMockR
 }
 
 // CancelUserConsent mocks base method.
-func (m *MockDeviceManagementFeature) CancelUserConsent(ctx context.Context, guid string) (any, error) {
+func (m *MockDeviceManagementFeature) CancelUserConsent(ctx context.Context, guid string) (dto.UserConsentMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CancelUserConsent", ctx, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.UserConsentMessage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -772,10 +772,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) GetTLSSettingData(c, guid any
 }
 
 // GetUserConsentCode mocks base method.
-func (m *MockDeviceManagementFeature) GetUserConsentCode(ctx context.Context, guid string) (map[string]any, error) {
+func (m *MockDeviceManagementFeature) GetUserConsentCode(ctx context.Context, guid string) (dto.GetUserConsentMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserConsentCode", ctx, guid)
-	ret0, _ := ret[0].(map[string]any)
+	ret0, _ := ret[0].(dto.GetUserConsentMessage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -832,10 +832,10 @@ func (mr *MockDeviceManagementFeatureMockRecorder) Redirect(ctx, conn, guid, mod
 }
 
 // SendConsentCode mocks base method.
-func (m *MockDeviceManagementFeature) SendConsentCode(ctx context.Context, code dto.UserConsent, guid string) (any, error) {
+func (m *MockDeviceManagementFeature) SendConsentCode(ctx context.Context, code dto.UserConsentCode, guid string) (dto.UserConsentMessage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendConsentCode", ctx, code, guid)
-	ret0, _ := ret[0].(any)
+	ret0, _ := ret[0].(dto.UserConsentMessage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
