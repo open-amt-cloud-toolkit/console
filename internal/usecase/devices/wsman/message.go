@@ -878,11 +878,12 @@ func (g *ConnectionEntry) GetIPSIEEE8021xSettings() (response ipsIEEE8021x.Respo
 }
 
 type NetworkResults struct {
-	EthernetPortSettingsResult []ethernetport.SettingsResponse
-	IPSIEEE8021xSettingsResult ipsIEEE8021x.IEEE8021xSettingsResponse
-	WiFiSettingsResult         []wifi.WiFiEndpointSettingsResponse
-	CIMIEEE8021xSettingsResult cimIEEE8021x.PullResponse
-	NetworkInterfaces          InterfaceTypes
+	EthernetPortSettingsResult  []ethernetport.SettingsResponse
+	IPSIEEE8021xSettingsResult  ipsIEEE8021x.IEEE8021xSettingsResponse
+	WiFiSettingsResult          []wifi.WiFiEndpointSettingsResponse
+	CIMIEEE8021xSettingsResult  cimIEEE8021x.PullResponse
+	WiFiPortConfigServiceResult wifiportconfiguration.WiFiPortConfigurationServiceResponse
+	NetworkInterfaces           InterfaceTypes
 }
 
 type InterfaceTypes struct {
@@ -937,6 +938,13 @@ func (g *ConnectionEntry) GetNetworkSettings() (NetworkResults, error) {
 		}
 
 		networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
+
+		wifiPortConfigService, err := g.WsmanMessages.AMT.WiFiPortConfigurationService.Get()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.WiFiPortConfigServiceResult = wifiPortConfigService.Body.WiFiPortConfigurationService
 	}
 
 	return networkResults, nil

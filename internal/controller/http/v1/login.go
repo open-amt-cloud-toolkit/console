@@ -15,8 +15,6 @@ import (
 
 var ErrLogin = consoleerrors.CreateConsoleError("LoginHandler")
 
-const hoursInADay = 24
-
 type LoginRoute struct {
 	Config *config.Config
 }
@@ -45,7 +43,7 @@ func (lr LoginRoute) Login(c *gin.Context) {
 	}
 
 	// Create JWT token
-	expirationTime := time.Now().Add(hoursInADay * time.Hour)
+	expirationTime := time.Now().Add(config.ConsoleConfig.JWTExpiration)
 	claims := jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(expirationTime),
 	}

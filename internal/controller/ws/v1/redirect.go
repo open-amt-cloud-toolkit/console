@@ -4,7 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/websocket"
 
+	"github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -25,6 +28,36 @@ func RegisterRoutes(r *gin.Engine, l logger.Interface, t devices.Feature, u Upgr
 }
 
 func (r *RedirectRoutes) websocketHandler(c *gin.Context) {
+	tokenString := c.GetHeader("Sec-Websocket-Protocol")
+
+	// validate jwt token in the Sec-Websocket-protocol header
+	if !config.ConsoleConfig.AuthDisabled {
+		if tokenString == "" {
+			http.Error(c.Writer, "request does not contain an access token", http.StatusUnauthorized)
+
+			return
+		}
+
+		claims := &jwt.MapClaims{}
+
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(_ *jwt.Token) (interface{}, error) {
+			return []byte(config.ConsoleConfig.App.JWTKey), nil
+		})
+
+		if err != nil || !token.Valid {
+			http.Error(c.Writer, "invalid access token", http.StatusUnauthorized)
+
+			return
+		}
+	}
+
+	upgrader, ok := r.u.(*websocket.Upgrader)
+	if !ok {
+		r.l.Debug("failed to cast Upgrader to *websocket.Upgrader")
+	} else {
+		upgrader.Subprotocols = []string{tokenString}
+	}
+
 	conn, err := r.u.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		http.Error(c.Writer, "Could not open websocket connection", http.StatusInternalServerError)
@@ -39,6 +72,4 @@ func (r *RedirectRoutes) websocketHandler(c *gin.Context) {
 		r.l.Error(err, "http - devices - v1 - redirect")
 		errorResponse(c, http.StatusInternalServerError, "redirect failed")
 	}
-
-	c.Status(http.StatusSwitchingProtocols)
 }

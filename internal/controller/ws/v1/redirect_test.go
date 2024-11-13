@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 )
 
@@ -23,6 +24,9 @@ func TestWebSocketHandler(t *testing.T) { //nolint:paralleltest // logging libra
 	ctrl := gomock.NewController(t)
 	t.Cleanup(ctrl.Finish)
 
+	_, _ = config.NewConfig()
+
+	config.ConsoleConfig.AuthDisabled = true
 	mockFeature := mocks.NewMockFeature(ctrl)
 	mockUpgrader := mocks.NewMockUpgrader(ctrl)
 	mockLogger := mocks.NewMockLogger(ctrl)
@@ -37,7 +41,7 @@ func TestWebSocketHandler(t *testing.T) { //nolint:paralleltest // logging libra
 			name:           "Success case",
 			upgraderError:  nil,
 			redirectError:  nil,
-			expectedStatus: http.StatusSwitchingProtocols,
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "Upgrade error",
@@ -60,11 +64,13 @@ func TestWebSocketHandler(t *testing.T) { //nolint:paralleltest // logging libra
 				mockUpgrader.EXPECT().
 					Upgrade(gomock.Any(), gomock.Any(), nil).
 					Return(nil, tc.upgraderError)
+				mockLogger.EXPECT().Debug("failed to cast Upgrader to *websocket.Upgrader")
 			} else {
 				mockUpgrader.EXPECT().
 					Upgrade(gomock.Any(), gomock.Any(), nil).
 					Return(&websocket.Conn{}, nil)
 
+				mockLogger.EXPECT().Debug("failed to cast Upgrader to *websocket.Upgrader")
 				mockLogger.EXPECT().Info("Websocket connection opened")
 
 				if tc.redirectError != nil {
