@@ -3,19 +3,21 @@ package devices
 import (
 	"context"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 )
 
-type Redirector struct{}
+type Redirector struct {
+	SafeRequirements security.Cryptor
+}
 
-func (g *Redirector) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) wsman.Messages {
+func (g *Redirector) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
-		Password:          device.Password,
 		UseDigest:         true,
 		UseTLS:            device.UseTLS,
 		SelfSignedAllowed: device.AllowSelfSigned,
@@ -23,11 +25,19 @@ func (g *Redirector) SetupWsmanClient(device dto.Device, isRedirection, logAMTMe
 		IsRedirection:     isRedirection,
 	}
 
+	if device.CertHash != nil {
+		clientParams.PinnedCert = *device.CertHash
+	}
+
+	clientParams.Password, _ = g.SafeRequirements.Decrypt(device.Password)
+
 	return wsman.NewMessages(clientParams)
 }
 
-func NewRedirector() *Redirector {
-	return &Redirector{}
+func NewRedirector(safeRequirements security.Cryptor) *Redirector {
+	return &Redirector{
+		SafeRequirements: safeRequirements,
+	}
 }
 
 func (g *Redirector) RedirectConnect(_ context.Context, deviceConnection *DeviceConnection) error {

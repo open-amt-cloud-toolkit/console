@@ -2,7 +2,15 @@ package devices
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/rsa"
+	"crypto/sha1" //nolint:gosec // SHA-1 is used for thumbprint not signature
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/hex"
+	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/publickey"
@@ -10,7 +18,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
@@ -20,20 +28,23 @@ const (
 	TypeWired    string = "Wired"
 )
 
-func processConcreteDependencies(certificateHandle string, profileAssociation *dto.ProfileAssociation, dependancyItems []concrete.ConcreteDependency, keyPairItems []publicprivate.RefinedPublicPrivateKeyPair) {
-	for x := range dependancyItems {
-		if dependancyItems[x].Antecedent.ReferenceParameters.SelectorSet.Selectors[0].Text != certificateHandle {
-			continue
+func processConcreteDependencies(certificateHandle string, profileAssociation *dto.ProfileAssociation, dependencyItems []concrete.ConcreteDependency, securitySettings dto.SecuritySettings) {
+	for i := range dependencyItems {
+		di := dependencyItems[i]
+		if di.Antecedent.ReferenceParameters.SelectorSet.Selectors[0].Text == certificateHandle {
+			updateProfileAssociationKey(di.Dependent.ReferenceParameters.SelectorSet.Selectors[0].Text, profileAssociation, securitySettings)
 		}
+	}
+}
 
-		keyHandle := dependancyItems[x].Dependent.ReferenceParameters.SelectorSet.Selectors[0].Text
+// Helper function to update profile association key if matching key is found.
+func updateProfileAssociationKey(keyHandle string, profileAssociation *dto.ProfileAssociation, securitySettings dto.SecuritySettings) {
+	for _, key := range securitySettings.KeyResponse.Keys {
+		if key.InstanceID == keyHandle {
+			keyCopy := key
+			profileAssociation.Key = &keyCopy
 
-		for i := range keyPairItems {
-			if keyPairItems[i].InstanceID == keyHandle {
-				profileAssociation.Key = keyPairItems[i]
-
-				break
-			}
+			return
 		}
 	}
 }
@@ -41,82 +52,87 @@ func processConcreteDependencies(certificateHandle string, profileAssociation *d
 func buildCertificateAssociations(profileAssociation dto.ProfileAssociation, securitySettings *dto.SecuritySettings) {
 	var publicKeyHandle string
 
-	// If a client cert, update the associated public key w/ the cert's handle
 	if profileAssociation.ClientCertificate != nil {
-		// Loop thru public keys looking for the one that matches the current profileAssociation's key
-		for i, existingKeyPair := range securitySettings.Keys.(publicprivate.RefinedPullResponse).PublicPrivateKeyPairItems {
-			// If found update that key with the profileAssociation's certificate handle
-			if existingKeyPair.InstanceID == profileAssociation.Key.(publicprivate.RefinedPublicPrivateKeyPair).InstanceID {
-				securitySettings.Keys.(publicprivate.RefinedPullResponse).PublicPrivateKeyPairItems[i].CertificateHandle = profileAssociation.ClientCertificate.(publickey.RefinedPublicKeyCertificateResponse).InstanceID
-				// save this public key handle since we know it pairs with the profileAssociation's certificate
-				publicKeyHandle = securitySettings.Keys.(publicprivate.RefinedPullResponse).PublicPrivateKeyPairItems[i].InstanceID
+		for i, existingKeyPair := range securitySettings.KeyResponse.Keys {
+			if existingKeyPair.InstanceID == profileAssociation.Key.InstanceID {
+				securitySettings.KeyResponse.Keys[i].CertificateHandle = profileAssociation.ClientCertificate.InstanceID
+				publicKeyHandle = securitySettings.KeyResponse.Keys[i].InstanceID
 
 				break
 			}
 		}
 	}
 
-	// Loop thru certificates looking for the one that matches the current profileAssociation's certificate and append profile name
-	for i := range securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems {
-		if (profileAssociation.ClientCertificate != nil && securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[i].InstanceID == profileAssociation.ClientCertificate.(publickey.RefinedPublicKeyCertificateResponse).InstanceID) ||
-			(profileAssociation.RootCertificate != nil && securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[i].InstanceID == profileAssociation.RootCertificate.(publickey.RefinedPublicKeyCertificateResponse).InstanceID) {
-			// if client cert found, associate the previously found key handle with it
-			if !securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[i].TrustedRootCertificate {
-				securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[i].PublicKeyHandle = publicKeyHandle
-			}
-
-			securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[i].AssociatedProfiles = append(securitySettings.Certificates.(publickey.RefinedPullResponse).PublicKeyCertificateItems[i].AssociatedProfiles, profileAssociation.ProfileID)
-
-			break
+	certs := securitySettings.CertificateResponse.Certificates
+	for i := range certs {
+		if (profileAssociation.ClientCertificate == nil || certs[i].InstanceID != profileAssociation.ClientCertificate.InstanceID) &&
+			(profileAssociation.RootCertificate == nil || certs[i].InstanceID != profileAssociation.RootCertificate.InstanceID) {
+			continue
 		}
+
+		if !certs[i].TrustedRootCertificate {
+			securitySettings.CertificateResponse.Certificates[i].PublicKeyHandle = publicKeyHandle
+		}
+
+		profileAssociationText := getProfileAssociationText(profileAssociation)
+		securitySettings.CertificateResponse.Certificates[i].AssociatedProfiles = append(securitySettings.CertificateResponse.Certificates[i].AssociatedProfiles, profileAssociationText)
+
+		break
 	}
+}
+
+func getProfileAssociationText(profileAssociation dto.ProfileAssociation) string {
+	value := profileAssociation.Type
+	if profileAssociation.Type == TypeWireless {
+		value += " - " + profileAssociation.ProfileID
+	}
+
+	return value
 }
 
 func buildProfileAssociations(certificateHandle string, profileAssociation *dto.ProfileAssociation, response wsman.Certificates, securitySettings *dto.SecuritySettings) {
 	isNewProfileAssociation := true
 
-	for idx := range response.PublicKeyCertificateResponse.PublicKeyCertificateItems {
-		if response.PublicKeyCertificateResponse.PublicKeyCertificateItems[idx].InstanceID != certificateHandle {
-			continue
+	for i := range securitySettings.CertificateResponse.Certificates {
+		if securitySettings.CertificateResponse.Certificates[i].InstanceID == certificateHandle {
+			if securitySettings.CertificateResponse.Certificates[i].TrustedRootCertificate {
+				profileAssociation.RootCertificate = &securitySettings.CertificateResponse.Certificates[i]
+			} else {
+				profileAssociation.ClientCertificate = &securitySettings.CertificateResponse.Certificates[i]
+				processConcreteDependencies(certificateHandle, profileAssociation, response.ConcreteDependencyResponse.Items, *securitySettings)
+			}
 		}
-
-		if response.PublicKeyCertificateResponse.PublicKeyCertificateItems[idx].TrustedRootCertificate {
-			profileAssociation.RootCertificate = response.PublicKeyCertificateResponse.PublicKeyCertificateItems[idx]
-
-			continue
-		}
-
-		profileAssociation.ClientCertificate = response.PublicKeyCertificateResponse.PublicKeyCertificateItems[idx]
-
-		processConcreteDependencies(certificateHandle, profileAssociation, response.ConcreteDependencyResponse.Items, response.PublicPrivateKeyPairResponse.PublicPrivateKeyPairItems)
 	}
 
-	// Check if the certificate is already in the list
-	for idx := range securitySettings.ProfileAssociation {
-		if !(securitySettings.ProfileAssociation[idx].ProfileID == profileAssociation.ProfileID) {
-			continue
+	// Update certificates in the profile association if it already exists in the list
+	for i, assoc := range securitySettings.ProfileAssociation {
+		if assoc.ProfileID == profileAssociation.ProfileID {
+			updateCertificate(&securitySettings.ProfileAssociation[i], profileAssociation)
+
+			isNewProfileAssociation = false
+
+			break
 		}
-
-		if profileAssociation.RootCertificate != nil {
-			securitySettings.ProfileAssociation[idx].RootCertificate = profileAssociation.RootCertificate
-		}
-
-		if profileAssociation.ClientCertificate != nil {
-			securitySettings.ProfileAssociation[idx].ClientCertificate = profileAssociation.ClientCertificate
-		}
-
-		if profileAssociation.Key != nil {
-			securitySettings.ProfileAssociation[idx].Key = profileAssociation.Key
-		}
-
-		isNewProfileAssociation = false
-
-		break
 	}
 
 	// If the profile is not in the list, add it
 	if isNewProfileAssociation {
 		securitySettings.ProfileAssociation = append(securitySettings.ProfileAssociation, *profileAssociation)
+	}
+}
+
+// Helper function to update certificates if they are not nil.
+func updateCertificate(existingAssoc, newAssoc *dto.ProfileAssociation) {
+	if newAssoc.RootCertificate != nil {
+		existingAssoc.RootCertificate = newAssoc.RootCertificate
+	}
+
+	if newAssoc.ClientCertificate != nil {
+		existingAssoc.ClientCertificate = newAssoc.ClientCertificate
+	}
+
+	if newAssoc.Key != nil {
+		existingAssoc.Key = newAssoc.Key
 	}
 }
 
@@ -134,21 +150,25 @@ func processCertificates(contextItems []credential.CredentialContext, response w
 }
 
 func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.SecuritySettings, error) {
-	item, err := uc.GetByID(c, guid, "")
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
 		return dto.SecuritySettings{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	if item == nil || item.GUID == "" {
+		return dto.SecuritySettings{}, ErrNotFound
+	}
 
-	response, err := uc.device.GetCertificates()
+	device := uc.device.SetupWsmanClient(*item, false, true)
+
+	response, err := device.GetCertificates()
 	if err != nil {
 		return dto.SecuritySettings{}, err
 	}
 
 	securitySettings := dto.SecuritySettings{
-		Certificates: response.PublicKeyCertificateResponse,
-		Keys:         response.PublicPrivateKeyPairResponse,
+		CertificateResponse: CertificatesToDTO(&response.PublicKeyCertificateResponse),
+		KeyResponse:         KeysToDTO(&response.PublicPrivateKeyPairResponse),
 	}
 
 	if !reflect.DeepEqual(response.CIMCredentialContextResponse, credential.PullResponse{}) {
@@ -158,4 +178,134 @@ func (uc *UseCase) GetCertificates(c context.Context, guid string) (dto.Security
 	}
 
 	return securitySettings, nil
+}
+
+func CertificatesToDTO(r *publickey.RefinedPullResponse) dto.CertificatePullResponse {
+	regex := regexp.MustCompile(`CN=[^,]+`)
+
+	keyManagementItems := make([]dto.RefinedKeyManagementResponse, len(r.KeyManagementItems))
+	for i := range r.KeyManagementItems {
+		keyManagementItems[i] = dto.RefinedKeyManagementResponse{
+			CreationClassName:       keyManagementItems[i].CreationClassName,
+			ElementName:             keyManagementItems[i].ElementName,
+			EnabledDefault:          keyManagementItems[i].EnabledDefault,
+			EnabledState:            keyManagementItems[i].EnabledState,
+			Name:                    keyManagementItems[i].Name,
+			RequestedState:          keyManagementItems[i].RequestedState,
+			SystemCreationClassName: keyManagementItems[i].SystemCreationClassName,
+			SystemName:              keyManagementItems[i].SystemName,
+		}
+	}
+
+	certItems := make([]dto.RefinedCertificate, len(r.PublicKeyCertificateItems))
+
+	for i := range r.PublicKeyCertificateItems {
+		displayName := regex.FindString(r.PublicKeyCertificateItems[i].Subject)
+		if displayName != "" && len(displayName) >= 2 {
+			displayName = displayName[3:]
+		} else {
+			displayName = r.PublicKeyCertificateItems[i].InstanceID
+		}
+
+		certItems[i] = dto.RefinedCertificate{
+			ElementName:            r.PublicKeyCertificateItems[i].ElementName,
+			InstanceID:             r.PublicKeyCertificateItems[i].InstanceID,
+			X509Certificate:        r.PublicKeyCertificateItems[i].X509Certificate,
+			TrustedRootCertificate: r.PublicKeyCertificateItems[i].TrustedRootCertificate,
+			Issuer:                 r.PublicKeyCertificateItems[i].Issuer,
+			Subject:                r.PublicKeyCertificateItems[i].Subject,
+			ReadOnlyCertificate:    r.PublicKeyCertificateItems[i].ReadOnlyCertificate,
+			PublicKeyHandle:        r.PublicKeyCertificateItems[i].PublicKeyHandle,
+			AssociatedProfiles:     r.PublicKeyCertificateItems[i].AssociatedProfiles,
+			DisplayName:            displayName,
+		}
+	}
+
+	return dto.CertificatePullResponse{
+		KeyManagementItems: keyManagementItems,
+		Certificates:       certItems,
+	}
+}
+
+func KeysToDTO(r *publicprivate.RefinedPullResponse) dto.KeyPullResponse {
+	keyItems := make([]dto.Key, len(r.PublicPrivateKeyPairItems))
+	for i, item := range r.PublicPrivateKeyPairItems {
+		keyItems[i] = dto.Key{
+			ElementName:       item.ElementName,
+			InstanceID:        item.InstanceID,
+			DERKey:            item.DERKey,
+			CertificateHandle: item.CertificateHandle,
+		}
+	}
+
+	return dto.KeyPullResponse{
+		Keys: keyItems,
+	}
+}
+
+func (uc *UseCase) GetDeviceCertificate(c context.Context, guid string) (dto.Certificate, error) {
+	item, err := uc.repo.GetByID(c, guid, "")
+	if err != nil {
+		return dto.Certificate{}, err
+	}
+
+	if item == nil || item.GUID == "" {
+		return dto.Certificate{}, ErrNotFound
+	}
+
+	device := uc.device.SetupWsmanClient(*item, false, true)
+
+	cert1, err := device.GetDeviceCertificate()
+	if err != nil {
+		return dto.Certificate{}, err
+	}
+
+	var certDTOs []dto.Certificate
+
+	for _, certBytes := range cert1.Certificate {
+		// Parse each certificate byte slice into an x509.Certificate
+		cert, err := x509.ParseCertificate(certBytes)
+		if err != nil {
+			uc.log.Warn(fmt.Sprintf("Failed to parse certificate: %v", err))
+
+			continue
+		}
+
+		// Populate the DTO with certificate information
+		certDTO := populateCertificateDTO(cert)
+		certDTOs = append(certDTOs, certDTO)
+	}
+
+	return certDTOs[0], nil
+}
+
+func populateCertificateDTO(cert *x509.Certificate) dto.Certificate {
+	// Compute the SHA-1 and SHA-256 fingerprints
+	sha1Fingerprint := sha1.Sum(cert.Raw) //nolint:gosec // SHA-1 is used for thumbprint not signature
+	sha256Fingerprint := sha256.Sum256(cert.Raw)
+
+	// Determine the public key size
+	var publicKeySize int
+	switch pub := cert.PublicKey.(type) {
+	case *rsa.PublicKey:
+		publicKeySize = pub.N.BitLen()
+	case *ecdsa.PublicKey:
+		publicKeySize = pub.Curve.Params().BitSize
+	default:
+		publicKeySize = 0 // Unknown or unsupported key type
+	}
+
+	// Populate the dto.Certificate struct
+	return dto.Certificate{
+		CommonName:         cert.Subject.CommonName,
+		IssuerName:         cert.Issuer.CommonName,
+		SerialNumber:       cert.SerialNumber.String(),
+		NotBefore:          cert.NotBefore,
+		NotAfter:           cert.NotAfter,
+		DNSNames:           cert.DNSNames,
+		SHA1Fingerprint:    hex.EncodeToString(sha1Fingerprint[:]),
+		SHA256Fingerprint:  hex.EncodeToString(sha256Fingerprint[:]),
+		PublicKeyAlgorithm: cert.PublicKeyAlgorithm.String(),
+		PublicKeySize:      publicKeySize,
+	}
 }

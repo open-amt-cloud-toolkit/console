@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -37,6 +37,7 @@ func NewProfileRoutes(handler *gin.RouterGroup, t profiles.Feature, l logger.Int
 		h.POST("", r.insert)
 		h.PATCH("", r.update)
 		h.DELETE(":name", r.delete)
+		h.GET("export/:name", r.export)
 	}
 }
 
@@ -110,6 +111,37 @@ func (r *profileRoutes) getByName(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, item)
+}
+
+// @Summary     Export Profile
+// @Description Export profile by name
+// @ID          export-profile
+// @Tags              profiles
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} Profile
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/profiles/export/:name [get]
+
+func (r *profileRoutes) export(c *gin.Context) {
+	name := c.Param("name")
+
+	item, key, err := r.t.Export(c.Request.Context(), name, "")
+	if err != nil {
+		r.l.Error(err, "http - v1 - export")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	// Create a JSON response containing the YAML file and the key
+	response := gin.H{
+		"filename": name + ".yaml",
+		"content":  item,
+		"key":      key,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // @Summary     Add Profile

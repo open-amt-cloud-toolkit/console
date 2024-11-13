@@ -8,7 +8,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/stretchr/testify/require"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type powerTest struct {
@@ -35,23 +35,23 @@ func TestDeterminePowerCapabilities(t *testing.T) {
 				SecureErase:         false,
 				ForceDiagnosticBoot: true,
 			},
-			res: map[string]interface{}{
-				"Power up":                 2,
-				"Power cycle":              5,
-				"Power down":               8,
-				"Reset":                    10,
-				"Soft-off":                 12,
-				"Soft-reset":               14,
-				"Sleep":                    4,
-				"Hibernate":                7,
-				"Power on to IDE-R Floppy": 201,
-				"Reset to IDE-R CDROM":     202,
-				"Power on to IDE-R CDROM":  203,
-				"Reset to IDE-R Floppy":    200,
-				"Power on to diagnostic":   300,
-				"Reset to diagnostic":      301,
-				"Reset to PXE":             400,
-				"Power on to PXE":          401,
+			res: dto.PowerCapabilities{
+				PowerUp:             2,
+				PowerCycle:          5,
+				PowerDown:           8,
+				Reset:               10,
+				SoftOff:             12,
+				SoftReset:           14,
+				Sleep:               4,
+				Hibernate:           7,
+				ResetToIDERFloppy:   200,
+				PowerOnToIDERFloppy: 201,
+				ResetToIDERCDROM:    202,
+				PowerOnToIDERCDROM:  203,
+				PowerOnToDiagnostic: 300,
+				ResetToDiagnostic:   301,
+				ResetToPXE:          400,
+				PowerOnToPXE:        401,
 			},
 		},
 		{
@@ -63,20 +63,20 @@ func TestDeterminePowerCapabilities(t *testing.T) {
 				SecureErase:         true,
 				ForceDiagnosticBoot: false,
 			},
-			res: map[string]interface{}{
-				"Power cycle":              5,
-				"Power down":               8,
-				"Power on to IDE-R CDROM":  203,
-				"Power on to IDE-R Floppy": 201,
-				"Power on to PXE":          401,
-				"Power up":                 2,
-				"Power up to BIOS":         100,
-				"Reset":                    10,
-				"Reset to BIOS":            101,
-				"Reset to IDE-R CDROM":     202,
-				"Reset to IDE-R Floppy":    200,
-				"Reset to PXE":             400,
-				"Reset to Secure Erase":    104,
+			res: dto.PowerCapabilities{
+				PowerUp:             2,
+				PowerCycle:          5,
+				PowerDown:           8,
+				Reset:               10,
+				PowerOnToBIOS:       100,
+				ResetToBIOS:         101,
+				ResetToSecureErase:  104,
+				ResetToIDERFloppy:   200,
+				PowerOnToIDERFloppy: 201,
+				ResetToIDERCDROM:    202,
+				PowerOnToIDERCDROM:  203,
+				ResetToPXE:          400,
+				PowerOnToPXE:        401,
 			},
 		},
 	}

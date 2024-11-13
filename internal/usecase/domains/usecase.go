@@ -6,10 +6,11 @@ import (
 	"encoding/base64"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"software.sslmate.com/src/go-pkcs12"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -17,15 +18,17 @@ import (
 
 // UseCase -.
 type UseCase struct {
-	repo Repository
-	log  logger.Interface
+	repo             Repository
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
 // New -.
-func New(r Repository, log logger.Interface) *UseCase {
+func New(r Repository, log logger.Interface, safeRequirements security.Cryptor) *UseCase {
 	return &UseCase{
-		repo: r,
-		log:  log,
+		repo:             r,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -130,12 +133,12 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 }
 
 func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
-	d1 := uc.dtoToEntity(d)
-
 	cert, err := DecryptAndCheckCertExpiration(*d)
 	if err != nil {
 		return nil, err
 	}
+
+	d1 := uc.dtoToEntity(d)
 
 	d1.ExpirationDate = cert.NotAfter.Format(time.RFC3339)
 
@@ -161,34 +164,18 @@ func DecryptAndCheckCertExpiration(domain dto.Domain) (*x509.Certificate, error)
 		return nil, err
 	}
 
-	// Convert the PFX data to PEM blocks
-	//nolint:staticcheck // AMT certs don't work with pkcs12.Decode (the suggested replacement)
-	pemBlocks, err := pkcs12.ToPEM(pfxData, domain.ProvisioningCertPassword)
-	if err != nil {
-		return nil, ErrCertPassword.Wrap("DecryptAndCheckCertExpiration", "pkcs12.ToPEM", err)
-	}
-
-	var x509Cert *x509.Certificate
-
-	for _, block := range pemBlocks {
-		if block.Type == "CERTIFICATE" {
-			cert, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				return nil, err
-			}
-
-			x509Cert = cert
-
-			break
-		}
+	// Convert the PFX data to x509 cert
+	_, cert, err := pkcs12.Decode(pfxData, domain.ProvisioningCertPassword)
+	if err != nil && cert == nil {
+		return nil, ErrCertPassword.Wrap("DecryptAndCheckCertExpiration", "pkcs12.Decode", err)
 	}
 
 	// Check the expiration date of the certificate
-	if x509Cert.NotAfter.Before(time.Now()) {
+	if cert.NotAfter.Before(time.Now()) {
 		return nil, ErrCertExpiration.Wrap("DecryptAndCheckCertExpiration", "x509Cert.NotAfter.Before", nil)
 	}
 
-	return x509Cert, nil
+	return cert, nil
 }
 
 // convert dto.Domain to entity.Domain.
@@ -202,6 +189,8 @@ func (uc *UseCase) dtoToEntity(d *dto.Domain) *entity.Domain {
 		TenantID:                      d.TenantID,
 		Version:                       d.Version,
 	}
+
+	d1.ProvisioningCertPassword, _ = uc.safeRequirements.Encrypt(d.ProvisioningCertPassword)
 
 	return d1
 }
@@ -221,10 +210,10 @@ func (uc *UseCase) entityToDTO(d *entity.Domain) *dto.Domain {
 	}
 
 	d1 := &dto.Domain{
-		ProfileName:                   d.ProfileName,
-		DomainSuffix:                  d.DomainSuffix,
-		ProvisioningCert:              d.ProvisioningCert,
-		ProvisioningCertPassword:      d.ProvisioningCertPassword,
+		ProfileName:  d.ProfileName,
+		DomainSuffix: d.DomainSuffix,
+		// ProvisioningCert:              d.ProvisioningCert,
+		// ProvisioningCertPassword:      d.ProvisioningCertPassword,
 		ProvisioningCertStorageFormat: d.ProvisioningCertStorageFormat,
 		ExpirationDate:                expirationDate,
 		TenantID:                      d.TenantID,

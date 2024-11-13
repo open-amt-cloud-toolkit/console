@@ -2,9 +2,11 @@ package devices
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"testing"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim"
@@ -55,10 +57,21 @@ func (m *MockClient) Listen() ([]byte, error) {
 	return args.Get(0).([]byte), args.Error(1)
 }
 
+func (m *MockClient) IsAuthenticated() bool {
+	args := m.Called()
+
+	return args.Get(0).(bool)
+}
+
+func (m *MockClient) GetServerCertificate() (*tls.Certificate, error) {
+	args := m.Called()
+
+	return args.Get(0).(*tls.Certificate), args.Error(1)
+}
+
 type wsmanTest struct {
 	name string
-
-	err error
+	err  error
 }
 
 func TestRedirectConnect(t *testing.T) {
@@ -67,14 +80,12 @@ func TestRedirectConnect(t *testing.T) {
 	tests := []wsmanTest{
 		{
 			name: "Successful Connection",
-
-			err: nil,
+			err:  nil,
 		},
 
 		{
 			name: "Connection Error",
-
-			err: ErrGeneralWsman,
+			err:  ErrGeneralWsman,
 		},
 	}
 
@@ -85,27 +96,19 @@ func TestRedirectConnect(t *testing.T) {
 			t.Parallel()
 
 			mockClient := new(MockClient)
-
 			mockClient.On("Connect").Return(tt.err)
-
 			deviceConnection := &DeviceConnection{
 				wsmanMessages: wsman.Messages{
 					Client: mockClient,
-
-					AMT: amt.Messages{},
-
-					CIM: cim.Messages{},
-
-					IPS: ips.Messages{},
+					AMT:    amt.Messages{},
+					CIM:    cim.Messages{},
+					IPS:    ips.Messages{},
 				},
 			}
 
-			redirector := NewRedirector()
-
+			redirector := NewRedirector(security.Crypto{})
 			err := redirector.RedirectConnect(context.Background(), deviceConnection)
-
 			require.IsType(t, tt.err, err)
-
 			mockClient.AssertExpectations(t)
 		})
 	}
@@ -115,25 +118,19 @@ func TestRedirectSend(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
-
+		name     string
 		sendData []byte
-
-		err error
+		err      error
 	}{
 		{
-			name: "Successful Send",
-
+			name:     "Successful Send",
 			sendData: []byte("test data"),
-
-			err: nil,
+			err:      nil,
 		},
 		{
-			name: "Send Error",
-
+			name:     "Send Error",
 			sendData: []byte("test data"),
-
-			err: ErrGeneralWsman,
+			err:      ErrGeneralWsman,
 		},
 	}
 
@@ -144,41 +141,26 @@ func TestRedirectSend(t *testing.T) {
 			t.Parallel()
 
 			// Create a new instance of MockClient
-
 			mockClient := new(MockClient)
-
 			// Setup expectations
-
 			mockClient.On("Send", tt.sendData).Return(tt.err)
-
 			// Create a DeviceConnection with the mock client
-
 			deviceConnection := &DeviceConnection{
 				wsmanMessages: wsman.Messages{
 					Client: mockClient,
-
-					AMT: amt.Messages{},
-
-					CIM: cim.Messages{},
-
-					IPS: ips.Messages{},
+					AMT:    amt.Messages{},
+					CIM:    cim.Messages{},
+					IPS:    ips.Messages{},
 				},
 			}
 
 			// Create a Redirector instance
-
-			redirector := NewRedirector()
-
+			redirector := NewRedirector(security.Crypto{})
 			// Call the method under test
-
 			err := redirector.RedirectSend(context.Background(), deviceConnection, tt.sendData)
-
 			// Assert the expected results
-
 			require.Equal(t, tt.err, err)
-
 			// Assert that the mock expectations were met
-
 			mockClient.AssertExpectations(t)
 		})
 	}
@@ -189,25 +171,19 @@ func TestRedirectListen(t *testing.T) {
 
 	tests := []struct {
 		name string
-
-		res []byte
-
-		err error
+		res  []byte
+		err  error
 	}{
 		{
 			name: "Successful Listen",
-
-			res: []byte("test data"),
-
-			err: nil,
+			res:  []byte("test data"),
+			err:  nil,
 		},
 
 		{
 			name: "Listen Error",
-
-			res: nil,
-
-			err: ErrGeneralWsman,
+			res:  nil,
+			err:  ErrGeneralWsman,
 		},
 	}
 
@@ -218,43 +194,27 @@ func TestRedirectListen(t *testing.T) {
 			t.Parallel()
 
 			// Create a new instance of MockClient
-
 			mockClient := new(MockClient)
-
 			// Setup expectations
-
 			mockClient.On("Receive").Return(tt.res, tt.err)
-
 			// Create a DeviceConnection with the mock client
-
 			deviceConnection := &DeviceConnection{
 				wsmanMessages: wsman.Messages{
 					Client: mockClient,
-
-					AMT: amt.Messages{},
-
-					CIM: cim.Messages{},
-
-					IPS: ips.Messages{},
+					AMT:    amt.Messages{},
+					CIM:    cim.Messages{},
+					IPS:    ips.Messages{},
 				},
 			}
 
 			// Create a Redirector instance
-
-			redirector := NewRedirector()
-
+			redirector := NewRedirector(security.Crypto{})
 			// Call the method under test
-
 			data, err := redirector.RedirectListen(context.Background(), deviceConnection)
-
 			// Assert the expected results
-
 			require.Equal(t, tt.res, data)
-
 			require.Equal(t, tt.err, err)
-
 			// Assert that the mock expectations were met
-
 			mockClient.AssertExpectations(t)
 		})
 	}
@@ -266,14 +226,11 @@ func TestRedirectClose(t *testing.T) {
 	tests := []wsmanTest{
 		{
 			name: "Successful Close",
-
-			err: nil,
+			err:  nil,
 		},
-
 		{
 			name: "Close Error",
-
-			err: ErrGeneralWsman,
+			err:  ErrGeneralWsman,
 		},
 	}
 
@@ -284,41 +241,25 @@ func TestRedirectClose(t *testing.T) {
 			t.Parallel()
 
 			// Create a new instance of MockClient
-
 			mockClient := new(MockClient)
-
 			// Setup expectations
-
 			mockClient.On("CloseConnection").Return(tt.err)
-
 			// Create a DeviceConnection with the mock client
-
 			deviceConnection := &DeviceConnection{
 				wsmanMessages: wsman.Messages{
 					Client: mockClient,
-
-					AMT: amt.Messages{},
-
-					CIM: cim.Messages{},
-
-					IPS: ips.Messages{},
+					AMT:    amt.Messages{},
+					CIM:    cim.Messages{},
+					IPS:    ips.Messages{},
 				},
 			}
-
 			// Create a Redirector instance
-
-			redirector := NewRedirector()
-
+			redirector := NewRedirector(security.Crypto{})
 			// Call the method under test
-
 			err := redirector.RedirectClose(context.Background(), deviceConnection)
-
 			// Assert the expected results
-
 			require.Equal(t, tt.err, err)
-
 			// Assert that the mock expectations were met
-
 			mockClient.AssertExpectations(t)
 		})
 	}

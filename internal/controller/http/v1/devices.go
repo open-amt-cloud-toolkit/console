@@ -2,10 +2,13 @@ package v1
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/config"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -21,11 +24,16 @@ var ErrValidationDevices = dto.NotValidError{Console: consoleerrors.CreateConsol
 func NewDeviceRoutes(handler *gin.RouterGroup, t devices.Feature, l logger.Interface) {
 	r := &deviceRoutes{t, l}
 
+	handler.GET("authorize/redirection/:id", r.LoginRedirection)
+
 	h := handler.Group("/devices")
 	{
 		h.GET("", r.get)
 		h.GET("stats", r.getStats)
 		h.GET("redirectstatus/:guid", r.redirectStatus)
+		h.GET("cert/:guid", r.getDeviceCertificate)
+		h.POST("cert/:guid", r.pinDeviceCertificate)
+		h.DELETE("cert/:guid", r.deleteDeviceCertificate)
 		h.GET(":guid", r.getByID)
 		h.GET("tags", r.getTags)
 		h.POST("", r.insert)
@@ -69,6 +77,43 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 	c.JSON(http.StatusOK, countResponse)
 }
 
+// @Summary     route for redirection auth
+// @Description gets token for use with redirection
+// @ID          loginRedirection
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} DeviceCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/authorize/redirection [get]
+func (dr *deviceRoutes) LoginRedirection(c *gin.Context) {
+	deviceID := c.Param("id")
+
+	_, err := dr.t.GetByID(c.Request.Context(), deviceID, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - LoginRedirection")
+		ErrorResponse(c, err)
+
+		return
+	}
+	// Create JWT token
+	expirationTime := time.Now().Add(config.ConsoleConfig.JWTExpiration)
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(expirationTime),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(config.ConsoleConfig.App.JWTKey))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+}
+
 // @Summary     Show Devices
 // @Description Show all devices
 // @ID          getDevices
@@ -77,7 +122,7 @@ func (dr *deviceRoutes) getStats(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} DeviceCountResponse
 // @Failure     500 {object} response
-// @Router      /api/v1/devices [get]
+// @Router      /api/v1/devices/:id [get]
 func (dr *deviceRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
@@ -302,4 +347,124 @@ func (dr *deviceRoutes) getTags(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, tags)
+}
+
+// @Summary     Get Device Certificate
+// @Description Get Device Certificate
+// @ID          getDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [get]
+func (dr *deviceRoutes) getDeviceCertificate(c *gin.Context) {
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - cert")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	cert, err := dr.t.GetDeviceCertificate(c.Request.Context(), item.GUID)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - cert")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	cert.GUID = item.GUID
+
+	c.JSON(http.StatusOK, cert)
+}
+
+// @Summary     Pin Device Certificate
+// @Description Pins Device Certificate
+// @ID          pinDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [post]
+func (dr *deviceRoutes) pinDeviceCertificate(c *gin.Context) {
+	var certToPin dto.PinCertificate
+	if err := c.ShouldBindBodyWithJSON(&certToPin); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - getById")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	item.CertHash = certToPin.SHA256Fingerprint
+
+	item, err = dr.t.Update(c.Request.Context(), item)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - update")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
+}
+
+// @Summary     Delete Device Certificate
+// @Description Deletes Pinned Device Certificate
+// @ID          deleteDeviceCertificate
+// @Tags  	    devices
+// @Accept      json
+// @Produce     json
+// @Success     204 {object} noContent
+// @Failure     500 {object} response
+// @Router      /api/v1/devices/cert/:guid [delete]
+func (dr *deviceRoutes) deleteDeviceCertificate(c *gin.Context) {
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	guid := c.Param("guid")
+
+	item, err := dr.t.GetByID(c.Request.Context(), guid, "")
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - getById")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	item.CertHash = ""
+
+	item, err = dr.t.Update(c.Request.Context(), item)
+	if err != nil {
+		dr.l.Error(err, "http - devices - v1 - deleteDeviceCertificate - update")
+		ErrorResponse(c, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
 }

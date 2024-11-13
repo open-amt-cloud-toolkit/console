@@ -34,6 +34,10 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
+	// Public routes
+	login := v1.NewLoginRoute(cfg)
+	handler.POST("/api/v1/authorize", login.Login)
+
 	// Static files
 	// Serve static assets (js, css, images, etc.)
 	// Create subdirectory view of the embedded file system
@@ -46,15 +50,20 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	handler.StaticFileFS("/", "./", http.FS(staticFiles)) // Serve static files from "/" route
 	handler.StaticFileFS("/main.js", "./main.js", http.FS(staticFiles))
 	handler.StaticFileFS("/polyfills.js", "./polyfills.js", http.FS(staticFiles))
-	handler.StaticFileFS("/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2", "./flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2", http.FS(staticFiles))
-	handler.StaticFileFS("/KFOlCnqEu92Fr1MmEU9fBBc4.woff2", "./KFOlCnqEu92Fr1MmEU9fBBc4.woff2", http.FS(staticFiles))
-	handler.StaticFileFS("/KFOlCnqEu92Fr1MmSU5fBBc4.woff2", "./KFOlCnqEu92Fr1MmSU5fBBc4.woff2", http.FS(staticFiles))
-	handler.StaticFileFS("/KFOmCnqEu92Fr1Mu4mxK.woff2", "./KFOmCnqEu92Fr1Mu4mxK.woff2", http.FS(staticFiles))
+	handler.StaticFileFS("/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2", "./kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2", http.FS(staticFiles))
 	handler.StaticFileFS("/runtime.js", "./runtime.js", http.FS(staticFiles))
 	handler.StaticFileFS("/styles.css", "./styles.css", http.FS(staticFiles))
 	handler.StaticFileFS("/vendor.js", "./vendor.js", http.FS(staticFiles))
 	handler.StaticFileFS("/favicon.ico", "./favicon.ico", http.FS(staticFiles))
 	handler.StaticFileFS("/assets/logo.png", "./assets/logo.png", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/loader.js", "./assets/monaco/min/vs/loader.js", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/editor/editor.main.js", "./assets/monaco/min/vs/editor/editor.main.js", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/editor/editor.main.css", "./assets/monaco/min/vs/editor/editor.main.css", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/editor/editor.main.nls.js", "./assets/monaco/min/vs/editor/editor.main.nls.js", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/base/worker/workerMain.js", "./assets/monaco/min/vs/base/worker/workerMain.js", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/base/common/worker/simpleWorker.nls.js", "./assets/monaco/min/vs/base/common/worker/simpleWorker.nls.js", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/base/browser/ui/codicons/codicon/codicon.ttf", "./assets/monaco/min/vs/base/browser/ui/codicons/codicon/codicon.ttf", http.FS(staticFiles))
+	handler.StaticFileFS("/assets/monaco/min/vs/basic-languages/xml/xml.js", "./assets/monaco/min/vs/basic-languages/xml/xml.js", http.FS(staticFiles))
 
 	// Swagger
 	swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
@@ -70,14 +79,22 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	vr := v1.NewVersionRoute(cfg)
 	handler.GET("/version", vr.LatestReleaseHandler)
 
-	// Routers
-	h2 := handler.Group("/api/v1")
-	{
-		v1.NewDeviceRoutes(h2, t.Devices, l)
-		v1.NewAmtRoutes(h2, t.Devices, l)
+	// Protected routes using JWT middleware
+	var protected *gin.RouterGroup
+	if cfg.App.AuthDisabled {
+		protected = handler.Group("/api")
+	} else {
+		protected = handler.Group("/api", login.JWTAuthMiddleware())
 	}
 
-	h := handler.Group("/api/v1/admin")
+	// Routers
+	h2 := protected.Group("/v1")
+	{
+		v1.NewDeviceRoutes(h2, t.Devices, l)
+		v1.NewAmtRoutes(h2, t.Devices, t.AMTExplorer, l)
+	}
+
+	h := protected.Group("/v1/admin")
 	{
 		v1.NewDomainRoutes(h, t.Domains, l)
 		v1.NewCIRAConfigRoutes(h, t.CIRAConfigs, l)
@@ -86,7 +103,7 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 		v1.NewIEEE8021xConfigRoutes(h, t.IEEE8021xProfiles, l)
 	}
 
-	h3 := handler.Group("/api/v2")
+	h3 := protected.Group("/v2")
 	{
 		v2.NewAmtRoutes(h3, t.Devices, l)
 	}

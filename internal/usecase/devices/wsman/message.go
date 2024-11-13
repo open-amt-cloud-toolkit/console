@@ -1,10 +1,11 @@
 package wsman
 
 import (
-	"strings"
+	gotls "crypto/tls"
 	"sync"
 	"time"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
@@ -52,36 +53,72 @@ import (
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
+const deviceCallBuffer = 100
+
 var (
-	connections   = make(map[string]*ConnectionEntry)
-	connectionsMu sync.Mutex
-	expireAfter   = 5 * time.Minute // Set the expiration duration as needed
+	connections         = make(map[string]*ConnectionEntry)
+	connectionsMu       sync.Mutex
+	waitForAuthTickTime = 1 * time.Second
+	queueTickTime       = 500 * time.Millisecond
+	expireAfter         = 30 * time.Second                    // expire the stored connection after 30 seconds
+	waitForAuth         = 3 * time.Second                     // wait for 3 seconds for the connection to authenticate, prevents multiple api calls trying to auth at the same time
+	requestQueue        = make(chan func(), deviceCallBuffer) // Buffered channel to queue requests
+	shutdownSignal      = make(chan struct{})
 )
 
 type ConnectionEntry struct {
-	wsmanMessages wsman.Messages
-	timer         *time.Timer
+	WsmanMessages wsman.Messages
+	Timer         *time.Timer
 }
 
 type GoWSMANMessages struct {
-	wsmanMessages wsman.Messages
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
-func NewGoWSMANMessages() *GoWSMANMessages {
-	return &GoWSMANMessages{}
+func NewGoWSMANMessages(log logger.Interface, safeRequirements security.Cryptor) *GoWSMANMessages {
+	return &GoWSMANMessages{
+		log:              log,
+		safeRequirements: safeRequirements,
+	}
 }
 
-func (g *GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
+func (g GoWSMANMessages) DestroyWsmanClient(device dto.Device) {
 	if entry, ok := connections[device.GUID]; ok {
-		entry.timer.Stop()
+		entry.Timer.Stop()
 		removeConnection(device.GUID)
 	}
 }
 
-func (g *GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, logAMTMessages bool) {
+func (g GoWSMANMessages) Worker() {
+	for {
+		select {
+		case request := <-requestQueue:
+			request()
+			time.Sleep(queueTickTime)
+		case <-shutdownSignal:
+			return
+		}
+	}
+}
+
+func (g GoWSMANMessages) SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) Management {
+	resultChan := make(chan *ConnectionEntry)
+	// Queue the request
+	requestQueue <- func() {
+		device.Password, _ = g.safeRequirements.Decrypt(device.Password)
+		resultChan <- g.setupWsmanClientInternal(device, isRedirection, logAMTMessages)
+	}
+
+	return <-resultChan
+}
+
+func (g GoWSMANMessages) setupWsmanClientInternal(device entity.Device, isRedirection, logAMTMessages bool) *ConnectionEntry {
 	clientParams := client.Parameters{
 		Target:            device.Hostname,
 		Username:          device.Username,
@@ -93,42 +130,76 @@ func (g *GoWSMANMessages) SetupWsmanClient(device dto.Device, isRedirection, log
 		IsRedirection:     isRedirection,
 	}
 
-	connectionsMu.Lock()
-	defer connectionsMu.Unlock()
+	if device.CertHash != nil && *device.CertHash != "" {
+		clientParams.PinnedCert = *device.CertHash
+	}
+
+	timer := time.AfterFunc(expireAfter, func() {
+		removeConnection(device.GUID)
+	})
 
 	if entry, ok := connections[device.GUID]; ok {
-		entry.timer.Stop() // Stop the previous timer
-		entry.timer = time.AfterFunc(expireAfter, func() {
-			removeConnection(device.GUID)
-		})
-		g.wsmanMessages = entry.wsmanMessages
-	} else {
-		wsmanMsgs := wsman.NewMessages(clientParams)
-		timer := time.AfterFunc(expireAfter, func() {
-			removeConnection(device.GUID)
-		})
-		connections[device.GUID] = &ConnectionEntry{
-			wsmanMessages: wsmanMsgs,
-			timer:         timer,
+		if entry.WsmanMessages.Client.IsAuthenticated() {
+			entry.Timer.Stop() // Stop the previous timer
+			entry.Timer = time.AfterFunc(expireAfter, func() {
+				removeConnection(device.GUID)
+			})
+
+			return connections[device.GUID]
 		}
-		g.wsmanMessages = wsmanMsgs
+
+		ticker := time.NewTicker(waitForAuthTickTime)
+
+		defer ticker.Stop()
+
+		timeout := time.After(waitForAuth)
+
+		for {
+			select {
+			case <-ticker.C:
+				if entry.WsmanMessages.Client.IsAuthenticated() {
+					// Your logic when the function check is successful
+					return connections[device.GUID]
+				}
+			case <-timeout:
+				connectionsMu.Lock()
+				connections[device.GUID] = &ConnectionEntry{
+					WsmanMessages: wsman.NewMessages(clientParams),
+					Timer:         timer,
+				}
+				connectionsMu.Unlock()
+
+				return connections[device.GUID]
+			}
+		}
 	}
+
+	wsmanMsgs := wsman.NewMessages(clientParams)
+
+	connectionsMu.Lock()
+	connections[device.GUID] = &ConnectionEntry{
+		WsmanMessages: wsmanMsgs,
+		Timer:         timer,
+	}
+	connections[device.GUID].WsmanMessages.Client.IsAuthenticated()
+	connectionsMu.Unlock()
+
+	return connections[device.GUID]
 }
 
 func removeConnection(guid string) {
 	connectionsMu.Lock()
 	defer connectionsMu.Unlock()
-
 	delete(connections, guid)
 }
 
-func (g *GoWSMANMessages) GetAMTVersion() ([]software.SoftwareIdentity, error) {
-	response, err := g.wsmanMessages.CIM.SoftwareIdentity.Enumerate()
+func (g *ConnectionEntry) GetAMTVersion() ([]software.SoftwareIdentity, error) {
+	response, err := g.WsmanMessages.CIM.SoftwareIdentity.Enumerate()
 	if err != nil {
 		return []software.SoftwareIdentity{}, err
 	}
 
-	response, err = g.wsmanMessages.CIM.SoftwareIdentity.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.CIM.SoftwareIdentity.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return []software.SoftwareIdentity{}, err
 	}
@@ -136,13 +207,13 @@ func (g *GoWSMANMessages) GetAMTVersion() ([]software.SoftwareIdentity, error) {
 	return response.Body.PullResponse.SoftwareIdentityItems, nil
 }
 
-func (g *GoWSMANMessages) GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error) {
-	response, err := g.wsmanMessages.AMT.SetupAndConfigurationService.Enumerate()
+func (g *ConnectionEntry) GetSetupAndConfiguration() ([]setupandconfiguration.SetupAndConfigurationServiceResponse, error) {
+	response, err := g.WsmanMessages.AMT.SetupAndConfigurationService.Enumerate()
 	if err != nil {
 		return []setupandconfiguration.SetupAndConfigurationServiceResponse{}, err
 	}
 
-	response, err = g.wsmanMessages.AMT.SetupAndConfigurationService.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.AMT.SetupAndConfigurationService.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return []setupandconfiguration.SetupAndConfigurationServiceResponse{}, err
 	}
@@ -150,107 +221,51 @@ func (g *GoWSMANMessages) GetSetupAndConfiguration() ([]setupandconfiguration.Se
 	return response.Body.PullResponse.SetupAndConfigurationServiceItems, nil
 }
 
-var UserConsentOptions = map[int]string{
-	0:          "none",
-	1:          "kvm",
-	4294967295: "all",
+func (g *ConnectionEntry) GetDeviceCertificate() (*gotls.Certificate, error) {
+	return g.WsmanMessages.Client.GetServerCertificate()
 }
 
-func (g *GoWSMANMessages) GetFeatures() (dto.Features, error) {
-	redirectionResult, err := g.wsmanMessages.AMT.RedirectionService.Get()
-	if err != nil {
-		return dto.Features{}, err
-	}
+func (g *ConnectionEntry) RequestAMTRedirectionServiceStateChange(ider, sol bool) (redirection.RequestedState, int, error) {
+	requestedState := redirection.DisableIDERAndSOL
+	listenerEnabled := 0
 
-	optServiceResult, err := g.wsmanMessages.IPS.OptInService.Get()
-	if err != nil {
-		return dto.Features{}, err
-	}
-
-	kvmResult, err := g.wsmanMessages.CIM.KVMRedirectionSAP.Get()
-	if err != nil {
-		return dto.Features{}, err
-	}
-
-	settingsResults := dto.Features{
-		UserConsent: UserConsentOptions[int(optServiceResult.Body.GetAndPutResponse.OptInRequired)],
-		EnableSOL:   (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
-		EnableIDER:  (redirectionResult.Body.GetAndPutResponse.EnabledState & redirection.Enabled) != 0,
-		EnableKVM:   kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.Enabled) || kvmResult.Body.GetResponse.EnabledState == kvm.EnabledState(redirection.EnabledButOffline),
-		Redirection: redirectionResult.Body.GetAndPutResponse.ListenerEnabled,
-		OptInState:  optServiceResult.Body.GetAndPutResponse.OptInState,
-	}
-
-	return settingsResults, nil
-}
-
-func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, error) {
-	// redirection
-	requestedState, listenerEnabled, err := configureRedirection(features, g)
-	if err != nil {
-		return features, err
-	}
-
-	// kvm
-	listenerEnabled, err = configureKVM(features, listenerEnabled, g)
-	if err != nil {
-		return features, err
-	}
-
-	// get and put redirection
-	currentRedirection, err := g.wsmanMessages.AMT.RedirectionService.Get()
-	if err != nil {
-		return features, err
-	}
-
-	request := redirection.RedirectionRequest{
-		CreationClassName:       currentRedirection.Body.GetAndPutResponse.CreationClassName,
-		ElementName:             currentRedirection.Body.GetAndPutResponse.ElementName,
-		EnabledState:            redirection.EnabledState(requestedState),
-		ListenerEnabled:         listenerEnabled == 1,
-		Name:                    currentRedirection.Body.GetAndPutResponse.Name,
-		SystemCreationClassName: currentRedirection.Body.GetAndPutResponse.SystemCreationClassName,
-		SystemName:              currentRedirection.Body.GetAndPutResponse.SystemName,
-	}
-
-	_, err = g.wsmanMessages.AMT.RedirectionService.Put(request)
-	if err != nil {
-		return features, err
-	}
-
-	// user consent
-	optInResponse, err := g.wsmanMessages.IPS.OptInService.Get()
-	if err != nil {
-		return features, err
-	}
-
-	optinRequest := optin.OptInServiceRequest{
-		CreationClassName:       optInResponse.Body.GetAndPutResponse.CreationClassName,
-		ElementName:             optInResponse.Body.GetAndPutResponse.ElementName,
-		Name:                    optInResponse.Body.GetAndPutResponse.Name,
-		OptInCodeTimeout:        optInResponse.Body.GetAndPutResponse.OptInCodeTimeout,
-		OptInDisplayTimeout:     optInResponse.Body.GetAndPutResponse.OptInDisplayTimeout,
-		OptInRequired:           determineConsentCode(features.UserConsent),
-		SystemName:              optInResponse.Body.GetAndPutResponse.SystemName,
-		SystemCreationClassName: optInResponse.Body.GetAndPutResponse.SystemCreationClassName,
-	}
-
-	_, err = g.wsmanMessages.IPS.OptInService.Put(optinRequest)
-	if err != nil {
-		return features, err
-	}
-
-	return features, nil
-}
-
-func configureKVM(features dto.Features, listenerEnabled int, g *GoWSMANMessages) (int, error) {
-	kvmRequestedState := kvm.RedirectionSAPDisable
-	if features.EnableKVM {
-		kvmRequestedState = kvm.RedirectionSAPEnable
+	if ider {
+		requestedState++
 		listenerEnabled = 1
 	}
 
-	_, err := g.wsmanMessages.CIM.KVMRedirectionSAP.RequestStateChange(kvmRequestedState)
+	if sol {
+		requestedState += 2
+		listenerEnabled = 1
+	}
+
+	_, err := g.WsmanMessages.AMT.RedirectionService.RequestStateChange(requestedState)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return requestedState, listenerEnabled, nil
+}
+
+func (g *ConnectionEntry) GetKVMRedirection() (kvm.Response, error) {
+	response, err := g.WsmanMessages.CIM.KVMRedirectionSAP.Get()
+	if err != nil {
+		return kvm.Response{}, err
+	}
+
+	return response, nil
+}
+
+func (g *ConnectionEntry) SetKVMRedirection(enable bool) (int, error) {
+	requestedState := kvm.RedirectionSAPDisable
+	listenerEnabled := 0
+
+	if enable {
+		requestedState = kvm.RedirectionSAPEnable
+		listenerEnabled = 1
+	}
+
+	_, err := g.WsmanMessages.CIM.KVMRedirectionSAP.RequestStateChange(requestedState)
 	if err != nil {
 		return 0, err
 	}
@@ -258,52 +273,13 @@ func configureKVM(features dto.Features, listenerEnabled int, g *GoWSMANMessages
 	return listenerEnabled, nil
 }
 
-func configureRedirection(features dto.Features, g *GoWSMANMessages) (redirection.RequestedState, int, error) {
-	requestedState := redirection.DisableIDERAndSOL
-	listenerEnabled := 0
-
-	if features.EnableIDER {
-		requestedState++
-		listenerEnabled = 1
-	}
-
-	if features.EnableSOL {
-		requestedState += 2
-		listenerEnabled = 1
-	}
-
-	_, err := g.wsmanMessages.AMT.RedirectionService.RequestStateChange(requestedState)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return requestedState, listenerEnabled, err
-}
-
-func determineConsentCode(consent string) int {
-	consentCode := optin.OptInRequiredAll // default to all if not valid user consent
-
-	consent = strings.ToLower(consent)
-
-	switch consent {
-	case "kvm":
-		consentCode = optin.OptInRequiredKVM
-	case "all":
-		consentCode = optin.OptInRequiredAll
-	case "none":
-		consentCode = optin.OptInRequiredNone
-	}
-
-	return int(consentCode)
-}
-
-func (g *GoWSMANMessages) GetAlarmOccurrences() ([]ipsAlarmClock.AlarmClockOccurrence, error) {
-	response, err := g.wsmanMessages.IPS.AlarmClockOccurrence.Enumerate()
+func (g *ConnectionEntry) GetAlarmOccurrences() ([]ipsAlarmClock.AlarmClockOccurrence, error) {
+	response, err := g.WsmanMessages.IPS.AlarmClockOccurrence.Enumerate()
 	if err != nil {
 		return []ipsAlarmClock.AlarmClockOccurrence{}, err
 	}
 
-	response, err = g.wsmanMessages.IPS.AlarmClockOccurrence.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.IPS.AlarmClockOccurrence.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return []ipsAlarmClock.AlarmClockOccurrence{}, err
 	}
@@ -311,7 +287,7 @@ func (g *GoWSMANMessages) GetAlarmOccurrences() ([]ipsAlarmClock.AlarmClockOccur
 	return response.Body.PullResponse.Items, nil
 }
 
-func (g *GoWSMANMessages) CreateAlarmOccurrences(name string, startTime time.Time, interval int, deleteOnCompletion bool) (amtAlarmClock.AddAlarmOutput, error) {
+func (g *ConnectionEntry) CreateAlarmOccurrences(name string, startTime time.Time, interval int, deleteOnCompletion bool) (amtAlarmClock.AddAlarmOutput, error) {
 	alarmOccurrence := amtAlarmClock.AlarmClockOccurrence{
 		InstanceID:         name,
 		ElementName:        name,
@@ -320,7 +296,7 @@ func (g *GoWSMANMessages) CreateAlarmOccurrences(name string, startTime time.Tim
 		DeleteOnCompletion: deleteOnCompletion,
 	}
 
-	response, err := g.wsmanMessages.AMT.AlarmClockService.AddAlarm(alarmOccurrence)
+	response, err := g.WsmanMessages.AMT.AlarmClockService.AddAlarm(alarmOccurrence)
 	if err != nil {
 		return amtAlarmClock.AddAlarmOutput{}, err
 	}
@@ -328,8 +304,8 @@ func (g *GoWSMANMessages) CreateAlarmOccurrences(name string, startTime time.Tim
 	return response.Body.AddAlarmOutput, nil
 }
 
-func (g *GoWSMANMessages) DeleteAlarmOccurrences(instanceID string) error {
-	_, err := g.wsmanMessages.IPS.AlarmClockOccurrence.Delete(instanceID)
+func (g *ConnectionEntry) DeleteAlarmOccurrences(instanceID string) error {
+	_, err := g.WsmanMessages.IPS.AlarmClockOccurrence.Delete(instanceID)
 	if err != nil {
 		return err
 	}
@@ -337,37 +313,32 @@ func (g *GoWSMANMessages) DeleteAlarmOccurrences(instanceID string) error {
 	return nil
 }
 
-func (g *GoWSMANMessages) hardwareGets() (GetHWResults, error) {
+func (g *ConnectionEntry) hardwareGets() (GetHWResults, error) {
 	results := GetHWResults{}
 
 	var err error
 
-	results.CSPResult, err = g.wsmanMessages.CIM.ComputerSystemPackage.Get()
+	results.ChassisResult, err = g.WsmanMessages.CIM.Chassis.Get()
 	if err != nil {
 		return results, err
 	}
 
-	results.ChassisResult, err = g.wsmanMessages.CIM.Chassis.Get()
+	results.CardResult, err = g.WsmanMessages.CIM.Card.Get()
 	if err != nil {
 		return results, err
 	}
 
-	results.CardResult, err = g.wsmanMessages.CIM.Card.Get()
+	results.ChipResult, err = g.WsmanMessages.CIM.Chip.Get()
 	if err != nil {
 		return results, err
 	}
 
-	results.ChipResult, err = g.wsmanMessages.CIM.Chip.Get()
+	results.BiosResult, err = g.WsmanMessages.CIM.BIOSElement.Get()
 	if err != nil {
 		return results, err
 	}
 
-	results.BiosResult, err = g.wsmanMessages.CIM.BIOSElement.Get()
-	if err != nil {
-		return results, err
-	}
-
-	results.ProcessorResult, err = g.wsmanMessages.CIM.Processor.Get()
+	results.ProcessorResult, err = g.WsmanMessages.CIM.Processor.Get()
 	if err != nil {
 		return results, err
 	}
@@ -375,17 +346,17 @@ func (g *GoWSMANMessages) hardwareGets() (GetHWResults, error) {
 	return results, nil
 }
 
-func (g *GoWSMANMessages) hardwarePulls() (PullHWResults, error) {
+func (g *ConnectionEntry) hardwarePulls() (PullHWResults, error) {
 	results := PullHWResults{}
 
 	var err error
 
-	pmEnumerateResult, err := g.wsmanMessages.CIM.PhysicalMemory.Enumerate()
+	pmEnumerateResult, err := g.WsmanMessages.CIM.PhysicalMemory.Enumerate()
 	if err != nil {
 		return results, err
 	}
 
-	results.PhysicalMemoryResult, err = g.wsmanMessages.CIM.PhysicalMemory.Pull(pmEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	results.PhysicalMemoryResult, err = g.WsmanMessages.CIM.PhysicalMemory.Pull(pmEnumerateResult.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return results, err
 	}
@@ -393,7 +364,7 @@ func (g *GoWSMANMessages) hardwarePulls() (PullHWResults, error) {
 	return results, nil
 }
 
-func (g *GoWSMANMessages) GetHardwareInfo() (interface{}, error) {
+func (g *ConnectionEntry) GetHardwareInfo() (interface{}, error) {
 	getHWResults, err := g.hardwareGets()
 	if err != nil {
 		return nil, err
@@ -405,23 +376,18 @@ func (g *GoWSMANMessages) GetHardwareInfo() (interface{}, error) {
 	}
 
 	hwResults := HWResults{
-		CSPResult:             getHWResults.CSPResult,
-		SPPullResult:          pullHWResults.SPPullResult,
-		ChassisResult:         getHWResults.ChassisResult,
-		ChipResult:            getHWResults.ChipResult,
-		CardResult:            getHWResults.CardResult,
-		PhysicalMemoryResult:  pullHWResults.PhysicalMemoryResult,
-		MediaAccessPullResult: pullHWResults.MediaAccessPullResult,
-		PPPullResult:          pullHWResults.PPPullResult,
-		BiosResult:            getHWResults.BiosResult,
-		ProcessorResult:       getHWResults.ProcessorResult,
+		ChassisResult:        getHWResults.ChassisResult,
+		ChipResult:           getHWResults.ChipResult,
+		CardResult:           getHWResults.CardResult,
+		PhysicalMemoryResult: pullHWResults.PhysicalMemoryResult,
+		BiosResult:           getHWResults.BiosResult,
+		ProcessorResult:      getHWResults.ProcessorResult,
 	}
 
 	return createMapInterfaceForHWInfo(hwResults)
 }
 
 type GetHWResults struct {
-	CSPResult       computer.Response
 	ChassisResult   chassis.Response
 	ChipResult      chip.Response
 	CardResult      card.Response
@@ -429,33 +395,19 @@ type GetHWResults struct {
 	ProcessorResult processor.Response
 }
 type PullHWResults struct {
-	SPPullResult          system.Response
-	PhysicalMemoryResult  physical.Response
-	MediaAccessPullResult mediaaccess.Response
-	PPPullResult          physical.Response
+	PhysicalMemoryResult physical.Response
 }
 type HWResults struct {
-	CSPResult             computer.Response
-	SPPullResult          system.Response
-	ChassisResult         chassis.Response
-	ChipResult            chip.Response
-	CardResult            card.Response
-	PhysicalMemoryResult  physical.Response
-	MediaAccessPullResult mediaaccess.Response
-	PPPullResult          physical.Response
-	BiosResult            bios.Response
-	ProcessorResult       processor.Response
+	ChassisResult        chassis.Response
+	ChipResult           chip.Response
+	CardResult           card.Response
+	PhysicalMemoryResult physical.Response
+	BiosResult           bios.Response
+	ProcessorResult      processor.Response
 }
 
 func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
 	return map[string]interface{}{
-		"CIM_ComputerSystemPackage": map[string]interface{}{
-			"response":  hwResults.CSPResult.Body.GetResponse,
-			"responses": hwResults.CSPResult.Body.GetResponse,
-		},
-		"CIM_SystemPackaging": map[string]interface{}{
-			"responses": []interface{}{hwResults.SPPullResult.Body.PullResponse.SystemPackageItems},
-		},
 		"CIM_Chassis": map[string]interface{}{
 			"response":  hwResults.ChassisResult.Body.PackageResponse,
 			"responses": []interface{}{},
@@ -471,21 +423,65 @@ func createMapInterfaceForHWInfo(hwResults HWResults) (interface{}, error) {
 			"responses": []interface{}{hwResults.ProcessorResult.Body.PackageResponse},
 		}, "CIM_PhysicalMemory": map[string]interface{}{
 			"responses": hwResults.PhysicalMemoryResult.Body.PullResponse.MemoryItems,
-		}, "CIM_MediaAccessDevice": map[string]interface{}{
-			"responses": []interface{}{hwResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
-		}, "CIM_PhysicalPackage": map[string]interface{}{
-			"responses": []interface{}{hwResults.PPPullResult.Body.PullResponse.PhysicalPackage},
 		},
 	}, nil
 }
 
-func (g *GoWSMANMessages) GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error) {
-	response, err := g.wsmanMessages.CIM.ServiceAvailableToElement.Enumerate()
+func createMapInterfaceForDiskInfo(diskResults DiskResults) (interface{}, error) {
+	return map[string]interface{}{
+		"CIM_MediaAccessDevice": map[string]interface{}{
+			"responses": []interface{}{diskResults.MediaAccessPullResult.Body.PullResponse.MediaAccessDevices},
+		}, "CIM_PhysicalPackage": map[string]interface{}{
+			"responses": []interface{}{diskResults.PPPullResult.Body.PullResponse.PhysicalPackage},
+		},
+	}, nil
+}
+
+type DiskResults struct {
+	MediaAccessPullResult mediaaccess.Response
+	PPPullResult          physical.Response
+}
+
+func (g *ConnectionEntry) GetDiskInfo() (interface{}, error) {
+	results := DiskResults{}
+
+	var err error
+
+	maEnumerateResult, err := g.WsmanMessages.CIM.MediaAccessDevice.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.MediaAccessPullResult, err = g.WsmanMessages.CIM.MediaAccessDevice.Pull(maEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	ppEnumerateResult, err := g.WsmanMessages.CIM.PhysicalPackage.Enumerate()
+	if err != nil {
+		return results, err
+	}
+
+	results.PPPullResult, err = g.WsmanMessages.CIM.PhysicalPackage.Pull(ppEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return results, err
+	}
+
+	diskResults := DiskResults{
+		MediaAccessPullResult: results.MediaAccessPullResult,
+		PPPullResult:          results.PPPullResult,
+	}
+
+	return createMapInterfaceForDiskInfo(diskResults)
+}
+
+func (g *ConnectionEntry) GetPowerState() ([]service.CIM_AssociatedPowerManagementService, error) {
+	response, err := g.WsmanMessages.CIM.ServiceAvailableToElement.Enumerate()
 	if err != nil {
 		return []service.CIM_AssociatedPowerManagementService{}, err
 	}
 
-	response, err = g.wsmanMessages.CIM.ServiceAvailableToElement.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.CIM.ServiceAvailableToElement.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return []service.CIM_AssociatedPowerManagementService{}, err
 	}
@@ -493,8 +489,8 @@ func (g *GoWSMANMessages) GetPowerState() ([]service.CIM_AssociatedPowerManageme
 	return response.Body.PullResponse.AssociatedPowerManagementService, nil
 }
 
-func (g *GoWSMANMessages) GetPowerCapabilities() (boot.BootCapabilitiesResponse, error) {
-	response, err := g.wsmanMessages.AMT.BootCapabilities.Get()
+func (g *ConnectionEntry) GetPowerCapabilities() (boot.BootCapabilitiesResponse, error) {
+	response, err := g.WsmanMessages.AMT.BootCapabilities.Get()
 	if err != nil {
 		return boot.BootCapabilitiesResponse{}, err
 	}
@@ -502,8 +498,8 @@ func (g *GoWSMANMessages) GetPowerCapabilities() (boot.BootCapabilitiesResponse,
 	return response.Body.BootCapabilitiesGetResponse, nil
 }
 
-func (g *GoWSMANMessages) GetGeneralSettings() (interface{}, error) {
-	response, err := g.wsmanMessages.AMT.GeneralSettings.Get()
+func (g *ConnectionEntry) GetGeneralSettings() (interface{}, error) {
+	response, err := g.WsmanMessages.AMT.GeneralSettings.Get()
 	if err != nil {
 		return nil, err
 	}
@@ -511,17 +507,20 @@ func (g *GoWSMANMessages) GetGeneralSettings() (interface{}, error) {
 	return response.Body.GetResponse, nil
 }
 
-func (g *GoWSMANMessages) CancelUserConsentRequest() (interface{}, error) {
-	response, err := g.wsmanMessages.IPS.OptInService.CancelOptIn()
+func (g *ConnectionEntry) CancelUserConsentRequest() (dto.UserConsentMessage, error) {
+	response, err := g.WsmanMessages.IPS.OptInService.CancelOptIn()
 	if err != nil {
-		return nil, err
+		return dto.UserConsentMessage{}, err
 	}
 
-	return response.Body.CancelOptInResponse, nil
+	return dto.UserConsentMessage{
+		Name:        response.Body.CancelOptInResponse.XMLName,
+		ReturnValue: response.Body.CancelOptInResponse.ReturnValue,
+	}, nil
 }
 
-func (g *GoWSMANMessages) GetUserConsentCode() (optin.StartOptIn_OUTPUT, error) {
-	response, err := g.wsmanMessages.IPS.OptInService.StartOptIn()
+func (g *ConnectionEntry) GetUserConsentCode() (optin.StartOptIn_OUTPUT, error) {
+	response, err := g.WsmanMessages.IPS.OptInService.StartOptIn()
 	if err != nil {
 		return optin.StartOptIn_OUTPUT{}, err
 	}
@@ -529,26 +528,29 @@ func (g *GoWSMANMessages) GetUserConsentCode() (optin.StartOptIn_OUTPUT, error) 
 	return response.Body.StartOptInResponse, nil
 }
 
-func (g *GoWSMANMessages) SendConsentCode(code int) (interface{}, error) {
-	response, err := g.wsmanMessages.IPS.OptInService.SendOptInCode(code)
+func (g *ConnectionEntry) SendConsentCode(code int) (dto.UserConsentMessage, error) {
+	response, err := g.WsmanMessages.IPS.OptInService.SendOptInCode(code)
 	if err != nil {
-		return nil, err
+		return dto.UserConsentMessage{}, err
 	}
 
-	return response.Body.SendOptInCodeResponse, nil
+	return dto.UserConsentMessage{
+		Name:        response.Body.SendOptInCodeResponse.XMLName,
+		ReturnValue: response.Body.SendOptInCodeResponse.ReturnValue,
+	}, nil
 }
 
-func (g *GoWSMANMessages) GetBootData() (boot.BootCapabilitiesResponse, error) {
-	bootSettingData, err := g.wsmanMessages.AMT.BootSettingData.Get()
+func (g *ConnectionEntry) GetBootData() (boot.BootSettingDataResponse, error) {
+	bootSettingData, err := g.WsmanMessages.AMT.BootSettingData.Get()
 	if err != nil {
-		return boot.BootCapabilitiesResponse{}, err
+		return boot.BootSettingDataResponse{}, err
 	}
 
-	return bootSettingData.Body.BootCapabilitiesGetResponse, nil
+	return bootSettingData.Body.BootSettingDataGetResponse, nil
 }
 
-func (g *GoWSMANMessages) SetBootData(data boot.BootSettingDataRequest) (interface{}, error) {
-	bootSettingData, err := g.wsmanMessages.AMT.BootSettingData.Put(data)
+func (g *ConnectionEntry) SetBootData(data boot.BootSettingDataRequest) (interface{}, error) {
+	bootSettingData, err := g.WsmanMessages.AMT.BootSettingData.Put(data)
 	if err != nil {
 		return nil, err
 	}
@@ -556,8 +558,8 @@ func (g *GoWSMANMessages) SetBootData(data boot.BootSettingDataRequest) (interfa
 	return bootSettingData.Body, nil
 }
 
-func (g *GoWSMANMessages) SetBootConfigRole(role int) (interface{}, error) {
-	response, err := g.wsmanMessages.CIM.BootService.SetBootConfigRole("Intel(r) AMT: Boot Configuration 0", role)
+func (g *ConnectionEntry) SetBootConfigRole(role int) (interface{}, error) {
+	response, err := g.WsmanMessages.CIM.BootService.SetBootConfigRole("Intel(r) AMT: Boot Configuration 0", role)
 	if err != nil {
 		return cimBoot.ChangeBootOrder_OUTPUT{}, err
 	}
@@ -565,8 +567,8 @@ func (g *GoWSMANMessages) SetBootConfigRole(role int) (interface{}, error) {
 	return response.Body.ChangeBootOrder_OUTPUT, nil
 }
 
-func (g *GoWSMANMessages) ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error) {
-	response, err := g.wsmanMessages.CIM.BootConfigSetting.ChangeBootOrder(cimBoot.Source(bootSource))
+func (g *ConnectionEntry) ChangeBootOrder(bootSource string) (cimBoot.ChangeBootOrder_OUTPUT, error) {
+	response, err := g.WsmanMessages.CIM.BootConfigSetting.ChangeBootOrder(cimBoot.Source(bootSource))
 	if err != nil {
 		return cimBoot.ChangeBootOrder_OUTPUT{}, err
 	}
@@ -574,8 +576,8 @@ func (g *GoWSMANMessages) ChangeBootOrder(bootSource string) (cimBoot.ChangeBoot
 	return response.Body.ChangeBootOrder_OUTPUT, nil
 }
 
-func (g *GoWSMANMessages) GetAuditLog(startIndex int) (auditlog.Response, error) {
-	response, err := g.wsmanMessages.AMT.AuditLog.ReadRecords(startIndex)
+func (g *ConnectionEntry) GetAuditLog(startIndex int) (auditlog.Response, error) {
+	response, err := g.WsmanMessages.AMT.AuditLog.ReadRecords(startIndex)
 	if err != nil {
 		return auditlog.Response{}, err
 	}
@@ -583,8 +585,8 @@ func (g *GoWSMANMessages) GetAuditLog(startIndex int) (auditlog.Response, error)
 	return response, nil
 }
 
-func (g *GoWSMANMessages) GetEventLog() (messagelog.GetRecordsResponse, error) {
-	response, err := g.wsmanMessages.AMT.MessageLog.GetRecords(1)
+func (g *ConnectionEntry) GetEventLog() (messagelog.GetRecordsResponse, error) {
+	response, err := g.WsmanMessages.AMT.MessageLog.GetRecords(1)
 	if err != nil {
 		return messagelog.GetRecordsResponse{}, err
 	}
@@ -592,8 +594,8 @@ func (g *GoWSMANMessages) GetEventLog() (messagelog.GetRecordsResponse, error) {
 	return response.Body.GetRecordsResponse, nil
 }
 
-func (g *GoWSMANMessages) SendPowerAction(action int) (power.PowerActionResponse, error) {
-	response, err := g.wsmanMessages.CIM.PowerManagementService.RequestPowerStateChange(power.PowerState(action))
+func (g *ConnectionEntry) SendPowerAction(action int) (power.PowerActionResponse, error) {
+	response, err := g.WsmanMessages.CIM.PowerManagementService.RequestPowerStateChange(power.PowerState(action))
 	if err != nil {
 		return power.PowerActionResponse{}, err
 	}
@@ -601,13 +603,13 @@ func (g *GoWSMANMessages) SendPowerAction(action int) (power.PowerActionResponse
 	return response.Body.RequestPowerStateChangeResponse, nil
 }
 
-func (g *GoWSMANMessages) GetPublicKeyCerts() ([]publickey.PublicKeyCertificateResponse, error) {
-	response, err := g.wsmanMessages.AMT.PublicKeyCertificate.Enumerate()
+func (g *ConnectionEntry) GetPublicKeyCerts() ([]publickey.PublicKeyCertificateResponse, error) {
+	response, err := g.WsmanMessages.AMT.PublicKeyCertificate.Enumerate()
 	if err != nil {
 		return nil, err
 	}
 
-	response, err = g.wsmanMessages.AMT.PublicKeyCertificate.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.AMT.PublicKeyCertificate.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return nil, err
 	}
@@ -615,16 +617,16 @@ func (g *GoWSMANMessages) GetPublicKeyCerts() ([]publickey.PublicKeyCertificateR
 	return response.Body.PullResponse.PublicKeyCertificateItems, nil
 }
 
-func (g *GoWSMANMessages) GenerateKeyPair(keyAlgorithm publickey.KeyAlgorithm, keyLength publickey.KeyLength) (response publickey.Response, err error) {
-	return g.wsmanMessages.AMT.PublicKeyManagementService.GenerateKeyPair(keyAlgorithm, keyLength)
+func (g *ConnectionEntry) GenerateKeyPair(keyAlgorithm publickey.KeyAlgorithm, keyLength publickey.KeyLength) (response publickey.Response, err error) {
+	return g.WsmanMessages.AMT.PublicKeyManagementService.GenerateKeyPair(keyAlgorithm, keyLength)
 }
 
-func (g *GoWSMANMessages) UpdateAMTPassword(digestPassword string) (authorization.Response, error) {
-	return g.wsmanMessages.AMT.AuthorizationService.SetAdminAclEntryEx("admin", digestPassword)
+func (g *ConnectionEntry) UpdateAMTPassword(digestPassword string) (authorization.Response, error) {
+	return g.WsmanMessages.AMT.AuthorizationService.SetAdminAclEntryEx("admin", digestPassword)
 }
 
-func (g *GoWSMANMessages) CreateTLSCredentialContext(certHandle string) (response tls.Response, err error) {
-	return g.wsmanMessages.AMT.TLSCredentialContext.Create(certHandle)
+func (g *ConnectionEntry) CreateTLSCredentialContext(certHandle string) (response tls.Response, err error) {
+	return g.WsmanMessages.AMT.TLSCredentialContext.Create(certHandle)
 }
 
 // GetPublicPrivateKeyPairs
@@ -635,13 +637,13 @@ func (g *GoWSMANMessages) CreateTLSCredentialContext(certHandle string) (respons
 
 // only the public section of the key is exported.
 
-func (g *GoWSMANMessages) GetPublicPrivateKeyPairs() ([]publicprivate.PublicPrivateKeyPair, error) {
-	response, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
+func (g *ConnectionEntry) GetPublicPrivateKeyPairs() ([]publicprivate.PublicPrivateKeyPair, error) {
+	response, err := g.WsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
 	if err != nil {
 		return nil, err
 	}
 
-	response, err = g.wsmanMessages.AMT.PublicPrivateKeyPair.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.AMT.PublicPrivateKeyPair.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return nil, err
 	}
@@ -649,13 +651,13 @@ func (g *GoWSMANMessages) GetPublicPrivateKeyPairs() ([]publicprivate.PublicPriv
 	return response.Body.PullResponse.PublicPrivateKeyPairItems, nil
 }
 
-func (g *GoWSMANMessages) GetWiFiSettings() ([]wifi.WiFiEndpointSettingsResponse, error) {
-	response, err := g.wsmanMessages.CIM.WiFiEndpointSettings.Enumerate()
+func (g *ConnectionEntry) GetWiFiSettings() ([]wifi.WiFiEndpointSettingsResponse, error) {
+	response, err := g.WsmanMessages.CIM.WiFiEndpointSettings.Enumerate()
 	if err != nil {
 		return nil, err
 	}
 
-	response, err = g.wsmanMessages.CIM.WiFiEndpointSettings.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.CIM.WiFiEndpointSettings.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return nil, err
 	}
@@ -663,13 +665,13 @@ func (g *GoWSMANMessages) GetWiFiSettings() ([]wifi.WiFiEndpointSettingsResponse
 	return response.Body.PullResponse.EndpointSettingsItems, nil
 }
 
-func (g *GoWSMANMessages) GetEthernetPortSettings() ([]ethernetport.SettingsResponse, error) {
-	response, err := g.wsmanMessages.AMT.EthernetPortSettings.Enumerate()
+func (g *ConnectionEntry) GetEthernetPortSettings() ([]ethernetport.SettingsResponse, error) {
+	response, err := g.WsmanMessages.AMT.EthernetPortSettings.Enumerate()
 	if err != nil {
 		return nil, err
 	}
 
-	response, err = g.wsmanMessages.AMT.EthernetPortSettings.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.AMT.EthernetPortSettings.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return nil, err
 	}
@@ -677,29 +679,29 @@ func (g *GoWSMANMessages) GetEthernetPortSettings() ([]ethernetport.SettingsResp
 	return response.Body.PullResponse.EthernetPortItems, nil
 }
 
-func (g *GoWSMANMessages) PutEthernetPortSettings(ethernetPortSettings ethernetport.SettingsRequest, instanceID string) (ethernetport.Response, error) {
-	return g.wsmanMessages.AMT.EthernetPortSettings.Put(instanceID, ethernetPortSettings)
+func (g *ConnectionEntry) PutEthernetPortSettings(ethernetPortSettings ethernetport.SettingsRequest, instanceID string) (ethernetport.Response, error) {
+	return g.WsmanMessages.AMT.EthernetPortSettings.Put(instanceID, ethernetPortSettings)
 }
 
-func (g *GoWSMANMessages) DeletePublicPrivateKeyPair(instanceID string) error {
-	_, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Delete(instanceID)
+func (g *ConnectionEntry) DeletePublicPrivateKeyPair(instanceID string) error {
+	_, err := g.WsmanMessages.AMT.PublicPrivateKeyPair.Delete(instanceID)
 
 	return err
 }
 
-func (g *GoWSMANMessages) DeletePublicCert(instanceID string) error {
-	_, err := g.wsmanMessages.AMT.PublicKeyCertificate.Delete(instanceID)
+func (g *ConnectionEntry) DeletePublicCert(instanceID string) error {
+	_, err := g.WsmanMessages.AMT.PublicKeyCertificate.Delete(instanceID)
 
 	return err
 }
 
-func (g *GoWSMANMessages) GetCredentialRelationships() (credential.Items, error) {
-	response, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+func (g *ConnectionEntry) GetCredentialRelationships() (credential.Items, error) {
+	response, err := g.WsmanMessages.CIM.CredentialContext.Enumerate()
 	if err != nil {
 		return credential.Items{}, err
 	}
 
-	response, err = g.wsmanMessages.CIM.CredentialContext.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.CIM.CredentialContext.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return credential.Items{}, err
 	}
@@ -707,13 +709,13 @@ func (g *GoWSMANMessages) GetCredentialRelationships() (credential.Items, error)
 	return response.Body.PullResponse.Items, nil
 }
 
-func (g *GoWSMANMessages) GetConcreteDependencies() ([]concrete.ConcreteDependency, error) {
-	response, err := g.wsmanMessages.CIM.ConcreteDependency.Enumerate()
+func (g *ConnectionEntry) GetConcreteDependencies() ([]concrete.ConcreteDependency, error) {
+	response, err := g.WsmanMessages.CIM.ConcreteDependency.Enumerate()
 	if err != nil {
 		return nil, err
 	}
 
-	response, err = g.wsmanMessages.CIM.ConcreteDependency.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.CIM.ConcreteDependency.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return nil, err
 	}
@@ -721,14 +723,14 @@ func (g *GoWSMANMessages) GetConcreteDependencies() ([]concrete.ConcreteDependen
 	return response.Body.PullResponse.Items, nil
 }
 
-func (g *GoWSMANMessages) DeleteWiFiSetting(instanceID string) error {
-	_, err := g.wsmanMessages.CIM.WiFiEndpointSettings.Delete(instanceID)
+func (g *ConnectionEntry) DeleteWiFiSetting(instanceID string) error {
+	_, err := g.WsmanMessages.CIM.WiFiEndpointSettings.Delete(instanceID)
 
 	return err
 }
 
-func (g *GoWSMANMessages) AddTrustedRootCert(caCert string) (handle string, err error) {
-	response, err := g.wsmanMessages.AMT.PublicKeyManagementService.AddTrustedRootCertificate(caCert)
+func (g *ConnectionEntry) AddTrustedRootCert(caCert string) (handle string, err error) {
+	response, err := g.WsmanMessages.AMT.PublicKeyManagementService.AddTrustedRootCertificate(caCert)
 	if err != nil {
 		return "", err
 	}
@@ -740,8 +742,8 @@ func (g *GoWSMANMessages) AddTrustedRootCert(caCert string) (handle string, err 
 	return handle, nil
 }
 
-func (g *GoWSMANMessages) AddClientCert(clientCert string) (handle string, err error) {
-	response, err := g.wsmanMessages.AMT.PublicKeyManagementService.AddCertificate(clientCert)
+func (g *ConnectionEntry) AddClientCert(clientCert string) (handle string, err error) {
+	response, err := g.WsmanMessages.AMT.PublicKeyManagementService.AddCertificate(clientCert)
 	if err != nil {
 		return "", err
 	}
@@ -753,8 +755,8 @@ func (g *GoWSMANMessages) AddClientCert(clientCert string) (handle string, err e
 	return handle, nil
 }
 
-func (g *GoWSMANMessages) AddPrivateKey(privateKey string) (handle string, err error) {
-	response, err := g.wsmanMessages.AMT.PublicKeyManagementService.AddKey(privateKey)
+func (g *ConnectionEntry) AddPrivateKey(privateKey string) (handle string, err error) {
+	response, err := g.WsmanMessages.AMT.PublicKeyManagementService.AddKey(privateKey)
 	if err != nil {
 		return "", err
 	}
@@ -766,14 +768,14 @@ func (g *GoWSMANMessages) AddPrivateKey(privateKey string) (handle string, err e
 	return handle, nil
 }
 
-func (g *GoWSMANMessages) DeleteKeyPair(instanceID string) error {
-	_, err := g.wsmanMessages.AMT.PublicKeyManagementService.Delete(instanceID)
+func (g *ConnectionEntry) DeleteKeyPair(instanceID string) error {
+	_, err := g.WsmanMessages.AMT.PublicKeyManagementService.Delete(instanceID)
 
 	return err
 }
 
-func (g *GoWSMANMessages) GetWiFiPortConfigurationService() (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
-	response, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Get()
+func (g *ConnectionEntry) GetWiFiPortConfigurationService() (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
+	response, err := g.WsmanMessages.AMT.WiFiPortConfigurationService.Get()
 	if err != nil {
 		return wifiportconfiguration.WiFiPortConfigurationServiceResponse{}, err
 	}
@@ -781,7 +783,7 @@ func (g *GoWSMANMessages) GetWiFiPortConfigurationService() (wifiportconfigurati
 	return response.Body.WiFiPortConfigurationService, nil
 }
 
-func (g *GoWSMANMessages) PutWiFiPortConfigurationService(request wifiportconfiguration.WiFiPortConfigurationServiceRequest) (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
+func (g *ConnectionEntry) PutWiFiPortConfigurationService(request wifiportconfiguration.WiFiPortConfigurationServiceRequest) (wifiportconfiguration.WiFiPortConfigurationServiceResponse, error) {
 	// if local sync not enable, enable it
 	// if response.Body.WiFiPortConfigurationService.LocalProfileSynchronizationEnabled == wifiportconfiguration.LocalSyncDisabled {
 	// 	putRequest := wifiportconfiguration.WiFiPortConfigurationServiceRequest{
@@ -798,7 +800,7 @@ func (g *GoWSMANMessages) PutWiFiPortConfigurationService(request wifiportconfig
 	// 		NoHostCsmeSoftwarePolicy:           response.Body.WiFiPortConfigurationService.NoHostCsmeSoftwarePolicy,
 	// 		UEFIWiFiProfileShareEnabled:        response.Body.WiFiPortConfigurationService.UEFIWiFiProfileShareEnabled,
 	// 	}
-	response, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Put(request)
+	response, err := g.WsmanMessages.AMT.WiFiPortConfigurationService.Put(request)
 	if err != nil {
 		return wifiportconfiguration.WiFiPortConfigurationServiceResponse{}, err
 	}
@@ -806,10 +808,10 @@ func (g *GoWSMANMessages) PutWiFiPortConfigurationService(request wifiportconfig
 	return response.Body.WiFiPortConfigurationService, nil
 }
 
-func (g *GoWSMANMessages) WiFiRequestStateChange() (err error) {
+func (g *ConnectionEntry) WiFiRequestStateChange() (err error) {
 	// always turn wifi on via state change request
 	// Enumeration 32769 - WiFi is enabled in S0 + Sx/AC
-	_, err = g.wsmanMessages.CIM.WiFiPort.RequestStateChange(int(wifi.EnabledStateWifiEnabledS0SxAC))
+	_, err = g.WsmanMessages.CIM.WiFiPort.RequestStateChange(int(wifi.EnabledStateWifiEnabledS0SxAC))
 	if err != nil {
 		return err // utils.WSMANMessageError
 	}
@@ -817,76 +819,83 @@ func (g *GoWSMANMessages) WiFiRequestStateChange() (err error) {
 	return nil
 }
 
-func (g *GoWSMANMessages) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSettingsRequest, ieee8021xSettings models.IEEE8021xSettings, wifiEndpoint, clientCredential, caCredential string) (response wifiportconfiguration.Response, err error) {
-	return g.wsmanMessages.AMT.WiFiPortConfigurationService.AddWiFiSettings(wifiEndpointSettings, ieee8021xSettings, wifiEndpoint, clientCredential, caCredential)
+func (g *ConnectionEntry) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSettingsRequest, ieee8021xSettings models.IEEE8021xSettings, wifiEndpoint, clientCredential, caCredential string) (response wifiportconfiguration.Response, err error) {
+	return g.WsmanMessages.AMT.WiFiPortConfigurationService.AddWiFiSettings(wifiEndpointSettings, ieee8021xSettings, wifiEndpoint, clientCredential, caCredential)
 }
 
-func (g *GoWSMANMessages) PUTTLSSettings(instanceID string, tlsSettingData tls.SettingDataRequest) (response tls.Response, err error) {
-	return g.wsmanMessages.AMT.TLSSettingData.Put(instanceID, tlsSettingData)
+func (g *ConnectionEntry) PUTTLSSettings(instanceID string, tlsSettingData tls.SettingDataRequest) (response tls.Response, err error) {
+	return g.WsmanMessages.AMT.TLSSettingData.Put(instanceID, tlsSettingData)
 }
 
-func (g *GoWSMANMessages) GetLowAccuracyTimeSynch() (response timesynchronization.Response, err error) {
-	return g.wsmanMessages.AMT.TimeSynchronizationService.GetLowAccuracyTimeSynch()
+func (g *ConnectionEntry) GetLowAccuracyTimeSynch() (response timesynchronization.Response, err error) {
+	return g.WsmanMessages.AMT.TimeSynchronizationService.GetLowAccuracyTimeSynch()
 }
 
-func (g *GoWSMANMessages) SetHighAccuracyTimeSynch(ta0, tm1, tm2 int64) (response timesynchronization.Response, err error) {
-	return g.wsmanMessages.AMT.TimeSynchronizationService.SetHighAccuracyTimeSynch(ta0, tm1, tm2)
+func (g *ConnectionEntry) SetHighAccuracyTimeSynch(ta0, tm1, tm2 int64) (response timesynchronization.Response, err error) {
+	return g.WsmanMessages.AMT.TimeSynchronizationService.SetHighAccuracyTimeSynch(ta0, tm1, tm2)
 }
 
-func (g *GoWSMANMessages) EnumerateTLSSettingData() (response tls.Response, err error) {
-	return g.wsmanMessages.AMT.TLSSettingData.Enumerate()
+func (g *ConnectionEntry) EnumerateTLSSettingData() (response tls.Response, err error) {
+	return g.WsmanMessages.AMT.TLSSettingData.Enumerate()
 }
 
-func (g *GoWSMANMessages) PullTLSSettingData(enumerationContext string) (response tls.Response, err error) {
-	return g.wsmanMessages.AMT.TLSSettingData.Pull(enumerationContext)
+func (g *ConnectionEntry) PullTLSSettingData(enumerationContext string) (response tls.Response, err error) {
+	return g.WsmanMessages.AMT.TLSSettingData.Pull(enumerationContext)
 }
 
-func (g *GoWSMANMessages) CommitChanges() (response setupandconfiguration.Response, err error) {
-	return g.wsmanMessages.AMT.SetupAndConfigurationService.CommitChanges()
+func (g *ConnectionEntry) CommitChanges() (response setupandconfiguration.Response, err error) {
+	return g.WsmanMessages.AMT.SetupAndConfigurationService.CommitChanges()
 }
 
-func (g *GoWSMANMessages) GeneratePKCS10RequestEx(keyPair, nullSignedCertificateRequest string, signingAlgorithm publickey.SigningAlgorithm) (response publickey.Response, err error) {
-	return g.wsmanMessages.AMT.PublicKeyManagementService.GeneratePKCS10RequestEx(keyPair, nullSignedCertificateRequest, signingAlgorithm)
+func (g *ConnectionEntry) GeneratePKCS10RequestEx(keyPair, nullSignedCertificateRequest string, signingAlgorithm publickey.SigningAlgorithm) (response publickey.Response, err error) {
+	return g.WsmanMessages.AMT.PublicKeyManagementService.GeneratePKCS10RequestEx(keyPair, nullSignedCertificateRequest, signingAlgorithm)
 }
 
-func (g *GoWSMANMessages) RequestRedirectionStateChange(requestedState redirection.RequestedState) (response redirection.Response, err error) {
-	return g.wsmanMessages.AMT.RedirectionService.RequestStateChange(requestedState)
+func (g *ConnectionEntry) RequestRedirectionStateChange(requestedState redirection.RequestedState) (response redirection.Response, err error) {
+	return g.WsmanMessages.AMT.RedirectionService.RequestStateChange(requestedState)
 }
 
-func (g *GoWSMANMessages) RequestKVMStateChange(requestedState kvm.KVMRedirectionSAPRequestStateChangeInput) (response kvm.Response, err error) {
-	return g.wsmanMessages.CIM.KVMRedirectionSAP.RequestStateChange(requestedState)
+func (g *ConnectionEntry) RequestKVMStateChange(requestedState kvm.KVMRedirectionSAPRequestStateChangeInput) (response kvm.Response, err error) {
+	return g.WsmanMessages.CIM.KVMRedirectionSAP.RequestStateChange(requestedState)
 }
 
-func (g *GoWSMANMessages) PutRedirectionState(requestedState redirection.RedirectionRequest) (response redirection.Response, err error) {
-	return g.wsmanMessages.AMT.RedirectionService.Put(requestedState)
+func (g *ConnectionEntry) PutRedirectionState(requestedState redirection.RedirectionRequest) (response redirection.Response, err error) {
+	return g.WsmanMessages.AMT.RedirectionService.Put(requestedState)
 }
 
-func (g *GoWSMANMessages) GetRedirectionService() (response redirection.Response, err error) {
-	return g.wsmanMessages.AMT.RedirectionService.Get()
+func (g *ConnectionEntry) GetRedirectionService() (response redirection.Response, err error) {
+	return g.WsmanMessages.AMT.RedirectionService.Get()
 }
 
-func (g *GoWSMANMessages) GetIpsOptInService() (response optin.Response, err error) {
-	return g.wsmanMessages.IPS.OptInService.Get()
+func (g *ConnectionEntry) GetIpsOptInService() (response optin.Response, err error) {
+	return g.WsmanMessages.IPS.OptInService.Get()
 }
 
-func (g *GoWSMANMessages) GetIPSIEEE8021xSettings() (response ipsIEEE8021x.Response, err error) {
-	return g.wsmanMessages.IPS.IEEE8021xSettings.Get()
+func (g *ConnectionEntry) GetIPSIEEE8021xSettings() (response ipsIEEE8021x.Response, err error) {
+	return g.WsmanMessages.IPS.IEEE8021xSettings.Get()
 }
 
 type NetworkResults struct {
-	EthernetPortSettingsResult []ethernetport.SettingsResponse
-	IPSIEEE8021xSettingsResult ipsIEEE8021x.IEEE8021xSettingsResponse
-	WiFiSettingsResult         []wifi.WiFiEndpointSettingsResponse
-	CIMIEEE8021xSettingsResult cimIEEE8021x.PullResponse
+	EthernetPortSettingsResult  []ethernetport.SettingsResponse
+	IPSIEEE8021xSettingsResult  ipsIEEE8021x.IEEE8021xSettingsResponse
+	WiFiSettingsResult          []wifi.WiFiEndpointSettingsResponse
+	CIMIEEE8021xSettingsResult  cimIEEE8021x.PullResponse
+	WiFiPortConfigServiceResult wifiportconfiguration.WiFiPortConfigurationServiceResponse
+	NetworkInterfaces           InterfaceTypes
 }
 
-func (g *GoWSMANMessages) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Response, err error) {
-	response, err = g.wsmanMessages.CIM.IEEE8021xSettings.Enumerate()
+type InterfaceTypes struct {
+	hasWired    bool
+	hasWireless bool
+}
+
+func (g *ConnectionEntry) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Response, err error) {
+	response, err = g.WsmanMessages.CIM.IEEE8021xSettings.Enumerate()
 	if err != nil {
 		return cimIEEE8021x.Response{}, err
 	}
 
-	response, err = g.wsmanMessages.CIM.IEEE8021xSettings.Pull(response.Body.EnumerateResponse.EnumerationContext)
+	response, err = g.WsmanMessages.CIM.IEEE8021xSettings.Pull(response.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return cimIEEE8021x.Response{}, err
 	}
@@ -894,60 +903,74 @@ func (g *GoWSMANMessages) GetCIMIEEE8021xSettings() (response cimIEEE8021x.Respo
 	return response, nil
 }
 
-func (g *GoWSMANMessages) GetNetworkSettings() (interface{}, error) {
+func (g *ConnectionEntry) GetNetworkSettings() (NetworkResults, error) {
 	networkResults := NetworkResults{}
 
 	var err error
 
 	networkResults.EthernetPortSettingsResult, err = g.GetEthernetPortSettings()
 	if err != nil {
-		return nil, err
+		return networkResults, err
 	}
 
-	response, err := g.GetIPSIEEE8021xSettings()
-	if err != nil {
-		return nil, err
+	networkResults.NetworkInterfaces = g.determineInterfaceTypes(networkResults.EthernetPortSettingsResult)
+
+	if networkResults.NetworkInterfaces.hasWired {
+		response, err := g.GetIPSIEEE8021xSettings()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
 	}
 
-	networkResults.IPSIEEE8021xSettingsResult = response.Body.IEEE8021xSettingsResponse
+	if networkResults.NetworkInterfaces.hasWireless {
+		networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
+		if err != nil {
+			return networkResults, err
+		}
 
-	networkResults.WiFiSettingsResult, err = g.GetWiFiSettings()
-	if err != nil {
-		return nil, err
+		cimResponse, err := g.GetCIMIEEE8021xSettings()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
+
+		wifiPortConfigService, err := g.WsmanMessages.AMT.WiFiPortConfigurationService.Get()
+		if err != nil {
+			return networkResults, err
+		}
+
+		networkResults.WiFiPortConfigServiceResult = wifiPortConfigService.Body.WiFiPortConfigurationService
 	}
-
-	cimResponse, err := g.GetCIMIEEE8021xSettings()
-	if err != nil {
-		return nil, err
-	}
-
-	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 
 	return networkResults, nil
 }
 
+func (g *ConnectionEntry) determineInterfaceTypes(ethernetSettings []ethernetport.SettingsResponse) InterfaceTypes {
+	types := InterfaceTypes{}
+
+	for i := range ethernetSettings {
+		switch ethernetSettings[i].InstanceID {
+		case "Intel(r) AMT Ethernet Port Settings 0":
+			types.hasWired = true
+		case "Intel(r) AMT Ethernet Port Settings 1":
+			types.hasWireless = true
+		}
+	}
+
+	return types
+}
+
 // AMT Explorer Functions.
-func (g *GoWSMANMessages) GetAMT8021xCredentialContext() (ieee8021x.Response, error) {
-	enum, err := g.wsmanMessages.AMT.IEEE8021xCredentialContext.Enumerate()
+func (g *ConnectionEntry) GetAMT8021xCredentialContext() (ieee8021x.Response, error) {
+	enum, err := g.WsmanMessages.AMT.IEEE8021xCredentialContext.Enumerate()
 	if err != nil {
 		return ieee8021x.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.IEEE8021xCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return ieee8021x.Response{}, err
-	}
-
-	return pull, nil
-}
-
-func (g *GoWSMANMessages) GetAMT8021xProfile() (ieee8021x.Response, error) {
-	enum, err := g.wsmanMessages.AMT.IEEE8021xProfile.Enumerate()
-	if err != nil {
-		return ieee8021x.Response{}, err
-	}
-
-	pull, err := g.wsmanMessages.AMT.IEEE8021xProfile.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.IEEE8021xCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return ieee8021x.Response{}, err
 	}
@@ -955,13 +978,27 @@ func (g *GoWSMANMessages) GetAMT8021xProfile() (ieee8021x.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTAlarmClockService() (amtAlarmClock.Response, error) {
-	enum, err := g.wsmanMessages.AMT.AlarmClockService.Enumerate()
+func (g *ConnectionEntry) GetAMT8021xProfile() (ieee8021x.Response, error) {
+	enum, err := g.WsmanMessages.AMT.IEEE8021xProfile.Enumerate()
+	if err != nil {
+		return ieee8021x.Response{}, err
+	}
+
+	pull, err := g.WsmanMessages.AMT.IEEE8021xProfile.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return ieee8021x.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *ConnectionEntry) GetAMTAlarmClockService() (amtAlarmClock.Response, error) {
+	enum, err := g.WsmanMessages.AMT.AlarmClockService.Enumerate()
 	if err != nil {
 		return amtAlarmClock.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.AlarmClockService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.AlarmClockService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return amtAlarmClock.Response{}, err
 	}
@@ -969,8 +1006,8 @@ func (g *GoWSMANMessages) GetAMTAlarmClockService() (amtAlarmClock.Response, err
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTAuditLog() (auditlog.Response, error) {
-	readrecords, err := g.wsmanMessages.AMT.AuditLog.ReadRecords(1)
+func (g *ConnectionEntry) GetAMTAuditLog() (auditlog.Response, error) {
+	readrecords, err := g.WsmanMessages.AMT.AuditLog.ReadRecords(1)
 	if err != nil {
 		return auditlog.Response{}, err
 	}
@@ -978,13 +1015,13 @@ func (g *GoWSMANMessages) GetAMTAuditLog() (auditlog.Response, error) {
 	return readrecords, nil
 }
 
-func (g *GoWSMANMessages) GetAMTAuthorizationService() (authorization.Response, error) {
-	enum, err := g.wsmanMessages.AMT.AuthorizationService.Enumerate()
+func (g *ConnectionEntry) GetAMTAuthorizationService() (authorization.Response, error) {
+	enum, err := g.WsmanMessages.AMT.AuthorizationService.Enumerate()
 	if err != nil {
 		return authorization.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.AuthorizationService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.AuthorizationService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return authorization.Response{}, err
 	}
@@ -992,27 +1029,13 @@ func (g *GoWSMANMessages) GetAMTAuthorizationService() (authorization.Response, 
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTBootCapabilities() (boot.Response, error) {
-	enum, err := g.wsmanMessages.AMT.BootCapabilities.Enumerate()
+func (g *ConnectionEntry) GetAMTBootCapabilities() (boot.Response, error) {
+	enum, err := g.WsmanMessages.AMT.BootCapabilities.Enumerate()
 	if err != nil {
 		return boot.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.BootCapabilities.Pull(enum.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return boot.Response{}, err
-	}
-
-	return pull, nil
-}
-
-func (g *GoWSMANMessages) GetAMTBootSettingData() (boot.Response, error) {
-	enum, err := g.wsmanMessages.AMT.BootSettingData.Enumerate()
-	if err != nil {
-		return boot.Response{}, err
-	}
-
-	pull, err := g.wsmanMessages.AMT.BootSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.BootCapabilities.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return boot.Response{}, err
 	}
@@ -1020,13 +1043,27 @@ func (g *GoWSMANMessages) GetAMTBootSettingData() (boot.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTEnvironmentDetectionSettingData() (environmentdetection.Response, error) {
-	enum, err := g.wsmanMessages.AMT.EnvironmentDetectionSettingData.Enumerate()
+func (g *ConnectionEntry) GetAMTBootSettingData() (boot.Response, error) {
+	enum, err := g.WsmanMessages.AMT.BootSettingData.Enumerate()
+	if err != nil {
+		return boot.Response{}, err
+	}
+
+	pull, err := g.WsmanMessages.AMT.BootSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return boot.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *ConnectionEntry) GetAMTEnvironmentDetectionSettingData() (environmentdetection.Response, error) {
+	enum, err := g.WsmanMessages.AMT.EnvironmentDetectionSettingData.Enumerate()
 	if err != nil {
 		return environmentdetection.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.EnvironmentDetectionSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.EnvironmentDetectionSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return environmentdetection.Response{}, err
 	}
@@ -1034,13 +1071,13 @@ func (g *GoWSMANMessages) GetAMTEnvironmentDetectionSettingData() (environmentde
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTEthernetPortSettings() (ethernetport.Response, error) {
-	enum, err := g.wsmanMessages.AMT.EthernetPortSettings.Enumerate()
+func (g *ConnectionEntry) GetAMTEthernetPortSettings() (ethernetport.Response, error) {
+	enum, err := g.WsmanMessages.AMT.EthernetPortSettings.Enumerate()
 	if err != nil {
 		return ethernetport.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.EthernetPortSettings.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.EthernetPortSettings.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return ethernetport.Response{}, err
 	}
@@ -1048,8 +1085,8 @@ func (g *GoWSMANMessages) GetAMTEthernetPortSettings() (ethernetport.Response, e
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTGeneralSettings() (general.Response, error) {
-	get, err := g.wsmanMessages.AMT.GeneralSettings.Get()
+func (g *ConnectionEntry) GetAMTGeneralSettings() (general.Response, error) {
+	get, err := g.WsmanMessages.AMT.GeneralSettings.Get()
 	if err != nil {
 		return general.Response{}, err
 	}
@@ -1057,13 +1094,13 @@ func (g *GoWSMANMessages) GetAMTGeneralSettings() (general.Response, error) {
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTKerberosSettingData() (kerberos.Response, error) {
-	enum, err := g.wsmanMessages.AMT.KerberosSettingData.Enumerate()
+func (g *ConnectionEntry) GetAMTKerberosSettingData() (kerberos.Response, error) {
+	enum, err := g.WsmanMessages.AMT.KerberosSettingData.Enumerate()
 	if err != nil {
 		return kerberos.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.KerberosSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.KerberosSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return kerberos.Response{}, err
 	}
@@ -1071,13 +1108,13 @@ func (g *GoWSMANMessages) GetAMTKerberosSettingData() (kerberos.Response, error)
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTManagementPresenceRemoteSAP() (managementpresence.Response, error) {
-	enum, err := g.wsmanMessages.AMT.ManagementPresenceRemoteSAP.Enumerate()
+func (g *ConnectionEntry) GetAMTManagementPresenceRemoteSAP() (managementpresence.Response, error) {
+	enum, err := g.WsmanMessages.AMT.ManagementPresenceRemoteSAP.Enumerate()
 	if err != nil {
 		return managementpresence.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.ManagementPresenceRemoteSAP.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.ManagementPresenceRemoteSAP.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return managementpresence.Response{}, err
 	}
@@ -1085,8 +1122,8 @@ func (g *GoWSMANMessages) GetAMTManagementPresenceRemoteSAP() (managementpresenc
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTMessageLog() (messagelog.Response, error) {
-	get, err := g.wsmanMessages.AMT.MessageLog.GetRecords(1)
+func (g *ConnectionEntry) GetAMTMessageLog() (messagelog.Response, error) {
+	get, err := g.WsmanMessages.AMT.MessageLog.GetRecords(1)
 	if err != nil {
 		return messagelog.Response{}, err
 	}
@@ -1094,13 +1131,13 @@ func (g *GoWSMANMessages) GetAMTMessageLog() (messagelog.Response, error) {
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTMPSUsernamePassword() (mps.Response, error) {
-	enum, err := g.wsmanMessages.AMT.MPSUsernamePassword.Enumerate()
+func (g *ConnectionEntry) GetAMTMPSUsernamePassword() (mps.Response, error) {
+	enum, err := g.WsmanMessages.AMT.MPSUsernamePassword.Enumerate()
 	if err != nil {
 		return mps.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.MPSUsernamePassword.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.MPSUsernamePassword.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return mps.Response{}, err
 	}
@@ -1108,13 +1145,13 @@ func (g *GoWSMANMessages) GetAMTMPSUsernamePassword() (mps.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTPublicKeyCertificate() (publickey.Response, error) {
-	enum, err := g.wsmanMessages.AMT.PublicKeyCertificate.Enumerate()
+func (g *ConnectionEntry) GetAMTPublicKeyCertificate() (publickey.Response, error) {
+	enum, err := g.WsmanMessages.AMT.PublicKeyCertificate.Enumerate()
 	if err != nil {
 		return publickey.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.PublicKeyCertificate.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.PublicKeyCertificate.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return publickey.Response{}, err
 	}
@@ -1122,8 +1159,8 @@ func (g *GoWSMANMessages) GetAMTPublicKeyCertificate() (publickey.Response, erro
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTPublicKeyManagementService() (publickey.Response, error) {
-	get, err := g.wsmanMessages.AMT.PublicKeyManagementService.Get()
+func (g *ConnectionEntry) GetAMTPublicKeyManagementService() (publickey.Response, error) {
+	get, err := g.WsmanMessages.AMT.PublicKeyManagementService.Get()
 	if err != nil {
 		return publickey.Response{}, err
 	}
@@ -1131,13 +1168,13 @@ func (g *GoWSMANMessages) GetAMTPublicKeyManagementService() (publickey.Response
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTPublicPrivateKeyPair() (publicprivate.Response, error) {
-	enum, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
+func (g *ConnectionEntry) GetAMTPublicPrivateKeyPair() (publicprivate.Response, error) {
+	enum, err := g.WsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
 	if err != nil {
 		return publicprivate.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.PublicPrivateKeyPair.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return publicprivate.Response{}, err
 	}
@@ -1145,8 +1182,8 @@ func (g *GoWSMANMessages) GetAMTPublicPrivateKeyPair() (publicprivate.Response, 
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTRedirectionService() (redirection.Response, error) {
-	get, err := g.wsmanMessages.AMT.RedirectionService.Get()
+func (g *ConnectionEntry) GetAMTRedirectionService() (redirection.Response, error) {
+	get, err := g.WsmanMessages.AMT.RedirectionService.Get()
 	if err != nil {
 		return redirection.Response{}, err
 	}
@@ -1154,13 +1191,22 @@ func (g *GoWSMANMessages) GetAMTRedirectionService() (redirection.Response, erro
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTRemoteAccessPolicyAppliesToMPS() (remoteaccess.Response, error) {
-	enum, err := g.wsmanMessages.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
+func (g *ConnectionEntry) SetAMTRedirectionService(request redirection.RedirectionRequest) (redirection.Response, error) {
+	response, err := g.WsmanMessages.AMT.RedirectionService.Put(request)
+	if err != nil {
+		return redirection.Response{}, err
+	}
+
+	return response, nil
+}
+
+func (g *ConnectionEntry) GetAMTRemoteAccessPolicyAppliesToMPS() (remoteaccess.Response, error) {
+	enum, err := g.WsmanMessages.AMT.RemoteAccessPolicyAppliesToMPS.Enumerate()
 	if err != nil {
 		return remoteaccess.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.RemoteAccessPolicyAppliesToMPS.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.RemoteAccessPolicyAppliesToMPS.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return remoteaccess.Response{}, err
 	}
@@ -1168,13 +1214,13 @@ func (g *GoWSMANMessages) GetAMTRemoteAccessPolicyAppliesToMPS() (remoteaccess.R
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTRemoteAccessPolicyRule() (remoteaccess.Response, error) {
-	enum, err := g.wsmanMessages.AMT.RemoteAccessPolicyRule.Enumerate()
+func (g *ConnectionEntry) GetAMTRemoteAccessPolicyRule() (remoteaccess.Response, error) {
+	enum, err := g.WsmanMessages.AMT.RemoteAccessPolicyRule.Enumerate()
 	if err != nil {
 		return remoteaccess.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.RemoteAccessPolicyRule.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.RemoteAccessPolicyRule.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return remoteaccess.Response{}, err
 	}
@@ -1182,8 +1228,8 @@ func (g *GoWSMANMessages) GetAMTRemoteAccessPolicyRule() (remoteaccess.Response,
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTRemoteAccessService() (remoteaccess.Response, error) {
-	get, err := g.wsmanMessages.AMT.RemoteAccessService.Get()
+func (g *ConnectionEntry) GetAMTRemoteAccessService() (remoteaccess.Response, error) {
+	get, err := g.WsmanMessages.AMT.RemoteAccessService.Get()
 	if err != nil {
 		return remoteaccess.Response{}, err
 	}
@@ -1191,8 +1237,8 @@ func (g *GoWSMANMessages) GetAMTRemoteAccessService() (remoteaccess.Response, er
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTSetupAndConfigurationService() (setupandconfiguration.Response, error) {
-	get, err := g.wsmanMessages.AMT.SetupAndConfigurationService.Get()
+func (g *ConnectionEntry) GetAMTSetupAndConfigurationService() (setupandconfiguration.Response, error) {
+	get, err := g.WsmanMessages.AMT.SetupAndConfigurationService.Get()
 	if err != nil {
 		return setupandconfiguration.Response{}, err
 	}
@@ -1200,8 +1246,8 @@ func (g *GoWSMANMessages) GetAMTSetupAndConfigurationService() (setupandconfigur
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTTimeSynchronizationService() (timesynchronization.Response, error) {
-	get, err := g.wsmanMessages.AMT.TimeSynchronizationService.Get()
+func (g *ConnectionEntry) GetAMTTimeSynchronizationService() (timesynchronization.Response, error) {
+	get, err := g.WsmanMessages.AMT.TimeSynchronizationService.Get()
 	if err != nil {
 		return timesynchronization.Response{}, err
 	}
@@ -1209,27 +1255,13 @@ func (g *GoWSMANMessages) GetAMTTimeSynchronizationService() (timesynchronizatio
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTTLSCredentialContext() (tls.Response, error) {
-	enum, err := g.wsmanMessages.AMT.TLSCredentialContext.Enumerate()
+func (g *ConnectionEntry) GetAMTTLSCredentialContext() (tls.Response, error) {
+	enum, err := g.WsmanMessages.AMT.TLSCredentialContext.Enumerate()
 	if err != nil {
 		return tls.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.TLSCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return tls.Response{}, err
-	}
-
-	return pull, nil
-}
-
-func (g *GoWSMANMessages) GetAMTTLSProtocolEndpointCollection() (tls.Response, error) {
-	enum, err := g.wsmanMessages.AMT.TLSProtocolEndpointCollection.Enumerate()
-	if err != nil {
-		return tls.Response{}, err
-	}
-
-	pull, err := g.wsmanMessages.AMT.TLSProtocolEndpointCollection.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.TLSCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return tls.Response{}, err
 	}
@@ -1237,13 +1269,13 @@ func (g *GoWSMANMessages) GetAMTTLSProtocolEndpointCollection() (tls.Response, e
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTTLSSettingData() (tls.Response, error) {
-	enum, err := g.wsmanMessages.AMT.TLSSettingData.Enumerate()
+func (g *ConnectionEntry) GetAMTTLSProtocolEndpointCollection() (tls.Response, error) {
+	enum, err := g.WsmanMessages.AMT.TLSProtocolEndpointCollection.Enumerate()
 	if err != nil {
 		return tls.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.TLSSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.TLSProtocolEndpointCollection.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return tls.Response{}, err
 	}
@@ -1251,8 +1283,22 @@ func (g *GoWSMANMessages) GetAMTTLSSettingData() (tls.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetAMTUserInitiatedConnectionService() (userinitiatedconnection.Response, error) {
-	get, err := g.wsmanMessages.AMT.UserInitiatedConnectionService.Get()
+func (g *ConnectionEntry) GetAMTTLSSettingData() (tls.Response, error) {
+	enum, err := g.WsmanMessages.AMT.TLSSettingData.Enumerate()
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	pull, err := g.WsmanMessages.AMT.TLSSettingData.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return tls.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *ConnectionEntry) GetAMTUserInitiatedConnectionService() (userinitiatedconnection.Response, error) {
+	get, err := g.WsmanMessages.AMT.UserInitiatedConnectionService.Get()
 	if err != nil {
 		return userinitiatedconnection.Response{}, err
 	}
@@ -1260,13 +1306,13 @@ func (g *GoWSMANMessages) GetAMTUserInitiatedConnectionService() (userinitiatedc
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetAMTWiFiPortConifgurationService() (wifiportconfiguration.Response, error) {
-	enum, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Enumerate()
+func (g *ConnectionEntry) GetAMTWiFiPortConfigurationService() (wifiportconfiguration.Response, error) {
+	enum, err := g.WsmanMessages.AMT.WiFiPortConfigurationService.Enumerate()
 	if err != nil {
 		return wifiportconfiguration.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.AMT.WiFiPortConfigurationService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.AMT.WiFiPortConfigurationService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return wifiportconfiguration.Response{}, err
 	}
@@ -1274,13 +1320,13 @@ func (g *GoWSMANMessages) GetAMTWiFiPortConifgurationService() (wifiportconfigur
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMBIOSElement() (bios.Response, error) {
-	enum, err := g.wsmanMessages.CIM.BIOSElement.Enumerate()
+func (g *ConnectionEntry) GetCIMBIOSElement() (bios.Response, error) {
+	enum, err := g.WsmanMessages.CIM.BIOSElement.Enumerate()
 	if err != nil {
 		return bios.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.BIOSElement.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.BIOSElement.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return bios.Response{}, err
 	}
@@ -1288,27 +1334,13 @@ func (g *GoWSMANMessages) GetCIMBIOSElement() (bios.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMBootConfigSetting() (cimBoot.Response, error) {
-	enum, err := g.wsmanMessages.CIM.BootConfigSetting.Enumerate()
+func (g *ConnectionEntry) GetCIMBootConfigSetting() (cimBoot.Response, error) {
+	enum, err := g.WsmanMessages.CIM.BootConfigSetting.Enumerate()
 	if err != nil {
 		return cimBoot.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.BootConfigSetting.Pull(enum.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return cimBoot.Response{}, err
-	}
-
-	return pull, nil
-}
-
-func (g *GoWSMANMessages) GetCIMBootService() (cimBoot.Response, error) {
-	enum, err := g.wsmanMessages.CIM.BootService.Enumerate()
-	if err != nil {
-		return cimBoot.Response{}, err
-	}
-
-	pull, err := g.wsmanMessages.CIM.BootService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.BootConfigSetting.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return cimBoot.Response{}, err
 	}
@@ -1316,13 +1348,13 @@ func (g *GoWSMANMessages) GetCIMBootService() (cimBoot.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMBootSourceSetting() (cimBoot.Response, error) {
-	enum, err := g.wsmanMessages.CIM.BootSourceSetting.Enumerate()
+func (g *ConnectionEntry) GetCIMBootService() (cimBoot.Response, error) {
+	enum, err := g.WsmanMessages.CIM.BootService.Enumerate()
 	if err != nil {
 		return cimBoot.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.BootSourceSetting.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.BootService.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return cimBoot.Response{}, err
 	}
@@ -1330,13 +1362,27 @@ func (g *GoWSMANMessages) GetCIMBootSourceSetting() (cimBoot.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMCard() (card.Response, error) {
-	enum, err := g.wsmanMessages.CIM.Card.Enumerate()
+func (g *ConnectionEntry) GetCIMBootSourceSetting() (cimBoot.Response, error) {
+	enum, err := g.WsmanMessages.CIM.BootSourceSetting.Enumerate()
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	pull, err := g.WsmanMessages.CIM.BootSourceSetting.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return cimBoot.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *ConnectionEntry) GetCIMCard() (card.Response, error) {
+	enum, err := g.WsmanMessages.CIM.Card.Enumerate()
 	if err != nil {
 		return card.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.Card.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.Card.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return card.Response{}, err
 	}
@@ -1344,13 +1390,13 @@ func (g *GoWSMANMessages) GetCIMCard() (card.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMChassis() (chassis.Response, error) {
-	enum, err := g.wsmanMessages.CIM.Chassis.Enumerate()
+func (g *ConnectionEntry) GetCIMChassis() (chassis.Response, error) {
+	enum, err := g.WsmanMessages.CIM.Chassis.Enumerate()
 	if err != nil {
 		return chassis.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.Chassis.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.Chassis.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return chassis.Response{}, err
 	}
@@ -1358,13 +1404,13 @@ func (g *GoWSMANMessages) GetCIMChassis() (chassis.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMChip() (chip.Response, error) {
-	enum, err := g.wsmanMessages.CIM.Chip.Enumerate()
+func (g *ConnectionEntry) GetCIMChip() (chip.Response, error) {
+	enum, err := g.WsmanMessages.CIM.Chip.Enumerate()
 	if err != nil {
 		return chip.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.Chip.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.Chip.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return chip.Response{}, err
 	}
@@ -1372,13 +1418,13 @@ func (g *GoWSMANMessages) GetCIMChip() (chip.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMComputerSystemPackage() (computer.Response, error) {
-	enum, err := g.wsmanMessages.CIM.ComputerSystemPackage.Enumerate()
+func (g *ConnectionEntry) GetCIMComputerSystemPackage() (computer.Response, error) {
+	enum, err := g.WsmanMessages.CIM.ComputerSystemPackage.Enumerate()
 	if err != nil {
 		return computer.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.ComputerSystemPackage.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.ComputerSystemPackage.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return computer.Response{}, err
 	}
@@ -1386,13 +1432,13 @@ func (g *GoWSMANMessages) GetCIMComputerSystemPackage() (computer.Response, erro
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMConcreteDependency() (concrete.Response, error) {
-	enum, err := g.wsmanMessages.CIM.ConcreteDependency.Enumerate()
+func (g *ConnectionEntry) GetCIMConcreteDependency() (concrete.Response, error) {
+	enum, err := g.WsmanMessages.CIM.ConcreteDependency.Enumerate()
 	if err != nil {
 		return concrete.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.ConcreteDependency.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.ConcreteDependency.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return concrete.Response{}, err
 	}
@@ -1400,13 +1446,13 @@ func (g *GoWSMANMessages) GetCIMConcreteDependency() (concrete.Response, error) 
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMCredentialContext() (credential.Response, error) {
-	enum, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+func (g *ConnectionEntry) GetCIMCredentialContext() (credential.Response, error) {
+	enum, err := g.WsmanMessages.CIM.CredentialContext.Enumerate()
 	if err != nil {
 		return credential.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.CredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.CredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return credential.Response{}, err
 	}
@@ -1414,13 +1460,13 @@ func (g *GoWSMANMessages) GetCIMCredentialContext() (credential.Response, error)
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMKVMRedirectionSAP() (kvm.Response, error) {
-	enum, err := g.wsmanMessages.CIM.KVMRedirectionSAP.Enumerate()
+func (g *ConnectionEntry) GetCIMKVMRedirectionSAP() (kvm.Response, error) {
+	enum, err := g.WsmanMessages.CIM.KVMRedirectionSAP.Enumerate()
 	if err != nil {
 		return kvm.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.KVMRedirectionSAP.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.KVMRedirectionSAP.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return kvm.Response{}, err
 	}
@@ -1428,13 +1474,13 @@ func (g *GoWSMANMessages) GetCIMKVMRedirectionSAP() (kvm.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMMediaAccessDevice() (mediaaccess.Response, error) {
-	enum, err := g.wsmanMessages.CIM.MediaAccessDevice.Enumerate()
+func (g *ConnectionEntry) GetCIMMediaAccessDevice() (mediaaccess.Response, error) {
+	enum, err := g.WsmanMessages.CIM.MediaAccessDevice.Enumerate()
 	if err != nil {
 		return mediaaccess.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.MediaAccessDevice.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.MediaAccessDevice.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return mediaaccess.Response{}, err
 	}
@@ -1442,27 +1488,13 @@ func (g *GoWSMANMessages) GetCIMMediaAccessDevice() (mediaaccess.Response, error
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMPhysicalMemory() (physical.Response, error) {
-	enum, err := g.wsmanMessages.CIM.PhysicalMemory.Enumerate()
+func (g *ConnectionEntry) GetCIMPhysicalMemory() (physical.Response, error) {
+	enum, err := g.WsmanMessages.CIM.PhysicalMemory.Enumerate()
 	if err != nil {
 		return physical.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.PhysicalMemory.Pull(enum.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return physical.Response{}, err
-	}
-
-	return pull, nil
-}
-
-func (g *GoWSMANMessages) GetCIMPhysicalPackage() (physical.Response, error) {
-	enum, err := g.wsmanMessages.CIM.PhysicalPackage.Enumerate()
-	if err != nil {
-		return physical.Response{}, err
-	}
-
-	pull, err := g.wsmanMessages.CIM.PhysicalPackage.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.PhysicalMemory.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return physical.Response{}, err
 	}
@@ -1470,8 +1502,22 @@ func (g *GoWSMANMessages) GetCIMPhysicalPackage() (physical.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMPowerManagementService() (power.Response, error) {
-	get, err := g.wsmanMessages.CIM.PowerManagementService.Get()
+func (g *ConnectionEntry) GetCIMPhysicalPackage() (physical.Response, error) {
+	enum, err := g.WsmanMessages.CIM.PhysicalPackage.Enumerate()
+	if err != nil {
+		return physical.Response{}, err
+	}
+
+	pull, err := g.WsmanMessages.CIM.PhysicalPackage.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return physical.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *ConnectionEntry) GetCIMPowerManagementService() (power.Response, error) {
+	get, err := g.WsmanMessages.CIM.PowerManagementService.Get()
 	if err != nil {
 		return power.Response{}, err
 	}
@@ -1479,13 +1525,13 @@ func (g *GoWSMANMessages) GetCIMPowerManagementService() (power.Response, error)
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetCIMProcessor() (processor.Response, error) {
-	enum, err := g.wsmanMessages.CIM.Processor.Enumerate()
+func (g *ConnectionEntry) GetCIMProcessor() (processor.Response, error) {
+	enum, err := g.WsmanMessages.CIM.Processor.Enumerate()
 	if err != nil {
 		return processor.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.Processor.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.Processor.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return processor.Response{}, err
 	}
@@ -1493,13 +1539,13 @@ func (g *GoWSMANMessages) GetCIMProcessor() (processor.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMServiceAvailableToElement() (service.Response, error) {
-	enum, err := g.wsmanMessages.CIM.ServiceAvailableToElement.Enumerate()
+func (g *ConnectionEntry) GetCIMServiceAvailableToElement() (service.Response, error) {
+	enum, err := g.WsmanMessages.CIM.ServiceAvailableToElement.Enumerate()
 	if err != nil {
 		return service.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.ServiceAvailableToElement.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.ServiceAvailableToElement.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return service.Response{}, err
 	}
@@ -1507,13 +1553,13 @@ func (g *GoWSMANMessages) GetCIMServiceAvailableToElement() (service.Response, e
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMSoftwareIdentity() (software.Response, error) {
-	enum, err := g.wsmanMessages.CIM.SoftwareIdentity.Enumerate()
+func (g *ConnectionEntry) GetCIMSoftwareIdentity() (software.Response, error) {
+	enum, err := g.WsmanMessages.CIM.SoftwareIdentity.Enumerate()
 	if err != nil {
 		return software.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.SoftwareIdentity.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.SoftwareIdentity.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return software.Response{}, err
 	}
@@ -1521,13 +1567,13 @@ func (g *GoWSMANMessages) GetCIMSoftwareIdentity() (software.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMSystemPackaging() (system.Response, error) {
-	enum, err := g.wsmanMessages.CIM.SystemPackaging.Enumerate()
+func (g *ConnectionEntry) GetCIMSystemPackaging() (system.Response, error) {
+	enum, err := g.WsmanMessages.CIM.SystemPackaging.Enumerate()
 	if err != nil {
 		return system.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.SystemPackaging.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.SystemPackaging.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return system.Response{}, err
 	}
@@ -1535,27 +1581,13 @@ func (g *GoWSMANMessages) GetCIMSystemPackaging() (system.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetCIMWiFiEndpointSettings() (wifi.Response, error) {
-	enum, err := g.wsmanMessages.CIM.WiFiEndpointSettings.Enumerate()
+func (g *ConnectionEntry) GetCIMWiFiEndpointSettings() (wifi.Response, error) {
+	enum, err := g.WsmanMessages.CIM.WiFiEndpointSettings.Enumerate()
 	if err != nil {
 		return wifi.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.CIM.WiFiEndpointSettings.Pull(enum.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return wifi.Response{}, err
-	}
-
-	return pull, nil
-}
-
-func (g *GoWSMANMessages) GetCIMWiFiPort() (wifi.Response, error) {
-	enum, err := g.wsmanMessages.CIM.WiFiPort.Enumerate()
-	if err != nil {
-		return wifi.Response{}, err
-	}
-
-	pull, err := g.wsmanMessages.CIM.WiFiPort.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.CIM.WiFiEndpointSettings.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return wifi.Response{}, err
 	}
@@ -1563,13 +1595,27 @@ func (g *GoWSMANMessages) GetCIMWiFiPort() (wifi.Response, error) {
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetIPS8021xCredentialContext() (ipsIEEE8021x.Response, error) {
-	enum, err := g.wsmanMessages.IPS.IEEE8021xCredentialContext.Enumerate()
+func (g *ConnectionEntry) GetCIMWiFiPort() (wifi.Response, error) {
+	enum, err := g.WsmanMessages.CIM.WiFiPort.Enumerate()
+	if err != nil {
+		return wifi.Response{}, err
+	}
+
+	pull, err := g.WsmanMessages.CIM.WiFiPort.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return wifi.Response{}, err
+	}
+
+	return pull, nil
+}
+
+func (g *ConnectionEntry) GetIPS8021xCredentialContext() (ipsIEEE8021x.Response, error) {
+	enum, err := g.WsmanMessages.IPS.IEEE8021xCredentialContext.Enumerate()
 	if err != nil {
 		return ipsIEEE8021x.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.IPS.IEEE8021xCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.IPS.IEEE8021xCredentialContext.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return ipsIEEE8021x.Response{}, err
 	}
@@ -1577,13 +1623,13 @@ func (g *GoWSMANMessages) GetIPS8021xCredentialContext() (ipsIEEE8021x.Response,
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetIPSAlarmClockOccurrence() (ipsAlarmClock.Response, error) {
-	enum, err := g.wsmanMessages.IPS.AlarmClockOccurrence.Enumerate()
+func (g *ConnectionEntry) GetIPSAlarmClockOccurrence() (ipsAlarmClock.Response, error) {
+	enum, err := g.WsmanMessages.IPS.AlarmClockOccurrence.Enumerate()
 	if err != nil {
 		return ipsAlarmClock.Response{}, err
 	}
 
-	pull, err := g.wsmanMessages.IPS.AlarmClockOccurrence.Pull(enum.Body.EnumerateResponse.EnumerationContext)
+	pull, err := g.WsmanMessages.IPS.AlarmClockOccurrence.Pull(enum.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return ipsAlarmClock.Response{}, err
 	}
@@ -1591,8 +1637,8 @@ func (g *GoWSMANMessages) GetIPSAlarmClockOccurrence() (ipsAlarmClock.Response, 
 	return pull, nil
 }
 
-func (g *GoWSMANMessages) GetIPSHostBasedSetupService() (hostbasedsetup.Response, error) {
-	get, err := g.wsmanMessages.IPS.HostBasedSetupService.Get()
+func (g *ConnectionEntry) GetIPSHostBasedSetupService() (hostbasedsetup.Response, error) {
+	get, err := g.WsmanMessages.IPS.HostBasedSetupService.Get()
 	if err != nil {
 		return hostbasedsetup.Response{}, err
 	}
@@ -1600,13 +1646,22 @@ func (g *GoWSMANMessages) GetIPSHostBasedSetupService() (hostbasedsetup.Response
 	return get, nil
 }
 
-func (g *GoWSMANMessages) GetIPSOptInService() (optin.Response, error) {
-	get, err := g.wsmanMessages.IPS.OptInService.Get()
+func (g *ConnectionEntry) GetIPSOptInService() (optin.Response, error) {
+	get, err := g.WsmanMessages.IPS.OptInService.Get()
 	if err != nil {
 		return optin.Response{}, err
 	}
 
 	return get, nil
+}
+
+func (g *ConnectionEntry) SetIPSOptInService(request optin.OptInServiceRequest) error {
+	_, err := g.WsmanMessages.IPS.OptInService.Put(request)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type Certificates struct {
@@ -1616,43 +1671,43 @@ type Certificates struct {
 	CIMCredentialContextResponse credential.PullResponse
 }
 
-func (g *GoWSMANMessages) GetCertificates() (Certificates, error) {
-	concreteDepEnumResp, err := g.wsmanMessages.CIM.ConcreteDependency.Enumerate()
+func (g *ConnectionEntry) GetCertificates() (Certificates, error) {
+	concreteDepEnumResp, err := g.WsmanMessages.CIM.ConcreteDependency.Enumerate()
 	if err != nil {
 		return Certificates{}, err
 	}
 
-	concreteDepResponse, err := g.wsmanMessages.CIM.ConcreteDependency.Pull(concreteDepEnumResp.Body.EnumerateResponse.EnumerationContext)
+	concreteDepResponse, err := g.WsmanMessages.CIM.ConcreteDependency.Pull(concreteDepEnumResp.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return Certificates{}, err
 	}
 
-	pubKeyCertEnumResp, err := g.wsmanMessages.AMT.PublicKeyCertificate.Enumerate()
+	pubKeyCertEnumResp, err := g.WsmanMessages.AMT.PublicKeyCertificate.Enumerate()
 	if err != nil {
 		return Certificates{}, err
 	}
 
-	pubKeyCertResponse, err := g.wsmanMessages.AMT.PublicKeyCertificate.Pull(pubKeyCertEnumResp.Body.EnumerateResponse.EnumerationContext)
+	pubKeyCertResponse, err := g.WsmanMessages.AMT.PublicKeyCertificate.Pull(pubKeyCertEnumResp.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return Certificates{}, err
 	}
 
-	pubPrivKeyPairEnumResp, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
+	pubPrivKeyPairEnumResp, err := g.WsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
 	if err != nil {
 		return Certificates{}, err
 	}
 
-	pubPrivKeyPairResponse, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Pull(pubPrivKeyPairEnumResp.Body.EnumerateResponse.EnumerationContext)
+	pubPrivKeyPairResponse, err := g.WsmanMessages.AMT.PublicPrivateKeyPair.Pull(pubPrivKeyPairEnumResp.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return Certificates{}, err
 	}
 
-	cimCredContextEnumResp, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+	cimCredContextEnumResp, err := g.WsmanMessages.CIM.CredentialContext.Enumerate()
 	if err != nil {
 		return Certificates{}, err
 	}
 
-	cimCredContextResponse, err := g.wsmanMessages.CIM.CredentialContext.Pull(cimCredContextEnumResp.Body.EnumerateResponse.EnumerationContext)
+	cimCredContextResponse, err := g.WsmanMessages.CIM.CredentialContext.Pull(cimCredContextEnumResp.Body.EnumerateResponse.EnumerationContext)
 	if err != nil {
 		return Certificates{}, err
 	}
@@ -1665,4 +1720,18 @@ func (g *GoWSMANMessages) GetCertificates() (Certificates, error) {
 	}
 
 	return certificates, nil
+}
+
+func (g *ConnectionEntry) GetTLSSettingData() ([]tls.SettingDataResponse, error) {
+	tlsSettingDataEnumResp, err := g.WsmanMessages.AMT.TLSSettingData.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	tlsSettingDataResponse, err := g.WsmanMessages.AMT.TLSSettingData.Pull(tlsSettingDataEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+
+	return tlsSettingDataResponse.Body.PullResponse.SettingDataItems, nil
 }

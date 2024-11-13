@@ -10,7 +10,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -23,20 +24,21 @@ type test struct {
 	domainSuffix string
 	tenantID     string
 	input        entity.Domain
-	mock         func(repo *MockRepository)
+	mock         func(repo *mocks.MockDomainsRepository)
 	res          interface{}
 	err          error
 }
 
-func domainsTest(t *testing.T) (*domains.UseCase, *MockRepository) {
+func domainsTest(t *testing.T) (*domains.UseCase, *mocks.MockDomainsRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
+	repo := mocks.NewMockDomainsRepository(mockCtl)
 	log := logger.New("error")
-	useCase := domains.New(repo, log)
+	crypto := mocks.MockCrypto{}
+	useCase := domains.New(repo, log, crypto)
 
 	return useCase, repo
 }
@@ -47,7 +49,7 @@ func TestGetCount(t *testing.T) {
 	tests := []test{
 		{
 			name: "empty result",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, nil)
 			},
 			res: 0,
@@ -55,7 +57,7 @@ func TestGetCount(t *testing.T) {
 		},
 		{
 			name: "result with error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, domains.ErrDatabase)
 			},
 			res: 0,
@@ -112,7 +114,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testDomains, nil)
@@ -125,7 +127,7 @@ func TestGet(t *testing.T) {
 			top:      5,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, domains.ErrDatabase)
@@ -138,7 +140,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     20,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Domain{}, nil)
@@ -187,9 +189,9 @@ func TestGetDomainByDomainSuffix(t *testing.T) {
 	domainDTO := dto.Domain{
 		ProfileName:                   "test-domain",
 		DomainSuffix:                  "test.com",
-		ProvisioningCert:              "test-cert",
+		ProvisioningCert:              "",
 		ProvisioningCertStorageFormat: "test-format",
-		ProvisioningCertPassword:      "test-password",
+		ProvisioningCertPassword:      "",
 		TenantID:                      "tenant-id-456",
 		Version:                       "1.0.0",
 	}
@@ -199,7 +201,7 @@ func TestGetDomainByDomainSuffix(t *testing.T) {
 			name:         "successful retrieval",
 			domainSuffix: "test.com",
 			tenantID:     "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					GetDomainByDomainSuffix(context.Background(), "test.com", "tenant-id-456").
 					Return(&domain, nil)
@@ -211,7 +213,7 @@ func TestGetDomainByDomainSuffix(t *testing.T) {
 			name:         "domain not found",
 			domainSuffix: "unknown.com",
 			tenantID:     "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					GetDomainByDomainSuffix(context.Background(), "unknown.com", "tenant-id-456").
 					Return(nil, nil)
@@ -265,9 +267,9 @@ func TestGetByName(t *testing.T) {
 	domainDTO := &dto.Domain{
 		ProfileName:                   "test-domain",
 		DomainSuffix:                  "test-domain",
-		ProvisioningCert:              "test-cert",
+		ProvisioningCert:              "",
 		ProvisioningCertStorageFormat: "test-format",
-		ProvisioningCertPassword:      "test-password",
+		ProvisioningCertPassword:      "",
 		TenantID:                      "tenant-id-456",
 		Version:                       "1.0.0",
 	}
@@ -279,7 +281,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "test-domain",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "test-domain", "tenant-id-456").
 					Return(domain, nil)
@@ -293,7 +295,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "unknown-domain",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					GetByName(context.Background(), "unknown-domain", "tenant-id-456").
 					Return(nil, nil)
@@ -333,7 +335,7 @@ func TestDelete(t *testing.T) {
 			name:       "successful deletion",
 			domainName: "example-domain",
 			tenantID:   "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "example-domain", "tenant-id-456").
 					Return(true, nil)
@@ -344,7 +346,7 @@ func TestDelete(t *testing.T) {
 			name:       "deletion fails - domain not found",
 			domainName: "nonexistent-domain",
 			tenantID:   "tenant-id-456",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Delete(context.Background(), "nonexistent-domain", "tenant-id-456").
 					Return(false, nil)
@@ -378,9 +380,10 @@ func TestUpdate(t *testing.T) {
 	t.Parallel()
 
 	domain := &entity.Domain{
-		ProfileName: "example-domain",
-		TenantID:    "tenant-id-456",
-		Version:     "1.0.0",
+		ProfileName:              "example-domain",
+		TenantID:                 "tenant-id-456",
+		ProvisioningCertPassword: "encrypted",
+		Version:                  "1.0.0",
 	}
 	domainDTO := &dto.Domain{
 		ProfileName: "example-domain",
@@ -391,7 +394,7 @@ func TestUpdate(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful update",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), domain).
 					Return(true, nil)
@@ -404,7 +407,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - not found",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), domain).
 					Return(false, nil)
@@ -414,7 +417,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - database error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Update(context.Background(), domain).
 					Return(false, domains.ErrDatabase)
@@ -449,7 +452,7 @@ func TestInsert(t *testing.T) {
 		DomainSuffix:                  "newdomain.com",
 		ProvisioningCert:              generateTestPFX(),
 		ProvisioningCertStorageFormat: "PEM",
-		ProvisioningCertPassword:      "P@ssw0rd",
+		ProvisioningCertPassword:      "encrypted",
 		TenantID:                      "tenant-id-789",
 		ExpirationDate:                "2033-08-01T07:12:09Z",
 		Version:                       "1.0.0",
@@ -464,11 +467,18 @@ func TestInsert(t *testing.T) {
 		TenantID:                      "tenant-id-789",
 		Version:                       "1.0.0",
 	}
-
+	returnDomainDTO := &dto.Domain{
+		ProfileName:                   "new-domain",
+		DomainSuffix:                  "newdomain.com",
+		ProvisioningCertStorageFormat: "PEM",
+		ExpirationDate:                time.Date(2033, time.August, 1, 7, 12, 9, 0, time.UTC),
+		TenantID:                      "tenant-id-789",
+		Version:                       "1.0.0",
+	}
 	tests := []test{
 		{
 			name: "successful insertion",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), domain).
 					Return("unique-domain-id", nil)
@@ -476,12 +486,12 @@ func TestInsert(t *testing.T) {
 					GetByName(context.Background(), domain.ProfileName, domain.TenantID).
 					Return(domain, nil)
 			},
-			res: domainDTO,
+			res: returnDomainDTO,
 			err: nil,
 		},
 		{
 			name: "insertion fails - database error",
-			mock: func(repo *MockRepository) {
+			mock: func(repo *mocks.MockDomainsRepository) {
 				repo.EXPECT().
 					Insert(context.Background(), domain).
 					Return("", domains.ErrDatabase)

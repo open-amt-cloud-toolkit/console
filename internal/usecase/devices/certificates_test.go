@@ -5,33 +5,34 @@ import (
 	"encoding/xml"
 	"testing"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/publickey"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/publicprivate"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	wsman "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func initCertificateTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initCertificateTest(t *testing.T) (*devices.UseCase, *mocks.MockWSMAN, *mocks.MockManagement, *mocks.MockDeviceManagementRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
-	management := NewMockManagement(mockCtl)
-	amtExplorer := NewMockAMTExplorer(mockCtl)
-	log := logger.New("error")
-	u := devices.New(repo, management, NewMockRedirection(mockCtl), amtExplorer, log)
+	repo := mocks.NewMockDeviceManagementRepository(mockCtl)
+	wsmanMock := mocks.NewMockWSMAN(mockCtl)
+	wsmanMock.EXPECT().Worker().Return().AnyTimes()
 
-	return u, management, repo
+	management := mocks.NewMockManagement(mockCtl)
+	log := logger.New("error")
+	u := devices.New(repo, wsmanMock, mocks.NewMockRedirection(mockCtl), log, mocks.MockCrypto{})
+
+	return u, wsmanMock, management, repo
 }
 
 func TestGetCertificates(t *testing.T) {
@@ -46,27 +47,27 @@ func TestGetCertificates(t *testing.T) {
 		{
 			name:   "success",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetCertificates().
 					Return(wsman.Certificates{}, nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
 			},
 			res: dto.SecuritySettings{
 				ProfileAssociation: []dto.ProfileAssociation(nil),
-				Certificates: publickey.RefinedPullResponse{
-					KeyManagementItems:        []publickey.RefinedKeyManagementResponse(nil),
-					PublicKeyCertificateItems: []publickey.RefinedPublicKeyCertificateResponse(nil),
+				CertificateResponse: dto.CertificatePullResponse{
+					KeyManagementItems: []dto.RefinedKeyManagementResponse{},
+					Certificates:       []dto.RefinedCertificate{},
 				},
-				Keys: publicprivate.RefinedPullResponse{
-					PublicPrivateKeyPairItems: []publicprivate.RefinedPublicPrivateKeyPair(nil),
+				KeyResponse: dto.KeyPullResponse{
+					Keys: []dto.Key{},
 				},
 			},
 			err: nil,
@@ -74,11 +75,11 @@ func TestGetCertificates(t *testing.T) {
 		{
 			name:   "success with CIMCredentialContext",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetCertificates().
 					Return(wsman.Certificates{
 						CIMCredentialContextResponse: credential.PullResponse{
@@ -151,7 +152,7 @@ func TestGetCertificates(t *testing.T) {
 						},
 					}, nil)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -161,17 +162,17 @@ func TestGetCertificates(t *testing.T) {
 					{
 						Type:              "TLS",
 						ProfileID:         "TLSProtocolEndpoint Instances Collection",
-						RootCertificate:   interface{}(nil),
-						ClientCertificate: interface{}(nil),
-						Key:               interface{}(nil),
+						RootCertificate:   nil,
+						ClientCertificate: nil,
+						Key:               nil,
 					},
 				},
-				Certificates: publickey.RefinedPullResponse{
-					KeyManagementItems:        []publickey.RefinedKeyManagementResponse(nil),
-					PublicKeyCertificateItems: []publickey.RefinedPublicKeyCertificateResponse(nil),
+				CertificateResponse: dto.CertificatePullResponse{
+					KeyManagementItems: []dto.RefinedKeyManagementResponse{},
+					Certificates:       []dto.RefinedCertificate{},
 				},
-				Keys: publicprivate.RefinedPullResponse{
-					PublicPrivateKeyPairItems: []publicprivate.RefinedPublicPrivateKeyPair(nil),
+				KeyResponse: dto.KeyPullResponse{
+					Keys: []dto.Key{},
 				},
 			},
 			err: nil,
@@ -179,26 +180,26 @@ func TestGetCertificates(t *testing.T) {
 		{
 			name:   "GetById fails",
 			action: 0,
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
 			res: dto.SecuritySettings{},
-			err: devices.ErrDatabase,
+			err: devices.ErrGeneral,
 		},
 		{
 			name:   "GetCertificates fails",
 			action: 0,
-			manMock: func(man *MockManagement) {
+			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
-					Return()
-				man.EXPECT().
+					Return(man2)
+				man2.EXPECT().
 					GetCertificates().
 					Return(wsman.Certificates{}, ErrGeneral)
 			},
-			repoMock: func(repo *MockRepository) {
+			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().
 					GetByID(context.Background(), device.GUID, "").
 					Return(device, nil)
@@ -213,10 +214,10 @@ func TestGetCertificates(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initCertificateTest(t)
+			useCase, wsmanMock, management, repo := initCertificateTest(t)
 
 			if tc.manMock != nil {
-				tc.manMock(management)
+				tc.manMock(wsmanMock, management)
 			}
 
 			tc.repoMock(repo)

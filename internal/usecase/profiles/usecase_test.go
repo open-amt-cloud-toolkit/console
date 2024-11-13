@@ -4,11 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/config"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
+	local "github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -20,23 +23,25 @@ type test struct {
 	tenantID    string
 	profileName string
 	input       entity.Profile
-	mock        func(*MockRepository, *MockwificonfigsFeature, *MockProfileWiFiConfigsFeature)
+	mock        func(*mocks.MockProfilesRepository, *mocks.MockWiFiConfigsRepository, *mocks.MockProfileWiFiConfigsFeature)
 	res         interface{}
 	err         error
 }
 
-func profilesTest(t *testing.T) (*profiles.UseCase, *MockRepository, *MockwificonfigsFeature, *MockProfileWiFiConfigsFeature) {
+func profilesTest(t *testing.T) (*profiles.UseCase, *mocks.MockProfilesRepository, *mocks.MockWiFiConfigsRepository, *mocks.MockProfileWiFiConfigsFeature) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
-	repo := NewMockRepository(mockCtl)
-	wificonfigs := NewMockwificonfigsFeature(mockCtl)
-	profilewificonfigs := NewMockProfileWiFiConfigsFeature(mockCtl)
-	ieeeMock := NewMockIEEEFeature(mockCtl)
+	repo := mocks.NewMockProfilesRepository(mockCtl)
+	wificonfigs := mocks.NewMockWiFiConfigsRepository(mockCtl)
+	profilewificonfigs := mocks.NewMockProfileWiFiConfigsFeature(mockCtl)
+	ieeeMock := mocks.NewMockIEEE8021xConfigsFeature(mockCtl)
+	domains := mocks.NewMockDomainsRepository(mockCtl)
+	security := mocks.MockCrypto{}
 	log := logger.New("error")
-	useCase := profiles.New(repo, wificonfigs, profilewificonfigs, ieeeMock, log)
+	useCase := profiles.New(repo, wificonfigs, profilewificonfigs, ieeeMock, log, domains, security)
 
 	return useCase, repo, wificonfigs, profilewificonfigs
 }
@@ -47,7 +52,7 @@ func TestGetCount(t *testing.T) {
 	tests := []test{
 		{
 			name: "empty result",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, nil)
 			},
 			res: 0,
@@ -55,7 +60,7 @@ func TestGetCount(t *testing.T) {
 		},
 		{
 			name: "result with error",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().GetCount(context.Background(), "").Return(0, profiles.ErrDatabase)
 			},
 			res: 0,
@@ -125,7 +130,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profileWifiRepo *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, profileWifiRepo *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 0, "tenant-id-456").
 					Return(testProfiles, nil)
@@ -144,7 +149,7 @@ func TestGet(t *testing.T) {
 			top:      5,
 			skip:     0,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Get(context.Background(), 5, 0, "tenant-id-456").
 					Return(nil, profiles.ErrDatabase)
@@ -157,7 +162,7 @@ func TestGet(t *testing.T) {
 			top:      10,
 			skip:     20,
 			tenantID: "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Get(context.Background(), 10, 20, "tenant-id-456").
 					Return([]entity.Profile{}, nil)
@@ -212,7 +217,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "test-profile",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					GetByName(context.Background(), "test-profile", "tenant-id-456").
 					Return(profile, nil)
@@ -229,7 +234,7 @@ func TestGetByName(t *testing.T) {
 				ProfileName: "unknown-profile",
 				TenantID:    "tenant-id-456",
 			},
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					GetByName(context.Background(), "unknown-profile", "tenant-id-456").
 					Return(nil, nil)
@@ -268,7 +273,7 @@ func TestDelete(t *testing.T) {
 			name:        "successful deletion",
 			profileName: "example-profile",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				profilewificonfigfeat.EXPECT().
 					DeleteByProfileName(context.Background(), "example-profile", "tenant-id-456").
 					Return(nil)
@@ -282,7 +287,7 @@ func TestDelete(t *testing.T) {
 			name:        "deletion fails - profile not found",
 			profileName: "nonexistent-profile",
 			tenantID:    "tenant-id-456",
-			mock: func(repo *MockRepository, _ *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, _ *mocks.MockWiFiConfigsRepository, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				profilewificonfigfeat.EXPECT().
 					DeleteByProfileName(context.Background(), "nonexistent-profile", "tenant-id-456").
 					Return(nil)
@@ -318,9 +323,11 @@ func TestUpdate(t *testing.T) {
 	t.Parallel()
 
 	profile := &entity.Profile{
-		ProfileName: "example-profile",
-		TenantID:    "tenant-id-456",
-		Version:     "1.0.0",
+		ProfileName:  "example-profile",
+		TenantID:     "tenant-id-456",
+		Version:      "1.0.0",
+		AMTPassword:  "encrypted",
+		MEBXPassword: "encrypted",
 	}
 
 	profileDTO := &dto.Profile{
@@ -339,7 +346,7 @@ func TestUpdate(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful update",
-			mock: func(repo *MockRepository, wifiConfig *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiConfig *mocks.MockWiFiConfigsRepository, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Update(context.Background(), profile).
 					Return(true, nil)
@@ -358,7 +365,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - not found",
-			mock: func(repo *MockRepository, wifiConfig *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiConfig *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Update(context.Background(), profile).
 					Return(false, profiles.ErrNotFound)
@@ -371,7 +378,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name: "update fails - database error",
-			mock: func(repo *MockRepository, wifiConfig *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiConfig *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Update(context.Background(), profile).
 					Return(false, profiles.ErrDatabase)
@@ -404,11 +411,13 @@ func TestInsert(t *testing.T) {
 	t.Parallel()
 
 	profile := &entity.Profile{
-		ProfileName: "new-profile",
-		TenantID:    "tenant-id-789",
-		Version:     "1.0.0",
-		Tags:        "",
-		DHCPEnabled: true,
+		ProfileName:  "new-profile",
+		TenantID:     "tenant-id-789",
+		Version:      "1.0.0",
+		Tags:         "",
+		DHCPEnabled:  true,
+		AMTPassword:  "encrypted",
+		MEBXPassword: "encrypted",
 	}
 
 	profileDTO := &dto.Profile{
@@ -428,7 +437,7 @@ func TestInsert(t *testing.T) {
 	tests := []test{
 		{
 			name: "successful insertion",
-			mock: func(repo *MockRepository, wifiRepo *MockwificonfigsFeature, profilewificonfigfeat *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiRepo *mocks.MockWiFiConfigsRepository, profilewificonfigfeat *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Insert(context.Background(), profile).
 					Return("unique-profile-id", nil)
@@ -447,7 +456,7 @@ func TestInsert(t *testing.T) {
 		},
 		{
 			name: "insertion fails - database error",
-			mock: func(repo *MockRepository, wifiRepo *MockwificonfigsFeature, _ *MockProfileWiFiConfigsFeature) {
+			mock: func(repo *mocks.MockProfilesRepository, wifiRepo *mocks.MockWiFiConfigsRepository, _ *mocks.MockProfileWiFiConfigsFeature) {
 				repo.EXPECT().
 					Insert(context.Background(), profile).
 					Return("", profiles.ErrDatabase)
@@ -471,6 +480,564 @@ func TestInsert(t *testing.T) {
 			id, err := useCase.Insert(context.Background(), profileDTO)
 
 			require.Equal(t, tc.res, id)
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestHandleIEEE8021xSettings(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	tenantID := "tenant-id-4"
+	ieeeProfileName := "test-8021x-profile"
+
+	tests := []struct {
+		name     string
+		data     *entity.Profile
+		mock     func(ieeeMock *mocks.MockIEEE8021xConfigsFeature)
+		expected *config.IEEE8021x
+		err      error
+	}{
+		{
+			name: "with IEEE 802.1x profile",
+			data: &entity.Profile{
+				IEEE8021xProfileName: &ieeeProfileName,
+			},
+			mock: func(ieeeMock *mocks.MockIEEE8021xConfigsFeature) {
+				ieeeMock.EXPECT().
+					GetByName(ctx, ieeeProfileName, tenantID).
+					Return(&dto.IEEE8021xConfig{
+						AuthenticationProtocol: 0,
+						PXETimeout:             func(i int) *int { return &i }(30),
+					}, nil)
+			},
+			expected: &config.IEEE8021x{
+				AuthenticationProtocol: 0,
+				PXETimeout:             30,
+			},
+			err: nil,
+		},
+		{
+			name:     "no IEEE 802.1x profile",
+			data:     &entity.Profile{},
+			mock:     func(_ *mocks.MockIEEE8021xConfigsFeature) {},
+			expected: nil,
+			err:      nil,
+		},
+		{
+			name: "error retrieving IEEE 802.1x profile",
+			data: &entity.Profile{
+				IEEE8021xProfileName: &ieeeProfileName,
+			},
+			mock: func(ieeeMock *mocks.MockIEEE8021xConfigsFeature) {
+				ieeeMock.EXPECT().
+					GetByName(ctx, ieeeProfileName, tenantID).
+					Return(nil, profiles.ErrDatabase)
+			},
+			expected: nil,
+			err:      profiles.ErrDatabase,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			ieeeMock := mocks.NewMockIEEE8021xConfigsFeature(gomock.NewController(t))
+			configuration := &config.Configuration{}
+
+			tc.mock(ieeeMock)
+
+			useCase := profiles.New(nil, nil, nil, ieeeMock, nil, nil, nil)
+
+			err := useCase.HandleIEEE8021xSettings(ctx, tc.data, configuration, tenantID)
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, configuration.Configuration.Network.Wired.IEEE8021x)
+			}
+		})
+	}
+}
+
+func TestGetProfileData(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	tenantID := "tenant-id-5"
+
+	tests := []struct {
+		name        string
+		profileName string
+		mock        func(repoMock *mocks.MockProfilesRepository)
+		expected    *entity.Profile
+		err         error
+	}{
+		{
+			name:        "successful retrieval",
+			profileName: "test-profile",
+			mock: func(repoMock *mocks.MockProfilesRepository) {
+				repoMock.EXPECT().
+					GetByName(ctx, "test-profile", tenantID).
+					Return(&entity.Profile{
+						ProfileName: "test-profile",
+					}, nil)
+			},
+			expected: &entity.Profile{
+				ProfileName: "test-profile",
+			},
+			err: nil,
+		},
+		{
+			name:        "profile not found",
+			profileName: "unknown-profile",
+			mock: func(repoMock *mocks.MockProfilesRepository) {
+				repoMock.EXPECT().
+					GetByName(ctx, "unknown-profile", tenantID).
+					Return(nil, profiles.ErrNotFound)
+			},
+			expected: nil,
+			err:      profiles.ErrNotFound,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			repoMock := mocks.NewMockProfilesRepository(gomock.NewController(t))
+
+			tc.mock(repoMock)
+
+			useCase := profiles.New(repoMock, nil, nil, nil, nil, nil, nil)
+
+			data, err := useCase.GetProfileData(ctx, tc.profileName, tenantID)
+
+			require.Equal(t, tc.expected, data)
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetDomainInformation(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	tenantID := "tenant-id-6"
+
+	tests := []struct {
+		name       string
+		activation string
+		mock       func(domainsMock *mocks.MockDomainsRepository)
+		expected   entity.Domain
+		err        error
+	}{
+		{
+			name:       "successful retrieval for acmactivate",
+			activation: "acmactivate",
+			mock: func(domainsMock *mocks.MockDomainsRepository) {
+				domainsMock.EXPECT().
+					Get(ctx, 1, 0, tenantID).
+					Return([]entity.Domain{
+						{ProvisioningCertPassword: "encryptedCert"},
+					}, nil)
+			},
+			expected: entity.Domain{
+				ProvisioningCertPassword: "decrypted",
+			},
+			err: nil,
+		},
+		{
+			name:       "no domains found",
+			activation: "acmactivate",
+			mock: func(domainsMock *mocks.MockDomainsRepository) {
+				domainsMock.EXPECT().
+					Get(ctx, 1, 0, tenantID).
+					Return([]entity.Domain{}, nil)
+			},
+			expected: entity.Domain{},
+			err:      profiles.ErrNotFound.WrapWithMessage("Export", "uc.domains.Get", "No domains found"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			domainsMock := mocks.NewMockDomainsRepository(gomock.NewController(t))
+			cryptoMock := &mocks.MockCrypto{}
+
+			tc.mock(domainsMock)
+
+			useCase := profiles.New(nil, nil, nil, nil, nil, domainsMock, cryptoMock)
+
+			domain, err := useCase.GetDomainInformation(ctx, tc.activation, tenantID)
+
+			require.Equal(t, tc.expected, domain)
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDecryptPasswords(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		data     *entity.Profile
+		expected *entity.Profile
+		err      error
+	}{
+		{
+			name: "successful decryption",
+			data: &entity.Profile{
+				AMTPassword:  "encryptedAMT",
+				MEBXPassword: "encryptedMEBX",
+			},
+			expected: &entity.Profile{
+				AMTPassword:  "decrypted",
+				MEBXPassword: "decrypted",
+			},
+			err: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			cryptoMock := &mocks.MockCrypto{}
+
+			useCase := profiles.New(nil, nil, nil, nil, nil, nil, cryptoMock)
+
+			err := useCase.DecryptPasswords(tc.data)
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected.AMTPassword, tc.data.AMTPassword)
+				require.Equal(t, tc.expected.MEBXPassword, tc.data.MEBXPassword)
+			}
+		})
+	}
+}
+
+func TestBuildWirelessProfiles(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	tenantID := "tenant-id-457"
+
+	wifiConfigs := []dto.ProfileWiFiConfigs{
+		{
+			WirelessProfileName: "wifi-profile-1",
+			Priority:            1,
+		},
+	}
+
+	tests := []struct {
+		name     string
+		mock     func(wifiMock *mocks.MockWiFiConfigsRepository)
+		expected []config.WirelessProfile
+		err      error
+	}{
+		{
+			name: "successful profile build",
+			mock: func(wifiMock *mocks.MockWiFiConfigsRepository) {
+				wifiMock.EXPECT().
+					GetByName(ctx, "wifi-profile-1", tenantID).
+					Return(&entity.WirelessConfig{
+						ProfileName:          "wifi-profile-1",
+						SSID:                 "wifi-ssid",
+						AuthenticationMethod: 4,
+						EncryptionMethod:     4,
+						PSKPassphrase:        "encryptedPassphrase",
+					}, nil)
+			},
+			expected: []config.WirelessProfile{
+				{
+					ProfileName:          "wifi-profile-1",
+					SSID:                 "wifi-ssid",
+					Priority:             1,
+					Password:             "decrypted",
+					AuthenticationMethod: "WPAPSK",
+					EncryptionMethod:     "CCMP",
+				},
+			},
+			err: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			wifiMock := mocks.NewMockWiFiConfigsRepository(gomock.NewController(t))
+			ieeeMock := mocks.NewMockIEEE8021xConfigsFeature(gomock.NewController(t))
+			cryptoMock := &mocks.MockCrypto{}
+
+			tc.mock(wifiMock)
+
+			useCase := profiles.New(nil, wifiMock, nil, ieeeMock, nil, nil, cryptoMock)
+
+			wifiProfiles, err := useCase.BuildWirelessProfiles(ctx, wifiConfigs, tenantID)
+
+			require.Equal(t, tc.expected, wifiProfiles)
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestBuildConfigurationObject(t *testing.T) {
+	t.Parallel()
+
+	originalConfig := local.ConsoleConfig
+
+	t.Cleanup(func() {
+		local.ConsoleConfig = originalConfig
+	})
+
+	local.ConsoleConfig = &local.Config{
+		EA: local.EA{
+			URL:      "http://test.com:8080",
+			Username: "username",
+			Password: "password",
+		},
+	}
+
+	tests := []struct {
+		name     string
+		profile  *entity.Profile
+		domain   entity.Domain
+		wifi     []config.WirelessProfile
+		expected config.Configuration
+	}{
+		{
+			name: "successful configuration build",
+			profile: &entity.Profile{
+				ProfileName:   "test-profile",
+				DHCPEnabled:   true,
+				IPSyncEnabled: true,
+				Activation:    "acmactivate",
+				AMTPassword:   "testAMTPassword",
+				MEBXPassword:  "testMEBXPassword",
+				TLSMode:       2,
+				KVMEnabled:    true,
+				SOLEnabled:    true,
+				IDEREnabled:   true,
+				UserConsent:   "None",
+			},
+			domain: entity.Domain{
+				ProvisioningCert:         "testCert",
+				ProvisioningCertPassword: "testCertPwd",
+			},
+			wifi: []config.WirelessProfile{
+				{
+					SSID:     "wifi-ssid",
+					Priority: 1,
+				},
+			},
+			expected: config.Configuration{
+				Name: "test-profile",
+				Configuration: config.RemoteManagement{
+					GeneralSettings: config.GeneralSettings{
+						SharedFQDN:              false,
+						NetworkInterfaceEnabled: 0,
+						PingResponseEnabled:     false,
+					},
+					Network: config.Network{
+						Wired: config.Wired{
+							DHCPEnabled:    true,
+							IPSyncEnabled:  true,
+							SharedStaticIP: false,
+						},
+						Wireless: config.Wireless{
+							Profiles: []config.WirelessProfile{
+								{
+									SSID:     "wifi-ssid",
+									Priority: 1,
+								},
+							},
+						},
+					},
+					Redirection: config.Redirection{
+						Services: config.Services{
+							KVM:  true,
+							SOL:  true,
+							IDER: true,
+						},
+						UserConsent: "None",
+					},
+					TLS: config.TLS{
+						MutualAuthentication: false,
+						Enabled:              true,
+						AllowNonTLS:          true,
+					},
+					EnterpriseAssistant: config.EnterpriseAssistant{
+						URL:      "http://test.com:8080",
+						Username: "username",
+						Password: "password",
+					},
+					AMTSpecific: config.AMTSpecific{
+						ControlMode:         "acmactivate",
+						AdminPassword:       "testAMTPassword",
+						MEBXPassword:        "testMEBXPassword",
+						ProvisioningCert:    "testCert",
+						ProvisioningCertPwd: "testCertPwd",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			useCase := profiles.New(nil, nil, nil, nil, nil, nil, nil)
+
+			result := useCase.BuildConfigurationObject(tc.profile.ProfileName, tc.profile, tc.domain, tc.wifi)
+
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestGetWiFiConfigurations(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	profileName := "test-profile"
+	tenantID := "tenant-id-456"
+
+	tests := []struct {
+		name     string
+		mock     func(profileWiFiMock *mocks.MockProfileWiFiConfigsFeature)
+		expected []dto.ProfileWiFiConfigs
+		err      error
+	}{
+		{
+			name: "successful retrieval",
+			mock: func(profileWiFiMock *mocks.MockProfileWiFiConfigsFeature) {
+				profileWiFiMock.EXPECT().
+					GetByProfileName(ctx, profileName, tenantID).
+					Return([]dto.ProfileWiFiConfigs{
+						{
+							WirelessProfileName: "wifi-profile-1",
+						},
+					}, nil)
+			},
+			expected: []dto.ProfileWiFiConfigs{
+				{
+					WirelessProfileName: "wifi-profile-1",
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "error during retrieval",
+			mock: func(profileWiFiMock *mocks.MockProfileWiFiConfigsFeature) {
+				profileWiFiMock.EXPECT().
+					GetByProfileName(ctx, profileName, tenantID).
+					Return(nil, profiles.ErrDatabase)
+			},
+			expected: nil,
+			err:      profiles.ErrDatabase,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			profileWiFiMock := mocks.NewMockProfileWiFiConfigsFeature(gomock.NewController(t))
+
+			tc.mock(profileWiFiMock)
+
+			useCase := profiles.New(nil, nil, profileWiFiMock, nil, nil, nil, nil)
+
+			wifiConfigs, err := useCase.GetWiFiConfigurations(ctx, profileName, tenantID)
+
+			require.Equal(t, tc.expected, wifiConfigs)
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestSerializeAndEncryptYAML(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                  string
+		configuration         config.Configuration
+		expectedEncryptedData string
+		expectedEncryptionKey string
+		err                   error
+	}{
+		{
+			name: "successful serialization and encryption",
+			configuration: config.Configuration{
+				Name: "test-config",
+				Configuration: config.RemoteManagement{
+					GeneralSettings: config.GeneralSettings{
+						SharedFQDN: true,
+					},
+				},
+			},
+			expectedEncryptedData: "encrypted",
+			expectedEncryptionKey: "key",
+			err:                   nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			cryptoMock := &mocks.MockCrypto{}
+
+			useCase := profiles.New(nil, nil, nil, nil, nil, nil, cryptoMock)
+
+			encryptedData, encryptionKey, err := useCase.SerializeAndEncryptYAML(tc.configuration)
+
+			require.Equal(t, tc.expectedEncryptedData, encryptedData)
+			require.Equal(t, tc.expectedEncryptionKey, encryptionKey)
 
 			if tc.err != nil {
 				require.Error(t, err)

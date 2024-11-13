@@ -6,8 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
+
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/ieee8021xconfigs"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
@@ -16,17 +18,19 @@ import (
 
 // UseCase -.
 type UseCase struct {
-	repo Repository
-	ieee ieee8021xconfigs.Feature
-	log  logger.Interface
+	repo             Repository
+	ieee             ieee8021xconfigs.Feature
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
 // New -.
-func New(r Repository, ieee ieee8021xconfigs.Feature, log logger.Interface) *UseCase {
+func New(r Repository, ieee ieee8021xconfigs.Feature, log logger.Interface, safeRequirements security.Cryptor) *UseCase {
 	return &UseCase{
-		repo: r,
-		ieee: ieee,
-		log:  log,
+		repo:             r,
+		ieee:             ieee,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -175,6 +179,8 @@ func (uc *UseCase) dtoToEntity(d *dto.WirelessConfig) *entity.WirelessConfig {
 		Version:              d.Version,
 	}
 
+	d1.PSKPassphrase, _ = uc.safeRequirements.Encrypt(d.PSKPassphrase)
+
 	return d1
 }
 
@@ -206,7 +212,6 @@ func (uc *UseCase) entityToDTO(d *entity.WirelessConfig) *dto.WirelessConfig {
 		EncryptionMethod:     d.EncryptionMethod,
 		SSID:                 d.SSID,
 		PSKValue:             d.PSKValue,
-		PSKPassphrase:        d.PSKPassphrase,
 		LinkPolicy:           linkPolicyInt,
 		TenantID:             d.TenantID,
 		IEEE8021xProfileName: d.IEEE8021xProfileName,

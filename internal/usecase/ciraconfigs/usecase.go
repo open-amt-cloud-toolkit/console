@@ -3,8 +3,10 @@ package ciraconfigs
 import (
 	"context"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
+
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/sqldb"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -12,8 +14,9 @@ import (
 
 // UseCase -.
 type UseCase struct {
-	repo Repository
-	log  logger.Interface
+	repo             Repository
+	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
 var (
@@ -23,10 +26,11 @@ var (
 )
 
 // New -.
-func New(r Repository, log logger.Interface) *UseCase {
+func New(r Repository, log logger.Interface, safeRequirements security.Cryptor) *UseCase {
 	return &UseCase{
-		repo: r,
-		log:  log,
+		repo:             r,
+		log:              log,
+		safeRequirements: safeRequirements,
 	}
 }
 
@@ -142,6 +146,8 @@ func (uc *UseCase) dtoToEntity(d *dto.CIRAConfig) *entity.CIRAConfig {
 		Version:             d.Version,
 	}
 
+	d1.Password, _ = uc.safeRequirements.Encrypt(d.Password)
+
 	return d1
 }
 
@@ -152,7 +158,6 @@ func (uc *UseCase) entityToDTO(d *entity.CIRAConfig) *dto.CIRAConfig {
 		MPSAddress:          d.MPSAddress,
 		MPSPort:             d.MPSPort,
 		Username:            d.Username,
-		Password:            d.Password,
 		CommonName:          d.CommonName,
 		ServerAddressFormat: d.ServerAddressFormat,
 		AuthMethod:          d.AuthMethod,

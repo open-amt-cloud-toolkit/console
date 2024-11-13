@@ -12,19 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
+	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/profiles"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-func profilesTest(t *testing.T) (*MockProfilesFeature, *gin.Engine) {
+func profilesTest(t *testing.T) (*mocks.MockProfilesFeature, *gin.Engine) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
 	defer mockCtl.Finish()
 
 	log := logger.New("error")
-	mockProfiles := NewMockProfilesFeature(mockCtl)
+	mockProfiles := mocks.NewMockProfilesFeature(mockCtl)
 
 	engine := gin.New()
 	handler := engine.Group("/api/v1/admin")
@@ -38,7 +39,7 @@ type testProfiles struct {
 	name         string
 	method       string
 	url          string
-	mock         func(repo *MockProfilesFeature)
+	mock         func(repo *mocks.MockProfilesFeature)
 	response     interface{}
 	requestBody  dto.Profile
 	expectedCode int
@@ -79,7 +80,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "get all profiless",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().Get(context.Background(), 25, 0, "").Return([]dto.Profile{{
 					ProfileName: "profile",
 				}}, nil)
@@ -91,7 +92,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "get all profiles - with count",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles?$top=10&$skip=1&$count=true",
-			mock: func(domain *MockProfilesFeature) {
+			mock: func(domain *mocks.MockProfilesFeature) {
 				domain.EXPECT().Get(context.Background(), 10, 1, "").Return([]dto.Profile{{
 					ProfileName: "profile",
 				}}, nil)
@@ -104,7 +105,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "get all profiles - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles",
-			mock: func(domain *MockProfilesFeature) {
+			mock: func(domain *mocks.MockProfilesFeature) {
 				domain.EXPECT().Get(context.Background(), 25, 0, "").Return(nil, profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,
@@ -114,7 +115,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "get profile by name",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles/profile",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().GetByName(context.Background(), "profile", "").Return(&dto.Profile{
 					ProfileName: "profile",
 				}, nil)
@@ -126,7 +127,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "get profile by name - failed",
 			method: http.MethodGet,
 			url:    "/api/v1/admin/profiles/profile",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().GetByName(context.Background(), "profile", "").Return(nil, profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,
@@ -136,7 +137,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "insert profile",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/profiles",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().Insert(context.Background(), &profileTest).Return(&profileTest, nil)
 			},
 			response:     profileTest,
@@ -147,7 +148,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "insert profile - failed",
 			method: http.MethodPost,
 			url:    "/api/v1/admin/profiles",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().Insert(context.Background(), &profileTest).Return(nil, profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,
@@ -158,7 +159,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "delete profile",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/profiles/profile",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().Delete(context.Background(), "profile", "").Return(nil)
 			},
 			response:     nil,
@@ -168,7 +169,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "delete profile - failed",
 			method: http.MethodDelete,
 			url:    "/api/v1/admin/profiles/profile",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().Delete(context.Background(), "profile", "").Return(profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,
@@ -178,7 +179,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "update profile",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/profiles",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().Update(context.Background(), &profileTest).Return(&profileTest, nil)
 			},
 			response:     profileTest,
@@ -189,7 +190,7 @@ func TestProfileRoutes(t *testing.T) {
 			name:   "update profile - failed",
 			method: http.MethodPatch,
 			url:    "/api/v1/admin/profiles",
-			mock: func(profile *MockProfilesFeature) {
+			mock: func(profile *mocks.MockProfilesFeature) {
 				profile.EXPECT().Update(context.Background(), &profileTest).Return(nil, profiles.ErrDatabase)
 			},
 			response:     profiles.ErrDatabase,

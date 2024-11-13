@@ -1,10 +1,18 @@
-package dto_v1
+package dto
 
 type Features struct {
-	Redirection bool   `json:"redirection"`
-	KVM         bool   `json:"KVM"`
-	SOL         bool   `json:"SOL"`
-	IDER        bool   `json:"IDER"`
-	OptInState  int    `json:"optInState"`
-	UserConsent string `json:"userConsent"`
+	UserConsent  string `json:"userConsent" example:"kvm"`
+	EnableSOL    bool   `json:"enableSOL" example:"true"`
+	EnableIDER   bool   `json:"enableIDER" example:"true"`
+	EnableKVM    bool   `json:"enableKVM" example:"true"`
+	Redirection  bool   `json:"redirection" example:"true"`
+	OptInState   int    `json:"optInState" example:"0"`
+	KVMAvailable bool   `json:"kvmAvailable" example:"true"`
+}
+
+type FeaturesRequest struct {
+	UserConsent string `json:"userConsent" example:"kvm"`
+	EnableSOL   bool   `json:"enableSOL" example:"true"`
+	EnableIDER  bool   `json:"enableIDER" example:"true"`
+	EnableKVM   bool   `json:"enableKVM" example:"true"`
 }

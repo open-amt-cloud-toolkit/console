@@ -4,58 +4,73 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
-func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+func (uc *UseCase) CancelUserConsent(c context.Context, guid string) (dto.UserConsentMessage, error) {
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.UserConsentMessage{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	if item == nil || item.GUID == "" {
+		return dto.UserConsentMessage{}, ErrNotFound
+	}
 
-	response, err := uc.device.CancelUserConsentRequest()
+	device := uc.device.SetupWsmanClient(*item, false, true)
+
+	response, err := device.CancelUserConsentRequest()
 	if err != nil {
-		return nil, err
+		return dto.UserConsentMessage{}, err
 	}
 
 	return response, nil
 }
 
-func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (map[string]interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+func (uc *UseCase) GetUserConsentCode(c context.Context, guid string) (dto.GetUserConsentMessage, error) {
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.GetUserConsentMessage{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
-
-	code, err := uc.device.GetUserConsentCode()
-	if err != nil {
-		return nil, err
+	if item == nil || item.GUID == "" {
+		return dto.GetUserConsentMessage{}, ErrNotFound
 	}
 
-	response := map[string]interface{}{
-		"Body": code,
+	device := uc.device.SetupWsmanClient(*item, false, true)
+
+	code, err := device.GetUserConsentCode()
+	if err != nil {
+		return dto.GetUserConsentMessage{}, err
+	}
+
+	response := dto.GetUserConsentMessage{
+		Body: dto.UserConsentMessage{
+			Name:        code.XMLName,
+			ReturnValue: code.ReturnValue,
+		},
 	}
 
 	return response, nil
 }
 
-func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsent, guid string) (interface{}, error) {
-	item, err := uc.GetByID(c, guid, "")
+func (uc *UseCase) SendConsentCode(c context.Context, userConsent dto.UserConsentCode, guid string) (dto.UserConsentMessage, error) {
+	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return nil, err
+		return dto.UserConsentMessage{}, err
 	}
 
-	uc.device.SetupWsmanClient(*item, false, true)
+	if item == nil || item.GUID == "" {
+		return dto.UserConsentMessage{}, ErrNotFound
+	}
+
+	device := uc.device.SetupWsmanClient(*item, false, true)
 
 	consentCode, _ := strconv.Atoi(userConsent.ConsentCode)
 
-	response, err := uc.device.SendConsentCode(consentCode)
+	response, err := device.SendConsentCode(consentCode)
 	if err != nil {
-		return nil, err
+		return dto.UserConsentMessage{}, err
 	}
 
 	return response, nil

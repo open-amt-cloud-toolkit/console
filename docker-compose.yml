@@ -21,8 +21,11 @@ services:
     env_file:
       - .env
     environment:
+      APP_ENCRYPTION_KEY: "Jf3Q2nXJ+GZzN1dbVQms0wbB4+i/5PjL" # This is a test encryption key for the app
+      HTTP_HOST: ""
       GIN_MODE: "debug"
       DB_URL: "postgres://postgresadmin:admin123@postgres:5432/rpsdb"
+      APP_AUTH_DISABLED: true
     ports:
       - 8181:8181
     depends_on:

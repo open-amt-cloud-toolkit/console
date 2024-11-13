@@ -3,8 +3,10 @@ package devices
 import (
 	"strings"
 
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
+
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/pkg/consoleerrors"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
@@ -36,25 +38,29 @@ const (
 // UseCase -.
 type UseCase struct {
 	repo             Repository
-	device           Management
-	amt              AMTExplorer
+	device           WSMAN
 	redirection      Redirection
 	redirConnections map[string]*DeviceConnection
 	log              logger.Interface
+	safeRequirements security.Cryptor
 }
 
 var ErrAMT = AMTError{Console: consoleerrors.CreateConsoleError("DevicesUseCase")}
 
 // New -.
-func New(r Repository, d Management, redirection Redirection, amt AMTExplorer, log logger.Interface) *UseCase {
-	return &UseCase{
+func New(r Repository, d WSMAN, redirection Redirection, log logger.Interface, safeRequirements security.Cryptor) *UseCase {
+	uc := &UseCase{
 		repo:             r,
 		device:           d,
-		amt:              amt,
 		redirection:      redirection,
 		redirConnections: make(map[string]*DeviceConnection),
 		log:              log,
+		safeRequirements: safeRequirements,
 	}
+	// start up the worker
+	go d.Worker()
+
+	return uc
 }
 
 // convert dto.Device to entity.Device.
@@ -64,7 +70,7 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 		d.Tags = []string{}
 	}
 
-	tags := strings.Join(d.Tags, ", ")
+	tags := strings.Join(d.Tags, ",")
 
 	d1 := &entity.Device{
 		ConnectionStatus: d.ConnectionStatus,
@@ -86,13 +92,29 @@ func (uc *UseCase) dtoToEntity(d *dto.Device) *entity.Device {
 		AllowSelfSigned: d.AllowSelfSigned,
 	}
 
+	var err error
+
+	d1.Password, err = uc.safeRequirements.Encrypt(d1.Password)
+	if err != nil {
+		uc.log.Error("Error encrypting password")
+	}
+
+	if d.CertHash == "" {
+		d1.CertHash = nil
+	} else {
+		d1.CertHash = &d.CertHash
+	}
+
 	return d1
 }
 
 // convert entity.Device to dto.Device.
 func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 	// convert comma separated string to []string
-	tags := strings.Split(d.Tags, ",")
+	var tags []string
+	if d.Tags != "" {
+		tags = strings.Split(d.Tags, ",")
+	}
 
 	d1 := &dto.Device{
 		ConnectionStatus: d.ConnectionStatus,
@@ -108,10 +130,14 @@ func (uc *UseCase) entityToDTO(d *entity.Device) *dto.Device {
 		LastSeen:         d.LastSeen,
 		LastDisconnected: d.LastDisconnected,
 		// DeviceInfo:       d.DeviceInfo,
-		Username:        d.Username,
-		Password:        d.Password,
+		Username: d.Username,
+		// Password:        d.Password,
 		UseTLS:          d.UseTLS,
 		AllowSelfSigned: d.AllowSelfSigned,
+	}
+
+	if d.CertHash != nil {
+		d1.CertHash = *d.CertHash
 	}
 
 	return d1

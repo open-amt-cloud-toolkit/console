@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 )
 
 type (
@@ -24,5 +24,6 @@ type (
 		Delete(ctx context.Context, profileName, tenantID string) error
 		Update(ctx context.Context, p *dto.Profile) (*dto.Profile, error)
 		Insert(ctx context.Context, p *dto.Profile) (*dto.Profile, error)
+		Export(ctx context.Context, profileName, tenantID string) (string, string, error)
 	}
 )

@@ -81,8 +81,20 @@ func (r *WirelessRepo) GetCount(_ context.Context, tenantID string) (int, error)
 
 // Get -.
 func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([]entity.WirelessConfig, error) {
+	const defaultTop = 100
+
 	if top == 0 {
-		top = 100
+		top = defaultTop
+	}
+
+	limitedTop := uint64(defaultTop)
+	if top > 0 {
+		limitedTop = uint64(top)
+	}
+
+	limitedSkip := uint64(0)
+	if skip > 0 {
+		limitedSkip = uint64(skip)
 	}
 
 	sqlQuery, _, err := r.Builder.
@@ -97,15 +109,15 @@ func (r *WirelessRepo) Get(_ context.Context, top, skip int, tenantID string) ([
 			"w.tenant_id",
 			"ieee8021x_profile_name",
 			"auth_protocol",
-			"pxe_timeout integer",
+			"pxe_timeout",
 			"wired_interface",
 		).
 		From("wirelessconfigs w").
 		LeftJoin("ieee8021xconfigs e ON e.profile_name = w.ieee8021x_profile_name AND e.tenant_id = w.tenant_id AND e.wired_interface = false").
 		Where("w.tenant_id = ?", tenantID).
 		OrderBy("wireless_profile_name").
-		Limit(uint64(top)).
-		Offset(uint64(skip)).
+		Limit(limitedTop).
+		Offset(limitedSkip).
 		ToSql()
 	if err != nil {
 		return nil, ErrWiFiDatabase.Wrap("Get", "r.Builder", err)
@@ -148,7 +160,7 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 			"encryption_method",
 			"ssid",
 			"psk_value",
-			// "psk_passphrase",
+			"psk_passphrase",
 			"link_policy",
 			"w.tenant_id",
 			"ieee8021x_profile_name",
@@ -180,7 +192,7 @@ func (r *WirelessRepo) GetByName(_ context.Context, profileName, tenantID string
 	for rows.Next() {
 		p := &entity.WirelessConfig{}
 
-		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
+		err = rows.Scan(&p.ProfileName, &p.AuthenticationMethod, &p.EncryptionMethod, &p.SSID, &p.PSKValue, &p.PSKPassphrase, &p.LinkPolicy, &p.TenantID, &p.IEEE8021xProfileName,
 			&p.AuthenticationProtocol, &p.PXETimeout, &p.WiredInterface)
 		if err != nil {
 			return p, ErrWiFiDatabase.Wrap("GetByName", "rows.Scan", err)
