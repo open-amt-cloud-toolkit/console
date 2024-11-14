@@ -4,8 +4,8 @@
       "name": "main"
     },
     {
-      "name": "alpha",
-      "prerelease": "alpha"
+      "name": "beta",
+      "prerelease": "beta"
     }
   ],
   "plugins": [
@@ -17,19 +17,15 @@
       {
         "assets": [
           {
-            "path": "console_linux_x64.tar.gz",
+            "path": "dist/linux/console_linux_x64.tar.gz",
             "label": "Linux x64 Console Executable"
           },
           {
-            "path": "console_windows_x64.exe",
+            "path": "dist/windows/console_windows_x64.exe",
             "label": "Windows x64 Console Executable"
           },
           {
-            "path": "console_mac_x64.tar.gz",
-            "label": "Mac x64 Console Executable"
-          },
-          {
-            "path": "console_mac_arm64.tar.gz",
+            "path": "dist/darwin/console_mac_arm64.tar.gz",
             "label": "Mac arm64 Console Executable"
           }
         ]
