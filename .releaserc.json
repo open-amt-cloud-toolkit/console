@@ -17,7 +17,7 @@
       {
         "assets": [
           {
-            "path": "dist/linux/console_linux_x64.tar.gz",
+            "path": "console_linux_x64.tar.gz",
             "label": "Linux x64 Console Executable"
           },
           {
@@ -25,7 +25,7 @@
             "label": "Windows x64 Console Executable"
           },
           {
-            "path": "dist/darwin/console_mac_arm64.tar.gz",
+            "path": "console_mac_arm64.tar.gz",
             "label": "Mac arm64 Console Executable"
           }
         ]
