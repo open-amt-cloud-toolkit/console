@@ -111,15 +111,15 @@ jobs:
       - shell: bash
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      - uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
+      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: dist/linux
           key: linux-${{ env.sha_short }}
-      - uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
+      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: dist/darwin
           key: darwin-${{ env.sha_short }}
-      - uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
+      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: dist/windows
           key: windows-${{ env.sha_short }}
