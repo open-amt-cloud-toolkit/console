@@ -1,7 +1,14 @@
 package config
 
 import (
+	"errors"
+	"flag"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/ilyakaznacheev/cleanenv"
+	"gopkg.in/yaml.v2"
 )
 
 var ConsoleConfig *Config
@@ -18,14 +25,16 @@ type (
 
 	// App -.
 	App struct {
-		Name          string `env-required:"true" yaml:"name" env:"APP_NAME"`
-		Repo          string `env-required:"true" yaml:"repo" env:"APP_REPO"`
-		Version       string `env-required:"true"`
-		EncryptionKey string `yaml:"encryption_key" env:"APP_ENCRYPTION_KEY"`
-		JWTKey        string `env-required:"true" yaml:"jwtKey" env:"APP_JWT_KEY"`
-		AuthDisabled  bool   `yaml:"authDisabled" env:"APP_AUTH_DISABLED"`
-		AdminUsername string `yaml:"adminUsername" env:"APP_ADMIN_USERNAME"`
-		AdminPassword string `yaml:"adminPassword" env:"APP_ADMIN_PASSWORD"`
+		Name                     string        `env-required:"true" yaml:"name" env:"APP_NAME"`
+		Repo                     string        `env-required:"true" yaml:"repo" env:"APP_REPO"`
+		Version                  string        `env-required:"true"`
+		EncryptionKey            string        `yaml:"encryption_key" env:"APP_ENCRYPTION_KEY"`
+		JWTKey                   string        `env-required:"true" yaml:"jwtKey" env:"APP_JWT_KEY"`
+		AuthDisabled             bool          `yaml:"authDisabled" env:"APP_AUTH_DISABLED"`
+		AdminUsername            string        `yaml:"adminUsername" env:"APP_ADMIN_USERNAME"`
+		AdminPassword            string        `yaml:"adminPassword" env:"APP_ADMIN_PASSWORD"`
+		JWTExpiration            time.Duration `yaml:"jwtExpiration" env:"APP_JWT_EXPIRATION"`
+		RedirectionJWTExpiration time.Duration `yaml:"redirectionJWTExpiration" env:"APP_REDIRECTION_JWT_EXPIRATION"`
 	}
 
 	// HTTP -.
@@ -60,13 +69,15 @@ func NewConfig() (*Config, error) {
 	// set defaults
 	ConsoleConfig = &Config{
 		App: App{
-			Name:          "console",
-			Repo:          "open-amt-cloud-toolkit/console",
-			Version:       "DEVELOPMENT",
-			EncryptionKey: "",
-			JWTKey:        "your_secret_jwt_key",
-			AdminUsername: "standalone",
-			AdminPassword: "G@ppm0ym",
+			Name:                     "console",
+			Repo:                     "open-amt-cloud-toolkit/console",
+			Version:                  "DEVELOPMENT",
+			EncryptionKey:            "",
+			JWTKey:                   "your_secret_jwt_key",
+			AdminUsername:            "standalone",
+			AdminPassword:            "G@ppm0ym",
+			JWTExpiration:            24 * time.Hour,
+			RedirectionJWTExpiration: 5 * time.Minute,
 		},
 		HTTP: HTTP{
 			Host:           "localhost",
@@ -87,10 +98,55 @@ func NewConfig() (*Config, error) {
 		},
 	}
 
-	_ = cleanenv.ReadConfig("./config/config.yml", ConsoleConfig)
-	// its ok to ignore the error here, as we have default values set if the config file is not found
+	// Define a command line flag for the config path
+	var configPathFlag string
+	if flag.Lookup("config") == nil {
+		flag.StringVar(&configPathFlag, "config", "", "path to config file")
+	}
 
-	err := cleanenv.ReadEnv(ConsoleConfig)
+	flag.Parse()
+
+	// Determine the config path
+	var configPath string
+	if configPathFlag != "" {
+		configPath = configPathFlag
+	} else {
+		ex, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+
+		exPath := filepath.Dir(ex)
+
+		configPath = filepath.Join(exPath, "config", "config.yml")
+	}
+
+	err := cleanenv.ReadConfig(configPath, ConsoleConfig)
+
+	var pathErr *os.PathError
+
+	if errors.As(err, &pathErr) {
+		// Write config file out to disk
+		configDir := filepath.Dir(configPath)
+		if err := os.MkdirAll(configDir, os.ModePerm); err != nil {
+			return nil, err
+		}
+
+		file, err := os.Create(configPath)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		encoder := yaml.NewEncoder(file)
+		defer encoder.Close()
+
+		if err := encoder.Encode(ConsoleConfig); err != nil {
+			return nil, err
+		}
+	}
+
+	err = cleanenv.ReadEnv(ConsoleConfig)
 	if err != nil {
 		return nil, err
 	}

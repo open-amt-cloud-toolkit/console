@@ -4,6 +4,8 @@ app:
   jwtKey: "your_secret_jwt_key"
   adminUsername: "standalone"
   adminPassword: "G@ppm0ym"
+  jwtExpiration: 24h
+  redirectionJWTExpiration: 5m
 http:
   host: "localhost"
   port: "8181"

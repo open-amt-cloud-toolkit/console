@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
+	local "github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/mocks"
@@ -772,8 +773,8 @@ func TestBuildWirelessProfiles(t *testing.T) {
 					Return(&entity.WirelessConfig{
 						ProfileName:          "wifi-profile-1",
 						SSID:                 "wifi-ssid",
-						AuthenticationMethod: 1,
-						EncryptionMethod:     2,
+						AuthenticationMethod: 4,
+						EncryptionMethod:     4,
 						PSKPassphrase:        "encryptedPassphrase",
 					}, nil)
 			},
@@ -783,8 +784,8 @@ func TestBuildWirelessProfiles(t *testing.T) {
 					SSID:                 "wifi-ssid",
 					Priority:             1,
 					Password:             "decrypted",
-					AuthenticationMethod: "1",
-					EncryptionMethod:     "2",
+					AuthenticationMethod: "WPAPSK",
+					EncryptionMethod:     "CCMP",
 				},
 			},
 			err: nil,
@@ -819,6 +820,20 @@ func TestBuildWirelessProfiles(t *testing.T) {
 
 func TestBuildConfigurationObject(t *testing.T) {
 	t.Parallel()
+
+	originalConfig := local.ConsoleConfig
+
+	t.Cleanup(func() {
+		local.ConsoleConfig = originalConfig
+	})
+
+	local.ConsoleConfig = &local.Config{
+		EA: local.EA{
+			URL:      "http://test.com:8080",
+			Username: "username",
+			Password: "password",
+		},
+	}
 
 	tests := []struct {
 		name     string
@@ -887,6 +902,11 @@ func TestBuildConfigurationObject(t *testing.T) {
 						MutualAuthentication: false,
 						Enabled:              true,
 						AllowNonTLS:          true,
+					},
+					EnterpriseAssistant: config.EnterpriseAssistant{
+						URL:      "http://test.com:8080",
+						Username: "username",
+						Password: "password",
 					},
 					AMTSpecific: config.AMTSpecific{
 						ControlMode:         "acmactivate",

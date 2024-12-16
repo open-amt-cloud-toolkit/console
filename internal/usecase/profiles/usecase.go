@@ -3,13 +3,13 @@ package profiles
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/config"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
 	"gopkg.in/yaml.v2"
 
+	local "github.com/open-amt-cloud-toolkit/console/config"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto/v1"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/domains"
@@ -50,6 +50,43 @@ func New(r Repository, wifiConfig wificonfigs.Repository, w profilewificonfigs.F
 		domains:           d,
 		safeRequirements:  safeRequirements,
 	}
+}
+
+type (
+	AuthMethod    int
+	EncryptMethod int
+)
+
+const (
+	WPAPSK        AuthMethod = 4
+	WPAIEEE8021x  AuthMethod = 5
+	WPA2PSK       AuthMethod = 6
+	WPA2IEEE8021x AuthMethod = 7
+)
+
+const (
+	TKIP EncryptMethod = 3
+	CCMP EncryptMethod = 4
+)
+
+var authenticationMethod = map[AuthMethod]string{
+	WPAPSK:        "WPAPSK",
+	WPAIEEE8021x:  "WPAIEEE8021x",
+	WPA2PSK:       "WPA2PSK",
+	WPA2IEEE8021x: "WPA2IEEE8021x",
+}
+
+var encryptionMethod = map[EncryptMethod]string{
+	TKIP: "TKIP",
+	CCMP: "CCMP",
+}
+
+func (uc *UseCase) getAuthMethodName(method AuthMethod) string {
+	return authenticationMethod[method]
+}
+
+func (uc *UseCase) getEncryptMethodName(method EncryptMethod) string {
+	return encryptionMethod[method]
 }
 
 // History - getting translate history from store.
@@ -198,8 +235,8 @@ func (uc *UseCase) BuildWirelessProfiles(ctx context.Context, wifiConfigs []dto.
 			SSID:                 wifi.SSID,
 			Priority:             wifiConfig.Priority,
 			Password:             wifi.PSKPassphrase,
-			AuthenticationMethod: strconv.Itoa(wifi.AuthenticationMethod),
-			EncryptionMethod:     strconv.Itoa(wifi.EncryptionMethod),
+			AuthenticationMethod: uc.getAuthMethodName(AuthMethod(wifi.AuthenticationMethod)),
+			EncryptionMethod:     uc.getEncryptMethodName(EncryptMethod(wifi.EncryptionMethod)),
 		}
 
 		if wifi.IEEE8021xProfileName != nil {
@@ -221,6 +258,16 @@ func (uc *UseCase) BuildWirelessProfiles(ctx context.Context, wifiConfigs []dto.
 }
 
 func (uc *UseCase) BuildConfigurationObject(profileName string, data *entity.Profile, domainStuff entity.Domain, wifiConfigs []config.WirelessProfile) config.Configuration {
+	if local.ConsoleConfig == nil {
+		local.ConsoleConfig = &local.Config{
+			EA: local.EA{
+				URL:      "",
+				Username: "",
+				Password: "",
+			},
+		}
+	}
+
 	return config.Configuration{
 		Name: profileName,
 		Configuration: config.RemoteManagement{
@@ -236,7 +283,8 @@ func (uc *UseCase) BuildConfigurationObject(profileName string, data *entity.Pro
 					SharedStaticIP: false,
 				},
 				Wireless: config.Wireless{
-					Profiles: wifiConfigs,
+					WiFiSyncEnabled: data.LocalWiFiSyncEnabled,
+					Profiles:        wifiConfigs,
 				},
 			},
 			Redirection: config.Redirection{
@@ -251,6 +299,11 @@ func (uc *UseCase) BuildConfigurationObject(profileName string, data *entity.Pro
 				MutualAuthentication: data.TLSMode == 3 || data.TLSMode == 4,
 				Enabled:              data.TLSMode >= 1,
 				AllowNonTLS:          data.TLSMode == 2 || data.TLSMode == 4,
+			},
+			EnterpriseAssistant: config.EnterpriseAssistant{
+				URL:      local.ConsoleConfig.EA.URL,
+				Username: local.ConsoleConfig.EA.Username,
+				Password: local.ConsoleConfig.EA.Password,
 			},
 			AMTSpecific: config.AMTSpecific{
 				ControlMode:         data.Activation,
