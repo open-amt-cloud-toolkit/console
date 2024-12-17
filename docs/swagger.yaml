@@ -1,8 +1,78 @@
 basePath: /v1
 definitions:
-  entity.CIRAConfig:
+  auditlog.AuditLogRecord:
+    properties:
+      AuditApp:
+        example: Security Admin
+        type: string
+      AuditAppId:
+        example: 0
+        type: integer
+      Event:
+        example: Provisioning Started
+        type: string
+      EventId:
+        example: 0
+        type: integer
+      Ex:
+        example: ""
+        type: string
+      ExStr:
+        example: Remote WSAMN
+        type: string
+      Initiator:
+        example: Local
+        type: string
+      InitiatorType:
+        example: 0
+        type: integer
+      MCLocationType:
+        example: 0
+        type: integer
+      NetAddress:
+        example: 127.0.0.1
+        type: string
+      Time:
+        example: "2023-04-19T20:38:20.000Z"
+        type: string
+    required:
+    - AuditApp
+    - AuditAppId
+    - Event
+    - EventId
+    - Ex
+    - ExStr
+    - Initiator
+    - InitiatorType
+    - MCLocationType
+    - NetAddress
+    - Time
+    type: object
+  encoding_xml.Name:
+    properties:
+      space:
+        type: string
+    type: object
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.AuditLog:
+    properties:
+      records:
+        items:
+          $ref: '#/definitions/auditlog.AuditLogRecord'
+        type: array
+      totalCnt:
+        example: 0
+        type: integer
+    required:
+    - records
+    - totalCnt
+    type: object
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig:
     properties:
       authMethod:
+        description: 1 = Mutal Auth, 2 = Username and Password
+        enum:
+        - 1
+        - 2
         example: 2
         type: integer
       commonName:
@@ -12,7 +82,7 @@ definitions:
         example: My CIRA Config
         type: string
       mpsPort:
-        example: 443
+        example: 4433
         type: integer
       mpsRootCertificate:
         example: |-
@@ -32,6 +102,11 @@ definitions:
         example: true
         type: boolean
       serverAddressFormat:
+        description: 3 = IPV4, 4= IPV6, 201 = FQDN
+        enum:
+        - 3
+        - 4
+        - 201
         example: 201
         type: integer
       tenantId:
@@ -43,8 +118,15 @@ definitions:
       version:
         example: 1.0.0
         type: string
+    required:
+    - authMethod
+    - mpsPort
+    - mpsRootCertificate
+    - mpsServerAddress
+    - serverAddressFormat
+    - username
     type: object
-  entity.CertCreationResult:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CertCreationResult:
     properties:
       cert:
         type: string
@@ -66,14 +148,14 @@ definitions:
       privateKeyBin:
         type: string
     type: object
-  entity.Device:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Device:
     properties:
       allowSelfSigned:
         type: boolean
       connectionStatus:
         type: boolean
       deviceInfo:
-        $ref: '#/definitions/entity.DeviceInfo'
+        $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.DeviceInfo'
       dnsSuffix:
         type: string
       friendlyName:
@@ -105,7 +187,7 @@ definitions:
       username:
         type: string
     type: object
-  entity.DeviceInfo:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.DeviceInfo:
     properties:
       currentMode:
         type: string
@@ -122,10 +204,13 @@ definitions:
       lastUpdated:
         type: string
     type: object
-  entity.Domain:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain:
     properties:
       domainSuffix:
         example: example.com
+        type: string
+      expirationDate:
+        example: "2022-01-01T00:00:00Z"
         type: string
       profileName:
         example: My Profile
@@ -137,9 +222,13 @@ definitions:
         type: string
       provisioningCertPassword:
         example: my_password
+        maxLength: 64
         type: string
       provisioningCertStorageFormat:
-        example: PKCS12
+        enum:
+        - raw
+        - string
+        example: string
         type: string
       tenantId:
         example: abc123
@@ -147,38 +236,83 @@ definitions:
       version:
         example: 1.0.0
         type: string
+    required:
+    - domainSuffix
+    - profileName
+    - provisioningCert
+    - provisioningCertPassword
+    - provisioningCertStorageFormat
     type: object
-  entity.IEEE8021xConfig:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.EventLog:
     properties:
-      activeInS0:
+      Desc:
+        type: string
+      DeviceAddress:
+        type: integer
+      Entity:
+        type: string
+      EntityInstance:
+        type: integer
+      EntityStr:
+        type: string
+      EventData:
+        items:
+          type: integer
+        type: array
+      EventOffset:
+        type: integer
+      EventSensorType:
+        type: integer
+      EventSeverity:
+        type: string
+      EventSourceType:
+        type: integer
+      EventType:
+        type: integer
+      SensorNumber:
+        type: integer
+      Time:
+        type: string
+      eventTypeDesc:
+        type: string
+    type: object
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Features:
+    properties:
+      enableIDER:
         example: true
         type: boolean
+      enableKVM:
+        example: true
+        type: boolean
+      enableSOL:
+        example: true
+        type: boolean
+      optInState:
+        example: 0
+        type: integer
+      redirection:
+        example: true
+        type: boolean
+      userConsent:
+        example: kvm
+        type: string
+    type: object
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig:
+    properties:
       authenticationProtocol:
         example: 1
         type: integer
-      domain:
-        example: example.com
-        type: string
-      password:
-        example: my_password
-        type: string
       profileName:
         example: My Profile
+        maxLength: 32
         type: string
       pxeTimeout:
         example: 60
+        maximum: 86400
+        minimum: 0
         type: integer
-      roamingIdentity:
-        example: my_roaming_identity
-        type: string
-      serverName:
-        example: example.com
-        type: string
       tenantId:
         example: abc123
-        type: string
-      username:
-        example: my_username
         type: string
       version:
         example: 1.0.0
@@ -186,20 +320,33 @@ definitions:
       wiredInterface:
         example: false
         type: boolean
+    required:
+    - profileName
+    - pxeTimeout
     type: object
-  entity.Profile:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile:
     properties:
       activation:
+        enum:
+        - ccmactivate
+        - acmactivate
         example: activate
         type: string
       amtPassword:
         example: my_password
+        maxLength: 32
         type: string
       ciraConfigName:
         example: My CIRA Config
         type: string
       ciraConfigObject:
-        $ref: '#/definitions/entity.CIRAConfig'
+        $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig'
+      created_by:
+        example: admin
+        type: string
+      creationDate:
+        example: "2021-07-01T00:00:00Z"
+        type: string
       dhcpEnabled:
         example: true
         type: boolean
@@ -212,11 +359,11 @@ definitions:
       iderEnabled:
         example: true
         type: boolean
+      ieee8021xProfile:
+        $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig'
       ieee8021xProfileName:
         example: My Profile
         type: string
-      ieee8021xProfileObject:
-        $ref: '#/definitions/entity.IEEE8021xConfig'
       ipSyncEnabled:
         example: true
         type: boolean
@@ -228,6 +375,7 @@ definitions:
         type: boolean
       mebxPassword:
         example: my_password
+        maxLength: 32
         type: string
       profileName:
         example: My Profile
@@ -246,14 +394,20 @@ definitions:
         example: abc123
         type: string
       tlsCerts:
-        $ref: '#/definitions/entity.TLSCerts'
+        $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.TLSCerts'
       tlsMode:
         example: 1
+        maximum: 4
+        minimum: 1
         type: integer
       tlsSigningAuthority:
+        enum:
+        - SelfSigned
+        - MicrosoftCA
         example: SelfSigned
         type: string
       userConsent:
+        default: All
         example: All
         type: string
       version:
@@ -261,91 +415,320 @@ definitions:
         type: string
       wifiConfigs:
         items:
-          $ref: '#/definitions/entity.ProfileWifiConfigs'
+          $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.ProfileWiFiConfigs'
         type: array
+    required:
+    - activation
+    - profileName
     type: object
-  entity.ProfileWifiConfigs:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.ProfileWiFiConfigs:
     properties:
       priority:
         example: 1
+        maximum: 255
+        minimum: 1
         type: integer
       profileName:
         example: My Profile
+        type: string
+      profileProfileName:
+        example: My Wireless Profile
         type: string
       tenantId:
         example: abc123
         type: string
     type: object
-  entity.TLSCerts:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.TLSCerts:
     properties:
       issuedCertificate:
-        $ref: '#/definitions/entity.CertCreationResult'
+        $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CertCreationResult'
       rootCertificate:
-        $ref: '#/definitions/entity.CertCreationResult'
+        $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CertCreationResult'
       version:
         type: string
     type: object
-  v1.DeviceCountResponse:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig:
+    properties:
+      authenticationMethod:
+        enum:
+        - 4
+        - 5
+        - 6
+        - 7
+        example: 1
+        type: integer
+      encryptionMethod:
+        enum:
+        - 3
+        - 4
+        example: 3
+        type: integer
+      ieee8021xProfileName:
+        example: My Profile
+        type: string
+      ieee8021xProfileObject:
+        $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig'
+      linkPolicy:
+        items:
+          type: integer
+        type: array
+      profileName:
+        example: My Profile
+        type: string
+      pskPassphrase:
+        example: abc
+        maxLength: 32
+        minLength: 8
+        type: string
+      pskValue:
+        example: 3
+        type: integer
+      ssid:
+        example: abc
+        maxLength: 32
+        type: string
+      tenantId:
+        example: abc123
+        type: string
+      version:
+        type: string
+    required:
+    - authenticationMethod
+    type: object
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfigCountResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/entity.Device'
+          $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig'
         type: array
-      totalAccount:
+      totalCount:
         type: integer
     type: object
-  v1.DomainCountResponse:
+  github_com_open-amt-cloud-toolkit_console_internal_entity_dto_v1.Features:
+    properties:
+      IDER:
+        type: boolean
+      KVM:
+        type: boolean
+      SOL:
+        type: boolean
+      optInState:
+        type: integer
+      redirection:
+        type: boolean
+      userConsent:
+        type: string
+    type: object
+  internal_controller_http_v1.CIRAConfigCountResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/entity.Domain'
+          $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig'
         type: array
-      totalAccount:
+      totalCount:
         type: integer
     type: object
-  v1.ProfileCountResponse:
+  internal_controller_http_v1.DeviceCountResponse:
     properties:
-      profile:
+      data:
         items:
-          $ref: '#/definitions/entity.Profile'
+          $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Device'
         type: array
-      totalAccount:
+      totalCount:
         type: integer
     type: object
-  v1.response:
+  internal_controller_http_v1.DeviceStatResponse:
+    properties:
+      connectedCount:
+        type: integer
+      disconnectedCount:
+        type: integer
+      totalCount:
+        type: integer
+    type: object
+  internal_controller_http_v1.DomainCountResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain'
+        type: array
+      totalCount:
+        type: integer
+    type: object
+  internal_controller_http_v1.ProfileCountResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile'
+        type: array
+      totalCount:
+        type: integer
+    type: object
+  internal_controller_http_v1.response:
     properties:
       error:
         example: message
         type: string
     type: object
-host: localhost:8080
+  optin.SendOptInCode_OUTPUT:
+    properties:
+      returnValue:
+        type: integer
+      xmlname:
+        $ref: '#/definitions/encoding_xml.Name'
+    type: object
+  power.PowerActionResponse:
+    properties:
+      returnValue:
+        $ref: '#/definitions/power.ReturnValue'
+    type: object
+  power.ReturnValue:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 4096
+    - 4097
+    - 4098
+    - 4099
+    type: integer
+    x-enum-varnames:
+    - ReturnValueCompletedWithNoError
+    - ReturnValueMethodNotSupported
+    - ReturnValueUnknownError
+    - ReturnValueCannotCompleteWithinTimeoutPeriod
+    - ReturnValueFailed
+    - ReturnValueInvalidParameter
+    - ReturnValueInUse
+    - ReturnValueMethodParametersCheckedJobStarted
+    - ReturnValueInvalidStateTransition
+    - ReturnValueUseOfTimeoutParameterNotSupported
+    - ReturnValueBusy
+host: localhost:8181
 info:
   contact: {}
-  description: Using a translation service as an example
-  title: Go Clean Template API
+  description: Provides a single pane of glass for managing devices with Intel® Active
+    Management Technology and other device technologies
+  title: Console API for Device Management Toolkit
   version: "1.0"
 paths:
-  /api/v1/admin/devices:
+  /api/v1/admin/ciraconfigs:
     get:
       consumes:
       - application/json
-      description: Show all devices
-      operationId: devices
+      description: Show all CIRA Configuration profiles
+      operationId: getCiraConfigs
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.DeviceCountResponse'
+            $ref: '#/definitions/internal_controller_http_v1.CIRAConfigCountResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/v1.response'
-      summary: Show Devices
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: CIRA Configurations
       tags:
-      - devices
+      - ciraconfig
+    patch:
+      consumes:
+      - application/json
+      description: Edit CIRA Configuration
+      operationId: updateCiraConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Edit CIRA Configuration
+      tags:
+      - ciraconfig
+    post:
+      consumes:
+      - application/json
+      description: Add CIRA Configuration
+      operationId: addCiraConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Add CIRA Configuration
+      tags:
+      - ciraconfig
+  /api/v1/admin/ciraconfigs/:ciraConfigName:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a CIRA Configuration profile
+      operationId: removeCiraConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Remove CIRA Configuration
+      tags:
+      - ciraconfig
+    get:
+      consumes:
+      - application/json
+      description: Show a CIRA Configuration profile
+      operationId: getCiraConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.CIRAConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: CIRA Configuration
+      tags:
+      - ciraconfig
   /api/v1/admin/domains:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a Domain
+      operationId: deleteDomain
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Remove Domains
+      tags:
+      - domains
     get:
       consumes:
       - application/json
@@ -357,32 +740,918 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.DomainCountResponse'
+            $ref: '#/definitions/internal_controller_http_v1.DomainCountResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/v1.response'
+            $ref: '#/definitions/internal_controller_http_v1.response'
       summary: Show Domains
       tags:
       - domains
-  /api/v1/admin/profiles:
-    get:
+    patch:
       consumes:
       - application/json
-      description: Show all profiles
-      operationId: profiles
+      description: Edit a Domain
+      operationId: updateDomain
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.ProfileCountResponse'
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/v1.response'
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Edit Domain
+      tags:
+      - domains
+    post:
+      consumes:
+      - application/json
+      description: Add Domain
+      operationId: addDomain
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Add Domain
+      tags:
+      - domains
+  /api/v1/admin/domains/:name:
+    get:
+      consumes:
+      - application/json
+      description: Show domain by name
+      operationId: getDomain
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Domain'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Show Domain
+      tags:
+      - domains
+  /api/v1/admin/ieee8021xconfigs/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all of the IEEE802.1x configuration profiles from the
+        database.
+      operationId: get8021xConfigs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get All IEEE802.1x Configs
+      tags:
+      - ieee802.1x
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Edits an existing IEEE802.1x configuration profile.
+
+        The profileName can not be changed.
+
+        Version must be provided to ensure the correct profile is edited.
+      operationId: edit8021xConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Edit a IEEE802.1x Config
+      tags:
+      - ieee802.1x
+    post:
+      consumes:
+      - application/json
+      description: Creates a new IEEE802.1x configuration profile.
+      operationId: add8021xConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Create an IEEE802.1x Config
+      tags:
+      - ieee802.1x
+  /api/v1/admin/ieee8021xconfigs/:profileName:
+    delete:
+      consumes:
+      - application/json
+      description: Removes the specific IEEE802.1x configuration profile from the
+        database.
+      operationId: delete8021xConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Remove a IEEE802.1x Config
+      tags:
+      - ieee802.1x
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the specific IEEE802.1x configuration profile from the
+        database.
+      operationId: get8021xConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.IEEE8021xConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get a IEEE802.1x Config
+      tags:
+      - ieee802.1x
+  /api/v1/admin/profiles:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a Profile
+      operationId: deleteProfile
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Remove Profile
+      tags:
+      - profiles
+    get:
+      consumes:
+      - application/json
+      description: Show all profiles
+      operationId: getProfiles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.ProfileCountResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
       summary: Show Profiles
       tags:
       - profiles
+    patch:
+      consumes:
+      - application/json
+      description: Edit a Profile
+      operationId: updateProfile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Edit Profile
+      tags:
+      - profiles
+    post:
+      consumes:
+      - application/json
+      description: Add Profile
+      operationId: addProfile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Add Profile
+      tags:
+      - profiles
+  /api/v1/admin/profiles/:name:
+    get:
+      consumes:
+      - application/json
+      description: Show profile by name
+      operationId: getProfile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Profile'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Show Profile
+      tags:
+      - profiles
+  /api/v1/admin/wireless/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all of the Wireless configuration profiles from the database.
+        Will not return the password field to protect the privacy of this asset.
+      operationId: getWifiConfigs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfigCountResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get All Wireless Configs
+      tags:
+      - wireless
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Edits an existing Wireless configuration profile.
+
+        The profileName can not be changed.
+
+        Version must be provided to ensure the correct profile is edited.
+      operationId: editWifiConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Edit a Wireless Config
+      tags:
+      - wireless
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Wireless configuration profile. The PSK passphrase
+        is stored in a secrets manager and is only used during configuration to set
+        the Wi-Fi credentials in the AMT device.
+      operationId: addWifiConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Create a Wireless Config
+      tags:
+      - wireless
+  /api/v1/admin/wireless/:profileName:
+    delete:
+      consumes:
+      - application/json
+      description: Removes the specific Wireless configuration profile from the database.
+      operationId: deleteWifiConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Remove a Wireless Config
+      tags:
+      - wireless
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the specific Wireless configuration profile from the
+        database. Will not return the password field to protect the privacy of this
+        asset.
+      operationId: getWifiConfig
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.WirelessConfig'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get a Wireless Config
+      tags:
+      - wireless
+  /api/v1/amt/alarmOccurrences/:guid:
+    delete:
+      consumes:
+      - application/json
+      description: Delete named Alarm Clock occurence from the device.
+      operationId: deleteAlarm
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Remove Alarm Clock Occurence
+      tags:
+      - device management
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all of the current Alarm Clock occurences for the device
+      operationId: getAlarm
+      produces:
+      - application/json
+      responses:
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Alarm Clock Occurences
+      tags:
+      - device management
+    post:
+      consumes:
+      - application/json
+      description: Create a new Alarm Clock occurence to wake device for AMT device.
+      operationId: setAlarm
+      produces:
+      - application/json
+      responses:
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Set new Alarm Clock Occurence
+      tags:
+      - device management
+  /api/v1/amt/features/:guid:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Retrieves the current Intel® AMT Enable/Disable state for User Consent, Redirection, KVM, SOL, and IDE-R.
+
+        optInState refers to the current Opt In State if the device has User Consent enabled. Valid values:
+
+        0 (Not Started) - No sessions in progress or user consent requested
+        1 (Requested) - Request to AMT device for user consent code successful
+        2 (Displayed) - AMT device displaying user consent code for 300 seconds (5 minutes) before timeout by default
+        3 (Received) - User consent code was entered correctly, a redirection session can be started. Will expire after 120 seconds (2 minutes) and return to State 0 if no active redirection session (State 4)
+        4 (In Session) - Active redirection session in progress
+      operationId: getFeatures
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto_v1.Features'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Intel® AMT Features
+      tags:
+      - device management
+    post:
+      consumes:
+      - application/json
+      description: Retrieves the current Intel® AMT Enable/Disable state for User
+        Consent, Redirection, KVM, SOL, and IDE-R.
+      operationId: setFeatures
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Features'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Set Intel® AMT Features
+      tags:
+      - device management
+  /api/v1/amt/generalSettings/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the Intel® AMT general settings.
+      operationId: getGeneralSettings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get General Settings
+      tags:
+      - device management
+  /api/v1/amt/hardwareInfo/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve hardware information such as processor or storage.
+      operationId: getHardwareInfo
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Hardware Information
+      tags:
+      - device management
+  /api/v1/amt/log/audit/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Returns Intel® AMT Audit Log data in blocks of 10 records for a
+        specified guid. Reference AMT SDK for definition of property return codes.
+      operationId: getAuditLog
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.AuditLog'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Intel® AMT Audit Log
+      tags:
+      - device management
+  /api/v1/amt/log/event/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Return sensor and hardware event data from the Intel® AMT event
+        log. Reference AMT SDK for definition of property return codes.
+      operationId: getEventLog
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.EventLog'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Intel® AMT Event Log
+      tags:
+      - device management
+  /api/v1/amt/networkSettings/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Return network settings.
+      operationId: getNetworkSettings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Intel® AMT Network Settings
+      tags:
+      - device management
+  /api/v1/amt/power/action/:guid:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Perform an OOB power actions numbered 1 thru 99.
+        Execute a GET /power/capabilities/{guid} call first to get the list of available power actions. See AMT Power States for ALL potential power actions.
+      operationId: sendPowerAction
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/power.PowerActionResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Perform OOB Power Action (1 - 99)
+      tags:
+      - device management
+  /api/v1/amt/power/bootoptions/:guid:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Perform an OOB power actions numbered 100+.
+        Execute a GET /power/capabilities/{guid} call first to get the list of available power actions. See AMT Power States for ALL potential power actions.
+      operationId: setBootSettings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/power.PowerActionResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Set OOB Power Action (100+)
+      tags:
+      - device management
+  /api/v1/amt/power/capabilities/:guid:
+    get:
+      consumes:
+      - application/json
+      description: View what OOB power actions are available for that device.
+      operationId: getPowerCapabilities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Power Capabilities
+      tags:
+      - device management
+  /api/v1/amt/power/state/:guid:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Retrieve current power state of Intel® AMT device, returns a number that maps to a device power state. Possible power state values:
+
+        2 = On - corresponding to ACPI state G0 or S0 or D0
+        3 = Sleep - Light, corresponding to ACPI state G1, S1/S2, or D1
+        4 = Sleep - Deep, corresponding to ACPI state G1, S3, or D2
+        6 = Off - Hard, corresponding to ACPI state G3, S5, or D3
+        7 = Hibernate (Off - Soft), corresponding to ACPI state S4, where the state of the managed element is preserved and will be recovered upon powering on
+        8 = Off - Soft, corresponding to ACPI state G2, S5, or D3
+        9 = Power Cycle (Off-Hard), corresponds to the managed element reaching the ACPI state G3 followed by ACPI state S0
+        13 = Off - Hard Graceful, equivalent to Off Hard but preceded by a request to the managed element to perform an orderly shutdown
+      operationId: getPowerState
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Power State
+      tags:
+      - device management
+  /api/v1/amt/userConsentCode/:guid:
+    get:
+      consumes:
+      - application/json
+      description: If optInState is 0, it will request for a new user consent code
+      operationId: getUserConsentCode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get User Consent Code
+      tags:
+      - device management
+    post:
+      consumes:
+      - application/json
+      description: Send the user consent code displayed on the client device.
+      operationId: sendUserConsentCode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/optin.SendOptInCode_OUTPUT'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Send User Consent Code
+      tags:
+      - device management
+  /api/v1/amt/userConsentCode/cancel/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Cancel six digit user consent code previously generated on client
+        device
+      operationId: cancelUserConsentCode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Cancel User Consent Code
+      tags:
+      - device management
+  /api/v1/amt/version/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves hardware version information for Intel® AMT and the current
+        activation state.
+      operationId: getVersion
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Intel® AMT Version
+      tags:
+      - device management
+  /api/v1/devices:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a device
+      operationId: deleteDevice
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Remove Devices
+      tags:
+      - devices
+    get:
+      consumes:
+      - application/json
+      description: Show all devices
+      operationId: getDevices
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.DeviceCountResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Show Devices
+      tags:
+      - devices
+    patch:
+      consumes:
+      - application/json
+      description: Edit a devices
+      operationId: updateDevice
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Device'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Edit Devices
+      tags:
+      - devices
+    post:
+      consumes:
+      - application/json
+      description: Add a devices
+      operationId: insertDevice
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.DeviceCountResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Add Devices
+      tags:
+      - devices
+  /api/v1/devices/:guid:
+    get:
+      consumes:
+      - application/json
+      description: Get a device by ID
+      operationId: getDevice
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.DeviceCountResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Device by ID
+      tags:
+      - devices
+  /api/v1/devices/stats:
+    get:
+      consumes:
+      - application/json
+      description: Gets number of devices
+      operationId: getStats
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.DeviceStatResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Gets Device Count
+      tags:
+      - devices
+  /api/v1/devices/tags:
+    get:
+      consumes:
+      - application/json
+      description: Get Available Distinct Tags in the system
+      operationId: getTags
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_controller_http_v1.response'
+      summary: Get Tags
+      tags:
+      - devices
+  /api/v2/amt/features/:guid:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Retrieves the current Intel® AMT Enable/Disable state for User Consent, Redirection, KVM, SOL, and IDE-R.
+
+        optInState refers to the current Opt In State if the device has User Consent enabled. Valid values:
+
+        0 (Not Started) - No sessions in progress or user consent requested
+        1 (Requested) - Request to AMT device for user consent code successful
+        2 (Displayed) - AMT device displaying user consent code for 300 seconds (5 minutes) before timeout by default
+        3 (Received) - User consent code was entered correctly, a redirection session can be started. Will expire after 120 seconds (2 minutes) and return to State 0 if no active redirection session (State 4)
+        4 (In Session) - Active redirection session in progress
+      operationId: getFeaturesV2
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: notpaging
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto.Features'
+        default:
+          description: 200 application/json
+          schema:
+            $ref: '#/definitions/github_com_open-amt-cloud-toolkit_console_internal_entity_dto_v1.Features'
+      summary: Get Intel® AMT Features
+      tags:
+      - device management
 swagger: "2.0"
