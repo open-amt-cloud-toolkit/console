@@ -25,7 +25,7 @@ require (
 	github.com/swaggo/swag v1.16.4
 	go.uber.org/mock v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
-	modernc.org/sqlite v1.34.3
+	modernc.org/sqlite v1.34.4
 	software.sslmate.com/src/go-pkcs12 v0.5.0
 )
 
