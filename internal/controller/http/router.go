@@ -91,7 +91,7 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	h2 := protected.Group("/v1")
 	{
 		v1.NewDeviceRoutes(h2, t.Devices, l)
-		v1.NewAmtRoutes(h2, t.Devices, t.AMTExplorer, l)
+		v1.NewAmtRoutes(h2, t.Devices, t.AMTExplorer, t.Exporter, l)
 	}
 
 	h := protected.Group("/v1/admin")

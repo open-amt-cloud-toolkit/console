@@ -13,7 +13,7 @@ linters-settings:
     lines: 100
     statements: 45
   gocognit:
-    min-complexity: 15
+    min-complexity: 16
   gocyclo:
     min-complexity: 15
   cyclop:

@@ -31,10 +31,11 @@ func deviceManagementTest(t *testing.T) (*mocks.MockDeviceManagementFeature, *gi
 	log := logger.New("error")
 	deviceManagement := mocks.NewMockDeviceManagementFeature(mockCtl)
 	amtExplorerMock := mocks.NewMockAMTExplorerFeature(mockCtl)
+	exporterMock := mocks.NewMockExporter(mockCtl)
 	engine := gin.New()
 	handler := engine.Group("/api/v1")
 
-	NewAmtRoutes(handler, deviceManagement, amtExplorerMock, log)
+	NewAmtRoutes(handler, deviceManagement, amtExplorerMock, exporterMock, log)
 
 	return deviceManagement, engine
 }
