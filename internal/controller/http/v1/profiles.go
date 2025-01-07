@@ -48,7 +48,7 @@ type ProfileCountResponse struct {
 
 // @Summary     Show Profiles
 // @Description Show all profiles
-// @ID          profiles
+// @ID          getProfiles
 // @Tags  	    profiles
 // @Accept      json
 // @Produce     json
@@ -90,16 +90,15 @@ func (r *profileRoutes) get(c *gin.Context) {
 	}
 }
 
-// @Summary     Show Profiles
+// @Summary     Show Profile
 // @Description Show profile by name
-// @ID          profile
-// @Tags              profiles
+// @ID          getProfile
+// @Tags        profiles
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} ProfileCountResponse
+// @Success     200 {object} dto.Profile
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/profiles/:name [get]
-
 func (r *profileRoutes) getByName(c *gin.Context) {
 	name := c.Param("name")
 
@@ -147,14 +146,13 @@ func (r *profileRoutes) export(c *gin.Context) {
 
 // @Summary     Add Profile
 // @Description Add Profile
-// @ID          profiles
-// @Tags              profiles
+// @ID          addProfile
+// @Tags        profiles
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} ProfileResponse
+// @Success     200 {object} dto.Profile
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/profiles [post]
-
 func (r *profileRoutes) insert(c *gin.Context) {
 	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
@@ -178,13 +176,12 @@ func (r *profileRoutes) insert(c *gin.Context) {
 // @Summary     Edit Profile
 // @Description Edit a Profile
 // @ID          updateProfile
-// @Tags              profiles
+// @Tags        profiles
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} ProfileResponse
+// @Success     200 {object} dto.Profile
 // @Failure     500 {object} response
-// @Router      /api/v1/admin/Profiles [patch]
-
+// @Router      /api/v1/admin/profiles [patch]
 func (r *profileRoutes) update(c *gin.Context) {
 	var profile dto.Profile
 	if err := c.ShouldBindJSON(&profile); err != nil {
@@ -205,16 +202,15 @@ func (r *profileRoutes) update(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedProfile)
 }
 
-// @Summary     Remove Profiles
+// @Summary     Remove Profile
 // @Description Remove a Profile
 // @ID          deleteProfile
-// @Tags              profiles
+// @Tags        profiles
 // @Accept      json
 // @Produce     json
-// @Success     204 {object} noContent
+// @Success     204 {object} nil
 // @Failure     500 {object} response
 // @Router      /api/v1/admin/profiles [delete]
-
 func (r *profileRoutes) delete(c *gin.Context) {
 	name := c.Param("name")
 

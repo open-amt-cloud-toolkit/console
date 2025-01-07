@@ -2,8 +2,8 @@
 ![Codecov](https://img.shields.io/codecov/c/github/open-amt-cloud-toolkit/console?style=for-the-badge&logo=codecov)
 [![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/open-amt-cloud-toolkit/console?style=for-the-badge&label=OSSF%20Score)](https://api.securityscorecards.dev/projects/github.com/open-amt-cloud-toolkit/console)
 [![Discord](https://img.shields.io/discord/1063200098680582154?style=for-the-badge&label=Discord&logo=discord&logoColor=white&labelColor=%235865F2&link=https%3A%2F%2Fdiscord.gg%2FDKHeUNEWVH)](https://discord.gg/DKHeUNEWVH)
-# Console
 
+# Console
 
 > Disclaimer: Production viable releases are tagged and listed under 'Releases'. Console is under development. **The current available tags for download are Alpha version code and should not be used in production.** For these Alpha tags, certain features may not function yet, visual look and feel may change, or bugs/errors may occur. Follow along our [Feature Backlog for future releases and feature updates](https://github.com/orgs/open-amt-cloud-toolkit/projects/10).
 
@@ -17,13 +17,13 @@ Console is an application that provides a 1:1, direct connection for AMT devices
 
 <br>
 
-## Quick start 
+## Quick start
 
 ### For Users
 
 1. Find the latest release of Console under [Github Releases](https://github.com/open-amt-cloud-toolkit/console/releases/latest).
 
-2. Download the appropriate binary assets for your OS and Architecture under the *Assets* dropdown section.
+2. Download the appropriate binary assets for your OS and Architecture under the _Assets_ dropdown section.
 
 3. Run Console.
 
@@ -31,7 +31,7 @@ Console is an application that provides a 1:1, direct connection for AMT devices
 
 Local development (in Linux or WSL):
 
-To start the service with Postgres: 
+To start the service with Postgres:
 
 ```sh
 # Postgres
@@ -41,16 +41,12 @@ $ make run
 ```
 
 Download and check out the sample-web-ui:
+
 ```
 git clone https://github.com/open-amt-cloud-toolkit/sample-web-ui
 ```
 
 Ensure that the environment file has cloud set to `false` and that the URLs for RPS and MPS are pointing to where you have `Console` running. The default is `http://localhost:8181`. Follow the instructions for launching and running the UI in the sample-web-ui readme.
-
-
-
-
-
 
 ## Dev tips for passing CI Checks
 
@@ -62,7 +58,6 @@ Ensure that the environment file has cloud set to `false` and that the URLs for 
   - Windows: `docker run --rm -v ${pwd}:/app -w /app golangci/golangci-lint:latest golangci-lint run -v`
   - Unix: `docker run --rm -v .:/app -w /app golangci/golangci-lint:latest golangci-lint run -v`
 
-
 ## Additional Resources
 
 - For detailed documentation and Getting Started, [visit the docs site](https://open-amt-cloud-toolkit.github.io/docs).
@@ -73,4 +68,4 @@ Ensure that the environment file has cloud set to `false` and that the URLs for 
 
 - Need additional support or want to get the latest news and events about Open AMT? Connect with the team directly through Discord.
 
-    [![Discord Banner 1](https://discordapp.com/api/guilds/1063200098680582154/widget.png?style=banner2)](https://discord.gg/DKHeUNEWVH)
+  [![Discord Banner 1](https://discordapp.com/api/guilds/1063200098680582154/widget.png?style=banner2)](https://discord.gg/DKHeUNEWVH)

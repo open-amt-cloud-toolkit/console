@@ -47,6 +47,15 @@ type IEEE8021xConfigCountResponse struct {
 	Data  []dto.IEEE8021xConfig `json:"data"`
 }
 
+// @Summary     Get All IEEE802.1x Configs
+// @Description Retrieves all of the IEEE802.1x configuration profiles from the database. 
+// @ID          get8021xConfigs
+// @Tags  	    ieee802.1x
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} []dto.IEEE8021xConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ieee8021xconfigs/ [get]
 func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
@@ -82,6 +91,15 @@ func (r *ieee8021xConfigRoutes) get(c *gin.Context) {
 	}
 }
 
+// @Summary     Get a IEEE802.1x Config
+// @Description Retrieves the specific IEEE802.1x configuration profile from the database. 
+// @ID          get8021xConfig
+// @Tags  	    ieee802.1x
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.IEEE8021xConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ieee8021xconfigs/:profileName [get]
 func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 	configName := c.Param("profileName")
 
@@ -96,6 +114,15 @@ func (r *ieee8021xConfigRoutes) getByName(c *gin.Context) {
 	c.JSON(http.StatusOK, config)
 }
 
+// @Summary     Create an IEEE802.1x Config
+// @Description Creates a new IEEE802.1x configuration profile. 
+// @ID          add8021xConfig
+// @Tags  	    ieee802.1x
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.IEEE8021xConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ieee8021xconfigs/ [post]
 func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -116,6 +143,19 @@ func (r *ieee8021xConfigRoutes) insert(c *gin.Context) {
 	c.JSON(http.StatusCreated, newConfig)
 }
 
+// @Summary     Edit a IEEE802.1x Config
+// @Description Edits an existing IEEE802.1x configuration profile.
+// @Description 
+// @Description The profileName can not be changed.
+// @Description 
+// @Description Version must be provided to ensure the correct profile is edited.
+// @ID          edit8021xConfig
+// @Tags  	    ieee802.1x
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.IEEE8021xConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ieee8021xconfigs/ [patch]
 func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 	var config dto.IEEE8021xConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -136,6 +176,15 @@ func (r *ieee8021xConfigRoutes) update(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedConfig)
 }
 
+// @Summary     Remove a IEEE802.1x Config
+// @Description Removes the specific IEEE802.1x configuration profile from the database. 
+// @ID          delete8021xConfig
+// @Tags  	    ieee802.1x
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} nil
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ieee8021xconfigs/:profileName [delete]
 func (r *ieee8021xConfigRoutes) delete(c *gin.Context) {
 	configName := c.Param("profileName")
 

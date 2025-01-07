@@ -42,6 +42,15 @@ func NewWirelessConfigRoutes(handler *gin.RouterGroup, t wificonfigs.Feature, l 
 	}
 }
 
+// @Summary     Get All Wireless Configs
+// @Description Retrieves all of the Wireless configuration profiles from the database. Will not return the password field to protect the privacy of this asset. 
+// @ID          getWifiConfigs
+// @Tags  	    wireless
+// @Accept      json
+// @Produce     json
+// @success     200 {object} dto.WirelessConfigCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/wireless/ [get]
 func (r *WirelessConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
@@ -77,6 +86,15 @@ func (r *WirelessConfigRoutes) get(c *gin.Context) {
 	}
 }
 
+// @Summary     Get a Wireless Config
+// @Description Retrieves the specific Wireless configuration profile from the database. Will not return the password field to protect the privacy of this asset. 
+// @ID          getWifiConfig
+// @Tags  	    wireless
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.WirelessConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/wireless/:profileName [get]
 func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 	profileName := c.Param("profileName")
 
@@ -91,6 +109,15 @@ func (r *WirelessConfigRoutes) getByName(c *gin.Context) {
 	c.JSON(http.StatusOK, config)
 }
 
+// @Summary     Create a Wireless Config
+// @Description Creates a new Wireless configuration profile. The PSK passphrase is stored in a secrets manager and is only used during configuration to set the Wi-Fi credentials in the AMT device. 
+// @ID          addWifiConfig
+// @Tags  	    wireless
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.WirelessConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/wireless/ [post]
 func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -112,6 +139,19 @@ func (r *WirelessConfigRoutes) insert(c *gin.Context) {
 	c.JSON(http.StatusCreated, insertedConfig)
 }
 
+// @Summary     Edit a Wireless Config
+// @Description Edits an existing Wireless configuration profile.
+// @Description 
+// @Description The profileName can not be changed.
+// @Description 
+// @Description Version must be provided to ensure the correct profile is edited.
+// @ID          editWifiConfig
+// @Tags  	    wireless
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.WirelessConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/wireless/ [patch]
 func (r *WirelessConfigRoutes) update(c *gin.Context) {
 	var config dto.WirelessConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -132,6 +172,15 @@ func (r *WirelessConfigRoutes) update(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedWirelessConfig)
 }
 
+// @Summary     Remove a Wireless Config
+// @Description Removes the specific Wireless configuration profile from the database. 
+// @ID          deleteWifiConfig
+// @Tags  	    wireless
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} nil
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/wireless/:profileName [delete]
 func (r *WirelessConfigRoutes) delete(c *gin.Context) {
 	configName := c.Param("profileName")
 

@@ -33,6 +33,15 @@ type CIRAConfigCountResponse struct {
 	Data  []dto.CIRAConfig `json:"data"`
 }
 
+// @Summary     CIRA Configurations
+// @Description Show all CIRA Configuration profiles
+// @ID          getCiraConfigs
+// @Tags  	    ciraconfig
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} CIRAConfigCountResponse
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ciraconfigs [get]
 func (r *ciraConfigRoutes) get(c *gin.Context) {
 	var odata OData
 	if err := c.ShouldBindQuery(&odata); err != nil {
@@ -70,6 +79,15 @@ func (r *ciraConfigRoutes) get(c *gin.Context) {
 	}
 }
 
+// @Summary     CIRA Configuration
+// @Description Show a CIRA Configuration profile
+// @ID          getCiraConfig
+// @Tags  	    ciraconfig
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.CIRAConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ciraconfigs/:ciraConfigName [get]
 func (r *ciraConfigRoutes) getByName(c *gin.Context) {
 	configName := c.Param("ciraConfigName")
 
@@ -84,6 +102,15 @@ func (r *ciraConfigRoutes) getByName(c *gin.Context) {
 	c.JSON(http.StatusOK, foundConfig)
 }
 
+// @Summary     Add CIRA Configuration
+// @Description Add CIRA Configuration
+// @ID          addCiraConfig
+// @Tags        ciraconfig
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.CIRAConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ciraconfigs [post]
 func (r *ciraConfigRoutes) insert(c *gin.Context) {
 	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -104,6 +131,15 @@ func (r *ciraConfigRoutes) insert(c *gin.Context) {
 	c.JSON(http.StatusCreated, newCiraConfig)
 }
 
+// @Summary     Edit CIRA Configuration
+// @Description Edit CIRA Configuration
+// @ID          updateCiraConfig
+// @Tags        ciraconfig
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} dto.CIRAConfig
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ciraconfigs [patch]
 func (r *ciraConfigRoutes) update(c *gin.Context) {
 	var config dto.CIRAConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -124,6 +160,15 @@ func (r *ciraConfigRoutes) update(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedConfig)
 }
 
+// @Summary     Remove CIRA Configuration
+// @Description Remove a CIRA Configuration profile
+// @ID          removeCiraConfig
+// @Tags  	    ciraconfig
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} nil
+// @Failure     500 {object} response
+// @Router      /api/v1/admin/ciraconfigs/:ciraConfigName [delete]
 func (r *ciraConfigRoutes) delete(c *gin.Context) {
 	configName := c.Param("ciraConfigName")
 

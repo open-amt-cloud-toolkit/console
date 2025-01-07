@@ -16,7 +16,7 @@ func TestSwaggerInfoInitialization(t *testing.T) {
 
 	// Assert specific fields
 	assert.Equal(t, "1.0", SwaggerInfo.Version)
-	assert.Equal(t, "localhost:8080", SwaggerInfo.Host)
+	assert.Equal(t, "localhost:8181", SwaggerInfo.Host)
 	assert.Equal(t, "/v1", SwaggerInfo.BasePath)
 	assert.Equal(t, "Console API", SwaggerInfo.Title)
 	assert.Equal(t, "Console is an application that provides a 1:1, direct connection for AMT devices for use in an enterprise environment. Users can add activated AMT devices to access device information and device management functionality such as power control, remote keyboard-video-mouse (KVM) control, and more.", SwaggerInfo.Description)
