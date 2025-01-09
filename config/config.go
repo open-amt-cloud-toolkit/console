@@ -90,6 +90,7 @@ func NewConfig() (*Config, error) {
 		},
 		DB: DB{
 			PoolMax: 2,
+			URL:     "",
 		},
 		EA: EA{
 			URL:      "http://localhost:8000",
