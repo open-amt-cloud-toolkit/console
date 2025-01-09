@@ -37,7 +37,7 @@ jobs:
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@dd3fda91790ca90e75049e5c767509dc0ec7d99b # v2.7.0
         with:
-          fail-level: error
+          fail_level: error
           golangci_lint_flags: "--config=.github/.golangci.yml ./..."
 
   yamllint:
