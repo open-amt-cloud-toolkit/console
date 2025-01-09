@@ -19,6 +19,7 @@ logger:
 
 postgres:
   pool_max: 5
+  url: ""
 
 ea:
   url: "http://localhost:8000"
