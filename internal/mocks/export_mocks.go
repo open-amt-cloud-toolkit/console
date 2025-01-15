@@ -22,6 +22,7 @@ import (
 type MockExporter struct {
 	ctrl     *gomock.Controller
 	recorder *MockExporterMockRecorder
+	isgomock struct{}
 }
 
 // MockExporterMockRecorder is the mock recorder for MockExporter.
