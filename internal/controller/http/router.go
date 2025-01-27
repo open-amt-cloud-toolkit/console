@@ -37,7 +37,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 	// Public routes
 	login := v1.NewLoginRoute(cfg)
 	handler.POST("/api/v1/authorize", login.Login)
-
 	// Static files
 	// Serve static assets (js, css, images, etc.)
 	// Create subdirectory view of the embedded file system
@@ -81,7 +80,7 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Usecases, cfg 
 
 	// Protected routes using JWT middleware
 	var protected *gin.RouterGroup
-	if cfg.App.AuthDisabled {
+	if cfg.Auth.Disabled {
 		protected = handler.Group("/api")
 	} else {
 		protected = handler.Group("/api", login.JWTAuthMiddleware())

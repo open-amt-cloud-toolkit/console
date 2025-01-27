@@ -5,7 +5,9 @@
 .env
 .DS_store
 *.pem
-
+**/*.yml
+**/*.yaml
+!config/config.yml
 # Binaries for programs and plugins
 *.exe
 *.exe~
