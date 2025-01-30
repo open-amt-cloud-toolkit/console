@@ -26,6 +26,7 @@ import (
 type MockUpgrader struct {
 	ctrl     *gomock.Controller
 	recorder *MockUpgraderMockRecorder
+	isgomock struct{}
 }
 
 // MockUpgraderMockRecorder is the mock recorder for MockUpgrader.
@@ -64,6 +65,7 @@ func (mr *MockUpgraderMockRecorder) Upgrade(w, r, hdr any) *gomock.Call {
 type MockRedirect struct {
 	ctrl     *gomock.Controller
 	recorder *MockRedirectMockRecorder
+	isgomock struct{}
 }
 
 // MockRedirectMockRecorder is the mock recorder for MockRedirect.
@@ -101,6 +103,7 @@ func (mr *MockRedirectMockRecorder) Redirect(c, conn, host, mode any) *gomock.Ca
 type MockFeature struct {
 	ctrl     *gomock.Controller
 	recorder *MockFeatureMockRecorder
+	isgomock struct{}
 }
 
 // MockFeatureMockRecorder is the mock recorder for MockFeature.

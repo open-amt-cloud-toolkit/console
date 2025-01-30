@@ -28,6 +28,7 @@ import (
 type MockWSMAN struct {
 	ctrl     *gomock.Controller
 	recorder *MockWSMANMockRecorder
+	isgomock struct{}
 }
 
 // MockWSMANMockRecorder is the mock recorder for MockWSMAN.
@@ -89,6 +90,7 @@ func (mr *MockWSMANMockRecorder) Worker() *gomock.Call {
 type MockWebSocketConn struct {
 	ctrl     *gomock.Controller
 	recorder *MockWebSocketConnMockRecorder
+	isgomock struct{}
 }
 
 // MockWebSocketConnMockRecorder is the mock recorder for MockWebSocketConn.
@@ -156,6 +158,7 @@ func (mr *MockWebSocketConnMockRecorder) WriteMessage(messageType, data any) *go
 type MockRedirection struct {
 	ctrl     *gomock.Controller
 	recorder *MockRedirectionMockRecorder
+	isgomock struct{}
 }
 
 // MockRedirectionMockRecorder is the mock recorder for MockRedirection.
@@ -250,6 +253,7 @@ func (mr *MockRedirectionMockRecorder) SetupWsmanClient(device, isRedirection, l
 type MockDeviceManagementRepository struct {
 	ctrl     *gomock.Controller
 	recorder *MockDeviceManagementRepositoryMockRecorder
+	isgomock struct{}
 }
 
 // MockDeviceManagementRepositoryMockRecorder is the mock recorder for MockDeviceManagementRepository.
@@ -408,6 +412,7 @@ func (mr *MockDeviceManagementRepositoryMockRecorder) Update(ctx, d any) *gomock
 type MockDeviceManagementFeature struct {
 	ctrl     *gomock.Controller
 	recorder *MockDeviceManagementFeatureMockRecorder
+	isgomock struct{}
 }
 
 // MockDeviceManagementFeatureMockRecorder is the mock recorder for MockDeviceManagementFeature.
