@@ -63,6 +63,11 @@ func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, amt amtexplorer.F
 	}
 }
 
+const (
+	defaultTop  = 0
+	defaultSkip = 120
+)
+
 func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 	guid := c.Param("guid")
 
@@ -390,7 +395,35 @@ func (r *deviceManagementRoutes) downloadAuditLog(c *gin.Context) {
 func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 	guid := c.Param("guid")
 
-	eventLogs, err := r.d.GetEventLog(c.Request.Context(), guid)
+	startIndex := defaultTop
+
+	if idStr := c.Query("startIndex"); idStr != "" {
+		var err error
+
+		startIndex, err = strconv.Atoi(idStr)
+		if err != nil {
+			r.l.Error(err, "http - v1 - getEventLog")
+			ErrorResponse(c, err)
+
+			return
+		}
+	}
+
+	maxReadRecords := defaultSkip
+
+	if maxStr := c.Query("maxReadRecords"); maxStr != "" {
+		var err error
+
+		maxReadRecords, err = strconv.Atoi(maxStr)
+		if err != nil {
+			r.l.Error(err, "http - v1 - getEventLog")
+			ErrorResponse(c, err)
+
+			return
+		}
+	}
+
+	eventLogs, err := r.d.GetEventLog(c.Request.Context(), startIndex, maxReadRecords, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getEventLog")
 		ErrorResponse(c, err)
@@ -404,16 +437,36 @@ func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 func (r *deviceManagementRoutes) downloadEventLog(c *gin.Context) {
 	guid := c.Param("guid")
 
-	eventLogs, err := r.d.GetEventLog(c.Request.Context(), guid)
-	if err != nil {
-		r.l.Error(err, "http - v1 - getEventLog")
-		ErrorResponse(c, err)
+	var allEventLogs []dto.EventLog
 
-		return
+	startIndex := defaultTop
+
+	maxReadRecords := 390
+
+	// Keep fetching logs until NoMoreRecords is true
+	for {
+		eventLogs, err := r.d.GetEventLog(c.Request.Context(), startIndex, maxReadRecords, guid)
+		if err != nil {
+			r.l.Error(err, "http - v1 - getEventLog")
+			ErrorResponse(c, err)
+
+			return
+		}
+
+		// Append the current batch of logs
+		allEventLogs = append(allEventLogs, eventLogs.EventLogs...)
+
+		// Break if no more records
+		if eventLogs.NoMoreRecords {
+			break
+		}
+
+		// Update the startIndex for the next batch
+		startIndex += len(eventLogs.EventLogs)
 	}
 
 	// Convert logs to CSV
-	csvReader, err := r.e.ExportEventLogsCSV(eventLogs)
+	csvReader, err := r.e.ExportEventLogsCSV(allEventLogs)
 	if err != nil {
 		r.l.Error(err, "http - v1 - downloadEventLog")
 		ErrorResponse(c, err)

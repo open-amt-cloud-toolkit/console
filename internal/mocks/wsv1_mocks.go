@@ -347,18 +347,18 @@ func (mr *MockFeatureMockRecorder) GetDistinctTags(ctx, tenantID any) *gomock.Ca
 }
 
 // GetEventLog mocks base method.
-func (m *MockFeature) GetEventLog(ctx context.Context, guid string) ([]dto.EventLog, error) {
+func (m *MockFeature) GetEventLog(ctx context.Context, startIndex, maxReadRecords int, guid string) (dto.EventLogs, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEventLog", ctx, guid)
-	ret0, _ := ret[0].([]dto.EventLog)
+	ret := m.ctrl.Call(m, "GetEventLog", ctx, startIndex, maxReadRecords, guid)
+	ret0, _ := ret[0].(dto.EventLogs)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetEventLog indicates an expected call of GetEventLog.
-func (mr *MockFeatureMockRecorder) GetEventLog(ctx, guid any) *gomock.Call {
+func (mr *MockFeatureMockRecorder) GetEventLog(ctx, startIndex, maxReadRecords, guid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventLog", reflect.TypeOf((*MockFeature)(nil).GetEventLog), ctx, guid)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventLog", reflect.TypeOf((*MockFeature)(nil).GetEventLog), ctx, startIndex, maxReadRecords, guid)
 }
 
 // GetFeatures mocks base method.
