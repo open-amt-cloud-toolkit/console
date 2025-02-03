@@ -169,7 +169,7 @@ func TestDeviceManagement(t *testing.T) {
 		},
 		{
 			name:   "getEventLog - successful retrieval",
-			url:    "/api/v1/amt/log/event/valid-guid?startIndex=1&maxReadRecords=10",
+			url:    "/api/v1/amt/log/event/valid-guid?$skip=1&$top=10",
 			method: http.MethodGet,
 			mock: func(m *mocks.MockDeviceManagementFeature) {
 				m.EXPECT().GetEventLog(context.Background(), 1, 10, "valid-guid").

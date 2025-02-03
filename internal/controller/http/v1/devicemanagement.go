@@ -63,11 +63,6 @@ func NewAmtRoutes(handler *gin.RouterGroup, d devices.Feature, amt amtexplorer.F
 	}
 }
 
-const (
-	defaultTop  = 0
-	defaultSkip = 120
-)
-
 func (r *deviceManagementRoutes) getVersion(c *gin.Context) {
 	guid := c.Param("guid")
 
@@ -395,35 +390,15 @@ func (r *deviceManagementRoutes) downloadAuditLog(c *gin.Context) {
 func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 	guid := c.Param("guid")
 
-	startIndex := defaultTop
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		validationErr := ErrValidationProfile.Wrap("get", "ShouldBindQuery", err)
+		ErrorResponse(c, validationErr)
 
-	if idStr := c.Query("startIndex"); idStr != "" {
-		var err error
-
-		startIndex, err = strconv.Atoi(idStr)
-		if err != nil {
-			r.l.Error(err, "http - v1 - getEventLog")
-			ErrorResponse(c, err)
-
-			return
-		}
+		return
 	}
 
-	maxReadRecords := defaultSkip
-
-	if maxStr := c.Query("maxReadRecords"); maxStr != "" {
-		var err error
-
-		maxReadRecords, err = strconv.Atoi(maxStr)
-		if err != nil {
-			r.l.Error(err, "http - v1 - getEventLog")
-			ErrorResponse(c, err)
-
-			return
-		}
-	}
-
-	eventLogs, err := r.d.GetEventLog(c.Request.Context(), startIndex, maxReadRecords, guid)
+	eventLogs, err := r.d.GetEventLog(c.Request.Context(), odata.Skip, odata.Top, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getEventLog")
 		ErrorResponse(c, err)
@@ -439,13 +414,11 @@ func (r *deviceManagementRoutes) downloadEventLog(c *gin.Context) {
 
 	var allEventLogs []dto.EventLog
 
-	startIndex := defaultTop
-
-	maxReadRecords := 390
+	startIndex := 0
 
 	// Keep fetching logs until NoMoreRecords is true
 	for {
-		eventLogs, err := r.d.GetEventLog(c.Request.Context(), startIndex, maxReadRecords, guid)
+		eventLogs, err := r.d.GetEventLog(c.Request.Context(), 0, 0, guid)
 		if err != nil {
 			r.l.Error(err, "http - v1 - getEventLog")
 			ErrorResponse(c, err)
