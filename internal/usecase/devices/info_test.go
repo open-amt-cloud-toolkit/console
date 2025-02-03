@@ -426,7 +426,7 @@ func TestGetEventLog(t *testing.T) {
 
 	tests := []test{
 		{
-			name:   "success",
+			name:   "success - with no more records",
 			action: 0,
 			manMock: func(man *mocks.MockWSMAN, man2 *mocks.MockManagement) {
 				man.EXPECT().
@@ -434,7 +434,7 @@ func TestGetEventLog(t *testing.T) {
 					Return(man2)
 				man2.EXPECT().
 					GetEventLog(1, 10).
-					Return(messagelog.GetRecordsResponse{}, nil)
+					Return(messagelog.GetRecordsResponse{NoMoreRecords: true}, nil)
 			},
 			repoMock: func(repo *mocks.MockDeviceManagementRepository) {
 				repo.EXPECT().

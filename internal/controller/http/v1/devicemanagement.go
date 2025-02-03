@@ -427,15 +427,15 @@ func (r *deviceManagementRoutes) downloadEventLog(c *gin.Context) {
 		}
 
 		// Append the current batch of logs
-		allEventLogs = append(allEventLogs, eventLogs.EventLogs...)
+		allEventLogs = append(allEventLogs, eventLogs.Records...)
 
 		// Break if no more records
-		if eventLogs.NoMoreRecords {
+		if eventLogs.HasMoreRecords {
 			break
 		}
 
 		// Update the startIndex for the next batch
-		startIndex += len(eventLogs.EventLogs)
+		startIndex += len(eventLogs.Records)
 	}
 
 	// Convert logs to CSV
