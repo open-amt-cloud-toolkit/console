@@ -169,8 +169,8 @@ func (uc *UseCase) GetEventLog(c context.Context, startIndex, maxReadRecords int
 	}
 
 	return dto.EventLogs{
-		EventLogs:     events,
-		NoMoreRecords: eventLogs.NoMoreRecords,
+		Records:        events,
+		HasMoreRecords: !eventLogs.NoMoreRecords,
 	}, nil
 }
 
