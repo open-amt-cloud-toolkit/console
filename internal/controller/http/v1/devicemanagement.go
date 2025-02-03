@@ -390,7 +390,15 @@ func (r *deviceManagementRoutes) downloadAuditLog(c *gin.Context) {
 func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 	guid := c.Param("guid")
 
-	eventLogs, err := r.d.GetEventLog(c.Request.Context(), guid)
+	var odata OData
+	if err := c.ShouldBindQuery(&odata); err != nil {
+		validationErr := ErrValidationProfile.Wrap("get", "ShouldBindQuery", err)
+		ErrorResponse(c, validationErr)
+
+		return
+	}
+
+	eventLogs, err := r.d.GetEventLog(c.Request.Context(), odata.Skip, odata.Top, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getEventLog")
 		ErrorResponse(c, err)
@@ -404,16 +412,34 @@ func (r *deviceManagementRoutes) getEventLog(c *gin.Context) {
 func (r *deviceManagementRoutes) downloadEventLog(c *gin.Context) {
 	guid := c.Param("guid")
 
-	eventLogs, err := r.d.GetEventLog(c.Request.Context(), guid)
-	if err != nil {
-		r.l.Error(err, "http - v1 - getEventLog")
-		ErrorResponse(c, err)
+	var allEventLogs []dto.EventLog
 
-		return
+	startIndex := 0
+
+	// Keep fetching logs until NoMoreRecords is true
+	for {
+		eventLogs, err := r.d.GetEventLog(c.Request.Context(), 0, 0, guid)
+		if err != nil {
+			r.l.Error(err, "http - v1 - getEventLog")
+			ErrorResponse(c, err)
+
+			return
+		}
+
+		// Append the current batch of logs
+		allEventLogs = append(allEventLogs, eventLogs.EventLogs...)
+
+		// Break if no more records
+		if eventLogs.NoMoreRecords {
+			break
+		}
+
+		// Update the startIndex for the next batch
+		startIndex += len(eventLogs.EventLogs)
 	}
 
 	// Convert logs to CSV
-	csvReader, err := r.e.ExportEventLogsCSV(eventLogs)
+	csvReader, err := r.e.ExportEventLogsCSV(allEventLogs)
 	if err != nil {
 		r.l.Error(err, "http - v1 - downloadEventLog")
 		ErrorResponse(c, err)

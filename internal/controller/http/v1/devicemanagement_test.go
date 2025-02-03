@@ -169,14 +169,14 @@ func TestDeviceManagement(t *testing.T) {
 		},
 		{
 			name:   "getEventLog - successful retrieval",
-			url:    "/api/v1/amt/log/event/valid-guid",
+			url:    "/api/v1/amt/log/event/valid-guid?$skip=1&$top=10",
 			method: http.MethodGet,
 			mock: func(m *mocks.MockDeviceManagementFeature) {
-				m.EXPECT().GetEventLog(context.Background(), "valid-guid").
-					Return([]dto.EventLog{}, nil)
+				m.EXPECT().GetEventLog(context.Background(), 1, 10, "valid-guid").
+					Return(dto.EventLogs{}, nil)
 			},
 			expectedCode: http.StatusOK,
-			response:     []dto.EventLog{},
+			response:     dto.EventLogs{},
 		},
 		{
 			name:   "setBootOptions - successful setting",
