@@ -28,6 +28,7 @@ type (
 		Name                     string        `env-required:"true" yaml:"name" env:"APP_NAME"`
 		Repo                     string        `env-required:"true" yaml:"repo" env:"APP_REPO"`
 		Version                  string        `env-required:"true"`
+		CommonName               string        `env-required:"true" yaml:"common_name" env:"APP_COMMON_NAME"`
 		EncryptionKey            string        `yaml:"encryption_key" env:"APP_ENCRYPTION_KEY"`
 		JWTKey                   string        `env-required:"true" yaml:"jwtKey" env:"APP_JWT_KEY"`
 		AuthDisabled             bool          `yaml:"authDisabled" env:"APP_AUTH_DISABLED"`
@@ -72,6 +73,7 @@ func NewConfig() (*Config, error) {
 			Name:                     "console",
 			Repo:                     "open-amt-cloud-toolkit/console",
 			Version:                  "DEVELOPMENT",
+			CommonName:               "localhost",
 			EncryptionKey:            "",
 			JWTKey:                   "your_secret_jwt_key",
 			AdminUsername:            "standalone",

@@ -4,7 +4,10 @@
 # Config
 .env
 .DS_store
-*.pem
+#certs
+**/*.pem
+**/*.crt
+**/*.key
 
 # Binaries for programs and plugins
 *.exe
