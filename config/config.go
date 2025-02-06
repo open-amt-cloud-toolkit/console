@@ -21,20 +21,15 @@ type (
 		Log  `yaml:"logger"`
 		DB   `yaml:"postgres"`
 		EA   `yaml:"ea"`
+		Auth `yaml:"auth"`
 	}
 
 	// App -.
 	App struct {
-		Name                     string        `env-required:"true" yaml:"name" env:"APP_NAME"`
-		Repo                     string        `env-required:"true" yaml:"repo" env:"APP_REPO"`
-		Version                  string        `env-required:"true"`
-		EncryptionKey            string        `yaml:"encryption_key" env:"APP_ENCRYPTION_KEY"`
-		JWTKey                   string        `env-required:"true" yaml:"jwtKey" env:"APP_JWT_KEY"`
-		AuthDisabled             bool          `yaml:"authDisabled" env:"APP_AUTH_DISABLED"`
-		AdminUsername            string        `yaml:"adminUsername" env:"APP_ADMIN_USERNAME"`
-		AdminPassword            string        `yaml:"adminPassword" env:"APP_ADMIN_PASSWORD"`
-		JWTExpiration            time.Duration `yaml:"jwtExpiration" env:"APP_JWT_EXPIRATION"`
-		RedirectionJWTExpiration time.Duration `yaml:"redirectionJWTExpiration" env:"APP_REDIRECTION_JWT_EXPIRATION"`
+		Name          string `env-required:"true" yaml:"name" env:"APP_NAME"`
+		Repo          string `env-required:"true" yaml:"repo" env:"APP_REPO"`
+		Version       string `env-required:"true"`
+		EncryptionKey string `yaml:"encryption_key" env:"APP_ENCRYPTION_KEY"`
 	}
 
 	// HTTP -.
@@ -62,6 +57,19 @@ type (
 		Username string `yaml:"username" env:"EA_USERNAME"`
 		Password string `yaml:"password" env:"EA_PASSWORD"`
 	}
+
+	Auth struct {
+		Disabled bool `yaml:"disabled" env:"AUTH_DISABLED"`
+		// BASIC
+		AdminUsername            string        `yaml:"adminUsername" env:"AUTH_ADMIN_USERNAME"`
+		AdminPassword            string        `yaml:"adminPassword" env:"AUTH_ADMIN_PASSWORD"`
+		JWTKey                   string        `env-required:"true" yaml:"jwtKey" env:"AUTH_JWT_KEY"`
+		JWTExpiration            time.Duration `yaml:"jwtExpiration" env:"AUTH_JWT_EXPIRATION"`
+		RedirectionJWTExpiration time.Duration `yaml:"redirectionJWTExpiration" env:"AUTH_REDIRECTION_JWT_EXPIRATION"`
+		// OAUTH
+		ClientID string `yaml:"clientId" env:"AUTH_CLIENT_ID"`
+		Issuer   string `yaml:"issuer" env:"AUTH_ISSUER"`
+	}
 )
 
 // NewConfig returns app config.
@@ -69,15 +77,10 @@ func NewConfig() (*Config, error) {
 	// set defaults
 	ConsoleConfig = &Config{
 		App: App{
-			Name:                     "console",
-			Repo:                     "open-amt-cloud-toolkit/console",
-			Version:                  "DEVELOPMENT",
-			EncryptionKey:            "",
-			JWTKey:                   "your_secret_jwt_key",
-			AdminUsername:            "standalone",
-			AdminPassword:            "G@ppm0ym",
-			JWTExpiration:            24 * time.Hour,
-			RedirectionJWTExpiration: 5 * time.Minute,
+			Name:          "console",
+			Repo:          "open-amt-cloud-toolkit/console",
+			Version:       "DEVELOPMENT",
+			EncryptionKey: "",
 		},
 		HTTP: HTTP{
 			Host:           "localhost",
@@ -90,11 +93,22 @@ func NewConfig() (*Config, error) {
 		},
 		DB: DB{
 			PoolMax: 2,
+			URL:     "",
 		},
 		EA: EA{
 			URL:      "http://localhost:8000",
 			Username: "",
 			Password: "",
+		},
+		Auth: Auth{
+			AdminUsername:            "standalone",
+			AdminPassword:            "G@ppm0ym",
+			JWTKey:                   "your_secret_jwt_key",
+			JWTExpiration:            24 * time.Hour,
+			RedirectionJWTExpiration: 5 * time.Minute,
+			// OAUTH CONFIG, if provided will not use basic auth
+			ClientID: "",
+			Issuer:   "",
 		},
 	}
 
