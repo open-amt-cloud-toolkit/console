@@ -58,7 +58,10 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 )
 
-const deviceCallBuffer = 100
+const (
+	deviceCallBuffer = 100
+	maxReadRecords   = 390
+)
 
 var (
 	connections         = make(map[string]*ConnectionEntry)
@@ -585,8 +588,8 @@ func (g *ConnectionEntry) GetAuditLog(startIndex int) (auditlog.Response, error)
 	return response, nil
 }
 
-func (g *ConnectionEntry) GetEventLog() (messagelog.GetRecordsResponse, error) {
-	response, err := g.WsmanMessages.AMT.MessageLog.GetRecords(1)
+func (g *ConnectionEntry) GetEventLog(startIndex, maxReadRecords int) (messagelog.GetRecordsResponse, error) {
+	response, err := g.WsmanMessages.AMT.MessageLog.GetRecords(startIndex, maxReadRecords)
 	if err != nil {
 		return messagelog.GetRecordsResponse{}, err
 	}
@@ -1123,7 +1126,7 @@ func (g *ConnectionEntry) GetAMTManagementPresenceRemoteSAP() (managementpresenc
 }
 
 func (g *ConnectionEntry) GetAMTMessageLog() (messagelog.Response, error) {
-	get, err := g.WsmanMessages.AMT.MessageLog.GetRecords(1)
+	get, err := g.WsmanMessages.AMT.MessageLog.GetRecords(1, maxReadRecords)
 	if err != nil {
 		return messagelog.Response{}, err
 	}
