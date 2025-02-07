@@ -134,6 +134,11 @@ jobs:
           ls -l dist
           ls -l
 
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: 22.x
+
       - name: Check out Sample Web UI
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # master
         with:
