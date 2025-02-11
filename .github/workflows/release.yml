@@ -59,6 +59,7 @@ jobs:
         run: |
           npx semantic-release@21 --no-ci --dry-run --plugins @semantic-release/commit-analyzer --branches main
           VERSION=$(cat .VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - shell: bash
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
