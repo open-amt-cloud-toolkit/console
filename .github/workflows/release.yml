@@ -54,8 +54,9 @@ jobs:
         id: semantic-release
         env:
           GITHUB_REF: ${{ github.head_ref || github.ref_name }}
+          GITHUB_TOKEN: ${{ secrets.ROSIE_TOKEN }}
         run: |
-          npx semantic-release@21 --no-ci --dry-run --plugins @semantic-release/commit-analyzer --branches $GITHUB_REF
+          npx semantic-release@21 --no-ci --dry-run --plugins @semantic-release/commit-analyzer --branches main
           VERSION=$(cat .VERSION)
       - shell: bash
         run: |
