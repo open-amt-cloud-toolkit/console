@@ -36,7 +36,7 @@
       {
         "prepareCmd": "./build.sh ${nextRelease.version} ",
         "publishCmd": "docker push vprodemo.azurecr.io/console:v${nextRelease.version}",
-        "verifyReleaseCmd": "echo v${nextRelease.version} > .nextVersion"
+        "verifyReleaseCmd": "echo v${nextRelease.version} > .VERSION"
       }
     ]
   ]
