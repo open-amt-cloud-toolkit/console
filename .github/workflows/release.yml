@@ -52,6 +52,7 @@ jobs:
           go-version: ">=1.23.0"
       - name: 🔬 Check semantic versioning
         id: semantic-release
+        shell: bash
         env:
           GITHUB_REF: ${{ github.head_ref || github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.ROSIE_TOKEN }}
