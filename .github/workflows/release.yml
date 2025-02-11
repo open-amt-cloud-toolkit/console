@@ -53,9 +53,9 @@ jobs:
       - name: 🔬 Check semantic versioning
         id: semantic-release
         env:
-          GITHUB_REF: ${{ github.head_ref }}
+          GITHUB_REF: ${{ github.head_ref || github.ref_name }}
         run: |
-          npx semantic-release --no-ci --dry-run --plugins @semantic-release/commit-analyzer --branches $GITHUB_REF
+          npx semantic-release@21 --no-ci --dry-run --plugins @semantic-release/commit-analyzer --branches $GITHUB_REF
           VERSION=$(cat .VERSION)
       - shell: bash
         run: |
